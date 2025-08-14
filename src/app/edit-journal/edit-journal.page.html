@@ -1,0 +1,181 @@
+<ion-header class="transparent-header">
+  <ion-toolbar class="transparent-toolbar">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/spend-record2" class="glass-back-button"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="glass-title">تعديل القيد المحاسبي</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="modern-content">
+  <!-- Loading State -->
+  <div *ngIf="!user_info || !store_info || !journal" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p class="loading-text">جاري التحميل...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="user_info && store_info && journal" class="main-container">
+    <div class="form-container">
+      <ion-card class="form-card">
+        <ion-card-header class="card-header">
+          <ion-card-title class="card-title">تعديل القيد المحاسبي</ion-card-title>
+        </ion-card-header>
+        <ion-card-content class="compact-content">
+          
+          <!-- Row 1: Transaction Type -->
+          <div class="field-row">
+            <ion-label class="field-label-right">نوع السند</ion-label>
+            <ion-segment [(ngModel)]="jType" (ionChange)="radioChange($event)" class="mini-segment">
+              <ion-segment-button value="1">
+                <div class="segment-content">
+                  <ion-icon name="arrow-up-outline"></ion-icon>
+                  <span>سند دفع</span>
+                </div>
+              </ion-segment-button>
+              <ion-segment-button value="2">
+                <div class="segment-content">
+                  <ion-icon name="arrow-down-outline"></ion-icon>
+                  <span>سند قبض</span>
+                </div>
+              </ion-segment-button>
+            </ion-segment>
+          </div>
+
+          <!-- Row 2: Date -->
+          <div class="field-row">
+            <ion-label class="field-label-right">التاريخ</ion-label>
+            <ion-input 
+              type="date" 
+              [(ngModel)]="journal.j_date"
+              class="mini-input">
+            </ion-input>
+          </div>
+
+          <!-- Row 3: Source -->
+          <div class="field-row">
+            <ion-label class="field-label-right">المصدر</ion-label>
+            <div class="field-with-balance">
+              <ion-select 
+                [(ngModel)]="radioVal" 
+                (ionChange)="pickAccountBank($event)" 
+                placeholder="اختر المصدر"
+                interface="action-sheet"
+                class="mini-select">
+                <ion-select-option value="1">الخزينة</ion-select-option>
+                <ion-select-option *ngFor="let bank of banksAccountArray" [value]="bank.id">
+                  {{ bank.sub_name }}
+                </ion-select-option>
+              </ion-select>
+              
+              <!-- Source Balance Display -->
+              <div class="balance-display" *ngIf="selectedBankAccount && selectedBankAccount.sub_name">
+                <div class="balance-label">الرصيد:</div>
+                <div class="balance-amount" *ngIf="!loadingSourceBalance && sourceAccountBalance" 
+                     [style.color]="getBalanceColor(sourceAccountBalance) === 'success' ? '#10dc60' : '#f04141'">
+                  {{ formatBalance(sourceAccountBalance) }}
+                </div>
+                <div class="balance-loading" *ngIf="loadingSourceBalance">
+                  <ion-spinner name="dots" color="primary"></ion-spinner>
+                  <span>جاري التحميل...</span>
+                </div>
+                <div class="balance-error" *ngIf="!loadingSourceBalance && !sourceAccountBalance && selectedBankAccount.sub_name">
+                  لا يمكن تحميل الرصيد
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 4: Account -->
+          <div class="field-row">
+            <ion-label class="field-label-right">الحساب</ion-label>
+            <div class="field-with-balance">
+              <div class="input-with-icon" (click)="presentAccountPopover($event)">
+                <ion-input 
+                  readonly="true" 
+                  [(ngModel)]="selectedFromAccount.sub_name" 
+                  placeholder="اختر الحساب"
+                  class="mini-input readonly-input">
+                </ion-input>
+                <ion-icon name="chevron-down-outline" class="dropdown-icon"></ion-icon>
+              </div>
+              
+              <!-- Account Balance Display -->
+              <div class="balance-display" *ngIf="selectedFromAccount && selectedFromAccount.sub_name">
+                <div class="balance-label">الرصيد:</div>
+                <div class="balance-amount" *ngIf="!loadingAccountBalance && selectedAccountBalance" 
+                     [style.color]="getBalanceColor(selectedAccountBalance) === 'success' ? '#10dc60' : '#f04141'">
+                  {{ formatBalance(selectedAccountBalance) }}
+                </div>
+                <div class="balance-loading" *ngIf="loadingAccountBalance">
+                  <ion-spinner name="dots" color="primary"></ion-spinner>
+                  <span>جاري التحميل...</span>
+                </div>
+                <div class="balance-error" *ngIf="!loadingAccountBalance && !selectedAccountBalance && selectedFromAccount.sub_name">
+                  لا يمكن تحميل الرصيد
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 5: Amount -->
+          <div class="field-row">
+            <ion-label class="field-label-right">المبلغ</ion-label>
+            <ion-input 
+              type="number" 
+              placeholder="0.00" 
+              [(ngModel)]="pay"
+              class="mini-input amount-input">
+            </ion-input>
+          </div>
+
+          <!-- Row 6: Description -->
+          <div class="field-row">
+            <ion-label class="field-label-right">البيان</ion-label>
+            <ion-textarea 
+              rows="1" 
+              [(ngModel)]="journal.j_details"
+              placeholder="وصف المعاملة..."
+              class="mini-textarea">
+            </ion-textarea>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="button-row">
+            <ion-button 
+              (click)="update()"
+              class="mini-btn save-btn"
+              [disabled]="!isFormValid()">
+              <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+              تحديث
+            </ion-button>
+            <ion-button 
+              fill="outline" 
+              (click)="delete(journal.j_ref)"
+              class="mini-btn delete-btn">
+              <ion-icon name="trash-outline" slot="start"></ion-icon>
+              حذف
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+</ion-content>
+
+<ion-popover #accountPopover [isOpen]="isAccountPopoverOpen" (didDismiss)="isAccountPopoverOpen = false"  side="bottom" alignment="start">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar dir="rtl">
+        <ion-searchbar [(ngModel)]="searchTerm" (ionInput)="searchAccount($event)" placeholder="بحث عن حساب" dir="rtl"></ion-searchbar>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content dir="rtl">
+      <ion-list>
+        <ion-item *ngFor="let acc of searchedAccounts" (click)="selectAccount(acc)" button dir="rtl">
+          <ion-label>{{acc.sub_name}}</ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-popover>

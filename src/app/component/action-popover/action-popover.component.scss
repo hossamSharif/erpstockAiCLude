@@ -1,0 +1,23 @@
+.action-popover-list {
+  min-width: 200px;
+  direction: rtl;
+  
+  .action-item {
+    --padding-start: 16px;
+    --padding-end: 16px;
+    
+    ion-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .action-icon {
+      margin-inline-end: 12px;
+      color: var(--ion-color-primary);
+    }
+    
+    &:hover {
+      --background: var(--ion-color-light);
+    }
+  }
+}

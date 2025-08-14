@@ -1,0 +1,164 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>إدارة التصنيفات</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleAddForm()">
+        <ion-icon name="add"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">إدارة التصنيفات</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <!-- Add/Edit Form -->
+  <ion-card *ngIf="showAddForm">
+    <ion-card-header>
+      <ion-card-title>{{ editingCategory ? 'تعديل التصنيف' : 'إضافة تصنيف جديد' }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="stacked">اسم التصنيف *</ion-label>
+        <ion-input [(ngModel)]="newCategory.category_name" placeholder="اسم التصنيف"></ion-input>
+      </ion-item>
+      
+      <ion-item>
+        <ion-label position="stacked">وصف التصنيف</ion-label>
+        <ion-textarea [(ngModel)]="newCategory.category_desc" placeholder="وصف التصنيف (اختياري)"></ion-textarea>
+      </ion-item>
+
+      <div class="ion-padding-top">
+        <ion-button 
+          expand="block" 
+          (click)="editingCategory ? updateCategory() : addCategory()"
+          [disabled]="!newCategory.category_name?.trim()">
+          {{ editingCategory ? 'تحديث' : 'إضافة' }}
+        </ion-button>
+        
+        <ion-button 
+          expand="block" 
+          fill="outline" 
+          (click)="resetForm()">
+          إلغاء
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Categories List -->
+  <div class="ion-padding">
+    <ion-card *ngFor="let category of categories" class="category-card">
+      <ion-card-content>
+        <div class="category-header">
+          <div>
+            <h3>{{ category.category_name }}</h3>
+            <p *ngIf="category.category_desc">{{ category.category_desc }}</p>
+            <ion-text color="medium">
+              <small>تاريخ الإنشاء: {{ category.created_at | date:'short':'ar' }}</small>
+            </ion-text>
+          </div>
+          
+          <div class="category-actions">
+            <ion-button 
+              fill="clear" 
+              size="small" 
+              color="primary"
+              (click)="editCategory(category)">
+              <ion-icon name="create"></ion-icon>
+            </ion-button>
+            
+            <ion-button 
+              fill="clear" 
+              size="small" 
+              color="danger"
+              (click)="deleteCategory(category)">
+              <ion-icon name="trash"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Empty State -->
+    <ion-card *ngIf="categories.length === 0">
+      <ion-card-content class="ion-text-center">
+        <ion-icon name="folder-open-outline" style="font-size: 64px; color: var(--ion-color-medium);"></ion-icon>
+        <h3>لا توجد تصنيفات</h3>
+        <p>ابدأ بإضافة التصنيف الأول للأصناف</p>
+        <ion-button fill="outline" (click)="toggleAddForm()">
+          <ion-icon name="add" slot="start"></ion-icon>
+          إضافة تصنيف
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+   
+    
+    <!-- Endpoint Selection Section -->
+    <ion-card class="endpoint-category-card" *ngIf="categories.length > 0">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="globe-outline" slot="start"></ion-icon>
+          تحديد القسم   
+        </ion-card-title>
+        <ion-card-subtitle>
+          اختر التصنيف الذي يحتوي على عنوان نقطة الاتصال للنظام
+        </ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-label class="column-label">اختر التصنيف</ion-label>
+        <div class="category-section">
+          <ion-segment 
+            [(ngModel)]="selectedEndpointCategoryId" 
+            (ionChange)="setEndpointCategory($event)" 
+            class="compact-segment"
+            scrollable="true">
+            <ion-segment-button 
+              *ngFor="let category of categories" 
+              [value]="category.id">
+              <span>{{ category.category_name }}</span>
+            </ion-segment-button>
+          </ion-segment>
+        </div>
+        
+        <ion-item *ngIf="selectedEndpointCategoryId && currentEndpoint">
+          <ion-label color="success">
+            <ion-icon name="checkmark-circle" slot="start" color="success"></ion-icon>
+            <h3>نقطة الاتصال النشطة</h3>
+            <p><strong>التصنيف:</strong> {{ getSelectedEndpointName() }}</p>
+            <p><strong>العنوان:</strong> {{ getCurrentEndpoint() }}</p>
+          </ion-label>
+        </ion-item>
+        
+        <ion-item *ngIf="!selectedEndpointCategoryId">
+          <ion-label color="warning">
+            <ion-icon name="warning" slot="start" color="warning"></ion-icon>
+            <h3>لم يتم تحديد نقطة اتصال</h3>
+            <p>سيتم استخدام نقطة الاتصال الافتراضية</p>
+          </ion-label>
+        </ion-item>
+        
+        <ion-button 
+          *ngIf="selectedEndpointCategoryId"
+          fill="clear" 
+          color="danger" 
+          size="small"
+          (click)="clearEndpointSettings()">
+          <ion-icon name="close-circle" slot="start"></ion-icon>
+          إلغاء نقطة الاتصال المحددة
+        </ion-button>
+        
+        <ion-note>
+          <p><strong>ملاحظة:</strong> تأكد من أن وصف التصنيف المحدد يحتوي على عنوان صحيح لنقطة الاتصال (مثل: https://example.com/api/)</p>
+        </ion-note>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

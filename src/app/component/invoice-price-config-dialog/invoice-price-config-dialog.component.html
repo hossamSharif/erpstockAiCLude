@@ -1,0 +1,268 @@
+<ion-header class="modern-header" dir="rtl">
+  <ion-toolbar color="primary">
+    <ion-title class="header-title">
+      <ion-icon name="copy" class="title-icon"></ion-icon>
+      ضبط أسعار الفاتورة المنسوخة
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()" fill="clear" class="close-btn">
+        <ion-icon name="close" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="modern-content" dir="rtl">
+  <!-- Sales Price Configuration -->
+  <div class="configuration-section" *ngIf="invoiceType === 'sales'">
+    <div class="control-card">
+      <div class="card-header">
+        <h3 class="section-title">
+          <ion-icon name="storefront" color="primary"></ion-icon>
+          ضبط أسعار فاتورة البيع
+        </h3>
+        <p class="section-description">
+          اختر كيف تريد تحديد أسعار البيع في الفاتورة الجديدة
+        </p>
+      </div>
+      <div class="card-content">
+        <!-- Sales Price Options -->
+        <ion-radio-group [(ngModel)]="salesPriceOption" (ionChange)="onSalesPriceOptionChange()">
+          <div class="option-item default-option">
+            <ion-item class="option-radio">
+              <ion-radio slot="start" value="use_perch_price"></ion-radio>
+              <ion-label>
+                <h3>استخدام أسعار الشراء كأسعار بيع</h3>
+                <p>نسخ أسعار الشراء من الأصناف لتصبح أسعار البيع في الفاتورة الجديدة</p>
+                <ion-chip color="success" class="default-chip">
+                  <ion-icon name="checkmark-circle"></ion-icon>
+                  <ion-label>الخيار الافتراضي</ion-label>
+                </ion-chip>
+              </ion-label>
+            </ion-item>
+          </div>
+          
+          <div class="option-item">
+            <ion-item class="option-radio">
+              <ion-radio slot="start" value="keep_original"></ion-radio>
+              <ion-label>
+                <h3>الاحتفاظ بالأسعار  الشراء في الفاتورة القديمة</h3>
+                <p>استخدام  أسعار البيع الإفتراضية للأصناف</p>
+              </ion-label>
+            </ion-item>
+          </div>
+        </ion-radio-group>
+      </div>
+    </div>
+  </div>
+
+  <!-- Purchase Price Configuration -->
+  <div class="configuration-section" *ngIf="invoiceType === 'purchase'">
+    <div class="control-card">
+      <div class="card-header">
+        <h3 class="section-title">
+          <ion-icon name="bag" color="primary"></ion-icon>
+          ضبط أسعار فاتورة الشراء
+        </h3>
+        <p class="section-description">
+          اختر كيف تريد تحديد أسعار الشراء في الفاتورة الجديدة
+        </p>
+      </div>
+      <div class="card-content">
+        <!-- Purchase Price Options -->
+        <ion-radio-group [(ngModel)]="purchasePriceOption" (ionChange)="onPurchasePriceOptionChange()">
+          <div class="option-item default-option">
+            <ion-item class="option-radio">
+              <ion-radio slot="start" value="pay_price_as_perch_price"></ion-radio>
+              <ion-label>
+                <h3>استخدام سعر البيع كسعر شراء</h3>
+                <p>تحويل سعر البيع الحالي ليصبح سعر الشراء في الفاتورة الجديدة</p>
+                <ion-chip color="success" class="default-chip">
+                  <ion-icon name="checkmark-circle"></ion-icon>
+                  <ion-label>الخيار الافتراضي</ion-label>
+                </ion-chip>
+              </ion-label>
+            </ion-item>
+          </div>
+          
+          <div class="option-item">
+            <ion-item class="option-radio">
+              <ion-radio slot="start" value="keep_pay_price"></ion-radio>
+              <ion-label>
+                <h3>الاحتفاظ بسعر البيع الحالي في الفاتورة القديمة</h3>
+                <p>استخدام سعر البيع الحالي في الفاتورة الجديدة مع الاحتفاظ بسعر الشراء الأصلي</p>
+              </ion-label>
+            </ion-item>
+          </div>
+          
+          <div class="option-item" *ngIf="context !== 'sales-record'">
+            <ion-item class="option-radio">
+              <ion-radio slot="start" value="set_custom"></ion-radio>
+              <ion-label>
+                <h3>تحديد أسعار مخصصة</h3>
+                <p>تحديد سعر شراء جديد واختيار السعر المرجعي من الفاتورة القديمة</p>
+              </ion-label>
+            </ion-item>
+          </div>
+          
+          <div class="option-item" *ngIf="context !== 'sales-record'">
+            <ion-item class="option-radio">
+              <ion-radio slot="start" value="keep_original"></ion-radio>
+              <ion-label>
+                <h3>الاحتفاظ بالأسعار الأصلية</h3>
+                <p>استخدام نفس الأسعار الموجودة في الفاتورة الأصلية</p>
+              </ion-label>
+            </ion-item>
+          </div>
+        </ion-radio-group>
+
+        <!-- Custom Purchase Price Settings -->
+        <div class="custom-settings" *ngIf="purchasePriceOption === 'set_custom' && context !== 'sales-record'">
+          <div class="custom-price-input">
+            <ion-item fill="outline">
+              <ion-label position="stacked">سعر الشراء الجديد</ion-label>
+              <ion-input
+                type="number"
+                [(ngModel)]="customPerchPrice"
+                (ngModelChange)="onCustomPerchPriceChange()"
+                placeholder="أدخل سعر الشراء الجديد"
+                class="price-input"
+              ></ion-input>
+              <ion-icon name="pricetag" slot="end" color="primary"></ion-icon>
+            </ion-item>
+          </div>
+
+          <div class="source-price-selection">
+            <ion-label class="selection-label">اختر السعر المرجعي من الفاتورة القديمة:</ion-label>
+            <ion-segment [(ngModel)]="purchaseSourcePrice" (ionChange)="onPurchaseSourcePriceChange()" class="modern-segment">
+              <ion-segment-button value="perch_price" class="segment-btn">
+                <ion-icon name="cube"></ion-icon>
+                <ion-label>سعر الشراء</ion-label>
+              </ion-segment-button>
+              <ion-segment-button value="pay_price" class="segment-btn">
+                <ion-icon name="storefront"></ion-icon>
+                <ion-label>سعر البيع</ion-label>
+              </ion-segment-button>
+            </ion-segment>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Section -->
+  <div class="summary-section">
+    <ion-card class="summary-card">
+      <ion-card-header>
+        <ion-card-title class="section-title">
+          <ion-icon name="calculator" color="success"></ion-icon>
+          ملخص الضبط
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid class="summary-grid">
+          <ion-row>
+            <ion-col size="6">
+              <div class="summary-item">
+                <div class="summary-label">عدد الأصناف</div>
+                <div class="summary-value primary">{{ previewItems.length }}</div>
+              </div>
+            </ion-col>
+            <ion-col size="6">
+              <div class="summary-item">
+                <div class="summary-label">الإجمالي الجديد</div>
+                <div class="summary-value success">{{ (getTotalNew() || 0).toFixed(2) }}</div>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Items Preview Section -->
+  <div class="preview-section" *ngIf="previewItems && previewItems.length > 0">
+    <ion-card class="items-card">
+      <ion-card-header>
+        <ion-card-title class="section-title">
+          <ion-icon name="eye" color="tertiary"></ion-icon>
+          معاينة الأصناف بعد الضبط ({{ previewItems.length }})
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="items-container">
+          <div 
+            *ngFor="let item of previewItems; let i = index" 
+            class="item-preview"
+            [class.even]="i % 2 === 0"
+          >
+            <div class="item-info">
+              <div class="item-name">
+                <ion-icon name="cube" color="primary"></ion-icon>
+                {{ item.item_name }}
+              </div>
+              <div class="item-details">
+                <span class="quantity">الكمية: {{ item.quantity }}</span>
+              </div>
+            </div>
+            <div class="price-comparison">
+              <div class="price-row">
+                <span class="price-label">{{ invoiceType === 'sales' ? 'سعر البيع الحالي:' : 'سعر الشراء الحالي:' }}</span>
+                <span class="original-price">{{ getItemOriginalPrice(item).toFixed(2) }}</span>
+              </div>
+              <div class="price-row">
+                <span class="price-label">{{ invoiceType === 'sales' ? 'سعر البيع الجديد:' : 'سعر الشراء الجديد:' }}</span>
+                <span 
+                  class="new-price"
+                  [class.increased]="getItemNewPrice(item) > getItemOriginalPrice(item)"
+                  [class.decreased]="getItemNewPrice(item) < getItemOriginalPrice(item)"
+                >
+                  {{ getItemNewPrice(item).toFixed(2) }}
+                </span>
+              </div>
+              <div class="price-difference" *ngIf="getItemNewPrice(item) !== getItemOriginalPrice(item)">
+                <ion-icon 
+                  [name]="getItemNewPrice(item) > getItemOriginalPrice(item) ? 'trending-up' : 'trending-down'"
+                  [color]="getItemNewPrice(item) > getItemOriginalPrice(item) ? 'success' : 'danger'"
+                ></ion-icon>
+                <span 
+                  [class.increased]="getItemNewPrice(item) > getItemOriginalPrice(item)"
+                  [class.decreased]="getItemNewPrice(item) < getItemOriginalPrice(item)"
+                >
+                  {{ getItemPriceDifference(item).toFixed(2) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
+
+<ion-footer class="modern-footer">
+  <ion-toolbar>
+    <div class="action-buttons">
+      <ion-button 
+        expand="block" 
+        color="medium" 
+        fill="outline"
+        (click)="cancel()"
+        class="cancel-btn"
+      >
+        <ion-icon name="close-circle" slot="start"></ion-icon>
+        إلغاء
+      </ion-button>
+      
+      <ion-button 
+        expand="block" 
+        color="primary"
+        (click)="applyConfiguration()"
+        class="apply-btn"
+      >
+        <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+        تطبيق الضبط
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>

@@ -1,0 +1,265 @@
+<ion-header class="transparent-header">
+  <ion-toolbar class="transparent-toolbar">
+    <ion-buttons slot="start">
+      <ion-menu-button class="glass-menu-button"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="glass-title">ميزان المراجعة والأرصدة</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="refresh()">
+        <ion-icon name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="modern-content">
+  <!-- Loading State -->
+  <div *ngIf="!user_info || !store_info" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p class="loading-text">جاري التحميل...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="user_info && store_info" class="main-container">
+    
+    <!-- Filter Card -->
+    <ion-card class="filter-card">
+      <ion-card-content class="filter-content">
+        <!-- Segment Filter -->
+        <div class="segment-container">
+          <ion-label class="segment-label">تصفية الحسابات:</ion-label>
+          <ion-segment [(ngModel)]="segmentValue" (ionChange)="segmentChanged($event)" class="balance-segment">
+            <ion-segment-button value="all">
+              <div class="segment-content">
+                <ion-icon name="list-outline"></ion-icon>
+                <span>جميع الحسابات</span>
+              </div>
+            </ion-segment-button>
+            <ion-segment-button value="customer">
+              <div class="segment-content">
+                <ion-icon name="people-outline"></ion-icon>
+                <span>العملاء</span>
+              </div>
+            </ion-segment-button>
+            <ion-segment-button value="supplier">
+              <div class="segment-content">
+                <ion-icon name="business-outline"></ion-icon>
+                <span>الموردون</span>
+              </div>
+            </ion-segment-button>
+            <ion-segment-button value="sales">
+              <div class="segment-content">
+                <ion-icon name="trending-up-outline"></ion-icon>
+                <span>المبيعات</span>
+              </div>
+            </ion-segment-button>
+            <ion-segment-button value="purchases">
+              <div class="segment-content">
+                <ion-icon name="trending-down-outline"></ion-icon>
+                <span>المشتريات</span>
+              </div>
+            </ion-segment-button>
+            <ion-segment-button value="other">
+              <div class="segment-content">
+                <ion-icon name="folder-outline"></ion-icon>
+                <span>أخرى</span>
+              </div>
+            </ion-segment-button>
+          </ion-segment>
+        </div>
+
+        <!-- Balance Filter -->
+        <div class="balance-filter">
+          <ion-item lines="none">
+            <ion-checkbox 
+              [(ngModel)]="showOnlyWithBalance" 
+              (ionChange)="balanceFilterChanged()"
+              slot="start">
+            </ion-checkbox>
+            <ion-label>عرض الحسابات ذات الرصيد فقط</ion-label>
+          </ion-item>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Summary Card -->
+    <ion-card class="summary-card" *ngIf="!loading">
+      <ion-card-content class="summary-content">
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="summary-label">عدد الحسابات</div>
+            <div class="summary-value">{{ summary.total_accounts }}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">إجمالي المدين</div>
+            <div class="summary-value debit-total">{{ formatBalance(summary.grand_debit_total) }}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">إجمالي الدائن</div>
+            <div class="summary-value credit-total">{{ formatBalance(summary.grand_credit_total) }}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">الفرق</div>
+            <div class="summary-value" [class.debit-total]="summary.difference > 0" [class.credit-total]="summary.difference < 0">
+              {{ formatBalance(getAbsoluteValue(summary.difference)) }}
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Desktop Table -->
+    <ion-card class="table-card" *ngIf="device == 'desktop'" color="primary">
+      <ion-card-header class="table-header">
+        <ion-card-title class="table-title">
+          <ion-icon name="analytics-outline" slot="start"></ion-icon>
+          ميزان المراجعة والأرصدة
+          <span class="account-count" *ngIf="filteredAccounts.length > 0">
+            ({{ filteredAccounts.length }} حساب)
+          </span>
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content class="table-content">
+        <div class="table-container">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>التسلسل</th>
+                <th>اسم الحساب</th>
+                <th>رقم الحساب</th>
+                <th>نوع الحساب</th>
+                <th>الرصيد الافتتاحي</th>
+                <th>مدين (عليه)</th>
+                <th>دائن (له)</th>
+                <th>حالة الرصيد</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let account of filteredAccounts; let i = index" class="table-row">
+                <td class="serial">{{ i + 1 }}</td>
+                <td class="account-name">{{ account.sub_name }}</td>
+                <td class="account-code">{{ account.sub_code || 'غير محدد' }}</td>
+                <td class="account-type">
+                  <span class="type-badge" [ngClass]="{'customer-type': account.ac_id == 1, 'supplier-type': account.ac_id == 2, 'sales-type': account.ac_id == 8, 'purchase-type': account.ac_id == 9}">
+                    {{ getAccountTypeDisplay(account) }}
+                  </span>
+                </td>
+                <td class="opening-balance">{{ formatBalance(account.opening_balance) }}</td>
+                <td class="debit">
+                  <span *ngIf="account.display_debit > 0" class="amount debit-amount">
+                    {{ formatBalance(account.display_debit) }}
+                  </span>
+                  <span *ngIf="account.display_debit == 0" class="amount zero-amount">0.00</span>
+                </td>
+                <td class="credit">
+                  <span *ngIf="account.display_credit > 0" class="amount credit-amount">
+                    {{ formatBalance(account.display_credit) }}
+                  </span>
+                  <span *ngIf="account.display_credit == 0" class="amount zero-amount">0.00</span>
+                </td>
+                <td class="balance-status">
+                  <span class="status-badge" [ngClass]="{'debit-status': account.balance_status == 'debit', 'credit-status': account.balance_status == 'credit'}">
+                    {{ getBalanceStatusDisplay(account) }}
+                  </span>
+                </td>
+              </tr>
+              
+              <!-- Loading Skeleton -->
+              <tr *ngIf="loading" class="skeleton-row">
+                <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+              </tr>
+            </tbody>
+            
+            <!-- Totals Footer -->
+            <tfoot *ngIf="filteredAccounts.length > 0">
+              <tr class="totals-row">
+                <td colspan="5" class="totals-label">الإجمالي:</td>
+                <td class="debit-total">
+                  <span class="amount debit-amount">{{ formatBalance(summary.grand_debit_total) }}</span>
+                </td>
+                <td class="credit-total">
+                  <span class="amount credit-amount">{{ formatBalance(summary.grand_credit_total) }}</span>
+                </td>
+                <td class="difference-cell">
+                  <span class="amount" [class.debit-amount]="summary.difference > 0" [class.credit-amount]="summary.difference < 0">
+                    {{ formatBalance(getAbsoluteValue(summary.difference)) }}
+                  </span>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="showEmpty && !loading">
+          <ion-icon name="analytics-outline" class="empty-icon"></ion-icon>
+          <h4>لا توجد حسابات</h4>
+          <p>لم يتم العثور على أي حسابات</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Mobile Cards -->
+    <div class="mobile-cards" *ngIf="device == 'mobile'">
+      <ion-card class="mobile-header-card" color="primary">
+        <ion-card-header>
+          <ion-card-title class="mobile-title">
+            <ion-icon name="analytics-outline" slot="start"></ion-icon>
+            ميزان المراجعة
+          </ion-card-title>
+        </ion-card-header>
+      </ion-card>
+
+      <ion-card class="mobile-account-card" *ngFor="let account of filteredAccounts; let i = index">
+        <ion-card-content class="mobile-content">
+          <div class="mobile-header">
+            <div class="account-info">
+              <h3>{{ account.sub_name }}</h3>
+              <p>{{ account.sub_code || 'غير محدد' }}</p>
+            </div>
+            <div class="account-type-mobile">
+              <span class="type-badge" [ngClass]="{'customer-type': account.ac_id == 1, 'supplier-type': account.ac_id == 2, 'sales-type': account.ac_id == 8, 'purchase-type': account.ac_id == 9}">
+                {{ getAccountTypeDisplay(account) }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="mobile-balances">
+            <div class="balance-row">
+              <span class="balance-label">الرصيد الافتتاحي:</span>
+              <span class="balance-value">{{ formatBalance(account.opening_balance) }}</span>
+            </div>
+            <div class="balance-row" *ngIf="account.display_debit > 0">
+              <span class="balance-label">مدين (عليه):</span>
+              <span class="balance-value debit-amount">{{ formatBalance(account.display_debit) }}</span>
+            </div>
+            <div class="balance-row" *ngIf="account.display_credit > 0">
+              <span class="balance-label">دائن (له):</span>
+              <span class="balance-value credit-amount">{{ formatBalance(account.display_credit) }}</span>
+            </div>
+            <div class="balance-row">
+              <span class="balance-label">حالة الرصيد:</span>
+              <span class="status-badge" [ngClass]="{'debit-status': account.balance_status == 'debit', 'credit-status': account.balance_status == 'credit'}">
+                {{ getBalanceStatusDisplay(account) }}
+              </span>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+      
+      <!-- Empty State Mobile -->
+      <div class="empty-state" *ngIf="showEmpty && !loading">
+        <ion-icon name="analytics-outline" class="empty-icon"></ion-icon>
+        <h4>لا توجد حسابات</h4>
+        <p>لم يتم العثور على أي حسابات</p>
+      </div>
+    </div>
+  </div>
+</ion-content>

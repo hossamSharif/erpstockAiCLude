@@ -1,0 +1,217 @@
+<ion-grid>
+  <ion-row>
+    <ion-col size="4" *ngIf="loadingItems == true">
+      <ion-item class="custInput">
+        <ion-input [disabled]="true"></ion-input>
+        <ion-spinner></ion-spinner>
+      </ion-item>
+    </ion-col>
+    <ion-col size="4" *ngIf="loadingItems == false">
+      <ion-grid class="ion-no-margin ion-no-padding">
+        <ion-row>
+          <ion-col size="12" class="ion-no-margin ion-no-padding">
+            <div class="label-with-buttons-container">
+              <div class="action-buttons-left">
+                <!-- Refresh Button positioned in top left -->
+                <ion-button 
+                  fill="clear" 
+                  size="small"
+                  class="item-refresh-btn-left"
+                  (click)="refresh()"
+                  [disabled]="loadingItems">
+                  <ion-icon 
+                    name="refresh" 
+                    color="primary"
+                    [class.spin]="loadingItems">
+                  </ion-icon>
+                </ion-button>
+                
+                <!-- Add New Item Button -->
+                <ion-button size="small" fill="clear" class="add-item-btn-left" (click)="presentModal2()">
+                  <ion-icon name="add-circle-outline" color="primary" slot="icon-only"></ion-icon>
+                </ion-button>
+                
+                <!-- Loading Spinner -->
+                <ion-spinner 
+                  *ngIf="loadingItems" 
+                  name="dots" 
+                  class="item-loading-spinner-left">
+                </ion-spinner>
+              </div>
+              
+              <ion-label  style="text-align: right;">
+                <strong>الصنف</strong> 
+              </ion-label>
+            </div>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <!-- Search Input Container - Match other field styles with proper positioning -->
+          <ion-item class="custInput item-selector-wrapper">
+            <div class="input-container-wrapper" #inputWrapper>
+              <ion-input
+                #searchInput
+                [(ngModel)]="searchTerm"
+                (ngModelChange)="onModelChange($event)"
+                [placeholder]="placeholder"
+                [disabled]="loadingItems"
+                [clearInput]="true"
+                class="item-selector-input"
+                (ionInput)="onSearchInput($event)"
+                (ionClear)="onInputClear($event)"
+                (ionFocus)="onInputFocus()"
+                (ionBlur)="onInputBlur()"
+                (click)="onInputFocus()"
+                (keydown)="onKeyDown($event)">
+              </ion-input>
+              
+            
+            </div>
+          </ion-item>
+
+          <!-- Dropdown List -->
+          <div class="dropdown-container" 
+               *ngIf="showDropdown && getFilteredItems().length > 0"
+               [style.top]="dropdownPosition.top"
+               [style.left]="dropdownPosition.left"
+               [style.width]="dropdownPosition.width">
+            
+            <ion-list class="item-dropdown">
+              <ion-item 
+                *ngFor="let item of getFilteredItems(); let i = index; trackBy: trackByItemId" 
+                button 
+                class="item-item"
+                [class.highlighted]="i === highlightedIndex"
+                (click)="selectItem(item)"
+                (mousedown)="$event.preventDefault()"
+                (mouseenter)="highlightedIndex = i">
+                <ion-label>
+                  <h3>{{ item.item_name }}</h3>
+                  <p *ngIf="item.item_desc" class="item-desc">{{ item.item_desc }}</p>
+                  <div class="item-prices-compact">
+                    <span class="price-sale">بيع: {{ item.pay_price }}</span>
+                    <span class="price-purchase">شراء: {{ item.perch_price }}</span>
+                    <!-- <span class="stock-qty">مخزون: {{ item.quantity }}</span> -->
+                  </div>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+          </div>
+
+
+          <!-- No Results Dropdown -->
+          <div class="dropdown-container" 
+               *ngIf="showDropdown && getFilteredItems().length === 0 && searchTerm.length > 0"
+               [style.top]="dropdownPosition.top"
+               [style.left]="dropdownPosition.left"
+               [style.width]="dropdownPosition.width">
+            <ion-list class="item-dropdown">
+              <ion-item class="no-results">
+                <ion-label>
+                  <p>لا توجد نتائج مطابقة</p>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+          </div>
+        </ion-row>
+      </ion-grid>
+
+
+      <div class="stock-info-container">
+        <div *ngIf="loadingQty && selectedItem.id" class="stock-info-line">
+          <ion-spinner name="crescent" color="primary"></ion-spinner>
+          <ion-text class="loading-text">جاري التحميل...</ion-text>
+        </div>
+
+        <div class="stock-display-container">
+          <div *ngIf="items.length > 0 && selectedItem.id && !qtyError && !loadingQty" class="stock-info-single-line">
+            <!-- Stock quantity section -->
+            <div class="stock-section">
+              <ion-text>المخزون: </ion-text>
+              <ion-text color="danger" class="qty-value">{{availQty}}</ion-text>
+              <ion-button fill="clear" size="small" class="refresh-btn" (click)="refreshQuantity()">
+                <ion-icon name="refresh-outline" color="primary"></ion-icon>
+              </ion-button>
+            </div>
+
+            <!-- Report button section -->
+            <div class="report-section">
+              <ion-label> <strong> | </strong></ion-label>
+              <ion-button fill="outline" *ngIf="selectedItem && selectedItem.id" fill="clear" size="small" (click)="viewSelectedItemReport()" color="primary">
+                <ion-icon name="analytics-outline" slot="icon-only"></ion-icon>
+                <ion-text color="dark"> تقرير الصنف </ion-text>
+              </ion-button>
+            </div>
+
+            <!-- Price info section -->
+            <div class="price-info-section">
+              <ion-label> <strong> | </strong></ion-label>
+              <ion-text color="dark">شراء</ion-text>
+              <ion-text color="dark">{{selectedItem.perch_price}}</ion-text>
+              <ion-label> <strong> | </strong></ion-label>
+              <ion-text color="dark">بيع</ion-text>
+              <ion-text color="dark">{{selectedItem.pay_price}}</ion-text>
+              <ion-label> <strong> | </strong></ion-label>
+            </div>
+
+            <!-- Details button section -->
+            <div class="action-button-section">
+              <ion-button 
+                fill="clear" 
+                size="small" 
+                (click)="viewSelectedItemDetails()" 
+                color="primary"
+                style="cursor: pointer; z-index: 1000; position: relative;">
+                <ion-icon name="information-circle-outline" slot="start"></ion-icon>
+                تفاصيل الصنف
+              </ion-button>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="qtyError && selectedItem.id && !loadingQty" class="stock-info-line error-line">
+          <ion-text color="danger" class="error-text">{{qtyErrorMsg}}</ion-text>
+          <ion-button fill="clear" size="small" class="refresh-btn" (click)="refreshQuantity()">
+            <ion-icon name="refresh-outline" color="danger"></ion-icon>
+          </ion-button>
+        </div>
+      </div> 
+    </ion-col>
+
+    <ion-col size="2" *ngIf="showQuantityInput" class="ion-margin-top">
+      <ion-label class="ion-padding"><strong>الكمية</strong></ion-label>
+      <ion-item class="custInput" [ngClass]="{'qty-warning': showQtyWarning}"> 
+        <ion-input #qtyId (keyup.enter)="addToList()" (ionFocus)="isFocused($event)" [(ngModel)]="selectedItem.qty"
+          (ionChange)="qtyChange($event)"   select-all></ion-input>
+      </ion-item>
+    </ion-col>
+
+    <ion-col size="2" *ngIf="showPriceInput" class="ion-margin-top">
+      <ion-label class="ion-padding"><strong>سعر الوحدة</strong></ion-label>
+      <ion-item class="custInput">
+        <ion-input (keyup.enter)="addToList()" [(ngModel)]="selectedItem.pay_price"
+          (ionChange)="onPayPriceChange($event)"></ion-input>
+      </ion-item>
+    </ion-col>
+
+     <ion-col size="2" *ngIf="showPerchPriceInput" class="ion-margin-top">
+      <ion-label class="ion-padding"><strong>سعر الشراء</strong></ion-label>
+      <ion-item class="custInput">
+        <ion-input (keyup.enter)="addToList()" [(ngModel)]="selectedItem.perch_price"
+          (ionChange)="onPerchPriceChange($event)"></ion-input>
+      </ion-item>
+    </ion-col>
+
+    <ion-col size="2" class="ion-margin-top">
+      <ion-label class="ion-padding"><strong>المجموع</strong></ion-label>
+      <ion-item class="custInput">
+        <ion-input [readonly]="true" [(ngModel)]="selectedItem.tot"></ion-input>
+      </ion-item>
+    </ion-col>
+
+    <ion-col size="2" class="ion-padding" class="ion-margin-top ion-padding-top">
+      <ion-button class="ion-margin-top" expand="block" routerDirection="root" color="primary" (click)="addToList()">
+        <ion-label class="ion-text-center">+</ion-label>
+      </ion-button>
+    </ion-col>
+  </ion-row>
+</ion-grid>

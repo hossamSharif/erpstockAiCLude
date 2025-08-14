@@ -1,0 +1,586 @@
+.custInput{
+    border-style: solid;
+    border-color: var(--ion-color-light);
+    border-radius: 5px;
+    }
+    .cust-card{
+        border-radius: 5px;
+    }
+    .show{ visibility: visible; }
+
+    .hide{visibility: hidden;}
+    .custRow{
+        margin-top: 5rem;
+        }
+.bnone{
+  border: none;
+}
+
+ .red{
+  color:var(--ion-color-danger) 
+ }
+ .darko{
+  color: var(--ion-color-dark)
+ }
+ion-popover{
+  --offset-y : -30px
+}
+.custInp{
+  border-right-style: solid;
+    border-right-width: 0.5px;
+    text-align: center;
+}
+ 
+  .table{
+       text-align: center;
+    width: 100%;
+    margin: 12px;
+  }
+
+  tr:nth-child(even) {
+    background-color: #dddddd;
+  }
+  td, th {border: 1px solid #dddddd;text-align: center;padding: 8px; font-size: 16px;font-weight: bold;color: black;}
+  
+  // Right align item name column
+  td:nth-child(2), th:nth-child(2) {
+    text-align: right;
+    padding-right: 12px;
+  }
+
+.table-card-header {
+  --background: var(--ion-color-primary) !important;
+  --color: white !important;
+  padding: 12px 16px;
+  
+  ion-card-title {
+    margin: 0;
+    
+    ion-row {
+      align-items: center;
+      
+      ion-col {
+        display: flex;
+        align-items: center;
+        
+        span {
+          font-size: 1.1rem;
+          font-weight: 600;
+        }
+      }
+      
+      ion-col[size="auto"] {
+        justify-content: flex-end;
+        
+        ion-button {
+          --color: white;
+          --color-hover: rgba(255, 255, 255, 0.8);
+          font-weight: 500;
+          
+          ion-icon {
+            margin-left: 4px;
+          }
+        }
+      }
+    }
+  }
+}
+       
+  .discount-section {
+  ion-note {
+    font-weight: bold;
+    color: var(--ion-color-primary);
+  }
+}
+
+.discount-radio-container {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  
+  .inline-radio-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+    
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      ion-radio {
+        margin: 0;
+        --color: var(--ion-color-medium);
+        --color-checked: var(--ion-color-primary);
+      }
+      
+      ion-label {
+        margin: 0;
+        font-size: 14px;
+        color: var(--ion-color-dark);
+        white-space: nowrap;
+      }
+    }
+  }
+}
+
+// Alternative compact version (if you prefer even more compact)
+.compact-radio-style {
+  .discount-radio-container {
+    --min-height: 48px;
+    
+    .inline-radio-group {
+      justify-content: space-around;
+      
+      .radio-option {
+        flex: 1;
+        justify-content: center;
+        padding: 8px;
+        border-radius: 8px;
+        transition: background-color 0.2s ease;
+        
+        &:hover {
+          background-color: var(--ion-color-light);
+        }
+        
+        ion-label {
+          font-weight: 500;
+        }
+      }
+    }
+  }
+}
+ion-segment { 
+  --color: var(--ion-color-dark);
+  --color-checked: var(--ion-color-primary-contrast);
+  --background-checked: var(--ion-color-primary);
+  --indicator-color: transparent;
+  --border-radius: 8px;
+   min-width: 200px;
+  
+  ion-segment-button {
+    --padding-start: 0px;
+    --padding-end: 0px;
+    min-height: 28px;
+    
+    ion-label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+  }
+}
+
+.discount-section {
+  ion-note {
+    font-weight: bold;
+    color: var(--ion-color-primary);
+  }
+}
+
+.discount-radio-container {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  
+  .inline-radio-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+    
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      ion-radio {
+        margin: 0;
+        --color: var(--ion-color-medium);
+        --color-checked: var(--ion-color-primary);
+      }
+      
+      ion-label {
+        margin: 0;
+        font-size: 14px;
+        color: var(--ion-color-dark);
+        white-space: nowrap;
+      }
+    }
+  }
+}
+
+.discount-radio-container {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  
+  .inline-radio-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+    
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      ion-radio {
+        margin: 0;
+        --color: var(--ion-color-medium);
+        --color-checked: var(--ion-color-primary);
+      }
+      
+      ion-label {
+        margin: 0;
+        font-size: 14px;
+        color: var(--ion-color-dark);
+        white-space: nowrap;
+      }
+    }
+  }
+}
+
+// RTL Input styling for Arabic labels
+.rtl-input {
+  direction: rtl;
+  
+  ion-label.float-right {
+    text-align: right !important;
+    transform-origin: right top !important;
+    right: 0 !important;
+    left: auto !important;
+    
+    &.label-floating {
+      transform: translateY(-14px) scale(0.82) !important;
+      right: 0 !important;
+    }
+  }
+  
+  ion-input.text-right {
+    text-align: right !important;
+    --padding-start: 0;
+    --padding-end: 16px;
+    
+    input {
+      text-align: right !important;
+      direction: ltr; // Keep numbers LTR for better readability
+    }
+  }
+  
+  ion-note {
+    direction: ltr;
+  }
+}
+
+// Alternative approach if the above doesn't work perfectly
+.custom-rtl-input {
+  .item-native {
+    flex-direction: row-reverse;
+  }
+  
+  ion-label {
+    order: 2;
+    text-align: right;
+    margin-right: 0;
+    margin-left: 16px;
+  }
+  
+  ion-input {
+    order: 1;
+    text-align: right;
+    
+    input {
+      text-align: right !important;
+    }
+  }
+  
+  ion-note {
+    order: 3;
+  }
+}
+
+// Insufficient Stock Modal Styling
+.insufficient-stock-modal {
+  --height: 80vh;
+  --width: 90vw;
+  --max-width: 600px;
+  --border-radius: 12px;
+  
+  @media (max-width: 768px) {
+    --height: 95vh;
+    --width: 95vw;
+  }
+}
+
+// Top Card Organization Styling
+.top-card-row {
+  padding: 16px;
+  align-items: flex-start;
+  gap: 16px; // Replace offset with gap
+  
+  .account-column,
+  .invoice-type-column,
+  .category-column,
+  .date-comment-column,
+  .date-column {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    
+    .column-label {
+      display: block;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+      margin-bottom: 6px; // Reduced margin
+      font-size: 0.95rem;
+      height: 22px; // Fixed height for consistent alignment
+      line-height: 30px;
+    }
+  }
+  
+  // Align all form content at the same level
+  .account-column {
+    app-account-selector {
+      margin-top: 0;
+    }
+  }
+  
+  .invoice-type-column {
+    .invoice-type-section {
+      margin-top: 10px;
+      
+      .compact-segment {
+        margin-top: 0;
+        height: 60px; // Increased height for better alignment
+        display: flex;
+        align-items: center;
+      }
+    }
+  }
+  
+  .category-column {
+    .category-section {
+      margin-top: 10px;
+      
+      .compact-segment {
+        margin-top: 0;
+        height: 60px; // Increased height for better alignment
+        display: flex;
+        align-items: center;
+      }
+    }
+  }
+  
+  .date-comment-column {
+    .comment-input {
+      --padding-start: 0;
+      --padding-end: 0;
+      height: 48px; // Match other inputs
+      
+      ion-input {
+        --padding-top: 12px;
+        --padding-bottom: 12px;
+      }
+    }
+  }
+  
+  .date-column {
+    .date-input {
+      --padding-start: 0;
+      --padding-end: 0;
+      height: 48px; // Match other inputs
+      
+      ion-input {
+        --padding-top: 12px;
+        --padding-bottom: 12px;
+      }
+    }
+  }
+}
+
+// Responsive design for mobile
+@media (max-width: 768px) {
+  .top-card-row {
+    flex-direction: column;
+    
+    .account-column,
+    .invoice-type-column,
+    .date-comment-column {
+      size: 12;
+      padding: 8px 0;
+      margin-bottom: 16px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+// Table container and search styles
+.table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid var(--ion-color-light-shade);
+  border-radius: 8px;
+}
+
+.search-container {
+  width: 100%;
+  
+  .search-item {
+    --background: rgba(255, 255, 255, 0.1);
+    --border-radius: 20px;
+    --padding-start: 12px;
+    --padding-end: 12px;
+    margin: 0;
+    
+    .search-input {
+      --color: white;
+      --placeholder-color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+    }
+    
+    .search-navigation {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      
+      .search-results {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 12px;
+        margin-left: 8px;
+      }
+      
+      ion-button {
+        --color: rgba(255, 255, 255, 0.8);
+        --border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        margin: 0 2px;
+        
+        ion-icon {
+          font-size: 20px;
+        }
+      }
+    }
+  }
+}
+
+// Table row highlighting
+tr.search-match {
+  background-color: rgba(255, 235, 59, 0.2) !important;
+}
+
+tr.search-highlight {
+  background-color: rgba(255, 193, 7, 0.4) !important;
+  border: 2px solid var(--ion-color-warning);
+}
+
+// Highlight text
+mark {
+  background-color: yellow;
+  color: black;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+// Scrollbar styling for webkit browsers
+.table-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: var(--ion-color-light);
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: var(--ion-color-medium);
+  border-radius: 3px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--ion-color-dark);
+}
+
+/* ======================================
+   CATEGORY AND INVOICE TYPE SELECTOR STYLES
+   ====================================== */
+
+.category-section,
+.invoice-type-section {
+  margin-top: 0;
+  
+  .field-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ion-color-dark);
+    margin-bottom: 6px;
+  }
+}
+
+.compact-segment {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  min-height: 48px;
+  width: 100%;
+
+  ion-segment-button {
+    --background: transparent;
+    --background-checked: var(--ion-color-primary);
+    --color: var(--ion-color-dark);
+    --color-checked: white;
+    border-radius: 8px;
+    margin: 4px;
+    transition: all 0.3s ease;
+    min-height: 40px;
+    flex: 1;
+
+    &.segment-button-checked {
+      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+      transform: translateY(-1px);
+    }
+
+    &:hover:not(.segment-button-checked) {
+      background: rgba(74, 144, 226, 0.1);
+    }
+
+    span {
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 12px;
+      display: block;
+    }
+  }
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+  .compact-segment {
+    ion-segment-button {
+      span {
+        font-size: 12px;
+        padding: 6px 8px;
+      }
+    }
+  }
+  
+  .category-column {
+    .column-label {
+      font-size: 13px;
+    }
+  }
+  
+  .category-section {
+    .field-label {
+      font-size: 13px;
+    }
+  }
+}

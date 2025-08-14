@@ -1,0 +1,219 @@
+<ion-header class="modern-header" dir="rtl">
+  <ion-toolbar color="primary">
+    <ion-title class="header-title">
+      <ion-icon name="pricetag" class="title-icon"></ion-icon>
+      {{ mode === 'sales' ? 'تعديل أسعار البيع' : 'تعديل أسعار الشراء' }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()" fill="clear" class="close-btn">
+        <ion-icon name="close" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="modern-content" dir="rtl">
+  <!-- Adjustment Controls Section -->
+  <div class="adjustment-section">
+    <div class="control-card">
+      <div class="card-header">
+        <h3 class="section-title">
+          <ion-icon name="settings" color="primary"></ion-icon>
+          إعدادات التعديل
+        </h3>
+      </div>
+      <div class="card-content">
+        <!-- Adjustment Type Selection -->
+        <div class="adjustment-type-container">
+          <ion-segment 
+            [(ngModel)]="adjustmentType" 
+            (ionChange)="onAdjustmentTypeChange()"
+            class="modern-segment"
+          >
+            <ion-segment-button value="percentage" class="segment-btn">
+              <ion-icon name="percent"></ion-icon>
+              <ion-label>نسبة مئوية</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="amount" class="segment-btn">
+              <ion-icon name="cash"></ion-icon>
+              <ion-label>قيمة ثابتة</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+        </div>
+
+        <!-- Adjustment Value Input -->
+        <div class="value-input-container">
+          <ion-item class="modern-input" fill="outline">
+            <ion-label position="stacked">
+              {{ adjustmentType === 'percentage' ? 'نسبة التعديل (%)' : 'قيمة التعديل' }}
+            </ion-label>
+            <ion-input
+              #adjustmentInput
+              type="number"
+              [(ngModel)]="adjustmentValue"
+              (ngModelChange)="updatePreview()"
+              placeholder="{{ adjustmentType === 'percentage' ? 'مثال: 10 للزيادة، -10 للنقصان' : 'مثال: 5.50 للزيادة، -2.25 للنقصان' }}"
+              class="adjustment-input"
+            ></ion-input>
+            <ion-icon 
+              name="{{ adjustmentType === 'percentage' ? 'percent' : 'cash' }}" 
+              slot="end" 
+              color="primary"
+            ></ion-icon>
+          </ion-item>
+        </div>
+
+        <!-- Quick Adjustment Buttons -->
+        <div class="quick-actions">
+          <ion-button 
+            *ngFor="let preset of (adjustmentType === 'percentage' ? [2,5, 7, 10,15, -2,-5,-7,-10, -15] : [100, 200, 300, -100, -200,-300])"
+            size="small" 
+            fill="outline" 
+            color="primary"
+            (click)="setPresetValue(preset)"
+            class="quick-btn"
+          >
+            {{ preset > 0 ? '+' : '' }}{{ preset }}{{ adjustmentType === 'percentage' ? '%' : '' }}
+          </ion-button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Section -->
+  <div class="summary-section">
+    <ion-card class="summary-card">
+      <ion-card-header>
+        <ion-card-title class="section-title">
+          <ion-icon name="calculator" color="success"></ion-icon>
+          ملخص التعديل
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid class="summary-grid">
+          <ion-row>
+            <ion-col size="4">
+              <div class="summary-item">
+                <div class="summary-label">عدد الأصناف</div>
+                <div class="summary-value primary">{{ previewItems.length }}</div>
+              </div>
+            </ion-col>
+            <ion-col size="4">
+              <div class="summary-item">
+                <div class="summary-label">الإجمالي الحالي</div>
+                <div class="summary-value">{{ (getTotalOriginal() || 0).toFixed(2) }}</div>
+              </div>
+            </ion-col>
+            <ion-col size="4">
+              <div class="summary-item">
+                <div class="summary-label">الإجمالي الجديد</div>
+                <div class="summary-value success">{{ (getTotalNew() || 0).toFixed(2) }}</div>
+              </div>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="12">
+              <div class="difference-item">
+                <div class="difference-label">الفرق</div>
+                <div 
+                  class="difference-value"
+                  [class.positive]="getTotalDifference() > 0"
+                  [class.negative]="getTotalDifference() < 0"
+                >
+                  {{ getTotalDifference() > 0 ? '+' : '' }}{{ (getTotalDifference() || 0).toFixed(2) }}
+                </div>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Items Preview Section -->
+  <div class="preview-section" *ngIf="previewItems && previewItems.length > 0">
+    <ion-card class="items-card">
+      <ion-card-header>
+        <ion-card-title class="section-title">
+          <ion-icon name="eye" color="tertiary"></ion-icon>
+          معاينة الأصناف ({{ previewItems.length }})
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="items-container">
+          <div 
+            *ngFor="let item of previewItems; let i = index" 
+            class="item-preview"
+            [class.even]="i % 2 === 0"
+          >
+            <div class="item-info">
+              <div class="item-name">
+                <ion-icon name="cube" color="primary"></ion-icon>
+                {{ item.item_name }}
+              </div>
+              <div class="item-details">
+                <span class="quantity">الكمية: {{ item.qty }}</span>
+              </div>
+            </div>
+            <div class="price-comparison">
+              <div class="price-row">
+                <span class="price-label">{{ mode === 'sales' ? 'سعر البيع الحالي:' : 'سعر الشراء الحالي:' }}</span>
+                <span class="original-price">{{ getOriginalPrice(item).toFixed(2) }}</span>
+              </div>
+              <div class="price-row">
+                <span class="price-label">{{ mode === 'sales' ? 'سعر البيع الجديد:' : 'سعر الشراء الجديد:' }}</span>
+                <span 
+                  class="new-price"
+                  [class.increased]="getNewPrice(item) > getOriginalPrice(item)"
+                  [class.decreased]="getNewPrice(item) < getOriginalPrice(item)"
+                >
+                  {{ getNewPrice(item).toFixed(2) }}
+                </span>
+              </div>
+              <div class="price-difference" *ngIf="getNewPrice(item) !== getOriginalPrice(item)">
+                <ion-icon 
+                  [name]="getNewPrice(item) > getOriginalPrice(item) ? 'trending-up' : 'trending-down'"
+                  [color]="getNewPrice(item) > getOriginalPrice(item) ? 'success' : 'danger'"
+                ></ion-icon>
+                <span 
+                  [class.increased]="getNewPrice(item) > getOriginalPrice(item)"
+                  [class.decreased]="getNewPrice(item) < getOriginalPrice(item)"
+                >
+                  {{ getPriceDifference(item).toFixed(2) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
+
+<ion-footer class="modern-footer">
+  <ion-toolbar>
+    <div class="action-buttons">
+      <ion-button 
+        expand="block" 
+        color="medium" 
+        fill="outline"
+        (click)="cancel()"
+        class="cancel-btn"
+      >
+        <ion-icon name="close-circle" slot="start"></ion-icon>
+        إلغاء
+      </ion-button>
+      
+      <ion-button 
+        expand="block" 
+        color="primary"
+        (click)="applyChanges()"
+        class="apply-btn"
+        [disabled]="adjustmentValue === 0"
+      >
+        <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+        تطبيق التعديل
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>

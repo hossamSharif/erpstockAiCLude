@@ -1,0 +1,148 @@
+<ion-header class="transparent-header">
+  <ion-toolbar class="transparent-toolbar">
+    <ion-buttons slot="start">
+      <ion-button (click)="navigateBack()" fill="clear">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title class="glass-title">
+      {{ mode === 'create' ? 'إنشاء حساب جديد' : 'تعديل الحساب' }}
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="modern-content">
+  <div class="form-container">
+    <!-- Account Data Card -->
+    <ion-card class="account-card">
+      <ion-card-header>
+        <ion-card-title>بيانات الحساب</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="form-grid">
+          <!-- Account Name -->
+          <div class="form-group">
+            <ion-label position="stacked" class="form-label">اسم الحساب *</ion-label>
+            <ion-input
+              [(ngModel)]="payInvo.sub_name"
+              placeholder="أدخل اسم الحساب"
+              class="form-input"
+              type="text"
+              required>
+            </ion-input>
+          </div>
+
+          <!-- Main Account -->
+          <div class="form-group">
+            <ion-label position="stacked" class="form-label">الحساب الرئيسي *</ion-label>
+            <ion-select
+              [(ngModel)]="selectedMainAccount.ac_name"
+              (ionChange)="pickMainAccount($event)"
+              placeholder="اختر الحساب الرئيسي"
+              class="form-select"
+              interface="alert"
+              [interfaceOptions]="{ header: 'اختر الحساب الرئيسي' }">
+              <ion-select-option *ngFor="let mainAcc of main_account" [value]="mainAcc.ac_name">
+                {{mainAcc.ac_name}}
+              </ion-select-option>
+            </ion-select>
+            <div *ngIf="main_account.length === 0" class="loading-text">
+              جاري تحميل الحسابات الرئيسية...
+            </div>
+          </div>
+
+          <!-- Account Code -->
+          <div class="form-group">
+            <ion-label position="stacked" class="form-label">كود الحساب</ion-label>
+            <ion-input
+              [(ngModel)]="payInvo.sub_code"
+              placeholder="أدخل كود الحساب"
+              class="form-input"
+              type="text">
+            </ion-input>
+          </div>
+
+          <!-- Opening Balance -->
+          <div class="form-group">
+            <ion-label position="stacked" class="form-label">الرصيد الافتتاحي</ion-label>
+            <ion-input
+              [(ngModel)]="payInvo.sub_balance"
+              placeholder="0.00"
+              class="form-input"
+              type="number"
+              step="0.01">
+            </ion-input>
+          </div>
+
+
+          <!-- Account Category -->
+          <div class="form-group">
+            <ion-label position="stacked" class="form-label">تصنيف الحساب</ion-label>
+            <ion-select
+              [value]="selectedCategory.cat_name"
+              (ionChange)="pickAccountCategory($event)"
+              placeholder="اختر التصنيف"
+              class="form-select"
+              interface="alert"
+              [interfaceOptions]="{ header: 'اختر التصنيف' }">
+              <ion-select-option *ngFor="let category of account_category" [value]="category.cat_name">
+                {{category.cat_name}}
+              </ion-select-option>
+            </ion-select>
+            <div *ngIf="account_category.length === 0" class="loading-text">
+              جاري تحميل التصنيفات...
+            </div>
+          </div>
+
+          <!-- Phone - Only show for categories 1 and 2 (عملاء, موردين) -->
+          <div class="form-group" *ngIf="shouldShowPhoneAndAddress()">
+            <ion-label position="stacked" class="form-label">الهاتف</ion-label>
+            <ion-input
+              [(ngModel)]="payInvo.phone"
+              placeholder="أدخل رقم الهاتف"
+              class="form-input"
+              type="tel">
+            </ion-input>
+          </div>
+
+          <!-- Address - Only show for categories 1 and 2 (عملاء, موردين) -->
+          <div class="form-group full-width" *ngIf="shouldShowPhoneAndAddress()">
+            <ion-label position="stacked" class="form-label">العنوان</ion-label>
+            <ion-textarea
+              [(ngModel)]="payInvo.address"
+              placeholder="أدخل العنوان"
+              class="form-textarea"
+              rows="3"
+              maxlength="500">
+            </ion-textarea>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons-container">
+          <div class="buttons-row">
+            <ion-button 
+              (click)="save()" 
+              fill="solid" 
+              color="primary" 
+              class="action-btn save-btn"
+              [disabled]="saving">
+              <ion-icon *ngIf="!saving" name="checkmark-outline" slot="start"></ion-icon>
+              <ion-spinner *ngIf="saving" name="crescent" slot="start"></ion-spinner>
+              {{ mode === 'create' ? 'إنشاء الحساب' : 'تحديث الحساب' }}
+            </ion-button>
+            <ion-button 
+              *ngIf="mode === 'edit'" 
+              (click)="deleteAccount()" 
+              fill="solid" 
+              color="danger" 
+              class="action-btn delete-btn">
+              <ion-icon name="trash-outline" slot="start"></ion-icon>
+              حذف الحساب
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

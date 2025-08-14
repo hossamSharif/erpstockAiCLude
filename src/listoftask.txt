@@ -1,0 +1,14 @@
+ 
+remove sorting and aply new sorting 
+
+ 
+add new item and update functioanlity 
+
+category pages add remove 
+
+printing functioanlity (xls and pdf ) for specific items (selected item from table ) 
+
+
+
+item-selector : add category filter to menue 
+

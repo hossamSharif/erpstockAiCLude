@@ -1,0 +1,1400 @@
+.custInput {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 5px 0;
+}
+
+.red {
+  --background: #ffebee;
+  --color: #c62828;
+}
+
+.darko {
+  --background: #f5f5f5;
+  --color: #333;
+}
+
+.cust_Toast {
+  --border-radius: 10px;
+  --box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+// New layout for label with buttons in top left
+.label-with-buttons-container {
+  direction: rtl;
+  display: flex;
+  justify-content: space-between;
+  align-items: center; 
+  position: relative;
+  text-align: right;
+  
+  .action-buttons-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    order: 1;
+  }
+  
+  .item-label-center {
+    flex: 1;
+    text-align: center;
+    order: 2;
+  }
+}
+
+// Left positioned refresh button
+.item-refresh-btn-left {
+  --color: var(--ion-color-success);
+  --padding-start: 3px;
+  --padding-end: 3px;
+  height: 32px;
+  width: 32px;
+  margin: 0;
+  
+  ion-icon {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+
+    &.spin {
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  &:hover {
+    --color: var(--ion-color-success-shade);
+    --background: rgba(var(--ion-color-success-rgb), 0.1);
+  }
+
+  &[disabled] {
+    --color: var(--ion-color-medium);
+    opacity: 0.5;
+  }
+}
+
+// Left positioned add item button
+.add-item-btn-left {
+  --color: var(--ion-color-success);
+  --padding-start: 3px;
+  --padding-end: 3px;
+  height: 32px;
+  width: 32px;
+  margin: 0;
+  
+  ion-icon {
+    font-size: 18px;
+  }
+
+  &:hover {
+    --color: var(--ion-color-success-shade);
+    --background: rgba(var(--ion-color-success-rgb), 0.1);
+  }
+}
+
+// Left positioned loading spinner
+.item-loading-spinner-left {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+// Filter Container inside Dropdown Styles
+.dropdown-filter-container {
+  background: var(--ion-color-light-tint);
+  border-bottom: 1px solid var(--ion-color-light-shade);
+}
+
+.filter-toggle-header {
+  padding: 8px 12px;
+  background: var(--ion-color-light);
+  
+  .filter-toggle-btn {
+    --padding-start: 0;
+    --padding-end: 0;
+    margin: 0;
+    width: 100%;
+    justify-content: space-between;
+    display: flex;
+    align-items: center;
+    
+    .button-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+    
+    ion-icon {
+      font-size: 16px;
+      margin-left: 6px;
+      transition: transform 0.2s ease;
+      order: 1;
+    }
+    
+    ion-label {
+      font-size: 14px;
+      font-weight: 500;
+      order: 2;
+      flex: 1;
+      text-align: right;
+      margin-right: 8px;
+    }
+    
+    .results-count {
+      font-size: 12px;
+      font-weight: 400;
+      order: 3;
+      margin-left: auto;
+    }
+  }
+}
+
+.filter-buttons-wrapper {
+  padding: 12px;
+  animation: slideDown 0.2s ease-out;
+}
+
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+  direction: rtl;
+}
+
+.filter-button {
+  --border-radius: 20px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 6px;
+  --padding-bottom: 6px;
+  height: 32px;
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+  text-transform: none;
+  
+  // Unselected state (outline with primary color)
+  &[fill="outline"] {
+    --border-color: var(--ion-color-primary);
+    --border-width: 1.5px;
+    --color: var(--ion-color-primary);
+    --background: transparent;
+    
+    &:hover {
+      --background: rgba(var(--ion-color-primary-rgb), 0.1);
+    }
+    
+    &:active {
+      --background: rgba(var(--ion-color-primary-rgb), 0.2);
+    }
+  }
+  
+  // Selected state (solid primary background)
+  &[fill="solid"] {
+    --background: var(--ion-color-primary);
+    --color: white;
+    
+    &:hover {
+      --background: var(--ion-color-primary-shade);
+    }
+    
+    &:active {
+      --background: var(--ion-color-primary-shade);
+    }
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+  }
+}
+
+// Override for dropdown container when filters are inside
+.dropdown-container {
+  .dropdown-filter-container + .item-dropdown {
+    border-top: none;
+  }
+}
+
+// Item Selector Enhanced Styles - Match other input fields
+.item-selector-wrapper {
+  width: 100%;
+  margin: 5px 0; // Same as other custInput fields
+  
+  // Input container wrapper for proper dropdown positioning
+  .input-container-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  
+  // Make it look exactly like other input fields (quantity, pay_price, etc)
+  .item-selector-input {
+    --background: transparent;
+    --color: var(--ion-color-dark);
+    --placeholder-color: var(--ion-color-medium);
+    width: 100%;
+    direction: rtl;
+    text-align: right;
+    
+    // Fix text overflow for long item names - minimal padding to maximize text space
+    --padding-start: 12px; // Minimal padding for text space
+    --padding-end: 45px; // Space for clear button only on right
+    
+    // Enhanced text overflow handling for long item names - target all possible input elements
+    input,
+    .native-input,
+    .input-wrapper input {
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      max-width: calc(100% - 80px) !important; // Account for buttons
+      display: block !important;
+    }
+
+    &[disabled] {
+      --background: var(--ion-color-light);
+      --color: var(--ion-color-medium);
+      cursor: not-allowed;
+    }
+  }
+
+  // Refresh button positioned at the very beginning of right side
+  .item-refresh-btn {
+    --color: var(--ion-color-success);
+    --padding-start: 3px;
+    --padding-end: 3px;
+    height: 30px;
+    width: 30px;
+    margin: 0;
+    position: absolute;
+    right: 40px; // At the beginning of right side, before clear button
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000; // Higher z-index to ensure visibility
+    
+    ion-icon {
+      font-size: 16px;
+      transition: transform 0.3s ease;
+
+      &.spin {
+        animation: spin 1s linear infinite;
+      }
+    }
+
+    &:hover {
+      --color: var(--ion-color-success-shade);
+      --background: rgba(var(--ion-color-success-rgb), 0.1);
+    }
+
+    &[disabled] {
+      --color: var(--ion-color-medium);
+      opacity: 0.5;
+    }
+  }
+
+  // Loading spinner positioning - replace refresh button when loading
+  .item-loading-spinner {
+    position: absolute;
+    right: 45px; // Same area as refresh button
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    z-index: 999;
+  }
+}
+
+// Dropdown container styles
+.dropdown-container {
+  position: fixed;
+  z-index: 10000;
+  background: white;
+  border: 1px solid var(--ion-color-light);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 4px;
+  min-width: 250px;
+
+  .dropdown-header {
+    background: var(--ion-color-light-tint);
+    border-bottom: 1px solid var(--ion-color-light-shade);
+    padding: 8px;
+  }
+
+  .item-dropdown {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+
+    .item-item {
+      --background: transparent;
+      --border-color: transparent;
+      --color: var(--ion-color-dark);
+      --padding-start: 12px;
+      --padding-end: 12px;
+      --min-height: 60px;
+      direction: rtl;
+      text-align: right;
+
+      &:hover {
+        --background: var(--ion-color-light);
+      }
+
+      &:active {
+        --background: rgba(var(--ion-color-primary-rgb), 0.1);
+      }
+
+      &.highlighted {
+        --background: rgba(var(--ion-color-primary-rgb), 0.1);
+        border-left: 3px solid var(--ion-color-primary);
+      }
+
+      ion-label {
+        margin: 0;
+
+        h3 {
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--ion-color-dark);
+          margin: 0 0 4px 0;
+        }
+
+        .item-desc {
+          font-size: 12px;
+          color: var(--ion-color-medium);
+          margin: 2px 0;
+        }
+
+        .item-prices-compact {
+          display: flex;
+          gap: 12px;
+          font-size: 11px;
+          margin-top: 4px;
+
+          .price-sale {
+            color: var(--ion-color-success);
+            font-weight: 600;
+          }
+
+          .price-purchase {
+            color: var(--ion-color-danger);
+            font-weight: 600;
+          }
+
+          .stock-qty {
+            color: var(--ion-color-dark);
+            font-weight: 500;
+          }
+        }
+      }
+    }
+
+    .no-results {
+      --color: var(--ion-color-medium);
+      --padding-start: 12px;
+      --padding-end: 12px;
+      text-align: center;
+      font-style: italic;
+
+      ion-label p {
+        margin: 0;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// Spin animation for refresh button
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive adjustments for mobile
+@media (max-width: 768px) {
+  .label-with-buttons-container {
+    .action-buttons-left {
+      gap: 2px;
+    }
+    
+    .item-refresh-btn-left,
+    .add-item-btn-left {
+      height: 28px;
+      width: 28px;
+      --padding-start: 2px;
+      --padding-end: 2px;
+
+      ion-icon {
+        font-size: 16px;
+      }
+    }
+
+    .item-loading-spinner-left {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .item-label-center {
+      font-size: 14px;
+    }
+  }
+  
+  // Mobile filter styles
+  .filter-buttons {
+    gap: 6px;
+  }
+  
+  .filter-button {
+    --padding-start: 10px;
+    --padding-end: 10px;
+    --padding-top: 4px;
+    --padding-bottom: 4px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  .filter-toggle-header .filter-toggle-btn {
+    ion-icon {
+      font-size: 14px;
+      margin-left: 4px;
+    }
+    
+    ion-label {
+      font-size: 13px;
+    }
+    
+    .results-count {
+      font-size: 11px;
+    }
+  }
+  
+  .item-selector-wrapper {
+    .item-selector-input {
+      font-size: 13px;
+      --padding-start: 10px; // Minimal padding to maximize text space
+      --padding-end: 40px; // Space for clear button only
+      
+      // Enhanced mobile text overflow
+      input,
+      .native-input,
+      .input-wrapper input {
+        max-width: calc(100% - 45px) !important;
+        font-size: 13px !important;
+      }
+    }
+
+    .item-refresh-btn {
+      right: 36px; // Position before clear button on mobile
+      height: 26px;
+      width: 26px;
+      --padding-start: 2px;
+      --padding-end: 2px;
+
+      ion-icon {
+        font-size: 14px;
+      }
+    }
+
+    .item-loading-spinner {
+      right: 41px; // Match refresh button position on mobile
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  .dropdown-container {
+    max-height: 200px;
+
+    .item-dropdown .item-item {
+      --min-height: 50px;
+
+      ion-label {
+        h3 {
+          font-size: 13px;
+        }
+
+        .item-desc {
+          font-size: 11px;
+        }
+
+        .item-prices-compact {
+          font-size: 10px;
+        }
+      }
+    }
+  }
+}
+
+// Global fix for ion-input text overflow in item selector
+.item-selector-wrapper {
+  ion-input {
+    // Force text overflow for all nested input elements
+    .native-input,
+    input {
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      width: 100% !important;
+    }
+  }
+  
+  // Additional CSS to handle ion-input wrapper
+  .input-wrapper {
+    overflow: hidden !important;
+    
+    input {
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+  }
+}
+
+// Stock info styles
+.stock-info-container {
+  margin-top: 8px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.stock-info-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+
+  ion-text {
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .qty-value {
+    font-weight: bold;
+    font-size: 16px;
+  }
+
+  .loading-text {
+    color: var(--ion-color-primary);
+    font-size: 12px;
+  }
+
+  .error-text {
+    font-size: 12px;
+  }
+
+  .refresh-btn {
+    --padding-start: 4px;
+    --padding-end: 4px;
+    margin: 0;
+    height: 24px;
+    width: 24px;
+
+    ion-icon {
+      font-size: 16px;
+    }
+  }
+}
+
+.error-line {
+  .refresh-btn {
+    ion-icon {
+      color: var(--ion-color-danger) !important;
+    }
+  }
+}
+
+ion-spinner {
+  width: 16px;
+  height: 16px;
+}
+
+.new-item-btn {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  margin-left: 4px;
+
+  ion-icon {
+    font-size: 20px;
+  }
+}
+
+.button-labels {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+  padding-right: 8px;
+
+  .btn-label {
+    font-size: 11px;
+    color: var(--ion-color-primary);
+    margin-left: 32px; // Adjust based on button spacing
+  }
+}
+
+// Category Selector Styles - Like account-selector
+.category-selector-container {
+  padding: 8px 16px;
+  background: var(--ion-color-light);
+  border-bottom: 1px solid var(--ion-color-light-shade);
+  position: relative;
+  
+  .category-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    
+    .category-input {
+      --background: #ffffff;
+      --border-radius: 6px;
+      --padding-start: 12px;
+      --padding-end: 35px; // Space for dropdown icon
+      --color: var(--ion-color-dark);
+      --placeholder-color: var(--ion-color-medium);
+      border: 1.5px solid var(--ion-color-light);
+      border-radius: 6px;
+      height: 36px;
+      font-size: 13px;
+      direction: rtl;
+      text-align: right;
+      
+      &:focus {
+        --border-color: var(--ion-color-primary);
+        box-shadow: 0 0 0 2px rgba(var(--ion-color-primary-rgb), 0.2);
+      }
+      
+      &.has-focus {
+        --border-color: var(--ion-color-primary);
+      }
+    }
+    
+    .category-dropdown-icon {
+      position: absolute;
+      right: 10px;
+      color: var(--ion-color-medium);
+      font-size: 16px;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+      z-index: 10;
+      
+      &.rotated {
+        transform: rotate(180deg);
+      }
+    }
+  }
+}
+
+// Category Dropdown Styles - Like account-selector
+.category-dropdown-container {
+  position: fixed;
+  z-index: 10000;
+  background: white;
+  border: 1px solid var(--ion-color-light);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  max-height: 160px;
+  overflow-y: auto;
+  margin-top: 4px;
+  min-width: 200px;
+
+  .category-dropdown {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+
+    .category-item {
+      --background: transparent;
+      --border-color: transparent;
+      --color: var(--ion-color-dark);
+      --padding-start: 12px;
+      --padding-end: 12px;
+      --min-height: 40px;
+      direction: rtl;
+      text-align: right;
+
+      &:hover {
+        --background: var(--ion-color-light);
+      }
+
+      &:active {
+        --background: rgba(var(--ion-color-primary-rgb), 0.1);
+      }
+
+      &.highlighted {
+        --background: rgba(var(--ion-color-primary-rgb), 0.1);
+        border-left: 3px solid var(--ion-color-primary);
+      }
+
+      ion-label {
+        margin: 0;
+
+        h3 {
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--ion-color-dark);
+          margin: 0;
+        }
+      }
+    }
+  }
+}
+
+// Responsive design for category selector
+@media (max-width: 480px) {
+  .category-selector-container {
+    padding: 6px 12px;
+    
+    .category-input-wrapper {
+      .category-input {
+        height: 32px;
+        font-size: 12px;
+        --padding-start: 10px;
+        --padding-end: 30px;
+      }
+      
+      .category-dropdown-icon {
+        right: 8px;
+        font-size: 14px;
+      }
+    }
+  }
+  
+  .category-dropdown-container {
+    max-height: 120px;
+    
+    .category-dropdown .category-item {
+      --min-height: 36px;
+      
+      ion-label h3 {
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+// Loading state
+.popover-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 16px;
+
+  ion-spinner {
+    --color: var(--ion-color-primary);
+    transform: scale(1.2);
+  }
+
+  ion-text {
+    color: var(--ion-color-medium);
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+.items-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0; // Important for flex scrolling
+}
+
+ 
+ 
+// Item content layout
+.item-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+gap: 6px !important;}
+
+ 
+// Item header (name + status)
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.item-name {
+   
+  font-weight: bold;
+  color: var(--ion-color-dark);
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+  flex: 1;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+.stock-status {
+  flex-shrink: 0;
+
+  ion-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    &[color="danger"] {
+      --background: var(--ion-color-danger);
+      --color: white;
+    }
+
+    &[color="warning"] {
+      --background: var(--ion-color-warning);
+      --color: var(--ion-color-warning-contrast);
+    }
+
+    &[color="success"] {
+      --background: var(--ion-color-success);
+      --color: white;
+    }
+  }
+}
+
+// Prices section
+.item-prices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.price-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.02);
+  padding: 2px 5px !important;
+  &.sale-price {
+    background: rgba(var(--ion-color-success-rgb), 0.1);
+
+    .price-icon {
+      color: var(--ion-color-success);
+      font-size: 14px;
+    }
+
+    .price-value {
+      color: var(--ion-color-success);
+      font-weight: 700;
+    }
+
+    .price-label {
+      color: var(--ion-color-success-shade);
+    }
+  }
+
+  &.purchase-price {
+    background: rgba(var(--ion-color-danger-rgb), 0.1);
+
+    .price-icon {
+      color: var(--ion-color-danger);
+      font-size: 14px;
+    }
+
+    .price-value {
+      color: var(--ion-color-danger);
+      font-weight: 300;
+    }
+
+    .price-label {
+      color: var(--ion-color-danger-shade);
+    }
+  }
+}
+
+.price-icon {
+  font-size: 10px;
+  min-width: 10px;
+}
+
+.price-label {
+  font-size: 8px;
+  font-weight: bold;
+  min-width: 25px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.price-value {
+  font-size: 10px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+// Stock info
+.stock-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+ padding: 2px 5px !important;
+  background: rgba(var(--ion-color-medium-rgb), 0.1);
+  border-radius: 6px;
+}
+
+.stock-label {
+  font-size: 11px;
+  color: var(--ion-color-medium);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.stock-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+}
+
+// Selection indicator
+.selection-icon {
+  font-size: 20px;
+  animation: checkmark-bounce 0.3s ease;
+}
+
+@keyframes checkmark-bounce {
+  0% {
+    transform: scale(0);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+// No results state
+.no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 12px;
+  text-align: center;
+
+  ion-icon {
+    font-size: 48px;
+    opacity: 0.5;
+  }
+
+  ion-text {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+// Navigation hint
+.navigation-hint {
+  padding: 12px 16px;
+  background: var(--ion-color-light-tint);
+  border-top: 1px solid var(--ion-color-light-shade);
+  text-align: center;
+
+  ion-text {
+    font-size: 11px;
+    color: var(--ion-color-medium);
+    line-height: 1.4;
+  }
+}
+
+ 
+.popover-item {
+  --inner-margin-top: 8px !important;
+  --inner-padding-top: 8px !important;
+  --inner-padding-bottom: 8px !important;
+
+    &.keyboard-selected {
+    --background: #514e4e !important;  // Dark gray background
+    --color: white !important;
+    transform: translateX(-4px);
+    box-shadow: 4px 0 12px rgba(74, 74, 74, 0.3);
+    border-left: 4px solid #333333;  // Darker gray border
+    
+    .item-name {
+      color: white !important;
+      font-weight: 700 !important;
+    }
+    
+    .price-value {
+      color: rgba(255, 255, 255, 0.95) !important;
+      font-weight: 600 !important;
+    }
+    
+    .price-label, .stock-label {
+      color: rgba(255, 255, 255, 0.85) !important;
+    }
+    
+    .price-icon {
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    .stock-value {
+      color: rgba(255, 255, 255, 0.95) !important;
+      font-weight: 600 !important;
+    }
+    
+    ion-badge {
+      --background: rgba(255, 255, 255, 0.25) !important;
+      --color: white !important;
+      font-weight: 600 !important;
+    }
+    
+    // Make price items more visible on dark background
+    .price-item {
+      &.sale-price {
+        background: rgba(255, 255, 255, 0.15) !important;
+      }
+      
+      &.purchase-price {
+        background: rgba(255, 255, 255, 0.15) !important;
+      }
+    }
+    
+    .stock-info {
+      background: rgba(255, 255, 255, 0.15) !important;
+    }
+  }
+}
+
+// Smooth scrolling
+.popover-content {
+  scroll-behavior: smooth;
+}
+
+// Custom scrollbar
+.popover-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.popover-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.popover-content::-webkit-scrollbar-thumb {
+  background: var(--ion-color-medium-tint);
+  border-radius: 2px;
+}
+
+.popover-content::-webkit-scrollbar-thumb:hover {
+  background: var(--ion-color-medium);
+}
+
+// Add this to your existing SCSS file
+:host ::ng-deep .item-selector-popover {
+  width: min(280px, 75vw) !important;
+  height: min(320px, 45vh) !important;
+  max-width: 75vw !important;
+  max-height: 45vh !important;
+  
+  .popover-content {
+    max-height: calc(min(320px, 45vh) - 45px) !important;
+  }
+  
+  ion-toolbar {
+    min-height: 45px !important;
+  }
+}
+
+
+// Safe area adjustments for mobile devices
+@supports (padding: max(0px)) {
+  :host ::ng-deep .item-selector-popover {
+    .popover-content {
+      padding-left: max(8px, env(safe-area-inset-left));
+      padding-right: max(8px, env(safe-area-inset-right));
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+  }
+}
+
+
+
+:host ::ng-deep .item-selector-popover {
+  // Ensure popover stays positioned relative to trigger
+  position: absolute !important;
+  
+  // Prevent popover from going to top of screen
+  &.popover-desktop {
+    position: absolute !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+  }
+}
+
+// Fix for mobile positioning
+@media (max-width: 768px) {
+  :host ::ng-deep .item-selector-popover {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}
+
+
+ 
+
+// CSS for single-line stock display
+.stock-display-container {
+  margin-top: 5px;
+}
+
+.stock-info-single-line {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 4px;
+  width: 100%;
+  overflow-x: auto;
+  
+  .stock-section,
+  .report-section,
+  .price-info-section,
+  .action-button-section {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  
+  .stock-section {
+    .qty-value {
+      font-weight: bold;
+      font-size: 16px;
+    }
+    
+    .refresh-btn {
+      --padding-start: 4px;
+      --padding-end: 4px;
+      margin: 0;
+      height: 24px;
+      width: 24px;
+      
+      ion-icon {
+        font-size: 16px;
+      }
+    }
+  }
+  
+  .report-section,
+  .action-button-section {
+    ion-button {
+      --padding-start: 6px;
+      --padding-end: 6px;
+      --padding-top: 4px;
+      --padding-bottom: 4px;
+      margin: 0;
+      min-height: 28px;
+      
+      ion-icon {
+        font-size: 16px;
+      }
+    }
+  }
+  
+  ion-text {
+    font-size: 14px;
+    margin: 0;
+  }
+  
+  ion-label {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+// Responsive design for smaller screens
+@media (max-width: 768px) {
+  .stock-info-single-line {
+    gap: 2px;
+    font-size: 12px;
+    
+    .stock-section,
+    .report-section,
+    .price-info-section,
+    .action-button-section {
+      gap: 2px;
+    }
+    
+    ion-text {
+      font-size: 12px;
+    }
+    
+    ion-label {
+      font-size: 12px;
+    }
+    
+    .report-section,
+    .action-button-section {
+      ion-button {
+        --padding-start: 4px;
+        --padding-end: 4px;
+        --padding-top: 2px;
+        --padding-bottom: 2px;
+        min-height: 24px;
+        
+        ion-icon {
+          font-size: 14px;
+        }
+      }
+    }
+  }
+}
+
+
+//
+// Add this CSS for the warning border
+:host ::ng-deep .qty-warning-border {
+  border: 2px solid #ff4444 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 8px rgba(255, 68, 68, 0.3) !important;
+  animation: warningPulse 0.5s ease-in-out;
+}
+
+@keyframes warningPulse {
+  0% {
+    box-shadow: 0 0 8px rgba(255, 68, 68, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(255, 68, 68, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 8px rgba(255, 68, 68, 0.3);
+  }
+}
+
+// Alternative approach using CSS class on ion-item
+:host ::ng-deep ion-item.qty-warning {
+  --border-color: #ff4444 !important;
+  --border-width: 2px !important;
+  --border-style: solid !important;
+  
+  ion-input {
+    --border-color: #ff4444 !important;
+    --border-width: 2px !important;
+  }
+}
+
+// Fix for تفاصيل الصنف button click behavior and layout
+.stock-info-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  
+  .price-info-section {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+  }
+  
+  .action-button-section {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  
+  .details-button {
+    --padding-start: 8px;
+    --padding-end: 8px;
+    --padding-top: 6px;
+    --padding-bottom: 6px;
+    margin: 0;
+    min-height: 32px;
+    cursor: pointer !important;
+    
+    &:hover {
+      --background: rgba(var(--ion-color-primary-rgb), 0.1);
+      cursor: pointer !important;
+    }
+    
+    &:active {
+      --background: rgba(var(--ion-color-primary-rgb), 0.2);
+    }
+    
+    ion-icon {
+      font-size: 16px;
+      margin-right: 4px;
+    }
+  }
+  
+  // Generic button fix
+  ion-button {
+    cursor: pointer !important;
+    
+    &:hover {
+      cursor: pointer !important;
+    }
+    
+    ion-text, ion-icon {
+      cursor: pointer !important;
+      pointer-events: all !important;
+    }
+  }
+}
+
+// Dark theme support
+@media (prefers-color-scheme: dark) {
+  .search-input-wrapper {
+    .item-input {
+      --background: var(--ion-color-step-50);
+      --color: var(--ion-color-dark-contrast);
+      border-color: var(--ion-color-step-200);
+    }
+  }
+
+  .dropdown-container {
+    background: var(--ion-color-step-50);
+    border-color: var(--ion-color-step-200);
+
+    .item-dropdown .item-item {
+      --color: var(--ion-color-dark-contrast);
+
+      &:hover {
+        --background: var(--ion-color-step-100);
+      }
+
+      ion-label h3 {
+        color: var(--ion-color-dark-contrast);
+      }
+    }
+  }
+}

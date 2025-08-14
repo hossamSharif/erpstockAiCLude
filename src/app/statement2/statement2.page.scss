@@ -1,0 +1,988 @@
+/* Modern Statement2 Page Styles - Following spend_record2 and sub_account2 patterns */
+
+/* ======================================
+   BASE STYLES - Using Modern Glass Design
+   ====================================== */
+
+.modern-content {
+  --background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1), 
+    rgba(255, 255, 255, 0.05)
+  );
+  --color: var(--ion-color-dark);
+  min-height: 100vh;
+  padding: 8px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      45deg,
+      rgba(74, 144, 226, 0.1),
+      rgba(80, 227, 194, 0.1),
+      rgba(245, 166, 35, 0.1)
+    );
+    animation: gradientShift 15s ease infinite;
+    z-index: -1;
+  }
+}
+
+@keyframes gradientShift {
+  0%, 100% { 
+    background: linear-gradient(45deg, rgba(74, 144, 226, 0.1), rgba(80, 227, 194, 0.1), rgba(245, 166, 35, 0.1)); 
+  }
+  50% { 
+    background: linear-gradient(225deg, rgba(245, 166, 35, 0.1), rgba(74, 144, 226, 0.1), rgba(80, 227, 194, 0.1)); 
+  }
+}
+
+/* ======================================
+   LOADING STYLES
+   ====================================== */
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  gap: 16px;
+
+  ion-spinner {
+    width: 48px;
+    height: 48px;
+    --color: var(--ion-color-primary);
+  }
+
+  .loading-text {
+    color: var(--ion-color-medium);
+    font-size: 14px;
+    margin: 0;
+  }
+}
+
+/* ======================================
+   MAIN CONTAINER AND FORM STYLES
+   ====================================== */
+
+.main-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ======================================
+   CARD STYLES - Following spend_record2 pattern
+   ====================================== */
+
+.form-card, .info-card, .table-card, .mobile-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  margin: 0;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 12px 48px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  
+  &.compact-card {
+    border-radius: 12px;
+    
+    .compact-content {
+      padding: 12px 16px;
+    }
+  }
+}
+
+.card-header, .table-header, .mobile-header {
+  background: linear-gradient(135deg, 
+    rgba(74, 144, 226, 0.1), 
+    rgba(80, 227, 194, 0.1)
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px;
+
+  .card-title, .table-title, .mobile-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ion-color-dark);
+    margin: 0;
+    
+    .transaction-count {
+      font-size: 14px;
+      color: var(--ion-color-medium);
+      font-weight: 400;
+    }
+  }
+}
+
+.compact-content, .info-content, .table-content, .mobile-content {
+  padding: 20px;
+}
+
+.compact-content {
+  padding: 10px 16px;
+}
+
+/* ======================================
+   MAIN ROW LAYOUT
+   ====================================== */
+
+.main-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.account-section {
+  flex: 1;
+  width: 50%;
+}
+
+.search-type-section {
+  flex: 1;
+  width: 50%;
+}
+
+.field-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ion-color-dark);
+  margin-bottom: 6px;
+}
+
+.compact-segment {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  min-height: 48px;
+  width: 100%;
+
+  ion-segment-button {
+    --background: transparent;
+    --background-checked: var(--ion-color-primary);
+    --color: var(--ion-color-dark);
+    --color-checked: white;
+    border-radius: 8px;
+    margin: 4px;
+    transition: all 0.3s ease;
+    min-height: 40px;
+    flex: 1;
+
+    &.segment-button-checked {
+      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+      transform: translateY(-1px);
+    }
+
+    &:hover:not(.segment-button-checked) {
+      background: rgba(74, 144, 226, 0.1);
+    }
+
+    span {
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 12px;
+      display: block;
+    }
+  }
+}
+
+/* ======================================
+   FIELD STYLES - Following cash2 pattern for account selection
+   ====================================== */
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.field-label-right {
+  min-width: 120px;
+  font-weight: 500;
+  color: var(--ion-color-dark);
+  text-align: right;
+}
+
+.field-with-balance {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-with-icon {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+
+  .readonly-input {
+    --background: rgba(255, 255, 255, 0.9);
+    --border-color: rgba(0, 0, 0, 0.2);
+    --border-width: 1px;
+    --border-style: solid;
+    --border-radius: 12px;
+    --padding-start: 16px;
+    --padding-end: 45px;
+    --color: var(--ion-color-dark);
+    --placeholder-color: var(--ion-color-medium);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 48px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    
+    &::part(native) {
+      cursor: pointer;
+    }
+  }
+
+  .dropdown-icon {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ion-color-medium);
+    font-size: 18px;
+    pointer-events: none;
+    transition: all 0.3s ease;
+  }
+
+  &:hover {
+    .readonly-input {
+      --background: rgba(255, 255, 255, 1);
+      border-color: var(--ion-color-primary);
+      box-shadow: 0 4px 16px rgba(74, 144, 226, 0.2);
+      transform: translateY(-1px);
+    }
+    
+    .dropdown-icon {
+      color: var(--ion-color-primary);
+      transform: translateY(-50%) scale(1.1);
+    }
+  }
+
+  &:active {
+    .readonly-input {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* ======================================
+   FILTER SEGMENT - Following spend_record2 pattern
+   ====================================== */
+
+.filter-segment {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  ion-segment-button {
+    --background: transparent;
+    --background-checked: var(--ion-color-primary);
+    --color: var(--ion-color-dark);
+    --color-checked: white;
+    border-radius: 8px;
+    margin: 4px;
+    transition: all 0.3s ease;
+
+    &.segment-button-checked {
+      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    }
+
+    .segment-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px;
+
+      ion-icon {
+        font-size: 18px;
+      }
+
+      span {
+        font-size: 12px;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+/* ======================================
+   FILTER AND SEARCH ROW
+   ====================================== */
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.mini-input, .mini-btn {
+  height: 40px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.mini-input {
+  --background: rgba(255, 255, 255, 0.9);
+  --border-color: rgba(0, 0, 0, 0.2);
+  --border-width: 1px;
+  --border-style: solid;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  
+  &:hover, &:focus {
+    --background: rgba(255, 255, 255, 1);
+    border-color: var(--ion-color-primary);
+    box-shadow: 0 4px 16px rgba(74, 144, 226, 0.2);
+  }
+}
+
+.search-btn {
+  --background: var(--ion-color-primary);
+  --color: white;
+  font-weight: 500;
+
+  &:hover {
+    --background: var(--ion-color-primary-shade);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+  }
+}
+
+/* ======================================
+   BALANCE CARD STYLES
+   ====================================== */
+
+/* ======================================
+   SIMPLIFIED INFO CARD STYLES
+   ====================================== */
+
+.info-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  margin: 0;
+  overflow: hidden;
+
+  .info-content {
+    padding: 12px 16px;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .info-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .info-label {
+      font-size: 13px;
+      color: var(--ion-color-medium);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .info-value {
+      font-size: 15px;
+      color: var(--ion-color-dark);
+      font-weight: 600;
+      word-wrap: break-word;
+      
+      &.address-value {
+        word-break: break-word;
+        overflow-wrap: break-word;
+      }
+    }
+  }
+}
+
+/* ======================================
+   PRIMARY CARD HEADERS
+   ====================================== */
+
+.table-card, .mobile-card {
+  &[color="primary"] {
+    .table-header, .mobile-header {
+      background: linear-gradient(135deg, 
+        var(--ion-color-primary), 
+        var(--ion-color-primary-shade)
+      );
+      color: white;
+      
+      .table-title, .mobile-title {
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        ion-icon {
+          font-size: 20px;
+        }
+        
+        .transaction-count {
+          color: rgba(255, 255, 255, 0.8);
+        }
+      }
+    }
+  }
+}
+
+/* ======================================
+   TABLE STYLES - Following spend_record2 pattern
+   ====================================== */
+
+
+.table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  margin: -20px;
+  margin-top: 0;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 14px;
+
+  thead {
+    background: linear-gradient(135deg, 
+      rgba(74, 144, 226, 0.1), 
+      rgba(80, 227, 194, 0.1)
+    );
+
+    th {
+      padding: 16px 12px;
+      text-align: right;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+      border-bottom: 2px solid rgba(74, 144, 226, 0.2);
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+    .table-row {
+      transition: all 0.2s ease;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+
+      &:hover {
+        background: rgba(74, 144, 226, 0.05);
+        transform: scale(1.001);
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      td {
+        padding: 12px;
+        text-align: right;
+        vertical-align: middle;
+        color: var(--ion-color-dark);
+
+        &.serial {
+          font-weight: 600;
+          color: var(--ion-color-medium);
+          width: 60px;
+        }
+
+        &.date {
+          color: var(--ion-color-medium);
+          font-size: 13px;
+          width: 100px;
+        }
+
+        &.type {
+          width: 120px;
+        }
+
+        &.details {
+          max-width: 200px;
+          word-break: break-word;
+        }
+
+        &.debit, &.credit {
+          font-weight: 600;
+          text-align: center;
+          width: 100px;
+        }
+
+        .transaction-type {
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 500;
+
+          &.sales-type {
+            background: rgba(16, 220, 96, 0.1);
+            color: var(--ion-color-success);
+            border: 1px solid rgba(16, 220, 96, 0.2);
+          }
+
+          &.purchase-type {
+            background: rgba(245, 166, 35, 0.1);
+            color: var(--ion-color-warning);
+            border: 1px solid rgba(245, 166, 35, 0.2);
+          }
+
+          &.voucher-type {
+            background: rgba(74, 144, 226, 0.1);
+            color: var(--ion-color-primary);
+            border: 1px solid rgba(74, 144, 226, 0.2);
+          }
+        }
+
+        .amount {
+          font-family: 'Courier New', monospace;
+          
+          &.debit-amount {
+            color: var(--ion-color-danger);
+          }
+
+          &.credit-amount {
+            color: var(--ion-color-success);
+          }
+        }
+      }
+    }
+
+    .skeleton-row {
+      td {
+        padding: 12px;
+      }
+    }
+  }
+  
+  tfoot {
+    .totals-row {
+      background: linear-gradient(135deg, 
+        rgba(74, 144, 226, 0.1), 
+        rgba(80, 227, 194, 0.1)
+      );
+      border-top: 2px solid rgba(74, 144, 226, 0.2);
+      
+      td {
+        padding: 16px 12px;
+        font-weight: 600;
+        
+        &.totals-label {
+          text-align: right;
+          color: var(--ion-color-dark);
+          font-size: 16px;
+        }
+        
+        &.debit-total, &.credit-total {
+          text-align: center;
+          font-size: 16px;
+          
+          .amount {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #000000 !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ======================================
+   MOBILE ACCORDION STYLES
+   ====================================== */
+
+.mobile-card {
+  .accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+
+    .header-main {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .transaction-type-mobile {
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .transaction-date {
+        font-size: 12px;
+        color: var(--ion-color-medium);
+      }
+    }
+
+    .header-amount {
+      text-align: left;
+      font-weight: 600;
+      font-family: 'Courier New', monospace;
+
+      .credit-amount {
+        color: var(--ion-color-success);
+      }
+
+      .debit-amount {
+        color: var(--ion-color-danger);
+      }
+    }
+  }
+}
+
+/* ======================================
+   LOAD MORE AND EMPTY STATE
+   ====================================== */
+
+.load-more-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+
+  .load-more-btn {
+    --background: rgba(74, 144, 226, 0.1);
+    --border-color: rgba(74, 144, 226, 0.3);
+    --color: var(--ion-color-primary);
+    border-radius: 12px;
+    height: 44px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover:not([disabled]) {
+      --background: rgba(74, 144, 226, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(74, 144, 226, 0.3);
+    }
+
+    &[disabled] {
+      opacity: 0.6;
+    }
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ion-color-medium);
+
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  h4 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.8;
+  }
+}
+
+/* ======================================
+   FOOTER TOTALS
+   ====================================== */
+
+.totals-footer {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 16px;
+
+  .totals-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    max-width: 600px;
+    margin: 0 auto;
+    gap: 20px;
+
+    .total-item {
+      text-align: center;
+      
+      .total-label {
+        font-size: 12px;
+        color: var(--ion-color-medium);
+        margin-bottom: 4px;
+      }
+
+      .total-value {
+        font-size: 16px;
+        font-weight: 600;
+        font-family: 'Courier New', monospace;
+
+        &.debit-total {
+          color: var(--ion-color-danger);
+        }
+
+        &.credit-total {
+          color: var(--ion-color-success);
+        }
+      }
+    }
+  }
+}
+
+/* ======================================
+   ACCOUNT POPOVER STYLES
+   ====================================== */
+
+ion-popover {
+  --max-height: 300px;
+  --min-height: 200px;
+  --width: 320px;
+  --border-radius: 12px;
+  --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+
+  .popover-content {
+    --background: white;
+    max-height: 250px;
+    overflow-y: auto;
+
+    ion-list {
+      background: transparent;
+      padding: 0;
+
+      ion-item {
+        --background: transparent;
+        --border-color: rgba(0, 0, 0, 0.1);
+        --min-height: 44px;
+        --padding-start: 16px;
+        --padding-end: 16px;
+        font-size: 14px;
+        
+        &:hover {
+          --background: rgba(74, 144, 226, 0.1);
+        }
+
+        ion-label {
+          margin: 8px 0;
+          font-weight: 500;
+          color: var(--ion-color-dark);
+        }
+      }
+    }
+  }
+
+  ion-header {
+    ion-toolbar {
+      --background: white;
+      --border-color: rgba(0, 0, 0, 0.1);
+      --min-height: 56px;
+      
+      ion-searchbar {
+        --background: rgba(244, 245, 248, 0.6);
+        --border-radius: 8px;
+        --box-shadow: none;
+        --color: var(--ion-color-dark);
+        --placeholder-color: var(--ion-color-medium);
+        padding: 8px;
+        
+        &::part(native) {
+          border-radius: 8px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  ion-popover {
+    --width: 280px;
+    --max-height: 250px;
+  }
+}
+
+/* ======================================
+   RESPONSIVE DESIGN
+   ====================================== */
+
+@media (max-width: 768px) {
+  .modern-content {
+    padding: 6px;
+  }
+
+  .main-row {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .account-section {
+    width: 100%;
+  }
+  
+  .search-type-section {
+    width: 100%;
+  }
+  
+  .compact-segment {
+    ion-segment-button {
+      span {
+        font-size: 12px;
+        padding: 6px 8px;
+      }
+    }
+  }
+
+  .field-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+
+    .field-label-right {
+      min-width: auto;
+      text-align: left;
+    }
+  }
+
+  .filter-search-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+
+    .filter-btn, .mini-input, .search-btn {
+      width: 100%;
+    }
+  }
+
+  .info-card {
+    .info-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .info-column {
+      gap: 8px;
+    }
+    
+    .info-item {
+      .info-label {
+        font-size: 12px;
+      }
+      
+      .info-value {
+        font-size: 13px;
+      }
+    }
+  }
+
+  .totals-container {
+    flex-direction: column;
+    gap: 12px;
+
+    .total-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .total-label {
+        margin-bottom: 0;
+        text-align: left;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .card-header, .table-header, .mobile-header {
+    padding: 16px;
+
+    .card-title, .table-title, .mobile-title {
+      font-size: 16px;
+    }
+  }
+
+  .compact-content, .info-content, .table-content, .mobile-content {
+    padding: 16px;
+  }
+
+  .info-card {
+    .info-grid {
+      grid-template-columns: 1fr !important;
+      gap: 8px;
+    }
+  }
+
+  .filter-segment {
+    ion-segment-button {
+      .segment-content {
+        padding: 6px;
+
+        ion-icon {
+          font-size: 16px;
+        }
+
+        span {
+          font-size: 11px;
+        }
+      }
+    }
+  }
+}

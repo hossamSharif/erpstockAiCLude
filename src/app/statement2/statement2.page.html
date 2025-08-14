@@ -1,0 +1,369 @@
+<ion-header class="transparent-header">
+  <ion-toolbar class="transparent-toolbar">
+    <ion-buttons slot="start">
+      <ion-menu-button class="glass-menu-button"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="glass-title">كشف حساب</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="refresh()">
+        <ion-icon name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="modern-content">
+  <!-- Loading State -->
+  <div *ngIf="!user_info || !store_info" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p class="loading-text">جاري التحميل...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="user_info && store_info" class="main-container">
+    <div class="form-container">
+      
+      <!-- Account Selection and Search Card -->
+      <ion-card class="form-card compact-card">
+        <ion-card-content class="compact-content">
+          <!-- Main Row: Account Selection and Search Type -->
+          <div class="main-row">
+            <!-- Account Selection -->
+            <div class="account-section">
+              <ion-label class="field-label">الحساب</ion-label>
+              <div class="input-with-icon" (click)="presentAccountPopover($event)">
+                <ion-input 
+                  readonly="true" 
+                  [value]="selectedAccount.sub_name || 'اختر الحساب'" 
+                  placeholder="اختر الحساب"
+                  class="mini-input readonly-input">
+                </ion-input>
+                <ion-icon name="chevron-down-outline" class="dropdown-icon"></ion-icon>
+              </div>
+            </div>
+
+            <!-- Search Type -->
+            <div class="search-type-section">
+              <ion-label class="field-label">نوع البحث</ion-label>
+              <ion-segment [(ngModel)]="radioVal" (ionChange)="radioChange($event)" class="compact-segment">
+                <ion-segment-button value="0">
+                  <span>العمليات الحديثة</span>
+                </ion-segment-button>
+                <ion-segment-button value="1">
+                  <span>بحث في تاريخ محدد</span>
+                </ion-segment-button>
+                <ion-segment-button value="2">
+                  <span>بحث في فترة زمنية</span>
+                </ion-segment-button>
+              </ion-segment>
+            </div>
+          </div>
+          
+          <!-- Search Row -->
+          <div class="search-row">
+            <!-- Date Inputs -->
+            <ion-input 
+              *ngIf="radioVal == 1"
+              type="date" 
+              [(ngModel)]="startingDate"
+              class="mini-input date-input">
+            </ion-input>
+            
+            <ion-input 
+              *ngIf="radioVal == 2"
+              type="date" 
+              [(ngModel)]="startingDate"
+              placeholder="من تاريخ"
+              class="mini-input date-input">
+            </ion-input>
+            
+            <ion-input 
+              *ngIf="radioVal == 2"
+              type="date" 
+              [(ngModel)]="endDate"
+              placeholder="إلى تاريخ"
+              class="mini-input date-input">
+            </ion-input>
+            
+            <!-- Search Button -->
+            <ion-button 
+              (click)="search()"
+              fill="outline"
+              class="mini-btn search-btn">
+              <ion-icon name="search-outline" slot="start"></ion-icon>
+              بحث
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Account Info Card - 4 Columns -->
+      <ion-card class="info-card">
+        <ion-card-content class="info-content">
+          <div class="info-grid">
+            <!-- First Column: النوع -->
+            <div class="info-column">
+              <div class="info-item">
+                <span class="info-label">النوع:</span>
+                <span class="info-value">{{ selectedAccount.sub_type }}</span>
+              </div>
+              <div class="info-item" *ngIf="selectedAccount.sub_code">
+                <span class="info-label">الكود:</span>
+                <span class="info-value">{{ selectedAccount.sub_code }}</span>
+              </div>
+            </div>
+
+            <!-- Second Column: الرصيد الافتتاحي -->
+            <div class="info-column">
+              <div class="info-item">
+                <span class="info-label">الرصيد الافتتاحي:</span>
+                <span class="info-value">{{ formatBalance(openingBalance) }}</span>
+              </div>
+            </div>
+
+            <!-- Third Column: الرصيد الحالي -->
+            <div class="info-column">
+              <div class="info-item">
+                <span class="info-label">الرصيد الحالي:</span>
+                <span class="info-value" [style.color]="getBalanceColor() === 'success' ? '#10dc60' : '#f04141'">
+                  <span *ngIf="currentStatus == 'credit'">دائن </span>
+                  <span *ngIf="currentStatus == 'debit'">مدين </span>
+                  {{ formatBalance(currentBalance) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Fourth Column: التصنيف -->
+            <div class="info-column">
+              <div class="info-item" *ngIf="selectedAccount.cat_name">
+                <span class="info-label">التصنيف:</span>
+                <span class="info-value">{{ selectedAccount.cat_name }}</span>
+              </div>
+              <div class="info-item" *ngIf="selectedAccount.phone && (selectedAccount.cat_id == 1 || selectedAccount.cat_id == 2)">
+                <span class="info-label">الهاتف:</span>
+                <span class="info-value">{{ selectedAccount.phone }}</span>
+              </div>
+              <div class="info-item" *ngIf="selectedAccount.address && (selectedAccount.cat_id == 1 || selectedAccount.cat_id == 2)">
+                <span class="info-label">العنوان:</span>
+                <span class="info-value address-value">{{ selectedAccount.address }}</span>
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Desktop Table -->
+      <ion-card class="table-card" *ngIf="device == 'desktop'" color="primary">
+        <ion-card-header class="table-header">
+          <ion-card-title class="table-title">
+            <ion-icon name="document-text-outline" slot="start"></ion-icon>
+كشف حساب - {{ selectedAccount.sub_name === 'لم يتم اختيار حساب' ? 'اختر حساب لعرض البيانات' : selectedAccount.sub_name }}
+            <span class="transaction-count" *ngIf="totalTransactions > 0">
+              ({{ totalTransactions }} معاملة)
+            </span>
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content class="table-content">
+          <div class="table-container">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>التسلسل</th>
+                  <th>التاريخ</th>
+                  <th>نوع القيد</th>
+                  <th>البيان</th>
+                  <th>مدين (عليه)</th>
+                  <th>دائن (له)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let transaction of displayedTransactions; let i = index" class="table-row">
+                  <td class="serial">{{ i + 1 }}</td>
+                  <td class="date">{{ transaction.j_date | date:'dd/MM/yyyy' }}</td>
+                  <td class="type">
+                    <span class="transaction-type" [ngClass]="{'sales-type': transaction.source_type === 'sales', 'purchase-type': transaction.source_type === 'purchases', 'voucher-type': transaction.source_type === 'journal'}">
+                      {{ getTransactionTypeDisplay(transaction) }}
+                    </span>
+                  </td>
+                  <td class="details">{{ transaction.j_details }}</td>
+                  <td class="debit">
+                    <span *ngIf="transaction.debit && +transaction.debit > 0" class="amount debit-amount">
+                      {{ formatBalance(+transaction.debit) }}
+                    </span>
+                  </td>
+                  <td class="credit">
+                    <span *ngIf="transaction.credit && +transaction.credit > 0" class="amount credit-amount">
+                      {{ formatBalance(+transaction.credit) }}
+                    </span>
+                  </td>
+                </tr>
+                
+                <!-- Loading Skeleton -->
+                <tr *ngIf="loading" class="skeleton-row">
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                </tr>
+              </tbody>
+              
+              <!-- Totals Footer -->
+              <tfoot *ngIf="displayedTransactions.length > 0">
+                <tr class="totals-row">
+                  <td colspan="4" class="totals-label">الإجمالي:</td>
+                  <td class="debit-total">
+                    <span class="amount debit-amount">{{ formatBalance(sums.debitTot) }}</span>
+                  </td>
+                  <td class="credit-total">
+                    <span class="amount credit-amount">{{ formatBalance(sums.creditTot) }}</span>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          
+          <!-- Load More Button -->
+          <div class="load-more-container" *ngIf="hasMoreTransactions && displayedTransactions.length > 0">
+            <ion-button 
+              (click)="loadMoreTransactions()" 
+              fill="outline" 
+              [disabled]="loadingMore"
+              class="load-more-btn">
+              <ion-spinner *ngIf="loadingMore" name="crescent" slot="start"></ion-spinner>
+              <ion-icon *ngIf="!loadingMore" name="chevron-down-outline" slot="start"></ion-icon>
+              {{ loadingMore ? 'جاري التحميل...' : 'تحميل المزيد' }}
+            </ion-button>
+          </div>
+          
+          <!-- Empty State -->
+          <div class="empty-state" *ngIf="showEmpty && !loading">
+            <ion-icon name="archive-outline" class="empty-icon"></ion-icon>
+            <h4>لا توجد معاملات</h4>
+            <p>لم يتم العثور على معاملات لهذا الحساب</p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Mobile Accordion -->
+      <ion-card class="mobile-card" *ngIf="device == 'mobile'" color="primary">
+        <ion-card-header class="mobile-header">
+          <ion-card-title class="mobile-title">
+            <ion-icon name="document-text-outline" slot="start"></ion-icon>
+كشف حساب - {{ selectedAccount.sub_name === 'لم يتم اختيار حساب' ? 'اختر حساب لعرض البيانات' : selectedAccount.sub_name }}
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content class="mobile-content">
+          <ion-accordion-group *ngIf="displayedTransactions.length > 0">
+            <ion-accordion *ngFor="let transaction of displayedTransactions; let i = index" [value]="i" toggleIcon="caret-down-circle" toggleIconSlot="end">
+              <ion-item slot="header" color="light">
+                <ion-icon name="newspaper-outline" color="primary" slot="start"></ion-icon>
+                <div class="accordion-header">
+                  <div class="header-main">
+                    <span class="transaction-type-mobile">{{ getTransactionTypeDisplay(transaction) }}</span>
+                    <span class="transaction-date">{{ transaction.j_date | date:'dd/MM' }}</span>
+                  </div>
+                  <div class="header-amount">
+                    <span *ngIf="transaction.credit && +transaction.credit > 0" class="credit-amount">
+                      {{ formatBalance(+transaction.credit) }}
+                    </span>
+                    <span *ngIf="transaction.debit && +transaction.debit > 0" class="debit-amount">
+                      {{ formatBalance(+transaction.debit) }}
+                    </span>
+                  </div>
+                </div>
+              </ion-item>
+
+              <div class="ion-padding" slot="content">
+                <ion-list>
+                  <ion-item lines="none">
+                    <ion-label>
+                      <ion-note>نوع القيد: </ion-note>
+                      <strong>{{ transaction.j_type }}</strong>
+                    </ion-label>
+                  </ion-item>
+                  <ion-item lines="none">
+                    <ion-label>
+                      <ion-note>البيان: </ion-note>
+                      <strong>{{ transaction.j_details }}</strong>
+                    </ion-label>
+                  </ion-item>
+                  <ion-item lines="none">
+                    <ion-label>
+                      <ion-note>مدين (عليه): </ion-note>
+                      <strong>{{ formatBalance(+transaction.debit) }}</strong>
+                    </ion-label>
+                  </ion-item>
+                  <ion-item lines="none">
+                    <ion-label>
+                      <ion-note>دائن (له): </ion-note>
+                      <strong>{{ formatBalance(+transaction.credit) }}</strong>
+                    </ion-label>
+                  </ion-item>
+                </ion-list>
+              </div>
+            </ion-accordion>
+          </ion-accordion-group>
+          
+          <!-- Load More Button Mobile -->
+          <div class="load-more-container" *ngIf="hasMoreTransactions && displayedTransactions.length > 0">
+            <ion-button 
+              (click)="loadMoreTransactions()" 
+              fill="outline" 
+              [disabled]="loadingMore"
+              expand="block"
+              class="load-more-btn">
+              <ion-spinner *ngIf="loadingMore" name="crescent" slot="start"></ion-spinner>
+              <ion-icon *ngIf="!loadingMore" name="chevron-down-outline" slot="start"></ion-icon>
+              {{ loadingMore ? 'جاري التحميل...' : 'تحميل المزيد' }}
+            </ion-button>
+          </div>
+          
+          <!-- Empty State Mobile -->
+          <div class="empty-state" *ngIf="showEmpty && !loading">
+            <ion-icon name="archive-outline" class="empty-icon"></ion-icon>
+            <h4>لا توجد معاملات</h4>
+            <p>لم يتم العثور على معاملات لهذا الحساب</p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+</ion-content>
+
+
+<!-- Account Selection Popover -->
+<ion-popover #accountPopover [isOpen]="isAccountPopoverOpen" (didDismiss)="isAccountPopoverOpen = false" size="auto" side="bottom" alignment="start">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar dir="rtl">
+        <ion-searchbar 
+          [(ngModel)]="searchTerm" 
+          (ionInput)="searchAccount($event)" 
+          placeholder="بحث عن حساب" 
+          dir="rtl"
+          show-clear-button="focus">
+        </ion-searchbar>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content dir="rtl" class="popover-content">
+      <ion-list>
+        <ion-item 
+          *ngFor="let acc of searchedAccounts" 
+          (click)="selectAccount(acc)" 
+          button 
+          dir="rtl">
+          <ion-label>{{ acc.sub_name }}</ion-label>
+        </ion-item>
+        
+        <!-- No results message -->
+        <ion-item *ngIf="searchedAccounts.length === 0" dir="rtl">
+          <ion-label>
+            <p>لا توجد حسابات تطابق البحث</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-popover>

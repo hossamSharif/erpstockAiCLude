@@ -1,0 +1,301 @@
+<ion-header class="transparent-header">
+  <ion-toolbar class="transparent-toolbar">
+    <ion-buttons slot="start">
+      <ion-menu-button class="glass-menu-button"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="glass-title">إدارة الحسابات</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="modern-content">
+  <!-- Loading State -->
+  <div *ngIf="!user_info || !store_info" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p class="loading-text">جاري التحميل...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="user_info && store_info" class="main-container">
+    <div class="form-container">
+      <!-- Search and Create Card -->
+      <ion-card class="search-card">
+        <ion-card-content class="compact-content">
+          <div class="search-header">
+            <div class="search-input-container">
+              <ion-input 
+                [(ngModel)]="searchTerm" 
+                (ionInput)="searchAccounts($event)" 
+                placeholder="بحث بالاسم أو الكود..."
+                class="search-input">
+                <ion-icon name="search-outline" slot="start"></ion-icon>
+              </ion-input>
+              <ion-button 
+                *ngIf="searchTerm && searchTerm.trim() !== ''"
+                (click)="clearSearch()"
+                fill="clear"
+                size="small"
+                class="clear-search-btn">
+                <ion-icon name="close-outline"></ion-icon>
+              </ion-button>
+            </div>
+            <ion-button 
+              (click)="openCreateModal()"
+              fill="outline"
+              color="primary"
+              class="create-btn">
+              <ion-icon name="add-outline" slot="start"></ion-icon>
+              إنشاء حساب جديد
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+      
+      <!-- Accounts Table Card -->
+      <ion-card class="table-card">
+        <ion-card-header class="card-header">
+          <div class="header-content">
+            <ion-card-title class="card-title">قائمة الحسابات</ion-card-title>
+            <div class="filter-buttons">
+              <ion-button 
+                fill="outline" 
+                size="small" 
+                class="filter-btn"
+                [class.active]="activeFilters.cat_name"
+                (click)="toggleCategoryFilter()">
+                <ion-icon name="funnel-outline" slot="start"></ion-icon>
+                تصنيف
+              </ion-button>
+              <ion-button 
+                fill="outline" 
+                size="small" 
+                class="filter-btn"
+                [class.active]="activeFilters.balance_type"
+                (click)="toggleBalanceTypeFilter()">
+                <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
+                نوع الرصيد
+              </ion-button>
+              <ion-button 
+                fill="outline" 
+                size="small" 
+                class="filter-btn"
+                [class.active]="activeFilters.has_balance"
+                (click)="toggleHasBalanceFilter()">
+                <ion-icon name="cash-outline" slot="start"></ion-icon>
+                رصيد > 0
+              </ion-button>
+              <ion-button 
+                fill="outline" 
+                size="small" 
+                class="filter-btn"
+                [class.active]="activeFilters.sub_type"
+                (click)="toggleSubTypeFilter()">
+                <ion-icon name="list-outline" slot="start"></ion-icon>
+                طبيعة الحساب
+              </ion-button>
+              <ion-button 
+                *ngIf="hasActiveFilters()"
+                fill="clear" 
+                size="small" 
+                class="clear-filters-btn"
+                (click)="clearAllFilters()">
+                <ion-icon name="close-outline" slot="start"></ion-icon>
+                مسح الفلاتر
+              </ion-button>
+            </div>
+          </div>
+        </ion-card-header>
+        <ion-card-content class="table-content">
+          <!-- Glass Table -->
+          <div class="glass-table-container">
+            <table class="glass-table">
+              <thead>
+                <tr>
+                  <th>م</th>
+                  <th>الكود</th>
+                  <th>اسم الحساب</th>
+                  <th>النوع</th>
+                  <th>التصنيف</th>
+                  <th>الرصيد الحالي</th>
+                  <th>العمليات</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Loading Rows -->
+                <tr *ngIf="loading" class="loading-row">
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                </tr>
+                <tr *ngIf="loading" class="loading-row">
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                </tr>
+                <tr *ngIf="loading" class="loading-row">
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                </tr>
+                
+                <!-- Data Rows -->
+                <tr *ngFor="let account of filteredAccounts; let i = index" class="data-row">
+                  <td class="serial-cell">{{(currentPage - 1) * pageSize + i + 1}}</td>
+                  <td class="code-cell">{{account.sub_code}}</td>
+                  <td class="name-cell">{{account.sub_name}}</td>
+                  <td class="type-cell">
+                    <span class="type-badge" [class.type-credit]="account.sub_type == 'credit'" [class.type-debit]="account.sub_type == 'debit'">
+                      {{account.sub_type == 'credit' ? 'دائن' : 'مدين'}}
+                    </span>
+                  </td>
+                  <td class="category-cell">{{account.cat_name || 'غير محدد'}}</td>
+                  <td class="balance-cell">
+                    <div class="balance-info">
+                      <span class="balance-amount" 
+                            [style.color]="getBalanceColor(account.current_balance) === 'success' ? '#10dc60' : '#f04141'">
+                        {{formatBalance(account.current_balance) || '0.00'}}
+                      </span>
+                      <span *ngIf="account.current_balance != 0" class="balance-type" 
+                            [style.color]="account.balance_type === 'debit' ? '#10dc60' : '#f04141'">
+                        {{account.balance_type === 'debit' ? 'مدين' : 'دائن'}}
+                      </span>
+                      <ion-spinner *ngIf="account.loadingBalance" name="dots" color="primary"></ion-spinner>
+                    </div>
+                  </td>
+                  <td class="actions-cell">
+                    <ion-button 
+                      fill="clear" 
+                      size="small" 
+                      class="actions-btn" 
+                      (click)="presentActionsPopover($event, account)"
+                      id="actions-trigger-{{i}}">
+                      <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+                    </ion-button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <!-- Empty State -->
+            <div class="empty-state" *ngIf="filteredAccounts.length === 0 && !loading">
+              <ion-icon name="business-outline" class="empty-icon"></ion-icon>
+              <h3 *ngIf="!searchTerm || searchTerm.trim() === ''">لا توجد حسابات</h3>
+              <h3 *ngIf="searchTerm && searchTerm.trim() !== ''">لا توجد نتائج للبحث</h3>
+              <p *ngIf="!searchTerm || searchTerm.trim() === ''">ابدأ بإنشاء حساب جديد</p>
+              <p *ngIf="searchTerm && searchTerm.trim() !== ''">جرب البحث بكلمة أخرى أو امسح البحث لعرض جميع الحسابات</p>
+              <ion-button *ngIf="searchTerm && searchTerm.trim() !== ''" 
+                          fill="outline" 
+                          (click)="clearSearch()" 
+                          class="clear-search-btn">
+                <ion-icon name="refresh-outline" slot="start"></ion-icon>
+                مسح البحث
+              </ion-button>
+            </div>
+            
+            <!-- Load More Button -->
+            <div class="load-more-container" *ngIf="hasMoreAccounts && !loading">
+              <ion-button 
+                (click)="loadMoreAccounts()"
+                fill="outline"
+                color="primary"
+                class="load-more-btn"
+                [disabled]="loadingMore">
+                <ion-icon *ngIf="!loadingMore" name="chevron-down-outline" slot="start"></ion-icon>
+                <ion-spinner *ngIf="loadingMore" name="crescent" slot="start"></ion-spinner>
+                {{loadingMore ? 'جاري التحميل...' : 'عرض المزيد'}}
+              </ion-button>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+</ion-content>
+
+<!-- Actions Popover -->
+<ion-popover #actionsPopover [isOpen]="isActionsPopoverOpen" (didDismiss)="isActionsPopoverOpen = false"   [backdropDismiss]="true">
+  <ng-template>
+    <ion-content>
+      <ion-list>
+        <ion-item button (click)="editAccount(selectedAccount)">
+          <ion-icon name="create-outline" slot="start" color="primary"></ion-icon>
+          <ion-label>تعديل</ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-popover>
+
+<!-- Filter Popovers -->
+<!-- Category Filter -->
+<ion-popover #categoryFilter [isOpen]="showCategoryFilter" (didDismiss)="showCategoryFilter = false" >
+  <ng-template>
+    <ion-content class="filter-popover">
+      <ion-list>
+        <ion-item button (click)="selectCategoryFilter('')">
+          <ion-label>جميع التصنيفات</ion-label>
+          <ion-checkbox slot="end" [checked]="filters.cat_name === ''"></ion-checkbox>
+        </ion-item>
+        <ion-item button *ngFor="let category of categories" (click)="selectCategoryFilter(category.cat_name)">
+          <ion-label>{{category.cat_name}}</ion-label>
+          <ion-checkbox slot="end" [checked]="filters.cat_name === category.cat_name"></ion-checkbox>
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-popover>
+
+<!-- Balance Type Filter -->
+<ion-popover #balanceTypeFilter [isOpen]="showBalanceTypeFilter" (didDismiss)="showBalanceTypeFilter = false"  >
+  <ng-template>
+    <ion-content class="filter-popover">
+      <ion-list>
+        <ion-item button (click)="selectBalanceTypeFilter('')">
+          <ion-label>جميع الأنواع</ion-label>
+          <ion-checkbox slot="end" [checked]="filters.balance_type === ''"></ion-checkbox>
+        </ion-item>
+        <ion-item button (click)="selectBalanceTypeFilter('debit')">
+          <ion-label>مدين</ion-label>
+          <ion-checkbox slot="end" [checked]="filters.balance_type === 'debit'"></ion-checkbox>
+        </ion-item>
+        <ion-item button (click)="selectBalanceTypeFilter('credit')">
+          <ion-label>دائن</ion-label>
+          <ion-checkbox slot="end" [checked]="filters.balance_type === 'credit'"></ion-checkbox>
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-popover>
+
+<!-- Sub Type Filter -->
+<ion-popover #subTypeFilter [isOpen]="showSubTypeFilter" (didDismiss)="showSubTypeFilter = false" >
+  <ng-template>
+    <ion-content class="filter-popover">
+      <ion-list>
+        <ion-item button (click)="selectSubTypeFilter('')">
+          <ion-label>جميع الطبائع</ion-label>
+          <ion-checkbox slot="end" [checked]="filters.sub_type === ''"></ion-checkbox>
+        </ion-item>
+        <ion-item button (click)="selectSubTypeFilter('debit')">
+          <ion-label>مدين</ion-label>
+          <ion-checkbox slot="end" [checked]="filters.sub_type === 'debit'"></ion-checkbox>
+        </ion-item>
+        <ion-item button (click)="selectSubTypeFilter('credit')">
+          <ion-label>دائن</ion-label>
+          <ion-checkbox slot="end" [checked]="filters.sub_type === 'credit'"></ion-checkbox>
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-popover>

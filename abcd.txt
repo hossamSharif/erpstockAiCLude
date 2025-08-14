@@ -1,0 +1,8 @@
+@sales and @purchase i wanna implemnt new feature that allow user to add new entry via @cash2 page , so when user
+saveInvo() and after saving done it must open cash2 as a modal .and 
+
+hide the pay feild 
+
+ 
+
+ 

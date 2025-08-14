@@ -1,0 +1,131 @@
+<div class="account-selector-container">
+  <!-- Header with Label and Action Buttons -->
+  <div class="header-container">
+    <div class="label-with-buttons-container">
+      <div class="action-buttons-left">
+        <!-- Refresh Button positioned in top left -->
+        <ion-button 
+          fill="clear" 
+          size="small"
+          class="account-refresh-btn-left"
+          (click)="refreshAccounts()"
+          [disabled]="loadingAccounts">
+          <ion-icon 
+            name="refresh" 
+            color="primary"
+            [class.spin]="loadingAccounts">
+          </ion-icon>
+        </ion-button>
+        
+        <!-- Add Account Button -->
+        <ion-button 
+          *ngIf="showAddButton"
+          size="small" 
+          fill="clear" 
+          class="add-account-btn-left" 
+          (click)="onAddAccount()"
+          [disabled]="disabled">
+          <ion-icon name="add-circle-outline" color="primary" slot="icon-only"></ion-icon>
+        </ion-button>
+        
+        <!-- Loading Spinner -->
+        <ion-spinner 
+          *ngIf="loadingAccounts" 
+          name="dots" 
+          class="account-loading-spinner-left">
+        </ion-spinner>
+      </div>
+      
+      <ion-label style="text-align: right;">
+        <strong>{{ label || 'الحساب' }}</strong> 
+      </ion-label>
+    </div>
+  </div>
+
+  <!-- Input Field Container -->
+  <div class="input-container">
+    <!-- Search Input - Match item-selector styling -->
+    <ion-item class="custInput account-selector-wrapper">
+      <div class="input-container-wrapper" #inputWrapper>
+        <ion-input
+          #searchInput
+          [(ngModel)]="searchTerm"
+          [placeholder]="placeholder"
+          [disabled]="disabled"
+          [clearInput]="true"
+          class="account-input"
+          (ionInput)="onSearchInput($event)"
+          (ionFocus)="onInputFocus()"
+          (ionBlur)="onInputBlur()"
+          (click)="onInputFocus()"
+          (keydown)="onKeyDown($event)">
+        </ion-input>
+      </div>
+    </ion-item>
+  </div>
+
+ 
+
+  <!-- Dropdown List -->
+  <div class="dropdown-container" 
+       *ngIf="showDropdown && filteredAccounts.length > 0"
+       [style.top]="dropdownPosition.top"
+       [style.left]="dropdownPosition.left"
+       [style.width]="dropdownPosition.width">
+    <ion-list class="account-dropdown">
+      <ion-item 
+        *ngFor="let account of filteredAccounts; let i = index" 
+        button 
+        class="account-item"
+        [class.highlighted]="i === highlightedIndex"
+        (click)="selectAccount(account)"
+        (mousedown)="$event.preventDefault()"
+        (mouseenter)="highlightedIndex = i">
+        <ion-label>
+          <h3>{{ account.sub_name }}</h3>
+          <p *ngIf="account.sub_code" class="account-code">كود: {{ account.sub_code }}</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <!-- No Results Dropdown -->
+  <div class="dropdown-container" 
+       *ngIf="showDropdown && filteredAccounts.length === 0 && searchTerm.length > 0"
+       [style.top]="dropdownPosition.top"
+       [style.left]="dropdownPosition.left"
+       [style.width]="dropdownPosition.width">
+    <ion-list class="account-dropdown">
+      <ion-item class="no-results">
+        <ion-label>
+          <p>لا توجد نتائج مطابقة</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <!-- Account Balance Display -->
+  <div class="balance-container" *ngIf="selectedAccount && selectedAccount.id">
+    <div class="balance-label">الرصيد:</div>
+    
+    <!-- Loading Balance -->
+    <div class="balance-loading" *ngIf="loadingBalance && selectedAccount">
+      <ion-spinner name="dots" color="primary"></ion-spinner>
+      <span>جاري التحميل...</span>
+    </div>
+    
+    <!-- Balance Amount -->
+    <div class="balance-amount" 
+         *ngIf="!loadingBalance && accountBalance && selectedAccount"
+         [style.color]="getBalanceColor(accountBalance) === 'success' ? '#10dc60' : '#f04141'">
+      {{ formatBalance(accountBalance) }}
+    </div>
+    
+    <!-- Balance Error -->
+    <div class="balance-error" 
+         *ngIf="!loadingBalance && !accountBalance && selectedAccount && selectedAccount.id">
+      لا يمكن تحميل الرصيد
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,615 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="closeModal()"> 
+        <ion-icon name="close-circle-outline" color="danger"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title class="ion-text-center" >
+      <ion-text *ngIf="status == 'edit'">تعديل الصنف</ion-text>
+      <ion-text *ngIf="status == 'save'"> صنف جديد</ion-text>
+      <ion-text *ngIf="status == 'price'"> تعديل الأسعار</ion-text>
+      <ion-text *ngIf="status == 'settings'">  إظهار و اخفاء الأعمدة </ion-text>
+      <ion-text *ngIf="status == 'filter'"> فلتر</ion-text>
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>  
+  
+  <ion-segment scrollable value="heart" [(ngModel)]="segment" value="manual"  (ionChange)="segmentChanged($event)" *ngIf="status == 'price'">
+    <ion-segment-button value="manual">
+      <ion-icon name="hand-left-outline"></ion-icon>
+      <ion-label class="ion-padding"><strong>manualy</strong></ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="xls">
+      <ion-icon name="newspaper-outline"></ion-icon>
+      <ion-label class="ion-padding"><strong>XLS Sheet</strong></ion-label>
+    </ion-segment-button> 
+  </ion-segment>
+
+    <div *ngIf="status == 'edit' || status =='save'" class="form-container">
+      <ion-grid dir="rtl">
+        <ion-row>
+          <ion-col size="12" class="ion-padding">
+            <div class="modern-form">
+              <!-- Basic Information Section -->
+              <div class="form-section">
+                <h3 class="section-title">معلومات أساسية</h3>
+                
+                <ion-row>
+                  <ion-col size="12">
+                    <ion-item class="modern-input" fill="outline">
+                      <ion-label position="stacked">اسم الصنف *</ion-label>
+                      <ion-input [(ngModel)]="selectedItem.item_name" placeholder="أدخل اسم الصنف"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row>
+                  <ion-col size="12">
+                    <ion-item class="modern-input" fill="outline">
+                      <ion-label position="stacked">الوصف</ion-label>
+                      <ion-input [(ngModel)]="selectedItem.item_desc" placeholder="وصف الصنف"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row>
+                  <ion-col size="12">
+                    <ion-item class="modern-input" fill="outline">
+                      <ion-label position="stacked">اسم مستعار</ion-label>
+                      <ion-input [(ngModel)]="selectedItem.aliasEn" placeholder="الاسم المستعار"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row>
+                  <ion-col size="12">
+                    <ion-item class="modern-input" fill="outline">
+                      <ion-label position="stacked">التصنيف</ion-label>
+                      <ion-select [(ngModel)]="selectedItem.category_id" placeholder="اختر التصنيف">
+                        <ion-select-option value="">بدون تصنيف</ion-select-option>
+                        <ion-select-option *ngFor="let category of categories" [value]="category.id">
+                          {{category.category_name}}
+                        </ion-select-option>
+                      </ion-select>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+              </div>
+
+              <!-- Product Details Section -->
+              <div class="form-section">
+                <h3 class="section-title">تفاصيل المنتج</h3>
+                
+                <ion-row>
+                  <ion-col size="6">
+                    <ion-item class="modern-input" fill="outline">
+                      <ion-label position="stacked">الكود</ion-label>
+                      <ion-input [(ngModel)]="selectedItem.part_no" placeholder="رقم القطعة"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                  <ion-col size="6">
+                    <ion-item class="modern-input" fill="outline">
+                      <ion-label position="stacked">الماركة</ion-label>
+                      <ion-input [(ngModel)]="selectedItem.brand" placeholder="العلامة التجارية"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row>
+                  <ion-col size="6">
+                    <ion-item class="modern-input" fill="outline">
+                      <ion-label position="stacked">الموديل</ion-label>
+                      <ion-input [(ngModel)]="selectedItem.model" placeholder="الموديل"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                  <ion-col size="6">
+                    <ion-item class="modern-input" fill="outline">
+                      <ion-label position="stacked">الوحدة</ion-label>
+                      <ion-input [(ngModel)]="selectedItem.item_unit" placeholder="وحدة القياس"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row>
+                  <ion-col size="6">
+                    <ion-item class="modern-input" fill="outline">
+                      <ion-label position="stacked">أقل كمية</ion-label>
+                      <ion-input [(ngModel)]="selectedItem.min_qty" type="number" placeholder="الحد الأدنى للكمية"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                  <ion-col size="6" *ngIf="status =='save'">
+                    <ion-item class="modern-input" fill="outline">
+                      <ion-label position="stacked">الكمية الافتتاحية</ion-label>
+                      <ion-input [(ngModel)]="firstqObj.quantity" type="number" placeholder="الكمية الأولية"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+              </div>
+
+              <!-- Pricing Section -->
+              <div class="form-section">
+                <h3 class="section-title">معلومات الأسعار</h3>
+                
+                <ion-row>
+                  <ion-col size="12">
+                    <ion-item class="modern-input" fill="outline">
+                      <ion-label position="stacked">سعر الشراء *</ion-label>
+                      <ion-input [(ngModel)]="selectedItem.perch_price" 
+                                 type="number" 
+                                 placeholder="سعر الشراء"
+                                 (ionInput)="onPerchPriceChange()"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <!-- Price Calculation Tool -->
+                <div class="price-calculator" *ngIf="selectedItem.perch_price && +selectedItem.perch_price > 0">
+                  <ion-card class="calc-card">
+                    <ion-card-header>
+                      <ion-card-subtitle>حاسبة سعر البيع</ion-card-subtitle>
+                    </ion-card-header>
+                    <ion-card-content>
+                      <!-- Custom Percentage Input -->
+                      <div class="custom-section">
+                        <!-- Preset Buttons Row -->
+                        <div class="preset-buttons-inline">
+                          <ion-button 
+                            fill="outline" 
+                            size="small" 
+                            (click)="applyPresetPercentage(2)"
+                            [color]="lastAppliedPercentage === 2 ? 'primary' : 'medium'"
+                            class="preset-btn">
+                            +2%
+                          </ion-button>
+                          <ion-button 
+                            fill="outline" 
+                            size="small" 
+                            (click)="applyPresetPercentage(4)"
+                            [color]="lastAppliedPercentage === 4 ? 'primary' : 'medium'"
+                            class="preset-btn">
+                            +4%
+                          </ion-button>
+                          <ion-button 
+                            fill="outline" 
+                            size="small" 
+                            (click)="applyPresetPercentage(6)"
+                            [color]="lastAppliedPercentage === 6 ? 'primary' : 'medium'"
+                            class="preset-btn">
+                            +6%
+                          </ion-button>
+                          <ion-button 
+                            fill="outline" 
+                            size="small" 
+                            (click)="applyPresetPercentage(8)"
+                            [color]="lastAppliedPercentage === 8 ? 'primary' : 'medium'"
+                            class="preset-btn">
+                            +8%
+                          </ion-button>
+                          <ion-button 
+                            fill="outline" 
+                            size="small" 
+                            (click)="applyPresetPercentage(10)"
+                            [color]="lastAppliedPercentage === 10 ? 'primary' : 'medium'"
+                            class="preset-btn">
+                            +10%
+                          </ion-button>
+                        </div>
+
+                        <ion-row>
+                          <ion-col size="8">
+                            <ion-item fill="outline" class="calc-input">
+                              <ion-label position="stacked">نسبة مخصصة (%) - موجبة أو سالبة</ion-label>
+                              <ion-input [(ngModel)]="customPercentage" 
+                                         type="number" 
+                                         step="0.1"
+                                         placeholder="مثال: 15 أو -5"
+                                         (ionInput)="onCustomPercentageChange()"></ion-input>
+                            </ion-item>
+                          </ion-col>
+                          <ion-col size="4">
+                            <ion-button 
+                              fill="solid" 
+                              (click)="applyPercentage(customPercentage)"
+                              [disabled]="customPercentage === null || customPercentage === undefined || customPercentage === 0"
+                              class="apply-btn">
+                              تطبيق
+                            </ion-button>
+                          </ion-col>
+                        </ion-row>
+
+                        <!-- Preview calculation -->
+                        <div class="calculation-preview" *ngIf="customPercentage !== null && customPercentage !== undefined && customPercentage !== 0">
+                          <ion-item lines="none" class="preview-item">
+                            <ion-label>
+                              <p class="preview-text">
+                                <span class="preview-label">المعاينة:</span>
+                                <span class="preview-calculation">
+                                  {{selectedItem.perch_price}} + ({{selectedItem.perch_price}} × {{customPercentage}}%) = 
+                                  <strong class="preview-result">{{getPreviewPrice()}}</strong>
+                                </span>
+                              </p>
+                            </ion-label>
+                          </ion-item>
+                        </div>
+                      </div>
+
+                      <!-- Quick Actions -->
+                      <div class="quick-actions">
+                        <ion-button 
+                          fill="clear" 
+                          size="small" 
+                          (click)="resetCalculator()"
+                          class="reset-btn">
+                          <ion-icon name="refresh" slot="start"></ion-icon>
+                          إعادة تعيين
+                        </ion-button>
+                        <ion-button 
+                          fill="clear" 
+                          size="small" 
+                          (click)="copyPurchasePrice()"
+                          class="copy-btn">
+                          <ion-icon name="copy" slot="start"></ion-icon>
+                          نسخ سعر الشراء
+                        </ion-button>
+                      </div>
+                    </ion-card-content>
+                  </ion-card>
+                </div>
+
+                <ion-row>
+                  <ion-col size="12">
+                    <ion-item class="modern-input" fill="outline">
+                      <ion-label position="stacked">سعر البيع *</ion-label>
+                      <ion-input [(ngModel)]="selectedItem.pay_price" 
+                                 type="number" 
+                                 placeholder="سعر البيع"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <!-- Profit Display -->
+                <ion-row *ngIf="selectedItem.pay_price && selectedItem.perch_price">
+                  <ion-col size="12">
+                    <div class="profit-display">
+                      <ion-chip [color]="getProfitColor()">
+                        <ion-icon name="trending-up" *ngIf="getProfit() >= 0"></ion-icon>
+                        <ion-icon name="trending-down" *ngIf="getProfit() < 0"></ion-icon>
+                        <ion-label>نسبة الربح: {{getProfit().toFixed(2)}}%</ion-label>
+                      </ion-chip>
+                    </div>
+                  </ion-col>
+                </ion-row>
+              </div>
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+
+    <ion-grid dir="rtl" *ngIf="status == 'price' && segment =='manual'">
+      <ion-row>
+        <ion-col size="4">
+          <ion-label><ion-text color="dark">اختر السعر</ion-text></ion-label> 
+        </ion-col>
+        <ion-col size="8" class="ion-padding"> 
+          <ion-radio-group [(ngModel)]="price.type"  (ionChange)="typeChange($event)" >
+            <ion-grid class="ion-no-padding ion-no-margin">
+              <ion-row>
+                <ion-col class="ion-no-padding ion-no-margin">
+                  <ion-item lines="none" >
+                    <ion-radio value="pay" class="ion-margin-end"></ion-radio>
+                    <ion-label>سعر بيع</ion-label> 
+                  </ion-item>
+                </ion-col>
+                <ion-col class="ion-no-padding ion-no-margin">
+                  <ion-item lines="none" >
+                    <ion-radio value="perch" class="ion-margin-end"></ion-radio>
+                    <ion-label>سعر شراء</ion-label> 
+                  </ion-item>
+                </ion-col>
+              </ion-row>
+            </ion-grid> 
+          </ion-radio-group>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col size="2">
+          <ion-label><ion-text color="dark"> التعديل</ion-text></ion-label> 
+        </ion-col>
+        <ion-col size="8" class="ion-padding"> 
+          <ion-radio-group [(ngModel)]="price.status"  (ionChange)="statusChange($event)" >
+            <ion-grid class="ion-padding ion-margin">
+              <ion-row>
+                <ion-col >
+                  <ion-item lines="none" >
+                    <ion-radio value="plus" class="ion-margin-end"></ion-radio>
+                    <ion-label>زيادة</ion-label> 
+                  </ion-item>
+                </ion-col>
+                <ion-col>
+                  <ion-item lines="none" >
+                    <ion-radio value="minus" class="ion-margin-end"></ion-radio>
+                    <ion-label>نقصان</ion-label> 
+                  </ion-item>
+                </ion-col>
+                
+              </ion-row>
+            </ion-grid> 
+          </ion-radio-group>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col size="4">
+          <ion-label >
+            <ion-text color="dark" *ngIf="price.status== 'plus'"> قيمة الزيادة </ion-text>   
+            <ion-text color="dark" *ngIf="price.status== 'minus'"> قيمة النقصان </ion-text>  
+          </ion-label> 
+        </ion-col>
+        <ion-col size="4" class="ion-padding"> 
+          <ion-item lines="none" *ngIf="price.type == 'pay'" class="custInput">
+            <ion-input  [(ngModel)]="price.payval" class="ion-margin-end" ></ion-input>  
+          </ion-item>
+          <ion-item lines="none" *ngIf="price.type == 'perch'" class="custInput">
+            <ion-input  [(ngModel)]="price.perchval" class="ion-margin-end" ></ion-input>  
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <ion-row class="ion-justify-content-center">
+        <ion-col size="5" >
+          <ion-button expand="block" color="success"  (click)="updatePrice()" >
+            <ion-label class="ion-text-center"> تعديل الأسعار </ion-label>
+          </ion-button>
+        </ion-col>
+        
+      </ion-row>
+
+    </ion-grid> 
+  
+    <div *ngIf="segment ==  'xls' && status == 'price'">
+      <ion-card class="ion-margin-top">
+        <ion-grid>
+          <ion-row class="ion-justify-content-center">
+            <ion-col size="6">
+              <input type="file" (change)="fileChange($event)"> 
+            </ion-col>
+          </ion-row>
+          <ion-row class="ion-justify-content-center ion-margin-top">
+            <ion-col size="6">
+              <ion-button [disabled]="!uploadedFiles" expand="block" color="success" (click)="truncateItems()" >
+                Upload File
+              </ion-button>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-card>
+    </div>
+
+    
+    <ion-grid dir="rtl" *ngIf="status == 'settings'">
+      <ion-row>
+        <ion-col size="12" class="ion-padding"> 
+          <ion-list>
+            <ion-item>
+              <ion-label>اسم الصنف</ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.item_name"></ion-checkbox>
+            </ion-item>
+            <ion-item>
+              <ion-label>اسم الصنف (en)</ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.item_desc"></ion-checkbox>
+            </ion-item>
+            <ion-item>
+              <ion-label>اسم مستعار (Alias)</ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.aliasEn"></ion-checkbox>
+            </ion-item>
+            <ion-item>
+              <ion-label>   الموديل (model)	  </ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.model"></ion-checkbox>
+            </ion-item>
+            <ion-item>
+              <ion-label>    الكود (part no)		  </ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.part_no"></ion-checkbox>
+            </ion-item>
+            <ion-item>
+              <ion-label>   الماركة (brand)			  </ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.brand"></ion-checkbox>
+            </ion-item>
+            <ion-item>
+              <ion-label>   اقل كمية (MSQ)			  </ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.min_qty"></ion-checkbox>
+            </ion-item>
+            <ion-item>
+              <ion-label>   الوحده (unit)				  </ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.item_unit"></ion-checkbox>
+            </ion-item>
+            <ion-item>
+              <ion-label>   سعر الشراء (purch price)			  </ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.perch_price"></ion-checkbox>
+            </ion-item>
+            <ion-item>
+              <ion-label>   سعر الوحده (selling price)				  </ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.pay_price"></ion-checkbox>
+            </ion-item>
+            <ion-item>
+              <ion-label>   نسبة الفائدة (profit perc)					  </ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.profit"></ion-checkbox>
+            </ion-item>
+            <ion-item>
+              <ion-label> المخزون (in stock)				  </ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.instock"></ion-checkbox>
+            </ion-item> 
+            <ion-item>
+              <ion-label> المجموع	 			  </ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.total"></ion-checkbox>
+            </ion-item>
+             
+              <ion-item>
+                <ion-label> اخر عملية بيع	 			  </ion-label>
+                <ion-checkbox [(ngModel)]="colSettingpr.lastSold"></ion-checkbox>
+              </ion-item>
+          </ion-list>
+        </ion-col>
+       
+      </ion-row>
+    </ion-grid> 
+
+
+    <ion-grid dir="rtl" *ngIf="status == 'filter'">
+      <ion-row>
+        <ion-col size="12" class="ion-padding"> 
+          <ion-list>
+            <ion-list-header color="light">الماركة (brand)</ion-list-header>
+            <ion-item *ngFor="let st of brandList ; let i = index">
+              <ion-label> {{st.brand}}  </ion-label>
+              <ion-checkbox [(ngModel)]="st.selected" (ionChange)="brandChange($event)"></ion-checkbox>
+            </ion-item>
+           
+          </ion-list>
+          <ion-list>
+            <ion-list-header color="light">الموديل(model)</ion-list-header>
+            <ion-item *ngFor="let rt of modelList ; let i = index">
+              <ion-label>  {{rt.model}}  </ion-label>
+              <ion-checkbox [(ngModel)]="rt.selected" (ionChange)="modelChange($event)"></ion-checkbox>
+            </ion-item> 
+          </ion-list>
+        </ion-col>
+       
+      </ion-row>
+    </ion-grid> 
+
+  <!-- Add Category Modal -->
+  <ion-modal [isOpen]="showAddCategoryModal" (didDismiss)="closeAddCategoryModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>إضافة تصنيف جديد</ion-title>
+          <ion-buttons slot="end">
+            <ion-button fill="clear" (click)="closeAddCategoryModal()">
+              <ion-icon name="close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      
+      <ion-content class="ion-padding">
+        <ion-item>
+          <ion-label position="stacked">اسم التصنيف *</ion-label>
+          <ion-input [(ngModel)]="newCategory.category_name" placeholder="اسم التصنيف"></ion-input>
+        </ion-item>
+        
+        <ion-item>
+          <ion-label position="stacked">وصف التصنيف</ion-label>
+          <ion-textarea [(ngModel)]="newCategory.category_desc" placeholder="وصف التصنيف (اختياري)"></ion-textarea>
+        </ion-item>
+        
+        <div class="ion-padding-top">
+          <ion-button 
+            expand="block" 
+            (click)="addCategory()"
+            [disabled]="!newCategory.category_name?.trim()">
+            إضافة التصنيف
+          </ion-button>
+          
+          <ion-button 
+            expand="block" 
+            fill="outline" 
+            (click)="closeAddCategoryModal()">
+            إلغاء
+          </ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>
+<ion-footer>
+  <ion-toolbar class="footer-toolbar">
+    <div class="footer-buttons">
+      <!-- Item Save/Edit/Delete Actions -->
+      <div *ngIf="status == 'edit' || status == 'save'" class="item-actions">
+        <ion-button 
+          expand="block" 
+          color="success" 
+          (click)="save()"
+          [disabled]="!isFormValid()"
+          class="action-btn save-btn">
+          <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+          <ion-label>{{status == 'save' ? 'حفظ' : 'تحديث'}}</ion-label>
+        </ion-button>
+        
+        <ion-button 
+          *ngIf="status == 'edit'" 
+          expand="block" 
+          color="danger" 
+          fill="outline"
+          (click)="confirmDelete()"
+          class="action-btn delete-btn">
+          <ion-icon name="trash" slot="start"></ion-icon>
+          <ion-label>حذف</ion-label>
+        </ion-button>
+        
+        <ion-button 
+          expand="block" 
+          fill="outline" 
+          color="medium"
+          (click)="closeModal()"
+          class="action-btn cancel-btn">
+          <ion-icon name="close" slot="start"></ion-icon>
+          <ion-label>إلغاء</ion-label>
+        </ion-button>
+      </div>
+
+      <!-- Filter Actions -->
+      <div *ngIf="status == 'filter'" class="filter-actions">
+        <ion-button 
+          expand="block" 
+          fill="outline" 
+          color="light"  
+          (click)="clearFilter()"
+          class="action-btn">
+          <ion-icon name="refresh" slot="start"></ion-icon>
+          <ion-label><ion-text color="dark">إلغاء كل الفلتر</ion-text></ion-label>
+        </ion-button>
+        
+        <ion-button 
+          expand="block" 
+          color="success"  
+          (click)="setFilter()"
+          class="action-btn">
+          <ion-icon name="funnel" slot="start"></ion-icon>
+          <ion-label>تطبيق الفلتر</ion-label>
+        </ion-button>
+      </div>
+
+      <!-- Settings Actions -->
+      <div *ngIf="status == 'settings'" class="settings-actions">
+        <ion-button 
+          expand="block" 
+          color="success"  
+          (click)="setColomns()"
+          class="action-btn">
+          <ion-icon name="settings" slot="start"></ion-icon>
+          <ion-label>حفظ الإعدادات</ion-label>
+        </ion-button>
+      </div>
+
+      <!-- Price Update Actions -->
+      <div *ngIf="status == 'price'" class="price-actions">
+        <ion-button 
+          *ngIf="segment == 'manual'"
+          expand="block" 
+          color="success"  
+          (click)="updatePrice()"
+          class="action-btn">
+          <ion-icon name="pricetag" slot="start"></ion-icon>
+          <ion-label>تعديل الأسعار</ion-label>
+        </ion-button>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-footer>

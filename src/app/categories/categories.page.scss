@@ -1,0 +1,261 @@
+.category-card {
+  margin-bottom: 12px;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.category-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.category-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.category-header p {
+  margin: 0 0 8px 0;
+  color: var(--ion-color-medium);
+}
+
+ion-card-content {
+  padding: 16px;
+}
+
+ion-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+}
+// Category settings card styling
+.category-settings-card {
+  margin-top: 20px;
+  border-left: 4px solid var(--ion-color-primary);
+  
+  ion-card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1em;
+  }
+  
+  ion-card-subtitle {
+    margin-top: 8px;
+    color: var(--ion-color-medium);
+    font-size: 0.9em;
+  }
+  
+  ion-item {
+    --background: transparent;
+    margin-bottom: 8px;
+    
+    h3 {
+      margin: 0;
+      font-size: 1em;
+      font-weight: 500;
+    }
+    
+    p {
+      margin: 4px 0 0 0;
+      color: var(--ion-color-medium);
+      font-size: 0.85em;
+    }
+    
+    ion-toggle {
+      margin-left: 16px;
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// Endpoint category card styling
+.endpoint-category-card {
+  margin-top: 20px;
+  border-left: 4px solid var(--ion-color-primary);
+  
+  ion-card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1em;
+    
+    ion-icon {
+      color: var(--ion-color-primary);
+    }
+  }
+  
+  ion-card-subtitle {
+    margin-top: 8px;
+    color: var(--ion-color-medium);
+    font-size: 0.9em;
+  }
+  
+  .column-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ion-color-dark);
+    margin-bottom: 12px;
+  }
+  
+  .category-section {
+    margin-bottom: 16px;
+  }
+}
+
+// Default category card styling
+.default-category-card {
+  margin-top: 20px;
+  border-left: 4px solid var(--ion-color-warning);
+  
+  ion-card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1em;
+    
+    ion-icon {
+      color: var(--ion-color-warning);
+    }
+  }
+  
+  ion-card-subtitle {
+    margin-top: 8px;
+    color: var(--ion-color-medium);
+    font-size: 0.9em;
+  }
+  
+  ion-item {
+    --background: transparent;
+    margin-bottom: 8px;
+    
+    h3 {
+      margin: 0;
+      font-size: 1em;
+      font-weight: 500;
+    }
+    
+    p {
+      margin: 4px 0 0 0;
+      color: var(--ion-color-medium);
+      font-size: 0.85em;
+    }
+    
+    ion-select {
+      --placeholder-color: var(--ion-color-medium);
+      --color: var(--ion-color-dark);
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  ion-button {
+    margin-top: 12px;
+    
+    ion-icon {
+      margin-left: 4px;
+    }
+  }
+  
+  // Category section styling (copied from sales page)
+  .category-section {
+    margin-bottom: 16px;
+    
+    .field-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ion-color-dark);
+      margin-bottom: 6px;
+    }
+  }
+}
+
+// Segment styling (copied from sales page)
+.compact-segment {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  min-height: 48px;
+  width: 100%;
+
+  ion-segment-button {
+    --background: transparent;
+    --background-checked: var(--ion-color-primary);
+    --color: var(--ion-color-dark);
+    --color-checked: white;
+    border-radius: 8px;
+    margin: 4px;
+    transition: all 0.3s ease;
+    min-height: 40px;
+    flex: 1;
+
+    &.segment-button-checked {
+      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+      transform: translateY(-1px);
+    }
+
+    &:hover:not(.segment-button-checked) {
+      background: rgba(74, 144, 226, 0.1);
+    }
+
+    span {
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 12px;
+      display: block;
+    }
+  }
+}
+
+// General ion-segment styling (copied from sales page)
+ion-segment { 
+  --color: var(--ion-color-dark);
+  --color-checked: var(--ion-color-primary-contrast);
+  --background-checked: var(--ion-color-primary);
+  --indicator-color: transparent;
+  --border-radius: 8px;
+  min-width: 200px;
+  
+  ion-segment-button {
+    --padding-start: 0px;
+    --padding-end: 0px;
+    min-height: 28px;
+    
+    ion-label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+  }
+}
+
+// Responsive design for mobile
+@media (max-width: 768px) {
+  .compact-segment {
+    ion-segment-button {
+      span {
+        font-size: 12px;
+        padding: 6px 8px;
+      }
+    }
+  }
+  
+  .default-category-card {
+    .category-section {
+      .field-label {
+        font-size: 13px;
+      }
+    }
+  }
+}

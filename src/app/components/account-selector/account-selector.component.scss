@@ -1,0 +1,394 @@
+// Add custInput class styling to match item-selector
+.custInput {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 5px 0;
+}
+
+.account-selector-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 8px;
+
+  .header-container {
+    margin-bottom: 8px;
+
+    // New layout for label with buttons in top left - Match item-selector
+    .label-with-buttons-container {
+      direction: ltr;
+      display: flex;
+      justify-content: space-between;
+      align-items: center; 
+      position: relative;
+      text-align: right;
+      
+      .action-buttons-left {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        order: 1;
+      }
+      
+      ion-label {
+        flex: 1;
+        text-align: right;
+        order: 2;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ion-color-dark);
+      }
+    }
+  }
+
+  // Left positioned refresh button - Match item-selector
+  .account-refresh-btn-left {
+    --color: var(--ion-color-primary);
+    --padding-start: 3px;
+    --padding-end: 3px;
+    height: 32px;
+    width: 32px;
+    margin: 0;
+    
+    ion-icon {
+      font-size: 18px;
+      transition: transform 0.3s ease;
+
+      &.spin {
+        animation: spin 1s linear infinite;
+      }
+    }
+
+    &:hover {
+      --color: var(--ion-color-primary-shade);
+      --background: rgba(var(--ion-color-primary-rgb), 0.1);
+    }
+
+    &[disabled] {
+      --color: var(--ion-color-medium);
+      opacity: 0.5;
+    }
+  }
+
+  // Left positioned add account button - Match item-selector
+  .add-account-btn-left {
+    --color: var(--ion-color-primary);
+    --padding-start: 3px;
+    --padding-end: 3px;
+    height: 32px;
+    width: 32px;
+    margin: 0;
+    
+    ion-icon {
+      font-size: 18px;
+    }
+
+    &:hover {
+      --color: var(--ion-color-primary-shade);
+      --background: rgba(var(--ion-color-primary-rgb), 0.1);
+    }
+
+    &[disabled] {
+      --color: var(--ion-color-medium);
+      opacity: 0.5;
+    }
+  }
+
+  // Left positioned loading spinner - Match item-selector
+  .account-loading-spinner-left {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+  }
+
+  .input-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+
+    // Account Selector Enhanced Styles - Match item-selector
+    .account-selector-wrapper {
+      width: 100%;
+      margin: 5px 0; // Same as other custInput fields
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      
+      // Input container wrapper for proper dropdown positioning
+      .input-container-wrapper {
+        position: relative;
+        width: 100%;
+      }
+      
+      // Make it look exactly like other input fields (quantity, pay_price, etc)
+      .account-input {
+        --background: transparent;
+        --color: var(--ion-color-dark);
+        --placeholder-color: var(--ion-color-medium);
+        width: 100%;
+        direction: rtl;
+        text-align: right;
+        
+        // Normal padding since no buttons are over the input now
+        --padding-start: 12px;
+        --padding-end: 45px; // Space for clear button
+        
+        &[disabled] {
+          --background: var(--ion-color-light);
+          --color: var(--ion-color-medium);
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  .dropdown-container {
+    position: fixed;
+    z-index: 10000;
+    background: white;
+    border: 1px solid var(--ion-color-light);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 4px;
+    min-width: 250px;
+
+    .account-dropdown {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+
+      .account-item {
+        --background: transparent;
+        --border-color: transparent;
+        --color: var(--ion-color-dark);
+        --padding-start: 12px;
+        --padding-end: 12px;
+        --min-height: 48px;
+        direction: rtl;
+        text-align: right;
+
+        &:hover {
+          --background: var(--ion-color-light);
+        }
+
+        &:active {
+          --background: rgba(var(--ion-color-primary-rgb), 0.1);
+        }
+
+        &.highlighted {
+          --background: rgba(var(--ion-color-primary-rgb), 0.1);
+          border-left: 3px solid var(--ion-color-primary);
+        }
+
+        ion-label {
+          margin: 0;
+
+          h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ion-color-dark);
+            margin: 0;
+          }
+
+          .account-code {
+            font-size: 12px;
+            color: var(--ion-color-medium);
+            margin: 2px 0 0 0;
+          }
+        }
+      }
+
+      .no-results {
+        --color: var(--ion-color-medium);
+        --padding-start: 12px;
+        --padding-end: 12px;
+        text-align: center;
+        font-style: italic;
+
+        ion-label p {
+          margin: 0;
+          font-size: 14px;
+        }
+      }
+    }
+  }
+
+  .balance-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: var(--ion-color-light-tint);
+    border-radius: 6px;
+    direction: rtl;
+
+    .balance-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+    }
+
+    .balance-loading {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      ion-spinner {
+        width: 14px;
+        height: 14px;
+      }
+
+      span {
+        font-size: 12px;
+        color: var(--ion-color-primary);
+      }
+    }
+
+    .balance-amount {
+      font-size: 13px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .balance-error {
+      font-size: 12px;
+      color: var(--ion-color-danger);
+      font-style: italic;
+    }
+  }
+
+}
+
+// Spin animation for refresh button
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .account-selector-container {
+    .header-container {
+      .label-with-buttons-container {
+        .action-buttons-left {
+          gap: 2px;
+        }
+        
+        ion-label {
+          font-size: 13px;
+        }
+        
+        .account-refresh-btn-left,
+        .add-account-btn-left {
+          height: 28px;
+          width: 28px;
+          --padding-start: 2px;
+          --padding-end: 2px;
+
+          ion-icon {
+            font-size: 16px;
+          }
+        }
+
+        .account-loading-spinner-left {
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+
+    .input-container {
+      .account-selector-wrapper {
+        .account-input {
+          font-size: 13px;
+          --padding-start: 10px;
+          --padding-end: 40px; // Space for clear button only
+        }
+      }
+    }
+
+    .dropdown-container {
+      max-height: 160px;
+
+      .account-dropdown .account-item {
+        --min-height: 44px;
+
+        ion-label {
+          h3 {
+            font-size: 13px;
+          }
+
+          .account-code {
+            font-size: 11px;
+          }
+        }
+      }
+    }
+
+    .balance-container {
+      padding: 6px 10px;
+
+      .balance-label {
+        font-size: 11px;
+      }
+
+      .balance-amount {
+        font-size: 12px;
+      }
+
+      .balance-loading span {
+        font-size: 11px;
+      }
+
+      .balance-error {
+        font-size: 11px;
+      }
+    }
+  }
+}
+
+// Dark theme support
+@media (prefers-color-scheme: dark) {
+  .account-selector-container {
+    .field-label {
+      color: var(--ion-color-dark-contrast);
+    }
+
+    .input-container .search-input-wrapper .account-input {
+      --background: var(--ion-color-step-50);
+      --color: var(--ion-color-dark-contrast);
+      border-color: var(--ion-color-step-200);
+    }
+
+    .dropdown-container {
+      background: var(--ion-color-step-50);
+      border-color: var(--ion-color-step-200);
+
+      .account-dropdown .account-item {
+        --color: var(--ion-color-dark-contrast);
+
+        &:hover {
+          --background: var(--ion-color-step-100);
+        }
+
+        ion-label h3 {
+          color: var(--ion-color-dark-contrast);
+        }
+      }
+    }
+
+    .balance-container {
+      background: var(--ion-color-step-100);
+
+      .balance-label {
+        color: var(--ion-color-dark-contrast);
+      }
+    }
+  }
+}

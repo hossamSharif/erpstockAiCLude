@@ -1,0 +1,524 @@
+/* ========================================
+   ACCOUNT MODAL LIQUID GLASS DESIGN
+   Matching the liquid glass theme
+======================================== */
+
+/* Core Liquid Glass Variables */
+:root {
+  /* Glass Material Properties */
+  --liquid-glass-bg: rgba(255, 255, 255, 0.15);
+  --liquid-glass-bg-light: rgba(255, 255, 255, 0.25);
+  --liquid-glass-bg-dark: rgba(0, 0, 0, 0.15);
+  --liquid-glass-border: rgba(255, 255, 255, 0.2);
+  --liquid-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --liquid-glass-highlight: rgba(255, 255, 255, 0.4);
+  
+  /* Blur and Effects */
+  --glass-blur: 20px;
+  --glass-border-radius: 20px;
+  --glass-border-radius-small: 12px;
+  
+  /* Dynamic Colors */
+  --glass-accent-primary: rgba(0, 122, 255, 0.8);
+  --glass-accent-success: rgba(52, 199, 89, 0.8);
+  --glass-accent-danger: rgba(255, 59, 48, 0.8);
+  
+  /* Animation Properties */
+  --glass-transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Dark Mode Glass Variables */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --liquid-glass-bg: rgba(0, 0, 0, 0.25);
+    --liquid-glass-bg-light: rgba(255, 255, 255, 0.1);
+    --liquid-glass-bg-dark: rgba(0, 0, 0, 0.4);
+    --liquid-glass-border: rgba(255, 255, 255, 0.1);
+    --liquid-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --liquid-glass-highlight: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* ========================================
+   TRANSPARENT HEADER STYLES
+======================================== */
+
+.transparent-header {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  
+  ion-toolbar {
+    --background: transparent;
+    --border-width: 0;
+    --border-color: transparent;
+    --color: rgba(0, 0, 0, 0.8);
+    --min-height: 60px;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    
+    /* Glass material effect */
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.25) 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    
+    /* Subtle border only at bottom */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    
+    /* Glass reflection */
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.3) 0%,
+        transparent 100%
+      );
+      opacity: 0.6;
+      pointer-events: none;
+    }
+  }
+}
+
+.transparent-toolbar {
+  .glass-title {
+    color: rgba(0, 0, 0, 0.8);
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  }
+  
+  ion-button {
+    --background: rgba(255, 255, 255, 0.15);
+    --color: rgba(0, 0, 0, 0.8);
+    --border-radius: var(--glass-border-radius-small);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: var(--glass-transition);
+    
+    &:hover {
+      --background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+    
+    &[color="primary"] {
+      --background: var(--glass-accent-primary);
+      --color: white;
+      border-color: var(--glass-accent-primary);
+      
+      &:hover {
+        --background: rgba(0, 122, 255, 0.9);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+      }
+    }
+  }
+}
+
+/* ========================================
+   MAIN CONTENT STYLES
+======================================== */
+
+.modern-content {
+  background: linear-gradient(
+    135deg,
+    #667eea 0%,
+    #764ba2 50%,
+    #667eea 100%
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+  min-height: 100vh;
+  direction: rtl;
+  --color: rgba(0, 0, 0, 0.8);
+  padding: 0;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.form-container {
+  padding: 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-height: 100vh;
+}
+
+/* ========================================
+   ACCOUNT CARD STYLES
+======================================== */
+
+.account-card {
+  margin: 0;
+  border-radius: var(--glass-border-radius);
+  background: var(--liquid-glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 0.5px solid rgba(128, 128, 128, 0.3);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.15),
+    0 4px 8px rgba(0, 0, 0, 0.1),
+    var(--liquid-glass-shadow),
+    0 0 0 1px var(--liquid-glass-highlight) inset,
+    0 1px 0 var(--liquid-glass-highlight) inset;
+  overflow: hidden;
+  position: relative;
+  transition: var(--glass-transition);
+  
+  /* 3D Perspective */
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  
+  /* Glass Reflection Effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    background: linear-gradient(
+      180deg,
+      var(--liquid-glass-highlight) 0%,
+      transparent 100%
+    );
+    opacity: 0.3;
+    pointer-events: none;
+    border-radius: var(--glass-border-radius) var(--glass-border-radius) 0 0;
+    z-index: 1;
+  }
+  
+  ion-card-header {
+    background: var(--ion-color-primary, #3880ff);
+    color: white;
+    padding: 1.5rem;
+    position: relative;
+    z-index: 2;
+    
+    ion-card-title {
+      color: white;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 0;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+  }
+  
+  ion-card-content {
+    padding: 2rem;
+    position: relative;
+    z-index: 2;
+    background: transparent;
+  }
+}
+
+/* ========================================
+   FORM STYLES
+======================================== */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+.form-label {
+  color: rgba(0, 0, 0, 0.8);
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.form-input {
+  --background: rgba(255, 255, 255, 0.3);
+  --color: rgba(0, 0, 0, 0.8);
+  --placeholder-color: rgba(0, 0, 0, 0.5);
+  --border-radius: var(--glass-border-radius-small);
+  --padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: var(--glass-transition);
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  &:focus-within {
+    --background: rgba(255, 255, 255, 0.4);
+    border-color: var(--glass-accent-primary);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+    transform: translateY(-2px);
+  }
+}
+
+.form-select {
+  --background: rgba(255, 255, 255, 0.3);
+  --color: rgba(0, 0, 0, 0.8);
+  --placeholder-color: rgba(0, 0, 0, 0.5);
+  --border-radius: var(--glass-border-radius-small);
+  --padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  transition: var(--glass-transition);
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+  
+  &:focus-within {
+    --background: rgba(255, 255, 255, 0.4);
+    border-color: var(--glass-accent-primary);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+    transform: translateY(-2px);
+    z-index: 10;
+  }
+  
+  &.select-expanded {
+    z-index: 100;
+    transform: translateY(-2px);
+  }
+}
+
+.form-textarea {
+  --background: rgba(255, 255, 255, 0.3);
+  --color: rgba(0, 0, 0, 0.8);
+  --placeholder-color: rgba(0, 0, 0, 0.5);
+  --border-radius: var(--glass-border-radius-small);
+  --padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: var(--glass-transition);
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  resize: vertical;
+  
+  &:focus-within {
+    --background: rgba(255, 255, 255, 0.4);
+    border-color: var(--glass-accent-primary);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+    transform: translateY(-2px);
+  }
+}
+
+/* ========================================
+   RADIO GROUP STYLES
+======================================== */
+
+.radio-group {
+  .radio-options {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    
+    .radio-item {
+      --background: rgba(255, 255, 255, 0.2);
+      --color: rgba(0, 0, 0, 0.8);
+      --border-radius: var(--glass-border-radius-small);
+      --padding: 0.5rem 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: var(--glass-transition);
+      margin: 0;
+      
+      &:hover {
+        --background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+      }
+      
+      ion-radio {
+        --color: var(--glass-accent-primary);
+        --color-checked: var(--glass-accent-primary);
+      }
+      
+      ion-label {
+        color: rgba(0, 0, 0, 0.8);
+        font-weight: 500;
+        font-size: 0.9rem;
+        margin-left: 0.5rem;
+      }
+    }
+  }
+}
+
+/* ========================================
+   ACTION BUTTONS
+======================================== */
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.action-buttons-container {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.buttons-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  align-items: center;
+}
+
+.action-btn {
+  --border-radius: var(--glass-border-radius-small);
+  --padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: var(--glass-transition);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 200px;
+  max-width: 100%;
+  
+  &:hover:not([disabled]) {
+    transform: translateY(-2px);
+  }
+  
+  ion-icon {
+    font-size: 1rem;
+  }
+}
+
+.cancel-btn {
+  --background: transparent;
+  --color: rgba(0, 0, 0, 0.6);
+  --border-color: rgba(255, 255, 255, 0.5);
+  --border-radius: var(--glass-border-radius-small);
+  --padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: var(--glass-transition);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    --background: rgba(255, 255, 255, 0.2);
+    --color: rgba(0, 0, 0, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+  }
+}
+
+.save-btn {
+  --background: var(--glass-accent-primary);
+  --color: white;
+  border: 1px solid var(--glass-accent-primary);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+  
+  &:hover:not([disabled]) {
+    --background: rgba(0, 122, 255, 0.9);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+  }
+  
+  &[disabled] {
+    --background: rgba(0, 122, 255, 0.5);
+    --color: rgba(255, 255, 255, 0.7);
+    opacity: 0.6;
+  }
+}
+
+.delete-btn {
+  --background: var(--glass-accent-danger);
+  --color: white;
+  border: 1px solid var(--glass-accent-danger);
+  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.2);
+  
+  &:hover:not([disabled]) {
+    --background: rgba(255, 59, 48, 0.9);
+    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+  }
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+======================================== */
+
+@media (max-width: 768px) {
+  .form-container {
+    padding: 1rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .action-buttons {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .action-buttons-container {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+  }
+  
+  .buttons-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .action-btn {
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  .account-card {
+    ion-card-header {
+      padding: 1rem;
+    }
+    
+    ion-card-content {
+      padding: 1rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    padding: 0.5rem;
+  }
+  
+  .radio-group .radio-options {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

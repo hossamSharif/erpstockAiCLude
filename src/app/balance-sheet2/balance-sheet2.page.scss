@@ -1,0 +1,694 @@
+/* Modern Balance Sheet Styles */
+
+/* ======================================
+   BASE STYLES - Modern Glass Design
+   ====================================== */
+
+.modern-content {
+  --background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1), 
+    rgba(255, 255, 255, 0.05)
+  );
+  --color: var(--ion-color-dark);
+  min-height: 100vh;
+  padding: 8px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      45deg,
+      rgba(74, 144, 226, 0.1),
+      rgba(80, 227, 194, 0.1),
+      rgba(245, 166, 35, 0.1)
+    );
+    animation: gradientShift 15s ease infinite;
+    z-index: -1;
+  }
+}
+
+@keyframes gradientShift {
+  0%, 100% { 
+    background: linear-gradient(45deg, rgba(74, 144, 226, 0.1), rgba(80, 227, 194, 0.1), rgba(245, 166, 35, 0.1)); 
+  }
+  50% { 
+    background: linear-gradient(225deg, rgba(245, 166, 35, 0.1), rgba(74, 144, 226, 0.1), rgba(80, 227, 194, 0.1)); 
+  }
+}
+
+/* ======================================
+   LOADING STYLES
+   ====================================== */
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  gap: 16px;
+
+  ion-spinner {
+    width: 48px;
+    height: 48px;
+    --color: var(--ion-color-primary);
+  }
+
+  .loading-text {
+    color: var(--ion-color-medium);
+    font-size: 14px;
+    margin: 0;
+  }
+}
+
+/* ======================================
+   MAIN CONTAINER
+   ====================================== */
+
+.main-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ======================================
+   CARD STYLES
+   ====================================== */
+
+.filter-card, .summary-card, .table-card, .mobile-header-card, .mobile-account-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  margin: 0;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 12px 48px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* ======================================
+   FILTER CARD STYLES
+   ====================================== */
+
+.filter-content {
+  padding: 16px;
+}
+
+.segment-container {
+  margin-bottom: 16px;
+}
+
+.segment-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin-bottom: 12px;
+}
+
+.balance-segment {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  ion-segment-button {
+    --background: transparent;
+    --background-checked: var(--ion-color-primary);
+    --color: var(--ion-color-dark);
+    --color-checked: white;
+    border-radius: 8px;
+    margin: 4px;
+    transition: all 0.3s ease;
+    min-height: 44px;
+
+    &.segment-button-checked {
+      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .segment-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 6px;
+
+      ion-icon {
+        font-size: 16px;
+      }
+
+      span {
+        font-size: 12px;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+.balance-filter {
+  ion-item {
+    --background: transparent;
+    --color: var(--ion-color-dark);
+    --padding-start: 0;
+    
+    ion-label {
+      font-weight: 500;
+    }
+
+    ion-checkbox {
+      --color: var(--ion-color-primary);
+      --color-checked: var(--ion-color-primary);
+    }
+  }
+}
+
+/* ======================================
+   SUMMARY CARD STYLES
+   ====================================== */
+
+.summary-content {
+  padding: 16px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.summary-item {
+  text-align: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .summary-label {
+    font-size: 13px;
+    color: var(--ion-color-medium);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .summary-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ion-color-dark);
+    font-family: 'Courier New', monospace;
+
+    &.debit-total {
+      color: var(--ion-color-danger);
+    }
+
+    &.credit-total {
+      color: var(--ion-color-success);
+    }
+  }
+}
+
+/* ======================================
+   TABLE STYLES WITH PRIMARY HEADER
+   ====================================== */
+
+.table-card {
+  &[color="primary"] {
+    .table-header {
+      background: linear-gradient(135deg, 
+        var(--ion-color-primary), 
+        var(--ion-color-primary-shade)
+      );
+      color: white;
+      
+      .table-title {
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 18px;
+        font-weight: 600;
+        
+        ion-icon {
+          font-size: 22px;
+        }
+        
+        .account-count {
+          font-size: 14px;
+          color: rgba(255, 255, 255, 0.8);
+          font-weight: 400;
+        }
+      }
+    }
+  }
+}
+
+.table-content {
+  padding: 0;
+}
+
+.table-container {
+  overflow-x: auto;
+  overflow-y: visible;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  position: relative;
+  margin-bottom: 80px; // Add space after table for footer visibility
+  
+  // Ensure footer is always visible
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(74, 144, 226, 0.6);
+    border-radius: 4px;
+    
+    &:hover {
+      background: rgba(74, 144, 226, 0.8);
+    }
+  }
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 14px;
+
+  thead {
+    background: linear-gradient(135deg, 
+      rgba(74, 144, 226, 0.1), 
+      rgba(80, 227, 194, 0.1)
+    );
+
+    th {
+      padding: 16px 12px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+      border-bottom: 2px solid rgba(74, 144, 226, 0.2);
+      white-space: nowrap;
+      font-size: 13px;
+    }
+  }
+
+  tbody {
+    .table-row {
+      transition: all 0.2s ease;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+
+      &:hover {
+        background: rgba(74, 144, 226, 0.05);
+        transform: scale(1.001);
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      td {
+        padding: 12px;
+        text-align: center;
+        vertical-align: middle;
+        color: var(--ion-color-dark);
+        font-size: 13px;
+
+        &.serial {
+          font-weight: 600;
+          color: var(--ion-color-medium);
+          width: 60px;
+        }
+
+        &.account-name {
+          text-align: right;
+          font-weight: 500;
+          max-width: 200px;
+          word-break: break-word;
+        }
+
+        &.account-code {
+          color: var(--ion-color-medium);
+          font-family: 'Courier New', monospace;
+        }
+
+        &.account-type {
+          width: 120px;
+        }
+
+        &.opening-balance, &.debit, &.credit {
+          font-family: 'Courier New', monospace;
+          font-weight: 600;
+          width: 120px;
+        }
+
+        .type-badge {
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 500;
+          
+          &.customer-type {
+            background: rgba(16, 220, 96, 0.1);
+            color: var(--ion-color-success);
+            border: 1px solid rgba(16, 220, 96, 0.2);
+          }
+
+          &.supplier-type {
+            background: rgba(245, 166, 35, 0.1);
+            color: var(--ion-color-warning);
+            border: 1px solid rgba(245, 166, 35, 0.2);
+          }
+
+          &.sales-type {
+            background: rgba(74, 144, 226, 0.1);
+            color: var(--ion-color-primary);
+            border: 1px solid rgba(74, 144, 226, 0.2);
+          }
+
+          &.purchase-type {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--ion-color-danger);
+            border: 1px solid rgba(220, 53, 69, 0.2);
+          }
+        }
+
+        .status-badge {
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 500;
+
+          &.debit-status {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--ion-color-danger);
+            border: 1px solid rgba(220, 53, 69, 0.2);
+          }
+
+          &.credit-status {
+            background: rgba(16, 220, 96, 0.1);
+            color: var(--ion-color-success);
+            border: 1px solid rgba(16, 220, 96, 0.2);
+          }
+        }
+
+        .amount {
+          font-family: 'Courier New', monospace;
+          
+          &.debit-amount {
+            color: var(--ion-color-danger);
+            font-weight: 600;
+          }
+
+          &.credit-amount {
+            color: var(--ion-color-success);
+            font-weight: 600;
+          }
+
+          &.zero-amount {
+            color: var(--ion-color-medium);
+            opacity: 0.6;
+          }
+        }
+      }
+    }
+
+    .skeleton-row {
+      td {
+        padding: 12px;
+      }
+    }
+  }
+  
+  tfoot {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    
+    .totals-row {
+      background: linear-gradient(135deg, 
+        rgba(74, 144, 226, 0.95), 
+        rgba(80, 227, 194, 0.95)
+      );
+      border-top: 3px solid rgba(74, 144, 226, 0.8);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      
+      td {
+        padding: 18px 12px;
+        font-weight: 700;
+        font-size: 14px;
+        border: none;
+        position: relative;
+        
+        &.totals-label {
+          text-align: center;
+          color: white;
+          font-size: 16px;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        
+        &.debit-total, &.credit-total, &.difference-cell {
+          text-align: center;
+          
+          .amount {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 15px;
+            color: white !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            min-width: 80px;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ======================================
+   MOBILE STYLES
+   ====================================== */
+
+.mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-header-card {
+  &[color="primary"] {
+    ion-card-header {
+      background: linear-gradient(135deg, 
+        var(--ion-color-primary), 
+        var(--ion-color-primary-shade)
+      );
+      
+      .mobile-title {
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 18px;
+        font-weight: 600;
+        
+        ion-icon {
+          font-size: 22px;
+        }
+      }
+    }
+  }
+}
+
+.mobile-content {
+  padding: 16px;
+}
+
+.mobile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  
+  .account-info {
+    flex: 1;
+    
+    h3 {
+      margin: 0 0 4px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+    }
+    
+    p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--ion-color-medium);
+      font-family: 'Courier New', monospace;
+    }
+  }
+  
+  .account-type-mobile {
+    flex-shrink: 0;
+  }
+}
+
+.mobile-balances {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.balance-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  .balance-label {
+    font-size: 13px;
+    color: var(--ion-color-medium);
+    font-weight: 500;
+  }
+  
+  .balance-value {
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    color: var(--ion-color-dark);
+    
+    &.debit-amount {
+      color: var(--ion-color-danger);
+    }
+    
+    &.credit-amount {
+      color: var(--ion-color-success);
+    }
+  }
+}
+
+/* ======================================
+   EMPTY STATE
+   ====================================== */
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ion-color-medium);
+
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  h4 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.8;
+  }
+}
+
+/* ======================================
+   RESPONSIVE DESIGN
+   ====================================== */
+
+@media (max-width: 768px) {
+  .modern-content {
+    padding: 6px;
+  }
+
+  .balance-segment {
+    ion-segment-button {
+      .segment-content {
+        padding: 4px;
+
+        ion-icon {
+          font-size: 14px;
+        }
+
+        span {
+          font-size: 11px;
+        }
+      }
+    }
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .summary-item {
+    padding: 8px;
+
+    .summary-label {
+      font-size: 12px;
+    }
+
+    .summary-value {
+      font-size: 16px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .balance-segment {
+    ion-segment-button {
+      .segment-content {
+        span {
+          font-size: 10px;
+        }
+      }
+    }
+  }
+}
