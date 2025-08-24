@@ -8,7 +8,8 @@ import { FilterPipe } from '../sales/pipe';
 import { AuthServiceService } from '../auth/auth-service.service';
 import { PrintModalPage } from '../print-modal/print-modal.page';
 import { NavigationExtras, Router } from '@angular/router'
-import { ActivatedRoute } from '@angular/router'; 
+import { ActivatedRoute } from '@angular/router';
+import { SortingService, SortConfig } from '../services/sorting.service'; 
 
 @Component({
   selector: 'app-items-report',
@@ -24,6 +25,8 @@ export class ItemsReportPage implements OnInit {
     searchResult :Array<any> =[]
   isOpen : boolean = false;
   payArray :Array<any> = []
+  sortedPayArray :Array<any> = []
+  currentTransactionsSort: SortConfig | null = null
   payArrayDaily :Array<any> = []
   perchDetailsArr :Array<any> = []
   payDetailsArr :Array<any> = []
@@ -40,6 +43,8 @@ export class ItemsReportPage implements OnInit {
   items:Array<any> =[]
   itemsLocal:Array<any> =[]
   itemList:Array<any> =[]
+  sortedItems:Array<any> =[]
+  currentSort: SortConfig | null = null
   salesLocal:Array<any> =[]
   loading:boolean = false ;
   sales:Array<any> =[]
@@ -98,7 +103,7 @@ export class ItemsReportPage implements OnInit {
    totPurch:any 
    }
 
-  constructor( private route: ActivatedRoute,private rout : Router,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) {
+  constructor( private route: ActivatedRoute,private rout : Router,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService) {
     this.selectedItem = {
       id:undefined,
       dateCreated:"",
@@ -185,9 +190,7 @@ export class ItemsReportPage implements OnInit {
       }
     });
     this.prepareOffline()
-    this.getAppInfo()   
-   this.getAllStockItemsWithouteCounts()
-
+    this.getAppInfo()
 
     this.route.queryParams.subscribe(params => {
       if (params['item']) {
@@ -221,47 +224,50 @@ export class ItemsReportPage implements OnInit {
   }
 
 readItemByIdQty(){  
-  this.api.readItemByIdQty(this.store_info.id ,this.selectedItem.id,this.year.id).subscribe(data =>{
+  // This method is now integrated into the search() method which uses getCompleteItemReport
+  // Keeping it here for backward compatibility if called from other places
+  if (!this.selectedItem?.id) {
+    return;
+  }
+
+  this.api.readItemByIdQty(this.store_info.id, this.selectedItem.id, this.year.id).subscribe(data => {
      console.log('readItemByIdQty',data)
      let res = data['data'][0]
-     if(res['message'] != 'No record Found'){
+     if(res && res['message'] != 'No record Found'){
        this.payTotQty = res.salesQuantity  
        this.availQty = res.availQty   
        this.qtyReal = res.qtyReal 
-        this.perchTotQty = res.perchQuantity 
-       this.firstQty =    res.firstQuantity 
+       this.perchTotQty = res.perchQuantity 
+       this.firstQty = res.firstQuantity 
        console.log('readItemByIdQty',this.payTotQty , this.availQty , this.qtyReal , this.perchTotQty , this.firstQty) 
        
-      
-    this.selectedItemNew = {
-      id:res.id, 
-      pay_ref:res,
-      item_desc:res,
-      item_name:res.item_name,
-      item_unit:res.item_unit,
-      parcode:res.parcode,
-      pay_price:res.pay_price,
-      perch_price:res.perch_price, 
-      qtyReal:res.qtyReal,
-      availQty:res.availQty, 
-      firstQty:res.firstQuantity ,
-      perchTotQty:res.perchQuantity,
-      payTotQty:res.salesQuantity, 
-      totSales:res.sales28 ,
-      totPurch:res.purch28 ,
-      currenQty:0,
-    }
+       this.selectedItemNew = {
+         id: res.id, 
+         pay_ref: "",
+         item_desc: res.item_desc || "",
+         item_name: res.item_name || "",
+         item_unit: res.item_unit || "",
+         parcode: res.item_parcode || 0,
+         pay_price: res.pay_price || 0,
+         perch_price: res.perch_price || 0, 
+         qtyReal: res.qtyReal || 0,
+         availQty: res.availQty || 0, 
+         firstQty: res.firstQuantity || 0,
+         perchTotQty: res.perchQuantity || 0,
+         payTotQty: res.salesQuantity || 0, 
+         totSales: res.sales28 || 0,
+         totPurch: res.purch28 || 0,
+         currenQty: 0,
+       }
 
-    this.getQtyTotalItemId() 
+       this.getQtyTotalItemId() 
      }
-    //   this.getQtyPurchByItemId() 
    }, (err) => {
-   //console.log(err);
-   this.presentToast('1خطا في الإتصال حاول مرة اخري' , 'danger')
-  
- },
- ()=>{
- })  
+     console.log(err);
+     this.presentToast('خطأ في الإتصال حاول مرة أخرى' , 'danger')
+   },
+   () => {
+   })  
  }
 
 
@@ -314,6 +320,9 @@ readItemByIdQty(){
             //   element.quantity = (+element.perchQuantity + +element.firstQuantity) - +element.salesQuantity
             // });
             // this.searchResult = this.items
+            
+            // Apply sorting after loading items
+            this.applySorting();
             this.loadingItems = false 
             this.storage.set('itemsLocal' , this.items).then((response) => {
                
@@ -340,6 +349,9 @@ readItemByIdQty(){
   
           //   element.quantity = (+element.perchQuantity + +element.firstQuantity) - +element.salesQuantity
           // });
+          
+          // Apply sorting after loading items from offline
+          this.applySorting();
           this.searchResult = this.items
         }
         } 
@@ -452,7 +464,7 @@ readItemByIdQty(){
           this.store_info = response
           //console.log(response)
           //console.log(this.store_info)
-          this.getAllStockItemsWithouteCounts()
+          // Remove getAllStockItemsWithouteCounts() call since enhanced component handles this
           this.getSalesAccount()   
            
           this.getItemLocalOff()
@@ -674,12 +686,6 @@ radioChange(ev){
       }, 2000);
     }
 
-        refresh(para?){
-        //this.getStockItems()tr
-            this.loadingItems = true
-            this.getAllStockItemsWithouteCounts()
-            
-        }
   
 
 
@@ -1292,6 +1298,9 @@ getItemPaysByItemIdBy2date(){
 // sorting array
  this.payArray = this.payArray.sort((a, b) => (a.pay_date > b.pay_date) ? -1 : 1);
  
+ // Apply advanced sorting for transactions
+ this.applyTransactionsSorting();
+ 
   }
 
 
@@ -1416,50 +1425,300 @@ getItemPaysByItemIdBy2date(){
  } 
 
 
-search(){
-  // this.currenQty = 0
-  // this.firstQty = 0
-  // this.perchTotQty =0
-  // this.payTotQty =  0
- this.selectedItemNew = {
-      id:undefined, 
-      pay_ref:"",
-      item_desc:"",
-      item_name:"",
-      item_unit:"",
-      parcode:0,
-      pay_price:0,
-      perch_price:0, 
-      qtyReal:0,
-      availQty:0,
-      currenQty:0,
-      firstQty:0,
-      perchTotQty:0,
-      payTotQty:0, 
-      totSales:0,
-      totPurch:0
-    }
+// Event handler for enhanced item selector
+onItemSelected(selectedItem: any) {
+  console.log('Item selected from enhanced component:', selectedItem);
   
- this.payArray = []
- this.perchDetailsArr =[]
- this.payDetailsArr = []
-  this.showEmpty=false
-  
-  if (this.radioVal == 0) { 
-    this.getItemPaysByItemId() 
-    this.getItemPurchByItemId() 
-    this.readItemByIdQty() 
-    } else if(this.radioVal == 1){
-    this.getItemPurchsByItemIdBydate() 
-    this.getItemPaysByItemIdBydate() 
-    this.readItemByIdQty()
-    }else if(this.radioVal == 2){
-      this.getItemPaysByItemIdBy2date() 
-      this.readItemByIdQty()
-      }else if(this.radioVal == 3){
-        this.getItemPaysBydate() 
-      }
- }
+  if (selectedItem && selectedItem.id) {
+    // Update the existing selectedItem with the new selection
+    this.selectedItem = {
+      id: selectedItem.id,
+      dateCreated: selectedItem.dateCreated || "",
+      pay_ref: selectedItem.pay_ref || "",
+      item_desc: selectedItem.item_desc || "",
+      item_name: selectedItem.item_name || "",
+      item_unit: selectedItem.item_unit || "",
+      parcode: selectedItem.parcode || 0,
+      pay_price: selectedItem.pay_price || 0,
+      perch_price: selectedItem.perch_price || 0,
+      qty: selectedItem.qty || 0,
+      tot: selectedItem.tot || 0,
+      availQty: selectedItem.availQty || 0,
+      firstQuantity: selectedItem.firstQuantity || 0,
+      aliasEn: selectedItem.aliasEn || ""
+    };
+    
+    // Automatically trigger search when item is selected
+    this.search();
+  } else {
+    // Clear selection if null item is passed
+    this.clearItemSelection();
+  }
+}
 
+// Event handler for refresh request from enhanced component
+onRefreshRequested() {
+  console.log('Refresh requested from enhanced component');
+  // The enhanced component handles its own refresh, but we can add any additional logic here if needed
+}
+
+refresh() {
+  this.presentToast('تم تحديث البيانات', 'success');
+  window.location.reload();
+}
+
+// Helper method to clear item selection
+clearItemSelection() {
+  this.selectedItem = {
+    id: undefined,
+    dateCreated: "",
+    pay_ref: "",
+    item_desc: "",
+    item_name: "",
+    item_unit: "",
+    parcode: 0,
+    pay_price: 0,
+    perch_price: 0,
+    qty: 0,
+    tot: 0,
+    availQty: 0,
+    firstQuantity: 0,
+    aliasEn: ""
+  };
+  
+  this.selectedItemNew = {
+    id: undefined, 
+    pay_ref: "",
+    item_desc: "",
+    item_name: "",
+    item_unit: "",
+    parcode: 0,
+    pay_price: 0,
+    perch_price: 0, 
+    qtyReal: 0,
+    availQty: 0,
+    currenQty: 0,
+    firstQty: 0,
+    perchTotQty: 0,
+    payTotQty: 0, 
+    totSales: 0,
+    totPurch: 0
+  };
+  
+  this.payArray = [];
+  this.perchDetailsArr = [];
+  this.payDetailsArr = [];
+  this.showEmpty = false;
+}
+
+search(){
+  if (!this.selectedItem?.id) {
+    this.presentToast('يرجى اختيار صنف أولاً', 'warning');
+    return;
+  }
+
+  // Reset all data before new search
+  this.selectedItemNew = {
+    id: undefined, 
+    pay_ref: "",
+    item_desc: "",
+    item_name: "",
+    item_unit: "",
+    parcode: 0,
+    pay_price: 0,
+    perch_price: 0, 
+    qtyReal: 0,
+    availQty: 0,
+    currenQty: 0,
+    firstQty: 0,
+    perchTotQty: 0,
+    payTotQty: 0, 
+    totSales: 0,
+    totPurch: 0
+  };
+  
+  this.payArray = [];
+  this.perchDetailsArr = [];
+  this.payDetailsArr = [];
+  this.tswiaDetailsArr = [];
+  this.showEmpty = false;
+  this.loading = true;
+
+  // Determine report type based on radioVal
+  let reportType = this.radioVal;
+  let startDate = null;
+  let endDate = null;
+
+  // Set date parameters based on report type
+  if (this.radioVal == 1) {
+    // Single date filter
+    startDate = this.startingDate;
+  } else if (this.radioVal == 2) {
+    // Date range filter
+    startDate = this.startingDate;
+    endDate = this.endDate;
+  } else if (this.radioVal == 3) {
+    // Daily report by date
+    startDate = this.startingDate;
+  }
+
+  // Make single API call to get all report data
+  this.api.getCompleteItemReport(
+    this.store_info.id, 
+    this.selectedItem.id, 
+    this.year.id, 
+    reportType, 
+    startDate, 
+    endDate
+  ).subscribe(
+    data => {
+      console.log('Complete item report data:', data);
+      
+      if (data && data['status'] === 'success' && data['data']) {
+        const reportData = data['data'];
+        
+        // Update item details
+        if (reportData.item_details) {
+          const itemData = reportData.item_details;
+          this.selectedItemNew = {
+            id: itemData.id,
+            pay_ref: "",
+            item_desc: itemData.item_desc || "",
+            item_name: itemData.item_name || "",
+            item_unit: itemData.item_unit || "",
+            parcode: itemData.item_parcode || 0,
+            pay_price: itemData.pay_price || 0,
+            perch_price: itemData.perch_price || 0,
+            qtyReal: itemData.qtyReal || 0,
+            availQty: itemData.availQty || 0,
+            currenQty: itemData.availQty || 0,
+            firstQty: itemData.firstQuantity || 0,
+            perchTotQty: itemData.perchQuantity || 0,
+            payTotQty: itemData.salesQuantity || 0,
+            totSales: itemData.sales28 || 0,
+            totPurch: itemData.purch28 || 0
+          };
+
+          // Update quantity calculations
+          this.payTotQty = itemData.salesQuantity || 0;
+          this.availQty = itemData.availQty || 0;
+          this.qtyReal = itemData.qtyReal || 0;
+          this.perchTotQty = itemData.perchQuantity || 0;
+          this.firstQty = itemData.firstQuantity || 0;
+        }
+
+        // Process sales invoices
+        if (reportData.sales_invoices && reportData.sales_invoices.length > 0) {
+          this.payDetailsArr = reportData.sales_invoices.map(item => ({
+            ...item,
+            type: 'مبيعات'
+          }));
+        }
+
+        // Process purchase invoices
+        if (reportData.purchase_invoices && reportData.purchase_invoices.length > 0) {
+          this.perchDetailsArr = reportData.purchase_invoices.map(item => ({
+            ...item,
+            type: 'مشتريات'
+          }));
+        }
+
+        // Process adjustment records
+        if (reportData.adjustment_records && reportData.adjustment_records.length > 0) {
+          this.tswiaDetailsArr = reportData.adjustment_records.map(item => ({
+            ...item,
+            type: 'تسوية جردية'
+          }));
+        }
+
+        // Process the data based on report type
+        if (this.radioVal == 3) {
+          // Daily report - use aggregated view
+          this.mixArrayAndOrderongCaseDaily();
+          if (this.payArrayDaily.length == 0) {
+            this.showEmpty = true;
+          } else {
+            this.showEmpty = false;
+          }
+        } else {
+          // Regular report - combine all arrays
+          this.mixArrayAndOrderong();
+          this.getTotal();
+          if (this.payArray.length == 0) {
+            this.showEmpty = true;
+          } else {
+            this.showEmpty = false;
+          }
+        }
+
+        console.log('Report processed successfully');
+
+      } else {
+        // No data found
+        this.showEmpty = true;
+        this.presentToast('لا توجد بيانات للصنف المحدد', 'warning');
+      }
+    },
+    (err) => {
+      console.error('Error fetching complete item report:', err);
+      this.loading = false;
+      this.showEmpty = true;
+      this.presentToast('خطأ في الإتصال حاول مرة أخرى', 'danger');
+    },
+    () => {
+      this.loading = false;
+    }
+  );
+}
+
+// Apply sorting to transactions (payArray)
+applyTransactionsSorting() {
+  if (this.currentTransactionsSort) {
+    this.sortedPayArray = this.sortingService.sortData(
+      this.payArray, 
+      this.currentTransactionsSort.column, 
+      this.currentTransactionsSort.direction
+    );
+  } else {
+    this.sortedPayArray = [...this.payArray];
+  }
+}
+
+// Handle transaction column sort
+sortTransactionsBy(column: string) {
+  const direction = this.sortingService.getNextSortDirection(column, this.currentTransactionsSort);
+  this.currentTransactionsSort = { column, direction };
+  this.applyTransactionsSorting();
+}
+
+// Get sort icon for transaction column
+getTransactionsSortIcon(column: string): string {
+  return this.sortingService.getSortIcon(column, this.currentTransactionsSort);
+}
+
+// Apply sorting to items
+applySorting() {
+  if (this.currentSort) {
+    this.sortedItems = this.sortingService.sortData(
+      this.items, 
+      this.currentSort.column, 
+      this.currentSort.direction
+    );
+  } else {
+    this.sortedItems = [...this.items];
+  }
+}
+
+// Handle column sort
+sortBy(column: string) {
+  const direction = this.sortingService.getNextSortDirection(column, this.currentSort);
+  this.currentSort = { column, direction };
+  this.applySorting();
+}
+
+// Get sort icon for column
+getSortIcon(column: string): string {
+  return this.sortingService.getSortIcon(column, this.currentSort);
+}
 
 }

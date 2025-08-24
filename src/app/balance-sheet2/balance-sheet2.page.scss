@@ -692,3 +692,33 @@
     }
   }
 }
+
+// Export buttons styling
+.card-header-with-export {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  .table-title {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: white;
+    display: flex;
+    align-items: center;
+    flex: 1;
+
+    ion-icon {
+      margin-left: 8px;
+    }
+
+    .account-count {
+      font-size: 0.9rem;
+      color: var(--ion-color-medium);
+      margin-right: 8px;
+    }
+  }
+}

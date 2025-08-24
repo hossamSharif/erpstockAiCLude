@@ -12,6 +12,7 @@ import { SharedModule } from '../module/shared/shared.module';
 import { FilterPipe } from './pipe';
 import { FilterPipe2 } from './pipe2';
 import { FilterPipe3 } from './pipe3';
+ 
 
 @NgModule({
   imports: [

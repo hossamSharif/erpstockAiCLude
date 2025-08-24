@@ -165,6 +165,112 @@ const searchSharp = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/
 
 /***/ }),
 
+/***/ 27533:
+/*!**************************************************************************!*\
+  !*** ./node_modules/ng2-search-filter/__ivy_ngcc__/ng2-search-filter.js ***!
+  \**************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Ng2SearchPipeModule": () => (/* binding */ Ng2SearchPipeModule),
+/* harmony export */   "Ng2SearchPipe": () => (/* binding */ Ng2SearchPipe)
+/* harmony export */ });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ 51109);
+
+
+
+class Ng2SearchPipe {
+    /**
+     * @param {?} items object from array
+     * @param {?} term term's search
+     * @return {?}
+     */
+    transform(items, term) {
+        if (!term || !items)
+            return items;
+        return Ng2SearchPipe.filter(items, term);
+    }
+    /**
+     *
+     * @param {?} items List of items to filter
+     * @param {?} term  a string term to compare with every property of the list
+     *
+     * @return {?}
+     */
+    static filter(items, term) {
+        const /** @type {?} */ toCompare = term.toLowerCase();
+        /**
+         * @param {?} item
+         * @param {?} term
+         * @return {?}
+         */
+        function checkInside(item, term) {
+            for (let /** @type {?} */ property in item) {
+                if (item[property] === null || item[property] == undefined) {
+                    continue;
+                }
+                if (typeof item[property] === 'object') {
+                    if (checkInside(item[property], term)) {
+                        return true;
+                    }
+                }
+                if (item[property].toString().toLowerCase().includes(toCompare)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return items.filter(function (item) {
+            return checkInside(item, term);
+        });
+    }
+}
+Ng2SearchPipe.ɵfac = function Ng2SearchPipe_Factory(t) { return new (t || Ng2SearchPipe)(); };
+Ng2SearchPipe.ɵpipe = /*@__PURE__*/ _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefinePipe"]({ name: "filter", type: Ng2SearchPipe, pure: false });
+Ng2SearchPipe.ɵprov = /*@__PURE__*/ _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineInjectable"]({ token: Ng2SearchPipe, factory: Ng2SearchPipe.ɵfac });
+/**
+ * @nocollapse
+ */
+Ng2SearchPipe.ctorParameters = () => [];
+(function () { (typeof ngDevMode === "undefined" || ngDevMode) && _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](Ng2SearchPipe, [{
+        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__.Pipe,
+        args: [{
+                name: 'filter',
+                pure: false
+            }]
+    }, {
+        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__.Injectable
+    }], null, null); })();
+
+class Ng2SearchPipeModule {
+}
+Ng2SearchPipeModule.ɵfac = function Ng2SearchPipeModule_Factory(t) { return new (t || Ng2SearchPipeModule)(); };
+Ng2SearchPipeModule.ɵmod = /*@__PURE__*/ _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineNgModule"]({ type: Ng2SearchPipeModule });
+Ng2SearchPipeModule.ɵinj = /*@__PURE__*/ _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineInjector"]({});
+/**
+ * @nocollapse
+ */
+Ng2SearchPipeModule.ctorParameters = () => [];
+(function () { (typeof ngDevMode === "undefined" || ngDevMode) && _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](Ng2SearchPipeModule, [{
+        type: _angular_core__WEBPACK_IMPORTED_MODULE_0__.NgModule,
+        args: [{
+                declarations: [Ng2SearchPipe],
+                exports: [Ng2SearchPipe]
+            }]
+    }], null, null); })();
+(function () { (typeof ngJitMode === "undefined" || ngJitMode) && _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵsetNgModuleScope"](Ng2SearchPipeModule, { declarations: [Ng2SearchPipe], exports: [Ng2SearchPipe] }); })();
+
+/**
+ * Generated bundle index. Do not edit.
+ */
+
+
+
+
+
+/***/ }),
+
 /***/ 79208:
 /*!*******************************!*\
   !*** ./src/app/sales/pipe.ts ***!
@@ -278,6 +384,132 @@ let FilterPipe3 = class FilterPipe3 {
 FilterPipe3 = (0,tslib__WEBPACK_IMPORTED_MODULE_0__.__decorate)([
     (0,_angular_core__WEBPACK_IMPORTED_MODULE_1__.Pipe)({ name: 'filterByEnName', pure: true })
 ], FilterPipe3);
+
+
+
+/***/ }),
+
+/***/ 52562:
+/*!*********************************************!*\
+  !*** ./src/app/services/sorting.service.ts ***!
+  \*********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "SortingService": () => (/* binding */ SortingService)
+/* harmony export */ });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ 48163);
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ 51109);
+
+
+let SortingService = class SortingService {
+    constructor() { }
+    // Arabic-aware string comparison
+    compareStrings(a, b) {
+        if (!a && !b)
+            return 0;
+        if (!a)
+            return -1;
+        if (!b)
+            return 1;
+        return a.localeCompare(b, 'ar', {
+            numeric: true,
+            sensitivity: 'base',
+            caseFirst: 'lower'
+        });
+    }
+    // Number comparison
+    compareNumbers(a, b) {
+        const numA = parseFloat(a === null || a === void 0 ? void 0 : a.toString()) || 0;
+        const numB = parseFloat(b === null || b === void 0 ? void 0 : b.toString()) || 0;
+        return numA - numB;
+    }
+    // Date comparison
+    compareDates(a, b) {
+        const dateA = new Date(a);
+        const dateB = new Date(b);
+        return dateA.getTime() - dateB.getTime();
+    }
+    // Generic sorting function
+    sortData(data, column, direction) {
+        if (!data || data.length === 0)
+            return data;
+        const sortedData = [...data].sort((a, b) => {
+            let result = 0;
+            const valueA = a[column];
+            const valueB = b[column];
+            // Handle null/undefined values
+            if (valueA == null && valueB == null)
+                return 0;
+            if (valueA == null)
+                return direction === 'asc' ? -1 : 1;
+            if (valueB == null)
+                return direction === 'asc' ? 1 : -1;
+            // Determine comparison type based on column name and value type
+            if (this.isDateColumn(column) || this.isDateValue(valueA)) {
+                result = this.compareDates(valueA, valueB);
+            }
+            else if (this.isNumericColumn(column) || this.isNumericValue(valueA)) {
+                result = this.compareNumbers(valueA, valueB);
+            }
+            else {
+                // String comparison (Arabic-aware)
+                result = this.compareStrings(String(valueA), String(valueB));
+            }
+            return direction === 'desc' ? -result : result;
+        });
+        return sortedData;
+    }
+    // Check if column is a date column
+    isDateColumn(column) {
+        const dateColumns = ['j_date', 'pay_date', 'date', 'created_at', 'updated_at'];
+        return dateColumns.includes(column);
+    }
+    // Check if value looks like a date
+    isDateValue(value) {
+        if (typeof value === 'string') {
+            // Check for date patterns like YYYY-MM-DD or DD/MM/YYYY
+            const datePattern = /^\d{4}-\d{2}-\d{2}$|^\d{2}\/\d{2}\/\d{4}$/;
+            return datePattern.test(value) || !isNaN(Date.parse(value));
+        }
+        return value instanceof Date;
+    }
+    // Check if column contains numeric data
+    isNumericColumn(column) {
+        const numericColumns = [
+            'amount', 'total', 'balance', 'price', 'quantity', 'qty',
+            'tot_pr', 'discount', 'pay', 'changee', 'sub_balance',
+            'current_balance', 'opening_balance', 'debit', 'credit',
+            'j_pay', 'perch_price', 'pay_price', 'id'
+        ];
+        return numericColumns.some(col => column.toLowerCase().includes(col));
+    }
+    // Check if value is numeric
+    isNumericValue(value) {
+        return !isNaN(parseFloat(value)) && isFinite(value);
+    }
+    // Get sort icon based on current sort state
+    getSortIcon(column, currentSort) {
+        if (!currentSort || currentSort.column !== column) {
+            return 'swap-vertical-outline';
+        }
+        return currentSort.direction === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline';
+    }
+    // Get next sort direction
+    getNextSortDirection(column, currentSort) {
+        if (!currentSort || currentSort.column !== column) {
+            return 'asc';
+        }
+        return currentSort.direction === 'asc' ? 'desc' : 'asc';
+    }
+};
+SortingService.ctorParameters = () => [];
+SortingService = (0,tslib__WEBPACK_IMPORTED_MODULE_0__.__decorate)([
+    (0,_angular_core__WEBPACK_IMPORTED_MODULE_1__.Injectable)({
+        providedIn: 'root'
+    })
+], SortingService);
 
 
 

@@ -7,13 +7,15 @@ import { IonicModule } from '@ionic/angular';
 import { Statement2PageRoutingModule } from './statement2-routing.module';
 
 import { Statement2Page } from './statement2.page';
+import { SharedModule } from '../module/shared/shared.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    Statement2PageRoutingModule
+    Statement2PageRoutingModule,
+    SharedModule
   ],
   declarations: [Statement2Page]
 })

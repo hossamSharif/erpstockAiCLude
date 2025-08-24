@@ -173,11 +173,11 @@
                 <tr *ngFor="let item of printArr[0].itemList ; let i = index"> 
                   <td class="td" style="border: none;">{{item.item_name}}</td>
                   <td class="td"  style="border: none;"> {{item.quantity}}</td>
-                  <td  class="td" style="border: none;">  {{item.pay_price}} </td> 
-                  <td  class="td" style="border: none;">  {{item.discount}} </td> 
+                  <td  class="td" style="border: none;">  {{formatBalance(item.pay_price)}} </td> 
+                  <td  class="td" style="border: none;">  {{formatBalance(item.discount)}} </td> 
                   <td  class="td" style="border: none;">  {{item.tax}} </td> 
-                  <td class="td" style="border: none;">{{+item.pay_price + (+item.tax/100 * +item.pay_price)}}</td>
-                  <td  class="td" style="border: none;">  {{item.tot}} </td> 
+                  <td class="td" style="border: none;">{{formatBalance(+item.pay_price + (+item.tax/100 * +item.pay_price))}}</td>
+                  <td  class="td" style="border: none;">  {{formatBalance(item.tot)}} </td> 
                 </tr> 
                 <tr>
                   <td ></td>
@@ -185,7 +185,7 @@
                   <td ></td>
                   <td></td>
                   <td></td>
-                  <td class="td" style="border: none;">{{printArr[0].payInvo.tot_pr }}</td>
+                  <td class="td" style="border: none;">{{formatBalance(printArr[0].payInvo.tot_pr)}}</td>
                 </tr>
               </table> 
               </div> 
@@ -197,7 +197,7 @@
                   <ion-label>صافي المبلغ  / total  </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> {{printArr[0].payInvo.tot_pr}}</ion-label>
+                  <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr)}}</ion-label>
                 </div>
               </div>
               <div  class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
@@ -205,7 +205,7 @@
                   <ion-label>   نسبة الضريبة % / VAT%</ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  {{printArr[0].payInvo.discount}} </ion-label>
+                  <ion-label>  {{formatBalance(printArr[0].payInvo.discount)}} </ion-label>
                 </div>
               </div>
               <div  class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
@@ -213,7 +213,7 @@
                   <ion-label> قيمة الضريبة / VAT </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  {{printArr[0].payInvo.discount}} </ion-label>
+                  <ion-label>  {{formatBalance(printArr[0].payInvo.discount)}} </ion-label>
                 </div>
               </div> 
 
@@ -222,7 +222,7 @@
                   <ion-label> صافي المبلغ شامل الضريبة / total include VAT   </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> {{printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount}}   </ion-label>
+                  <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}}   </ion-label>
                 </div>
               </div> 
            </div>
@@ -327,12 +327,12 @@
               <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">{{item.item_name}}</td>
               <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{item.quantity}}</td>
               <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;" *ngIf="page=='sales' || page=='sales_record'">
-                {{item.pay_price}}
+                {{formatBalance(item.pay_price)}}
               </td>
               <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;" *ngIf="page=='perch' || page=='perch_record'">
-                {{item.perch_price}}
+                {{formatBalance(item.perch_price)}}
               </td>
-              <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{item.tot}}</td>
+              <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{formatBalance(item.tot)}}</td>
             </tr>
             <!-- Totals Row -->
             <!-- <tr style="background-color: #f0f0f0; font-weight: bold;">
@@ -340,7 +340,7 @@
               <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;"></td>
               <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{printArr[0].itemList.length}}</td>
               <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;" *ngIf="page=='sales' || page=='sales_record' || page=='perch' || page=='perch_record'"></td>
-              <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{printArr[0].payInvo.tot_pr}}</td>
+              <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{formatBalance(printArr[0].payInvo.tot_pr)}}</td>
             </tr> -->
           </tbody>
         </table>
@@ -352,29 +352,23 @@
           <!-- First Row -->
           <div style="margin-bottom: 8px; border-bottom: 1px dotted #ccc; padding-bottom: 8px;">
             <span style="display: inline-block; width: 48%; text-align: right;">
-              <strong>إجمالي المبلغ: </strong>{{printArr[0].payInvo.tot_pr}} ج.س
+              <strong>إجمالي المبلغ: </strong>{{formatBalance(printArr[0].payInvo.tot_pr)}} ج.س
             </span>
             <span style="display: inline-block; width: 48%; text-align: right;" *ngIf="+printArr[0].payInvo.discount > 0">
-              <strong>الخصم: </strong>{{printArr[0].payInvo.discount}} ج.س
+              <strong>الخصم: </strong>{{formatBalance(printArr[0].payInvo.discount)}} ج.س
             </span>
-            <span style="display: inline-block; width: 48%; text-align: right;" *ngIf="+printArr[0].payInvo.discount == 0">
-              <strong>المبلغ المدفوع: </strong>{{printArr[0].payInvo.pay}} ج.س
-            </span>
+            <!-- Hidden pay amount for enhanced mode -->
           </div>
           <!-- Second Row -->
           <div style="margin-bottom: 8px;" *ngIf="+printArr[0].payInvo.discount > 0">
             <span style="display: inline-block; width: 48%; text-align: right;">
-              <strong>الإجمالي بعد الخصم: </strong>{{printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount}} ج.س
+              <strong>الإجمالي بعد الخصم: </strong>{{formatBalance(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}} ج.س
             </span>
-            <span style="display: inline-block; width: 48%; text-align: right;">
-              <strong>المبلغ المدفوع: </strong>{{printArr[0].payInvo.pay}} ج.س
-            </span>
+            <!-- Hidden pay amount for enhanced mode with discount -->
           </div>
           <!-- Third Row for remaining amount -->
           <div style="margin-bottom: 8px;">
-            <span style="display: inline-block; width: 48%; text-align: right;">
-              <strong>المتبقي: </strong>{{printArr[0].payInvo.changee}} ج.س
-            </span>
+            <!-- Hidden remaining amount for enhanced mode -->
           </div>
         </div>
       </div>
@@ -467,19 +461,19 @@
                   <td class="td">{{item.item_name}}</td>
                  <td class="td"> {{item.quantity}}</td>
                  <td *ngIf="page=='sales' || page=='sales_record'" class="td">
-                  {{item.pay_price}}
+                  {{formatBalance(item.pay_price)}}
                 </td>
                  <td  *ngIf="page=='perch' || page=='perch_record'" class="td">
-                  {{item.perch_price}}
+                  {{formatBalance(item.perch_price)}}
                 </td>
-                 <td class="td">{{+item.tot}}</td>
+                 <td class="td">{{formatBalance(+item.tot)}}</td>
                 </tr> 
                 <tr>
                   <td ></td>
                   <td ></td>
                   <td></td>
                   <td></td>
-                  <td class="td">{{printArr[0].payInvo.tot_pr }}</td>
+                  <td class="td">{{formatBalance(printArr[0].payInvo.tot_pr)}}</td>
                 </tr>
               </table> 
               </div> 
@@ -491,7 +485,7 @@
                   <ion-label>إجمالي المبلغ </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> {{printArr[0].payInvo.tot_pr}} ج.س</ion-label>
+                  <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr)}} ج.س</ion-label>
                 </div>
               </div>
               <div *ngIf="+printArr[0].payInvo.discount>0" class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
@@ -499,7 +493,7 @@
                   <ion-label>   الخصــم </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  {{printArr[0].payInvo.discount}}  ج.س</ion-label>
+                  <ion-label>  {{formatBalance(printArr[0].payInvo.discount)}}  ج.س</ion-label>
                 </div>
               </div>  
               <div *ngIf="+printArr[0].payInvo.discount>0" class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
@@ -507,25 +501,11 @@
                   <ion-label> الإجمالي بعدالخصم    </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> {{printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount}}  ج.س</ion-label>
+                  <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}}  ج.س</ion-label>
                 </div>
               </div>
-              <div   class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
-                <div class="rtl ion-text-center" style=" width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  المبلغ المدفوع نقدا      </ion-label>
-                </div>
-                <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  {{printArr[0].payInvo.pay}}  ج.س</ion-label>
-                </div>
-              </div>
-              <div  class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
-                <div class="rtl ion-text-center" style=" width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  المتبقي    </ion-label>
-                </div>
-                <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  {{printArr[0].payInvo.changee}} ج.س</ion-label>
-                </div>
-              </div>
+              <!-- Hidden pay amount section for regular mode -->
+              <!-- Hidden remaining amount section for regular mode -->
              
               <!-- <div   class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
                 <div class="rtl ion-text-center" style=" width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
@@ -534,7 +514,7 @@
                   <ion-label *ngIf = "printArr[0].balanceStatus == 'credit'">  <strong>( له ) </strong>  </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  {{printArr[0].sub_balanse}} ج.س</ion-label>
+                  <ion-label>  {{formatBalance(printArr[0].sub_balanse)}} ج.س</ion-label>
                 </div>
               </div> -->
 
@@ -596,16 +576,16 @@
                <td class="td"> {{item.quantity}}</td>
                
                <td   class="td">
-                {{item.perch_price}}
+                {{formatBalance(item.perch_price)}}
               </td>
-               <td class="td">{{+item.tot}}</td>
+               <td class="td">{{formatBalance(+item.tot)}}</td>
               </tr> 
               <tr>
                 <td ></td>
                 <td ></td>
                 <td></td>
                 <td></td>
-                <td class="td">{{printArr[0].payInvo.tot_pr }}</td>
+                <td class="td">{{formatBalance(printArr[0].payInvo.tot_pr)}}</td>
               </tr>
             </table> 
             </div> 
@@ -617,7 +597,7 @@
                 <ion-label>إجمالي المبلغ </ion-label>
               </div>
               <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                <ion-label> {{printArr[0].payInvo.tot_pr}} ج.س</ion-label>
+                <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr)}} ج.س</ion-label>
               </div>
             </div>
 
@@ -627,7 +607,7 @@
                 <ion-label>   الخصــم </ion-label>
               </div>
               <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                <ion-label>  {{printArr[0].payInvo.discount}}  ج.س</ion-label>
+                <ion-label>  {{formatBalance(printArr[0].payInvo.discount)}}  ج.س</ion-label>
               </div>
             </div>  
             <div *ngIf="+printArr[0].payInvo.discount>0" class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
@@ -635,7 +615,7 @@
                 <ion-label> الإجمالي بعدالخصم    </ion-label>
               </div>
               <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                <ion-label> {{printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount}}  ج.س</ion-label>
+                <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}}  ج.س</ion-label>
               </div>
             </div> -->
             <!-- "sub_balanse": this.selectedAccount.sub_balance,
@@ -695,16 +675,16 @@
          <td class="td"> {{item.quantity}}</td>
          
          <td   class="td">
-          {{item.perch_price}}
+          {{formatBalance(item.perch_price)}}
         </td>
-         <td class="td">{{+item.tot}}</td>
+         <td class="td">{{formatBalance(+item.tot)}}</td>
         </tr> 
         <tr>
           <td ></td>
           <td ></td>
           <td></td>
           <td></td>
-          <td class="td">{{printArr[0].payInvo.tot_pr }}</td>
+          <td class="td">{{formatBalance(printArr[0].payInvo.tot_pr)}}</td>
         </tr>
       </table> 
       </div> 
@@ -716,7 +696,7 @@
           <ion-label>  Total </ion-label>
         </div>
         <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-          <ion-label> {{printArr[0].payInvo.tot_pr}} S.D</ion-label>
+          <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr)}} S.D</ion-label>
         </div>
       </div>
 
@@ -726,7 +706,7 @@
           <ion-label>   الخصــم </ion-label>
         </div>
         <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-          <ion-label>  {{printArr[0].payInvo.discount}}  ج.س</ion-label>
+          <ion-label>  {{formatBalance(printArr[0].payInvo.discount)}}  ج.س</ion-label>
         </div>
       </div>  
       <div *ngIf="+printArr[0].payInvo.discount>0" class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
@@ -734,7 +714,7 @@
           <ion-label> الإجمالي بعدالخصم    </ion-label>
         </div>
         <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-          <ion-label> {{printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount}}  ج.س</ion-label>
+          <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}}  ج.س</ion-label>
         </div>
       </div> -->
       <!-- "sub_balanse": this.selectedAccount.sub_balance,

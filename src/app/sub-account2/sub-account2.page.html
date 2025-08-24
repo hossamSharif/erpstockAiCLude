@@ -51,11 +51,12 @@
       </ion-card>
       
       <!-- Accounts Table Card -->
-      <ion-card class="table-card">
+      <ion-card class="table-card" color="primary">
         <ion-card-header class="card-header">
           <div class="header-content">
             <ion-card-title class="card-title">قائمة الحسابات</ion-card-title>
-            <div class="filter-buttons">
+            
+            <div class="filter-buttons-center">
               <ion-button 
                 fill="outline" 
                 size="small" 
@@ -102,6 +103,15 @@
                 مسح الفلاتر
               </ion-button>
             </div>
+            
+            <div class="export-buttons-left">
+              <app-export-buttons 
+                [hasData]="filteredAccounts && filteredAccounts.length > 0"
+                [isLoading]="loading"
+                (exportPDF)="exportToPDF()"
+                (exportExcel)="exportToExcel()">
+              </app-export-buttons>
+            </div>
           </div>
         </ion-card-header>
         <ion-card-content class="table-content">
@@ -111,11 +121,26 @@
               <thead>
                 <tr>
                   <th>م</th>
-                  <th>الكود</th>
-                  <th>اسم الحساب</th>
-                  <th>النوع</th>
-                  <th>التصنيف</th>
-                  <th>الرصيد الحالي</th>
+                  <th class="sortable-header" (click)="sortBy('sub_code')">
+                    <ion-icon [name]="getSortIcon('sub_code')" class="sort-icon"></ion-icon>
+                    الكود
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('sub_name')">
+                    <ion-icon [name]="getSortIcon('sub_name')" class="sort-icon"></ion-icon>
+                    اسم الحساب
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('sub_type')">
+                    <ion-icon [name]="getSortIcon('sub_type')" class="sort-icon"></ion-icon>
+                    النوع
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('cat_name')">
+                    <ion-icon [name]="getSortIcon('cat_name')" class="sort-icon"></ion-icon>
+                    التصنيف
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('current_balance')">
+                    <ion-icon [name]="getSortIcon('current_balance')" class="sort-icon"></ion-icon>
+                    الرصيد الحالي
+                  </th>
                   <th>العمليات</th>
                 </tr>
               </thead>
@@ -150,7 +175,7 @@
                 </tr>
                 
                 <!-- Data Rows -->
-                <tr *ngFor="let account of filteredAccounts; let i = index" class="data-row">
+                <tr *ngFor="let account of sortedAccounts; let i = index" class="data-row">
                   <td class="serial-cell">{{(currentPage - 1) * pageSize + i + 1}}</td>
                   <td class="code-cell">{{account.sub_code}}</td>
                   <td class="name-cell">{{account.sub_name}}</td>

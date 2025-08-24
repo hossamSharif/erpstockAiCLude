@@ -111,34 +111,61 @@
           <ion-row>
             <ion-col size="12">
             <ion-card>
+              <ion-card-header class="ion-no-padding">
+                <div class="card-header-with-export">
+                  <ion-card-title>سجل المبيعات</ion-card-title>
+                  <app-export-buttons 
+                    [hasData]="sortedPayArray && sortedPayArray.length > 0"
+                    [isLoading]="loading"
+                    (exportPDF)="exportToPDF()"
+                    (exportExcel)="exportToExcel()">
+                  </app-export-buttons>
+                </div>
+              </ion-card-header>
                <table class="table">
                  <tr>
                   <th>التسلسل</th>
                   <!-- <th>رقم الفاتورة</th> -->
-                  <th>العميل</th>
-                  <th>التاريخ</th>
-                  <th>اجمالي المبلغ</th>
-                  <th>الخصــم</th>  
+                  <th class="sortable-header" (click)="sortBy('sub_name')">
+                    <ion-icon [name]="getSortIcon('sub_name')" class="sort-icon"></ion-icon>
+                    العميل
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('pay_date')">
+                    <ion-icon [name]="getSortIcon('pay_date')" class="sort-icon"></ion-icon>
+                    التاريخ
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('tot_pr')">
+                    <ion-icon [name]="getSortIcon('tot_pr')" class="sort-icon"></ion-icon>
+                    اجمالي المبلغ
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('discount')">
+                    <ion-icon [name]="getSortIcon('discount')" class="sort-icon"></ion-icon>
+                    الخصــم
+                  </th>  
                   <th>الإجمالي بعد الخصم</th>  
-                  <th>نقدا</th>  
-                  <th>المتبقي</th>   
-                  <th>تعليق</th>
-                  <th>المستخدم</th> 
+                  <!-- Hidden pay and change columns -->   
+                  <th class="sortable-header" (click)="sortBy('payComment')">
+                    <ion-icon [name]="getSortIcon('payComment')" class="sort-icon"></ion-icon>
+                    تعليق
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('user_name')">
+                    <ion-icon [name]="getSortIcon('user_name')" class="sort-icon"></ion-icon>
+                    المستخدم
+                  </th> 
                   <th>إجراء</th> 
                   <!-- <th ><strong>تعديل</strong></th> 
                   <th ><strong>طياعة</strong></th>  -->
                   
                  </tr>
-                 <tr *ngFor="let pay of payArray ; let i = index">
+                 <tr *ngFor="let pay of sortedPayArray ; let i = index">
                   <td>{{i+1}}</td>
                   <!-- <td>{{pay.pay_id}}</td> -->
                   <td>{{pay.sub_name}}</td>
                   <td> {{pay.pay_date}}</td>
-                  <td>{{pay.tot_pr}}</td>
-                  <td>{{pay.discount}}</td>
-                  <td>{{+pay.tot_pr - +pay.discount}}</td>
-                  <td>{{pay.pay}}</td>
-                  <td>{{pay.changee}}</td> 
+                  <td>{{formatBalance(pay.tot_pr)}}</td>
+                  <td>{{formatBalance(pay.discount)}}</td>
+                  <td>{{formatBalance(+pay.tot_pr - +pay.discount)}}</td>
+                  <!-- Hidden pay and change data --> 
                   <td>{{pay.payComment}}</td>
                   <td>{{pay.user_name}}</td>
                   <!-- <td>
@@ -174,9 +201,7 @@
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
                  </tr>
                  <tr *ngIf="loading == true" >
@@ -186,9 +211,8 @@
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <!-- Hidden skeleton for pay and change columns -->
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
                  </tr>
                  <tr  *ngIf="loading == true">
@@ -198,9 +222,8 @@
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <!-- Hidden skeleton for pay and change columns -->
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
                  </tr> 
                </table> 
@@ -383,7 +406,7 @@
                 <ion-label><ion-note>{{pay.pay_date | date:'dd-MM'}}</ion-note>    </ion-label>
               </ion-col>
               <ion-col size="8" class="ion-text-end">
-                <ion-label>{{+pay.tot_pr - +pay.discount}}</ion-label>
+                <ion-label>{{formatBalance(+pay.tot_pr - +pay.discount)}}</ion-label>
               </ion-col>
             </ion-row>
           </ion-grid>
@@ -421,14 +444,14 @@
           <ion-item-divider></ion-item-divider>
           <ion-list>
             <ion-item lines="none">
-              <ion-label><ion-note>المجموع  : </ion-note><strong>{{pay.tot_pr}}</strong></ion-label>
+              <ion-label><ion-note>المجموع  : </ion-note><strong>{{formatBalance(pay.tot_pr)}}</strong></ion-label>
             </ion-item>
             <ion-item lines="none" *ngIf="pay.discount > 0">
-              <ion-label><ion-note>تخفيض  : </ion-note><strong>{{pay.discount}}</strong></ion-label>
+              <ion-label><ion-note>تخفيض  : </ion-note><strong>{{formatBalance(pay.discount)}}</strong></ion-label>
             </ion-item>
             <ion-item lines="none" *ngIf="pay.discount > 0">
               <ion-label><ion-note> صافي المبلغ    : 
-              </ion-note><strong> {{+pay.tot_pr - +pay.discount}} </strong></ion-label>
+              </ion-note><strong> {{formatBalance(+pay.tot_pr - +pay.discount)}} </strong></ion-label>
             </ion-item>
           </ion-list>
           <ion-row class="ion-justify-content-center">
@@ -459,39 +482,29 @@
   <ion-grid dir="rtl" *ngIf="device == 'desktop'" >
     <ion-row>
       <ion-col>
-        <ion-label><ion-text>إجمالي المبيعات : </ion-text><br>  <strong>{{sums.tot.toFixed(2)}}</strong></ion-label>
+        <ion-label><ion-text>إجمالي المبيعات : </ion-text><br>  <strong>{{formatBalance(sums.tot)}}</strong></ion-label>
       </ion-col>
       <ion-col>
-        <ion-label><ion-text>اجمالي الخصم  : </ion-text><br>  <strong>{{sums.discount.toFixed(2)}}</strong></ion-label>
+        <ion-label><ion-text>اجمالي الخصم  : </ion-text><br>  <strong>{{formatBalance(sums.discount)}}</strong></ion-label>
       </ion-col>
       <ion-col>
-        <ion-label><ion-text>المبيعات بعد الخصم : </ion-text><br>  <strong>{{sums.totAfterDiscout.toFixed(2)}}</strong></ion-label>
+        <ion-label><ion-text>المبيعات بعد الخصم : </ion-text><br>  <strong>{{formatBalance(sums.totAfterDiscout)}}</strong></ion-label>
       </ion-col>
-      <ion-col>
-        <ion-label><ion-text>اجمالي النقد : </ion-text><br>  <strong>{{sums.pay.toFixed(2)}}</strong></ion-label>
-      </ion-col>
-      <ion-col>
-        <ion-label><ion-text>اجمالي الاجل : </ion-text><br>  <strong>{{sums.change.toFixed(2)}}</strong></ion-label>
-      </ion-col>
+      <!-- Hidden pay and change summary columns -->
     </ion-row>
   </ion-grid>
   <ion-grid dir="rtl" *ngIf="device == 'mobile'" >
     <ion-row>
       <ion-col size="6">
-        <ion-label><ion-text>إجمالي المبيعات : </ion-text><br>  <strong>{{sums.tot.toFixed(2)}}</strong></ion-label>
+        <ion-label><ion-text>إجمالي المبيعات : </ion-text><br>  <strong>{{formatBalance(sums.tot)}}</strong></ion-label>
       </ion-col>
       <ion-col size="6">
-        <ion-label><ion-text>اجمالي الخصم  : </ion-text><br>  <strong>{{sums.discount.toFixed(2)}}</strong></ion-label>
+        <ion-label><ion-text>اجمالي الخصم  : </ion-text><br>  <strong>{{formatBalance(sums.discount)}}</strong></ion-label>
       </ion-col>
       <ion-col size="12">
-        <ion-label><ion-text>المبيعات بعد الخصم : </ion-text><br>  <strong>{{sums.totAfterDiscout.toFixed(2)}}</strong></ion-label>
+        <ion-label><ion-text>المبيعات بعد الخصم : </ion-text><br>  <strong>{{formatBalance(sums.totAfterDiscout)}}</strong></ion-label>
       </ion-col>
-      <ion-col size="6">
-        <ion-label><ion-text>اجمالي النقد : </ion-text><br>  <strong>{{sums.pay.toFixed(2)}}</strong></ion-label>
-      </ion-col>
-      <ion-col size="6">
-        <ion-label><ion-text>اجمالي الاجل : </ion-text><br>  <strong>{{sums.change.toFixed(2)}}</strong></ion-label>
-      </ion-col>
+      <!-- Hidden pay and change summary columns for mobile -->
     </ion-row>
   </ion-grid>
 </ion-footer>

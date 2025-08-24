@@ -5,13 +5,15 @@ import { FilterPipe } from "./pipe";
 import { IonicModule } from '@ionic/angular'; 
 import { SpendRecord2PageRoutingModule } from './spend-record2-routing.module'; 
 import { SpendRecord2Page } from './spend-record2.page';
+import { SharedModule } from '../module/shared/shared.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    SpendRecord2PageRoutingModule
+    SpendRecord2PageRoutingModule,
+    SharedModule
   ],
   declarations: [SpendRecord2Page,  FilterPipe],
   exports:[FilterPipe]

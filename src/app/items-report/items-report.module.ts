@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { ItemsReportPageRoutingModule } from './items-report-routing.module';
+import { SharedModule } from '../module/shared/shared.module';
 
 import { ItemsReportPage } from './items-report.page';
 
@@ -13,7 +14,8 @@ import { ItemsReportPage } from './items-report.page';
     CommonModule,
     FormsModule,
     IonicModule,
-    ItemsReportPageRoutingModule
+    ItemsReportPageRoutingModule,
+    SharedModule
   ],
   declarations: [ItemsReportPage]
 })

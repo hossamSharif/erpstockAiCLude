@@ -49,6 +49,1211 @@ ActionPopoverComponent = (0,tslib__WEBPACK_IMPORTED_MODULE_3__.__decorate)([
 
 /***/ }),
 
+/***/ 29517:
+/*!**************************************************************************************!*\
+  !*** ./src/app/component/enhanced-item-selector/enhanced-item-selector.component.ts ***!
+  \**************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "EnhancedItemSelectorComponent": () => (/* binding */ EnhancedItemSelectorComponent)
+/* harmony export */ });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! tslib */ 48163);
+/* harmony import */ var _enhanced_item_selector_component_html_ngResource__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./enhanced-item-selector.component.html?ngResource */ 98766);
+/* harmony import */ var _enhanced_item_selector_component_scss_ngResource__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./enhanced-item-selector.component.scss?ngResource */ 14403);
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/core */ 51109);
+/* harmony import */ var _stockService_services_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../stockService/services.service */ 91472);
+/* harmony import */ var _ionic_storage__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @ionic/storage */ 52879);
+/* harmony import */ var _ionic_angular__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @ionic/angular */ 95472);
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @angular/common */ 38143);
+/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @angular/router */ 65485);
+
+
+
+
+
+
+
+
+
+let EnhancedItemSelectorComponent = class EnhancedItemSelectorComponent {
+    constructor(alertController, router, api, storage, toast, loadingController, datePipe, cdr, renderer) {
+        this.alertController = alertController;
+        this.router = router;
+        this.api = api;
+        this.storage = storage;
+        this.toast = toast;
+        this.loadingController = loadingController;
+        this.datePipe = datePipe;
+        this.cdr = cdr;
+        this.renderer = renderer;
+        // Input properties
+        this.placeholder = 'اختر الصنف';
+        this.searchLang = 0;
+        this.showQuantityDisplay = false;
+        this.parentPage = 'items-report';
+        // Output events
+        this.itemSelected = new _angular_core__WEBPACK_IMPORTED_MODULE_4__.EventEmitter();
+        this.refreshRequested = new _angular_core__WEBPACK_IMPORTED_MODULE_4__.EventEmitter();
+        // Dropdown state
+        this.showDropdown = false;
+        this.highlightedIndex = -1;
+        // Component properties
+        this.searchTerm = "";
+        this.items = [];
+        this.loadingItems = false;
+        this.loadingQty = false;
+        this.qtyError = false;
+        this.qtyErrorMsg = "";
+        // Dropdown positioning
+        this.dropdownPosition = { top: '0px', left: '0px', width: '250px' };
+        // Focus tracking
+        this.componentHasFocus = false;
+        // Portal dropdown element
+        this.portalDropdownElement = null;
+        this.initializeSelectedItem();
+    }
+    ngOnInit() {
+        this.getAppInfo();
+        this.loadItemsFromBackend();
+    }
+    ngOnDestroy() {
+        // Cleanup portal dropdown
+        this.destroyPortalDropdown();
+    }
+    initializeSelectedItem() {
+        this.selectedItem = {
+            id: undefined,
+            dateCreated: "",
+            pay_ref: "",
+            item_desc: "",
+            item_name: "",
+            item_unit: "",
+            parcode: 0,
+            pay_price: 0,
+            perch_price: 0,
+            qty: 0,
+            tot: 0,
+            availQty: 0,
+            aliasEn: "",
+            tax: 0,
+            imageUrl: ""
+        };
+    }
+    getAppInfo() {
+        this.storage.get('USER_INFO').then((response) => {
+            if (response) {
+                this.user_info = response;
+            }
+        });
+        this.storage.get('STORE_INFO').then((response) => {
+            if (response) {
+                this.store_info = response;
+                this.loadItemsFromBackend();
+            }
+        });
+        this.storage.get('year').then((response) => {
+            if (response) {
+                this.year = response;
+                this.loadItemsFromBackend();
+            }
+        });
+    }
+    loadItemsFromBackend() {
+        if (!this.store_info || !this.year) {
+            return;
+        }
+        console.log('Loading items from backend...');
+        this.loadingItems = true;
+        this.api.getAllStockItemsWithouteCounts(this.store_info.id, this.year.id).subscribe(data => {
+            console.log('Items loaded successfully:', data);
+            let res = data;
+            this.items = res['data'] || [];
+            this.loadingItems = false;
+            // Store items locally for offline use
+            this.storage.set('itemsLocal', this.items).then(() => {
+                console.log('Items stored locally');
+            });
+        }, (err) => {
+            console.error('Error loading items:', err);
+            this.loadingItems = false;
+            this.loadItemsFromStorage();
+            this.presentToast('خطأ في تحميل الأصناف، تم التحميل من البيانات المحفوظة', 'warning');
+        }, () => {
+            this.loadingItems = false;
+        });
+    }
+    loadItemsFromStorage() {
+        this.storage.get('itemsLocal').then((response) => {
+            if (response) {
+                this.items = response;
+                console.log('Items loaded from storage:', this.items.length);
+            }
+            else {
+                this.items = [];
+                this.presentToast('لا توجد أصناف محفوظة', 'warning');
+            }
+        });
+    }
+    // Create portal dropdown attached to document.body
+    createPortalDropdown() {
+        var _a, _b;
+        if (this.portalDropdownElement) {
+            this.destroyPortalDropdown();
+        }
+        const elementToUse = ((_a = this.inputWrapper) === null || _a === void 0 ? void 0 : _a.nativeElement) || ((_b = this.searchInput) === null || _b === void 0 ? void 0 : _b.nativeElement);
+        if (!elementToUse)
+            return;
+        const rect = elementToUse.getBoundingClientRect();
+        // Create dropdown container
+        this.portalDropdownElement = this.renderer.createElement('div');
+        this.renderer.addClass(this.portalDropdownElement, 'portal-dropdown-container');
+        // Apply positioning styles
+        this.renderer.setStyle(this.portalDropdownElement, 'position', 'fixed');
+        this.renderer.setStyle(this.portalDropdownElement, 'top', `${rect.bottom + 4}px`);
+        this.renderer.setStyle(this.portalDropdownElement, 'left', `${rect.left}px`);
+        this.renderer.setStyle(this.portalDropdownElement, 'width', `${rect.width}px`);
+        this.renderer.setStyle(this.portalDropdownElement, 'z-index', '2147483647');
+        this.renderer.setStyle(this.portalDropdownElement, 'background', 'white');
+        this.renderer.setStyle(this.portalDropdownElement, 'border', '1px solid #ccc');
+        this.renderer.setStyle(this.portalDropdownElement, 'border-radius', '8px');
+        this.renderer.setStyle(this.portalDropdownElement, 'box-shadow', '0 8px 24px rgba(0, 0, 0, 0.2)');
+        this.renderer.setStyle(this.portalDropdownElement, 'max-height', '300px');
+        this.renderer.setStyle(this.portalDropdownElement, 'overflow-y', 'auto');
+        this.renderer.setStyle(this.portalDropdownElement, 'min-width', '250px');
+        // Create dropdown content
+        this.createDropdownContent();
+        // Append to document body
+        this.renderer.appendChild(document.body, this.portalDropdownElement);
+        console.log('Portal dropdown created at:', { top: rect.bottom + 4, left: rect.left, width: rect.width });
+    }
+    // Create dropdown content dynamically - OPTIMIZED VERSION
+    createDropdownContent() {
+        if (!this.portalDropdownElement)
+            return;
+        const filteredItems = this.getFilteredItems();
+        if (filteredItems.length === 0) {
+            // No results
+            const noResultsDiv = this.renderer.createElement('div');
+            this.renderer.setStyle(noResultsDiv, 'padding', '12px');
+            this.renderer.setStyle(noResultsDiv, 'text-align', 'center');
+            this.renderer.setStyle(noResultsDiv, 'color', '#666');
+            this.renderer.setStyle(noResultsDiv, 'font-style', 'italic');
+            const noResultsText = this.renderer.createText('لا توجد نتائج مطابقة');
+            this.renderer.appendChild(noResultsDiv, noResultsText);
+            this.renderer.appendChild(this.portalDropdownElement, noResultsDiv);
+            return;
+        }
+        // Create items list - ONLY CREATE ONCE
+        filteredItems.forEach((item, index) => {
+            const itemDiv = this.renderer.createElement('div');
+            this.renderer.addClass(itemDiv, 'portal-dropdown-item');
+            this.renderer.setAttribute(itemDiv, 'data-index', index.toString());
+            // Base styles
+            this.renderer.setStyle(itemDiv, 'padding', '12px');
+            this.renderer.setStyle(itemDiv, 'border-bottom', '1px solid #eee');
+            this.renderer.setStyle(itemDiv, 'cursor', 'pointer');
+            this.renderer.setStyle(itemDiv, 'direction', 'rtl');
+            this.renderer.setStyle(itemDiv, 'text-align', 'right');
+            this.renderer.setStyle(itemDiv, 'transition', 'background-color 0.2s ease');
+            // Item name
+            const nameDiv = this.renderer.createElement('div');
+            this.renderer.setStyle(nameDiv, 'font-size', '14px');
+            this.renderer.setStyle(nameDiv, 'font-weight', '500');
+            this.renderer.setStyle(nameDiv, 'color', '#333');
+            this.renderer.setStyle(nameDiv, 'margin-bottom', '4px');
+            const nameText = this.renderer.createText(item.item_name);
+            this.renderer.appendChild(nameDiv, nameText);
+            this.renderer.appendChild(itemDiv, nameDiv);
+            // Prices
+            const pricesDiv = this.renderer.createElement('div');
+            this.renderer.setStyle(pricesDiv, 'display', 'flex');
+            this.renderer.setStyle(pricesDiv, 'gap', '12px');
+            this.renderer.setStyle(pricesDiv, 'font-size', '11px');
+            const salePrice = this.renderer.createElement('span');
+            this.renderer.setStyle(salePrice, 'color', '#10dc60');
+            this.renderer.setStyle(salePrice, 'font-weight', '600');
+            const salePriceText = this.renderer.createText(`بيع: ${item.pay_price}`);
+            this.renderer.appendChild(salePrice, salePriceText);
+            this.renderer.appendChild(pricesDiv, salePrice);
+            const purchasePrice = this.renderer.createElement('span');
+            this.renderer.setStyle(purchasePrice, 'color', '#f04141');
+            this.renderer.setStyle(purchasePrice, 'font-weight', '600');
+            const purchasePriceText = this.renderer.createText(`شراء: ${item.perch_price}`);
+            this.renderer.appendChild(purchasePrice, purchasePriceText);
+            this.renderer.appendChild(pricesDiv, purchasePrice);
+            this.renderer.appendChild(itemDiv, pricesDiv);
+            // OPTIMIZED EVENT LISTENERS - NO RECREATING DROPDOWN
+            this.renderer.listen(itemDiv, 'mousedown', (event) => {
+                // Prevent input blur from hiding dropdown before click is processed
+                event.preventDefault();
+            });
+            this.renderer.listen(itemDiv, 'click', (event) => {
+                console.log('Item clicked:', item.item_name);
+                event.stopPropagation();
+                this.componentHasFocus = true; // Keep focus to prevent blur hiding
+                this.selectItem(item);
+            });
+            this.renderer.listen(itemDiv, 'mouseenter', () => {
+                this.componentHasFocus = true; // Maintain focus when hovering over dropdown
+                this.updateHighlighting(index); // EFFICIENT highlighting update
+            });
+            this.renderer.appendChild(this.portalDropdownElement, itemDiv);
+        });
+        // Apply initial highlighting
+        this.updateHighlighting(this.highlightedIndex);
+    }
+    // OPTIMIZED: Update highlighting without recreating dropdown
+    updateHighlighting(newHighlightedIndex) {
+        if (!this.portalDropdownElement)
+            return;
+        this.highlightedIndex = newHighlightedIndex;
+        // Get all dropdown items
+        const items = this.portalDropdownElement.querySelectorAll('.portal-dropdown-item');
+        // Update highlighting efficiently - only change styles, don't recreate
+        items.forEach((item, index) => {
+            const element = item;
+            if (index === this.highlightedIndex) {
+                // Highlight this item
+                this.renderer.setStyle(element, 'background-color', 'rgba(74, 144, 226, 0.1)');
+                this.renderer.setStyle(element, 'border-left', '3px solid #4A90E2');
+            }
+            else {
+                // Remove highlight from this item
+                this.renderer.removeStyle(element, 'background-color');
+                this.renderer.removeStyle(element, 'border-left');
+            }
+        });
+    }
+    // LEGACY: Keep for search term changes only
+    updatePortalDropdown() {
+        if (!this.portalDropdownElement)
+            return;
+        // Only recreate when search term changes (not for highlighting)
+        while (this.portalDropdownElement.firstChild) {
+            this.renderer.removeChild(this.portalDropdownElement, this.portalDropdownElement.firstChild);
+        }
+        this.createDropdownContent();
+    }
+    // Destroy portal dropdown
+    destroyPortalDropdown() {
+        if (this.portalDropdownElement) {
+            this.renderer.removeChild(document.body, this.portalDropdownElement);
+            this.portalDropdownElement = null;
+        }
+    }
+    // Calculate dropdown position - LEGACY METHOD (kept for compatibility)
+    calculateDropdownPosition() {
+        var _a, _b;
+        // This method is kept for compatibility but not used with portal approach
+        const elementToUse = ((_a = this.inputWrapper) === null || _a === void 0 ? void 0 : _a.nativeElement) || ((_b = this.searchInput) === null || _b === void 0 ? void 0 : _b.nativeElement);
+        if (elementToUse) {
+            const rect = elementToUse.getBoundingClientRect();
+            this.dropdownPosition = {
+                top: (rect.bottom + 4) + 'px',
+                left: rect.left + 'px',
+                width: rect.width + 'px'
+            };
+        }
+    }
+    // Get filtered items for display
+    getFilteredItems() {
+        if (!this.items || this.items.length === 0) {
+            return [];
+        }
+        if (this.searchTerm && this.searchTerm.trim() !== '') {
+            const searchValue = this.searchTerm.toLowerCase();
+            return this.items.filter(item => item.item_name.toLowerCase().includes(searchValue) ||
+                (item.item_desc && item.item_desc.toLowerCase().includes(searchValue)) ||
+                (item.aliasEn && item.aliasEn.toLowerCase().includes(searchValue)));
+        }
+        return this.items;
+    }
+    // Handle input focus - show dropdown
+    onInputFocus() {
+        console.log('Input focused, items:', this.items.length);
+        this.componentHasFocus = true;
+        this.highlightedIndex = -1;
+        if (this.items.length > 0) {
+            setTimeout(() => {
+                this.showDropdown = true;
+                this.createPortalDropdown();
+            }, 10);
+        }
+        else {
+            console.warn('No items available to show in dropdown');
+        }
+    }
+    // Handle input blur - hide dropdown with delay
+    onInputBlur() {
+        console.log('Input blur triggered');
+        this.componentHasFocus = false;
+        setTimeout(() => {
+            if (!this.componentHasFocus) {
+                console.log('Hiding dropdown after blur delay');
+                this.showDropdown = false;
+                this.highlightedIndex = -1;
+                this.destroyPortalDropdown();
+            }
+        }, 300); // Increased delay to allow click events to register
+    }
+    // Listen for scroll events to reposition dropdown
+    onWindowScroll() {
+        if (this.showDropdown && this.portalDropdownElement) {
+            this.createPortalDropdown(); // Recreate portal with updated position
+        }
+    }
+    // Listen for resize events to reposition dropdown
+    onWindowResize() {
+        if (this.showDropdown && this.portalDropdownElement) {
+            this.createPortalDropdown(); // Recreate portal with updated position
+        }
+    }
+    // Listen for clicks outside the component to hide dropdowns
+    onDocumentClick(event) {
+        var _a, _b;
+        const target = event.target;
+        if (!target)
+            return;
+        const componentElement = ((_a = this.inputWrapper) === null || _a === void 0 ? void 0 : _a.nativeElement) || ((_b = this.searchInput) === null || _b === void 0 ? void 0 : _b.nativeElement);
+        let isClickInsideComponent = false;
+        let isClickInsidePortalDropdown = false;
+        if (componentElement) {
+            isClickInsideComponent = componentElement.contains(target) ||
+                target.closest('.item-selector-wrapper') !== null;
+        }
+        // Check if click is inside portal dropdown
+        if (this.portalDropdownElement) {
+            isClickInsidePortalDropdown = this.portalDropdownElement.contains(target) ||
+                target.closest('.portal-dropdown-container') !== null ||
+                target.closest('.portal-dropdown-item') !== null;
+        }
+        console.log('Document click detected:', {
+            isClickInsideComponent,
+            isClickInsidePortalDropdown,
+            targetClass: target.className,
+            showDropdown: this.showDropdown
+        });
+        if (!isClickInsideComponent && !isClickInsidePortalDropdown) {
+            if (this.showDropdown) {
+                console.log('Hiding dropdown due to outside click');
+                this.showDropdown = false;
+                this.highlightedIndex = -1;
+                this.componentHasFocus = false;
+                this.destroyPortalDropdown();
+            }
+        }
+    }
+    // Handle search input changes
+    onSearchInput(event) {
+        const searchValue = event.target.value || event.detail.value;
+        this.searchTerm = searchValue || '';
+        console.log('Search term changed to:', this.searchTerm);
+        if (this.searchTerm.length === 0) {
+            console.log('Input field cleared - resetting selection');
+            this.resetSelection();
+        }
+        // Reset highlighting when search changes
+        this.highlightedIndex = -1;
+        if (this.searchTerm.length > 0 || this.items.length > 0) {
+            if (!this.showDropdown) {
+                this.showDropdown = true;
+                this.createPortalDropdown();
+            }
+            else if (this.portalDropdownElement) {
+                this.updatePortalDropdown(); // Update existing dropdown
+            }
+            console.log('Showing dropdown with', this.getFilteredItems().length, 'filtered items');
+        }
+        else {
+            this.showDropdown = false;
+            this.destroyPortalDropdown();
+        }
+    }
+    // Handle clear button click
+    onInputClear(event) {
+        console.log('Clear button clicked');
+        this.searchTerm = '';
+        this.resetSelection();
+        this.showDropdown = false;
+        this.highlightedIndex = -1;
+        this.destroyPortalDropdown();
+    }
+    // Handle model changes
+    onModelChange(newValue) {
+        console.log('Model changed to:', newValue);
+        this.searchTerm = newValue || '';
+        if (!newValue || newValue.length === 0) {
+            console.log('Model change detected empty value - resetting component');
+            this.resetSelection();
+        }
+        this.highlightedIndex = -1;
+        if (this.searchTerm.length > 0 || this.getFilteredItems().length > 0) {
+            if (!this.showDropdown) {
+                this.showDropdown = true;
+                this.calculateDropdownPosition();
+            }
+        }
+        else {
+            this.showDropdown = false;
+        }
+    }
+    // Reset selection
+    resetSelection() {
+        this.initializeSelectedItem();
+        this.searchTerm = '';
+        this.showDropdown = false;
+        this.highlightedIndex = -1;
+        this.itemSelected.emit(null);
+        this.destroyPortalDropdown();
+        // Clear the search input field
+        if (this.searchInput && this.searchInput.nativeElement) {
+            this.searchInput.nativeElement.value = '';
+        }
+        this.cdr.detectChanges();
+    }
+    // Toggle dropdown visibility
+    toggleDropdown() {
+        console.log('Toggle dropdown clicked, items:', this.items.length);
+        if (this.items.length > 0) {
+            this.showDropdown = !this.showDropdown;
+            if (this.showDropdown) {
+                this.calculateDropdownPosition();
+                if (this.searchInput) {
+                    setTimeout(() => {
+                        this.searchInput.nativeElement.focus();
+                    }, 100);
+                }
+            }
+            this.highlightedIndex = -1;
+        }
+        else {
+            console.warn('No items loaded yet');
+        }
+    }
+    // Handle keyboard navigation - OPTIMIZED
+    onKeyDown(event) {
+        if (!this.showDropdown || this.getFilteredItems().length === 0) {
+            if (event.key === 'ArrowDown' && this.getFilteredItems().length > 0) {
+                event.preventDefault();
+                this.showDropdown = true;
+                this.createPortalDropdown();
+                this.updateHighlighting(0);
+            }
+            return;
+        }
+        switch (event.key) {
+            case 'ArrowDown':
+                event.preventDefault();
+                const newDownIndex = Math.min(this.highlightedIndex + 1, this.getFilteredItems().length - 1);
+                this.updateHighlighting(newDownIndex); // FAST highlighting update
+                this.scrollHighlightedItemIntoView();
+                break;
+            case 'ArrowUp':
+                event.preventDefault();
+                const newUpIndex = Math.max(this.highlightedIndex - 1, -1);
+                this.updateHighlighting(newUpIndex); // FAST highlighting update
+                this.scrollHighlightedItemIntoView();
+                break;
+            case 'Enter':
+                event.preventDefault();
+                if (this.highlightedIndex >= 0 && this.highlightedIndex < this.getFilteredItems().length) {
+                    this.selectItem(this.getFilteredItems()[this.highlightedIndex]);
+                }
+                break;
+            case 'Escape':
+                event.preventDefault();
+                this.showDropdown = false;
+                this.highlightedIndex = -1;
+                this.destroyPortalDropdown();
+                break;
+            case 'Tab':
+                this.showDropdown = false;
+                this.highlightedIndex = -1;
+                this.destroyPortalDropdown();
+                break;
+        }
+    }
+    scrollHighlightedItemIntoView() {
+        if (this.highlightedIndex >= 0 && this.portalDropdownElement) {
+            // Use direct query selector for efficiency
+            const highlightedItem = this.portalDropdownElement.querySelector(`[data-index="${this.highlightedIndex}"]`);
+            if (highlightedItem) {
+                const containerRect = this.portalDropdownElement.getBoundingClientRect();
+                const itemRect = highlightedItem.getBoundingClientRect();
+                if (itemRect.bottom > containerRect.bottom) {
+                    this.portalDropdownElement.scrollTop += (itemRect.bottom - containerRect.bottom + 10);
+                }
+                else if (itemRect.top < containerRect.top) {
+                    this.portalDropdownElement.scrollTop -= (containerRect.top - itemRect.top + 10);
+                }
+            }
+        }
+    }
+    // Select item
+    selectItem(item) {
+        console.log('✅ selectItem called with:', item.item_name);
+        this.selectedItem = {
+            id: item.id,
+            dateCreated: item.dateCreated,
+            pay_ref: "",
+            item_desc: item.item_desc,
+            item_name: item.item_name,
+            item_unit: item.item_unit,
+            parcode: item.parcode,
+            pay_price: item.pay_price,
+            perch_price: item.perch_price,
+            qty: "",
+            tot: item.pay_price,
+            availQty: item.quantity || item.availQty,
+            aliasEn: item.aliasEn,
+            tax: item.tax || 0,
+            imageUrl: item.imageUrl || ""
+        };
+        this.searchTerm = item.item_name;
+        this.showDropdown = false;
+        this.highlightedIndex = -1;
+        this.componentHasFocus = false;
+        this.destroyPortalDropdown();
+        console.log('✅ Item selection completed, emitting event');
+        // Force change detection
+        this.cdr.detectChanges();
+        // Update input value manually
+        if (this.searchInput && this.searchInput.nativeElement) {
+            setTimeout(() => {
+                const ionInput = this.searchInput.nativeElement;
+                ionInput.value = item.item_name;
+                const inputEvent = new Event('input', { bubbles: true });
+                ionInput.dispatchEvent(inputEvent);
+            }, 10);
+        }
+        this.itemSelected.emit(this.selectedItem);
+        console.log('✅ Item selected and emitted:', this.selectedItem.item_name);
+    }
+    // Refresh items
+    refreshItems() {
+        console.log('Refreshing items...');
+        this.loadItemsFromBackend();
+        this.refreshRequested.emit();
+    }
+    // Performance optimization
+    trackByItemId(index, item) {
+        return item.id || index;
+    }
+    presentToast(msg, color) {
+        return (0,tslib__WEBPACK_IMPORTED_MODULE_5__.__awaiter)(this, void 0, void 0, function* () {
+            const toast = yield this.toast.create({
+                message: msg,
+                duration: 2000,
+                color: color,
+                cssClass: 'cust_Toast',
+                mode: 'ios',
+                position: 'top'
+            });
+            toast.present();
+        });
+    }
+    // Additional methods to match the original item-selector functionality
+    refreshQuantity() {
+        // Placeholder for quantity refresh logic
+        console.log('Refresh quantity called');
+    }
+    viewSelectedItemReport() {
+        // Navigate to item report with selected item
+        if (this.selectedItem && this.selectedItem.id) {
+            const navigationExtras = {
+                queryParams: {
+                    item: JSON.stringify(this.selectedItem)
+                }
+            };
+            this.router.navigate(['/items-report'], navigationExtras);
+        }
+    }
+    viewSelectedItemDetails() {
+        // Placeholder for viewing item details
+        console.log('View item details called for:', this.selectedItem);
+        // You can implement modal or navigation logic here
+    }
+};
+EnhancedItemSelectorComponent.ctorParameters = () => [
+    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_6__.AlertController },
+    { type: _angular_router__WEBPACK_IMPORTED_MODULE_7__.Router },
+    { type: _stockService_services_service__WEBPACK_IMPORTED_MODULE_2__.ServicesService },
+    { type: _ionic_storage__WEBPACK_IMPORTED_MODULE_3__.Storage },
+    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_6__.ToastController },
+    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_6__.LoadingController },
+    { type: _angular_common__WEBPACK_IMPORTED_MODULE_8__.DatePipe },
+    { type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.ChangeDetectorRef },
+    { type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.Renderer2 }
+];
+EnhancedItemSelectorComponent.propDecorators = {
+    searchInput: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.ViewChild, args: ['searchInput', { static: false },] }],
+    inputWrapper: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.ViewChild, args: ['inputWrapper', { static: false },] }],
+    placeholder: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.Input }],
+    searchLang: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.Input }],
+    showQuantityDisplay: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.Input }],
+    parentPage: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.Input }],
+    itemSelected: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.Output }],
+    refreshRequested: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.Output }],
+    onWindowScroll: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.HostListener, args: ['window:scroll', ['$event'],] }],
+    onWindowResize: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.HostListener, args: ['window:resize', ['$event'],] }],
+    onDocumentClick: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.HostListener, args: ['document:click', ['$event'],] }]
+};
+EnhancedItemSelectorComponent = (0,tslib__WEBPACK_IMPORTED_MODULE_5__.__decorate)([
+    (0,_angular_core__WEBPACK_IMPORTED_MODULE_4__.Component)({
+        selector: 'app-enhanced-item-selector',
+        template: _enhanced_item_selector_component_html_ngResource__WEBPACK_IMPORTED_MODULE_0__,
+        styles: [_enhanced_item_selector_component_scss_ngResource__WEBPACK_IMPORTED_MODULE_1__]
+    })
+], EnhancedItemSelectorComponent);
+
+
+
+/***/ }),
+
+/***/ 90733:
+/*!**********************************************************************!*\
+  !*** ./src/app/component/export-buttons/export-buttons.component.ts ***!
+  \**********************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "ExportButtonsComponent": () => (/* binding */ ExportButtonsComponent)
+/* harmony export */ });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! tslib */ 48163);
+/* harmony import */ var _export_buttons_component_html_ngResource__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./export-buttons.component.html?ngResource */ 86427);
+/* harmony import */ var _export_buttons_component_scss_ngResource__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./export-buttons.component.scss?ngResource */ 65225);
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/core */ 51109);
+
+
+
+
+let ExportButtonsComponent = class ExportButtonsComponent {
+    constructor() {
+        this.hasData = false;
+        this.isLoading = false;
+        this.disabled = false;
+        this.exportPDF = new _angular_core__WEBPACK_IMPORTED_MODULE_2__.EventEmitter();
+        this.exportExcel = new _angular_core__WEBPACK_IMPORTED_MODULE_2__.EventEmitter();
+    }
+    onExportPDF() {
+        if (this.hasData && !this.isLoading && !this.disabled) {
+            this.exportPDF.emit();
+        }
+    }
+    onExportExcel() {
+        if (this.hasData && !this.isLoading && !this.disabled) {
+            this.exportExcel.emit();
+        }
+    }
+};
+ExportButtonsComponent.propDecorators = {
+    hasData: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_2__.Input }],
+    isLoading: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_2__.Input }],
+    disabled: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_2__.Input }],
+    exportPDF: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_2__.Output }],
+    exportExcel: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_2__.Output }]
+};
+ExportButtonsComponent = (0,tslib__WEBPACK_IMPORTED_MODULE_3__.__decorate)([
+    (0,_angular_core__WEBPACK_IMPORTED_MODULE_2__.Component)({
+        selector: 'app-export-buttons',
+        template: _export_buttons_component_html_ngResource__WEBPACK_IMPORTED_MODULE_0__,
+        styles: [_export_buttons_component_scss_ngResource__WEBPACK_IMPORTED_MODULE_1__]
+    })
+], ExportButtonsComponent);
+
+
+
+/***/ }),
+
+/***/ 88709:
+/*!************************************************************************************!*\
+  !*** ./src/app/component/invoice-journal-entry/invoice-journal-entry.component.ts ***!
+  \************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "InvoiceJournalEntryComponent": () => (/* binding */ InvoiceJournalEntryComponent)
+/* harmony export */ });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! tslib */ 48163);
+/* harmony import */ var _invoice_journal_entry_component_html_ngResource__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./invoice-journal-entry.component.html?ngResource */ 57663);
+/* harmony import */ var _invoice_journal_entry_component_scss_ngResource__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./invoice-journal-entry.component.scss?ngResource */ 49206);
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/core */ 51109);
+/* harmony import */ var _stockService_services_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../stockService/services.service */ 91472);
+/* harmony import */ var _ionic_angular__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @ionic/angular */ 95472);
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @angular/common */ 38143);
+/* harmony import */ var _ionic_storage__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @ionic/storage */ 52879);
+
+
+
+
+
+
+
+
+let InvoiceJournalEntryComponent = class InvoiceJournalEntryComponent {
+    constructor(api, alertController, loadingController, toast, datePipe, storage) {
+        this.api = api;
+        this.alertController = alertController;
+        this.loadingController = loadingController;
+        this.toast = toast;
+        this.datePipe = datePipe;
+        this.storage = storage;
+        this.journalSaved = new _angular_core__WEBPACK_IMPORTED_MODULE_4__.EventEmitter();
+        this.journalCancelled = new _angular_core__WEBPACK_IMPORTED_MODULE_4__.EventEmitter();
+        // Component state
+        this.jType = "2"; // 1 = payment, 2 = receipt
+        this.radioVal = "1"; // 1 = cash, other = bank
+        this.pay = 0;
+        this.selectedBankAccount = null;
+        this.banksAccountArray = [];
+        // Journal objects
+        this.journal = {};
+        this.payInvo = {};
+        this.jdetail_from = {};
+        this.jdetail_to = {};
+        this.jdetail_fromArr = [];
+        this.jdetail_toArr = [];
+        // Balance display
+        this.selectedAccountBalance = null;
+        this.sourceAccountBalance = null;
+        this.loadingAccountBalance = false;
+        this.loadingSourceBalance = false;
+        this.initializeObjects();
+    }
+    // Form validation
+    isFormValid() {
+        return !!(this.jType && +this.jType > 0 &&
+            this.pay && +this.pay > 0 &&
+            this.isValidAmount() &&
+            this.journal.j_details && this.journal.j_details.trim() !== '' &&
+            this.journal.j_date &&
+            (this.radioVal === "1" || this.selectedBankAccount));
+    }
+    // Validate amount against invoice total
+    isValidAmount() {
+        var _a, _b;
+        const maxAmount = ((_a = this.invoiceData) === null || _a === void 0 ? void 0 : _a.totalAfterDiscount) || ((_b = this.invoiceData) === null || _b === void 0 ? void 0 : _b.invoiceAmount) || 0;
+        return this.pay <= maxAmount;
+    }
+    // Get validation error message
+    getAmountValidationError() {
+        var _a, _b;
+        const maxAmount = ((_a = this.invoiceData) === null || _a === void 0 ? void 0 : _a.totalAfterDiscount) || ((_b = this.invoiceData) === null || _b === void 0 ? void 0 : _b.invoiceAmount) || 0;
+        if (this.pay > maxAmount) {
+            return `المبلغ لا يمكن أن يتجاوز ${maxAmount.toLocaleString()}`;
+        }
+        return '';
+    }
+    ngOnInit() {
+        if (this.invoiceData) {
+            this.setupForInvoiceData();
+            this.getBanksAccount();
+        }
+    }
+    ngAfterViewInit() {
+        // Set focus on amount input after view is initialized
+        setTimeout(() => {
+            if (this.amountInput && this.amountInput.nativeElement) {
+                this.amountInput.nativeElement.setFocus();
+            }
+        }, 300);
+    }
+    initializeObjects() {
+        this.selectedBankAccount = {
+            id: null, ac_id: null, sub_name: null, sub_type: null,
+            sub_code: null, sub_balance: null, store_id: null,
+            debit: null, credit: null, currentType: null
+        };
+        this.payInvo = {
+            rec_id: undefined, rec_ref: 0, store_id: "", rec_date: "",
+            user_id: "", ac_id: 0, rec_detailes: "", rec_pay: 0,
+            rec_type: "", yearId: ""
+        };
+        this.journal = {
+            j_id: undefined, j_ref: "", j_details: "", j_type: "",
+            invo_ref: "", j_desc: "", j_date: "", store_id: "",
+            user_id: "", j_pay: "", standard_details: "", yearId: ""
+        };
+    }
+    setupForInvoiceData() {
+        var _a;
+        if (!this.invoiceData)
+            return;
+        // Auto-set journal type based on invoice type
+        this.jType = this.invoiceData.invoiceType === 'sales' ? "2" : "1"; // Sales = receipt, Purchase = payment
+        // Auto-set amount to total after discount or invoice amount
+        this.pay = this.invoiceData.totalAfterDiscount || this.invoiceData.invoiceAmount;
+        // Set up journal details with proper format
+        const actionText = this.invoiceData.invoiceType === 'sales' ? 'تحصيل' : 'دفع';
+        const invoiceTypeText = this.invoiceData.invoiceType === 'sales' ? 'مبيعات' : 'مشتريات';
+        const customerName = ((_a = this.invoiceData.customerAccount) === null || _a === void 0 ? void 0 : _a.sub_name) || 'غير محدد';
+        const invoiceDate = this.invoiceData.invoiceDate || this.datePipe.transform(new Date(), 'dd-MM-yyyy');
+        const totalAmount = (this.invoiceData.totalAfterDiscount || this.invoiceData.invoiceAmount).toLocaleString();
+        this.journal.j_details = `${actionText} فاتورة ${invoiceTypeText} ${customerName} بتاريخ ${invoiceDate} اجمالي ${totalAmount}`;
+        // Set up basic data
+        this.payInvo.store_id = this.invoiceData.store_info.id;
+        this.payInvo.yearId = this.invoiceData.year.id;
+        this.payInvo.user_id = this.invoiceData.user_info.id;
+        this.journal.store_id = this.invoiceData.store_info.id;
+        this.journal.yearId = this.invoiceData.year.id;
+        this.journal.user_id = this.invoiceData.user_info.id;
+        this.journal.invo_ref = this.invoiceData.invoiceRef;
+        // Set current date
+        let d = new Date();
+        this.payInvo.rec_date = this.datePipe.transform(d, 'yyyy-MM-dd');
+        this.journal.j_date = this.datePipe.transform(d, 'yyyy-MM-dd');
+        // Generate references
+        this.generateRandom();
+    }
+    getBanksAccount() {
+        if (!this.invoiceData)
+            return;
+        this.api.getAllAccounts(this.invoiceData.store_info.id, this.invoiceData.year.id).subscribe(data => {
+            let res = data;
+            if (res && res['data']) {
+                const allAccounts = res['data'];
+                this.banksAccountArray = allAccounts.filter(x => x.ac_id == 7); // Bank accounts
+                console.log('Banks accounts loaded:', this.banksAccountArray);
+            }
+        }, (err) => {
+            console.log('Error loading accounts:', err);
+        });
+    }
+    pickAccountBank(ev) {
+        console.log('Bank selection:', ev.target.value);
+        if (ev.target.value == "1") {
+            // Cash selection
+            this.selectedBankAccount = {
+                id: 46, ac_id: 7, sub_name: "الخزينة",
+                sub_type: "", sub_code: "", store_id: this.invoiceData.store_info.id,
+                sub_balance: "", currentType: "", debit: "", credit: ""
+            };
+            this.loadSourceBalance(46);
+        }
+        else {
+            // Bank selection
+            let fl = this.banksAccountArray.filter(x => x.id == ev.target.value);
+            if (fl.length > 0) {
+                this.selectedBankAccount = {
+                    id: fl[0]['id'], ac_id: fl[0]['ac_id'],
+                    sub_name: fl[0]['sub_name'], sub_type: fl[0]['sub_type'],
+                    sub_code: fl[0]['sub_code'], store_id: fl[0]['store_id'],
+                    sub_balance: fl[0]['sub_balance'], currentType: "",
+                    debit: +fl[0]['debit'], credit: +fl[0]['credit']
+                };
+                this.loadSourceBalance(fl[0]['id']);
+            }
+        }
+    }
+    generateRandom() {
+        let da = new Date();
+        let randomsNumber = da.getMonth().toString() + da.getDay().toString() +
+            da.getHours().toString() + da.getMinutes().toString() +
+            da.getSeconds().toString() + da.getMilliseconds().toString();
+        this.payInvo.rec_ref = this.invoiceData.store_info.store_ref + "INV" + randomsNumber;
+        this.journal.j_ref = this.invoiceData.store_info.store_ref + "JO" + randomsNumber;
+        this.journal.invo_ref = this.payInvo.rec_ref;
+    }
+    prepare4save() {
+        this.payInvo.rec_date = this.journal.j_date;
+        let d = this.payInvo.rec_date;
+        this.payInvo.rec_date = this.datePipe.transform(d, 'yyyy-MM-dd');
+        let debit = 0;
+        let credit = 0;
+        if (+this.jType == 1) {
+            debit = +this.pay;
+            this.journal.j_type = "سند دفع";
+        }
+        else if (+this.jType == 2) {
+            credit = +this.pay;
+            this.journal.j_type = "سند قبض";
+        }
+        this.journal.j_pay = +this.pay;
+        let from = "";
+        let to = "";
+        // Prepare journal entries based on type
+        if (+this.jType == 1) { // Payment
+            if (+this.radioVal == 1) {
+                // Cash payment
+                this.jdetail_to = {
+                    id: "NULL", j_id: this.journal.j_id, j_ref: this.journal.j_ref,
+                    ac_id: 46, j_desc: "", j_type: "سند دفع",
+                    credit: this.pay, debit: 0,
+                    store_id: this.invoiceData.store_info.id,
+                    yearId: this.invoiceData.year.id
+                };
+                to = 'الخزينة';
+            }
+            else {
+                // Bank payment
+                this.jdetail_to = {
+                    id: "NULL", j_id: this.journal.j_id, j_ref: this.journal.j_ref,
+                    ac_id: this.selectedBankAccount.id, j_desc: "", j_type: "سند دفع",
+                    credit: this.pay, debit: 0,
+                    store_id: this.invoiceData.store_info.id,
+                    yearId: this.invoiceData.year.id
+                };
+                to = this.selectedBankAccount.sub_name;
+            }
+            from = this.invoiceData.customerAccount.sub_name;
+            this.jdetail_toArr.push(this.jdetail_to);
+        }
+        else if (+this.jType == 2) { // Receipt
+            if (+this.radioVal == 1) {
+                // Cash receipt
+                this.jdetail_from = {
+                    id: "NULL", j_id: this.journal.j_id, j_ref: this.journal.j_ref,
+                    ac_id: 46, j_desc: "", j_type: "سند قبض",
+                    credit: 0, debit: this.pay,
+                    store_id: this.invoiceData.store_info.id,
+                    yearId: this.invoiceData.year.id
+                };
+                from = 'الخزينة';
+            }
+            else {
+                // Bank receipt
+                this.jdetail_from = {
+                    id: "NULL", j_id: this.journal.j_id, j_ref: this.journal.j_ref,
+                    ac_id: this.selectedBankAccount.id, j_desc: "", j_type: "سند قبض",
+                    credit: 0, debit: +this.pay,
+                    store_id: this.invoiceData.store_info.id,
+                    yearId: this.invoiceData.year.id
+                };
+                from = this.selectedBankAccount.sub_name;
+            }
+            to = this.invoiceData.customerAccount.sub_name;
+            this.jdetail_fromArr.push(this.jdetail_from);
+        }
+        // Add customer account entry
+        const customerEntry = {
+            id: "NULL", j_id: this.journal.j_id, j_ref: this.journal.j_ref,
+            ac_id: this.invoiceData.customerAccount.id,
+            j_desc: this.invoiceData.customerAccount.sub_type,
+            j_type: this.journal.j_type,
+            credit: +this.jType == 1 ? credit : 0,
+            debit: +this.jType == 1 ? 0 : debit,
+            store_id: this.invoiceData.store_info.id,
+            sub_code: this.invoiceData.customerAccount.sub_code,
+            sub_name: this.invoiceData.customerAccount.sub_name,
+            yearId: this.invoiceData.year.id
+        };
+        if (+this.jType == 1) {
+            this.jdetail_fromArr.push(customerEntry);
+        }
+        else {
+            this.jdetail_toArr.push(customerEntry);
+        }
+        this.journal.standard_details = 'من حساب ' + from + ' الي حساب ' + to;
+    }
+    save() {
+        return (0,tslib__WEBPACK_IMPORTED_MODULE_5__.__awaiter)(this, void 0, void 0, function* () {
+            if (!this.isFormValid()) {
+                if (!this.isValidAmount()) {
+                    this.presentToast(this.getAmountValidationError(), 'danger');
+                }
+                else {
+                    this.presentToast('الرجاء إكمال جميع الحقول المطلوبة', 'danger');
+                }
+                return;
+            }
+            this.prepare4save();
+            yield this.presentLoadingWithOptions('جاري حفظ البيانات...');
+            this.saveJournal();
+        });
+    }
+    saveJournal() {
+        this.api.saveJournal(this.journal).subscribe(data => {
+            if (data['message'] != 'Post Not Created') {
+                // Update journal entries with the returned ID
+                for (let i = 0; i < this.jdetail_fromArr.length; i++) {
+                    this.jdetail_fromArr[i].j_id = data['message'];
+                }
+                for (let i = 0; i < this.jdetail_toArr.length; i++) {
+                    this.jdetail_toArr[i].j_id = data['message'];
+                }
+                this.saveJournalDetails();
+            }
+            else {
+                this.loadingController.dismiss();
+                this.presentToast('لم يتم حفظ البيانات، خطأ في الإتصال حاول مرة أخرى', 'danger');
+            }
+        }, (err) => {
+            this.loadingController.dismiss();
+            this.presentToast('لم يتم حفظ البيانات، خطأ في الإتصال حاول مرة أخرى', 'danger');
+        });
+    }
+    saveJournalDetails() {
+        // Save both from and to journal details
+        if (this.jdetail_fromArr.length > 0) {
+            this.api.saveJournalFrom(this.jdetail_fromArr).subscribe(data => {
+                if (data['message'] != 'Post Not Created') {
+                    if (this.jdetail_toArr.length > 0) {
+                        this.saveJournalTo();
+                    }
+                    else {
+                        this.handleSaveSuccess();
+                    }
+                }
+                else {
+                    this.loadingController.dismiss();
+                    this.presentToast('لم يتم حفظ البيانات، خطأ في الإتصال حاول مرة أخرى', 'danger');
+                }
+            }, (err) => {
+                this.loadingController.dismiss();
+                this.presentToast('لم يتم حفظ البيانات، خطأ في الإتصال حاول مرة أخرى', 'danger');
+            });
+        }
+        else if (this.jdetail_toArr.length > 0) {
+            this.saveJournalTo();
+        }
+    }
+    saveJournalTo() {
+        this.api.saveJournalTo(this.jdetail_toArr).subscribe(data => {
+            if (data['message'] != 'Post Not Created') {
+                this.handleSaveSuccess();
+            }
+            else {
+                this.loadingController.dismiss();
+                this.presentToast('لم يتم حفظ البيانات، خطأ في الإتصال حاول مرة أخرى', 'danger');
+            }
+        }, (err) => {
+            this.loadingController.dismiss();
+            this.presentToast('لم يتم حفظ البيانات، خطأ في الإتصال حاول مرة أخرى', 'danger');
+        });
+    }
+    handleSaveSuccess() {
+        this.loadingController.dismiss();
+        this.presentToast('تم حفظ القيد بنجاح', 'success');
+        this.journalSaved.emit(true);
+    }
+    cancel() {
+        this.journalCancelled.emit();
+    }
+    // Get current amount for header display (reactive to user changes)
+    getCurrentAmount() {
+        return this.pay || 0;
+    }
+    // Handle amount input changes with validation
+    onAmountChange(event) {
+        const newAmount = event.target.value;
+        this.pay = parseFloat(newAmount) || 0;
+        // The header will automatically update due to getCurrentAmount() method
+    }
+    // Get transaction type text for header
+    getTransactionTypeText() {
+        var _a;
+        return ((_a = this.invoiceData) === null || _a === void 0 ? void 0 : _a.invoiceType) === 'sales' ? 'سند قبض' : 'سند دفع';
+    }
+    // Get customer name for header
+    getCustomerName() {
+        var _a, _b;
+        return ((_b = (_a = this.invoiceData) === null || _a === void 0 ? void 0 : _a.customerAccount) === null || _b === void 0 ? void 0 : _b.sub_name) || 'غير محدد';
+    }
+    // Get customer balance for header display
+    getCustomerBalance() {
+        var _a;
+        return ((_a = this.invoiceData) === null || _a === void 0 ? void 0 : _a.customerBalance) || null;
+    }
+    // Format customer balance for display
+    formatCustomerBalance(balance) {
+        if (!balance)
+            return '0.00';
+        const amount = Math.abs(parseFloat(balance.current_balance || 0)).toFixed(2);
+        const status = balance.status === 'debit' ? 'مدين' : 'دائن';
+        return `${amount} ${status}`;
+    }
+    // Get balance color for styling
+    getCustomerBalanceColor(balance) {
+        if (!balance)
+            return 'medium';
+        return balance.status === 'debit' ? 'success' : 'danger';
+    }
+    // Load balance for source account
+    loadSourceBalance(accountId) {
+        if (!accountId || !this.invoiceData)
+            return;
+        this.loadingSourceBalance = true;
+        this.sourceAccountBalance = null;
+        this.api.getAccountBalance(accountId, this.invoiceData.store_info.id, this.invoiceData.year.id).subscribe((response) => {
+            this.loadingSourceBalance = false;
+            if (response.success) {
+                this.sourceAccountBalance = response.data;
+            }
+        }, (error) => {
+            this.loadingSourceBalance = false;
+            this.sourceAccountBalance = null;
+        });
+    }
+    // Format balance for display
+    formatBalance(balance) {
+        if (!balance)
+            return '0.00';
+        const amount = parseFloat(balance.current_balance || 0).toFixed(2);
+        const type = balance.balance_type === 'debit' ? 'مدين' : 'دائن';
+        return `${amount} ${type}`;
+    }
+    // Get balance color for styling
+    getBalanceColor(balance) {
+        if (!balance)
+            return 'medium';
+        return balance.balance_type === 'debit' ? 'success' : 'danger';
+    }
+    presentToast(msg, color) {
+        return (0,tslib__WEBPACK_IMPORTED_MODULE_5__.__awaiter)(this, void 0, void 0, function* () {
+            const toast = yield this.toast.create({
+                message: msg,
+                duration: 2000,
+                color: color,
+                cssClass: 'cust_Toast',
+                mode: 'ios',
+                position: 'top'
+            });
+            toast.present();
+        });
+    }
+    presentLoadingWithOptions(msg) {
+        return (0,tslib__WEBPACK_IMPORTED_MODULE_5__.__awaiter)(this, void 0, void 0, function* () {
+            const loading = yield this.loadingController.create({
+                spinner: 'bubbles',
+                mode: 'ios',
+                message: msg,
+                translucent: true,
+                backdropDismiss: false
+            });
+            yield loading.present();
+        });
+    }
+};
+InvoiceJournalEntryComponent.ctorParameters = () => [
+    { type: _stockService_services_service__WEBPACK_IMPORTED_MODULE_2__.ServicesService },
+    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_6__.AlertController },
+    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_6__.LoadingController },
+    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_6__.ToastController },
+    { type: _angular_common__WEBPACK_IMPORTED_MODULE_7__.DatePipe },
+    { type: _ionic_storage__WEBPACK_IMPORTED_MODULE_3__.Storage }
+];
+InvoiceJournalEntryComponent.propDecorators = {
+    invoiceData: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.Input }],
+    journalSaved: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.Output }],
+    journalCancelled: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.Output }],
+    amountInput: [{ type: _angular_core__WEBPACK_IMPORTED_MODULE_4__.ViewChild, args: ['amountInput',] }]
+};
+InvoiceJournalEntryComponent = (0,tslib__WEBPACK_IMPORTED_MODULE_5__.__decorate)([
+    (0,_angular_core__WEBPACK_IMPORTED_MODULE_4__.Component)({
+        selector: 'app-invoice-journal-entry',
+        template: _invoice_journal_entry_component_html_ngResource__WEBPACK_IMPORTED_MODULE_0__,
+        styles: [_invoice_journal_entry_component_scss_ngResource__WEBPACK_IMPORTED_MODULE_1__]
+    })
+], InvoiceJournalEntryComponent);
+
+
+
+/***/ }),
+
 /***/ 67705:
 /*!************************************************************************************************!*\
   !*** ./src/app/component/invoice-price-config-dialog/invoice-price-config-dialog.component.ts ***!
@@ -2328,17 +3533,23 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "SharedModule": () => (/* binding */ SharedModule)
 /* harmony export */ });
-/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! tslib */ 48163);
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @angular/core */ 51109);
-/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @angular/common */ 38143);
-/* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @angular/forms */ 31777);
-/* harmony import */ var _ionic_angular__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @ionic/angular */ 95472);
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! tslib */ 48163);
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @angular/core */ 51109);
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @angular/common */ 38143);
+/* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @angular/forms */ 31777);
+/* harmony import */ var _ionic_angular__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @ionic/angular */ 95472);
 /* harmony import */ var _component_item_selector_item_selector_component__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../component/item-selector/item-selector.component */ 30752);
 /* harmony import */ var _component_item_selector_pipe__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../component/item-selector/pipe */ 47068);
-/* harmony import */ var _component_price_adjustment_dialog_price_adjustment_dialog_component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../component/price-adjustment-dialog/price-adjustment-dialog.component */ 91872);
-/* harmony import */ var _component_invoice_price_config_dialog_invoice_price_config_dialog_component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../component/invoice-price-config-dialog/invoice-price-config-dialog.component */ 67705);
-/* harmony import */ var _components_account_selector_account_selector_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../components/account-selector/account-selector.component */ 35845);
-/* harmony import */ var _component_action_popover_action_popover_component__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../component/action-popover/action-popover.component */ 10276);
+/* harmony import */ var _component_enhanced_item_selector_enhanced_item_selector_component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../component/enhanced-item-selector/enhanced-item-selector.component */ 29517);
+/* harmony import */ var _component_price_adjustment_dialog_price_adjustment_dialog_component__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../component/price-adjustment-dialog/price-adjustment-dialog.component */ 91872);
+/* harmony import */ var _component_invoice_price_config_dialog_invoice_price_config_dialog_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../component/invoice-price-config-dialog/invoice-price-config-dialog.component */ 67705);
+/* harmony import */ var _components_account_selector_account_selector_component__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../components/account-selector/account-selector.component */ 35845);
+/* harmony import */ var _component_action_popover_action_popover_component__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../component/action-popover/action-popover.component */ 10276);
+/* harmony import */ var src_app_component_invoice_journal_entry_invoice_journal_entry_component__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! src/app/component/invoice-journal-entry/invoice-journal-entry.component */ 88709);
+/* harmony import */ var _component_export_buttons_export_buttons_component__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../component/export-buttons/export-buttons.component */ 90733);
+
+
+
 
 
 
@@ -2352,28 +3563,34 @@ __webpack_require__.r(__webpack_exports__);
 
 let SharedModule = class SharedModule {
 };
-SharedModule = (0,tslib__WEBPACK_IMPORTED_MODULE_6__.__decorate)([
-    (0,_angular_core__WEBPACK_IMPORTED_MODULE_7__.NgModule)({
+SharedModule = (0,tslib__WEBPACK_IMPORTED_MODULE_9__.__decorate)([
+    (0,_angular_core__WEBPACK_IMPORTED_MODULE_10__.NgModule)({
         declarations: [
             _component_item_selector_item_selector_component__WEBPACK_IMPORTED_MODULE_0__.ItemSelectorComponent,
             _component_item_selector_pipe__WEBPACK_IMPORTED_MODULE_1__.FilterPipe,
-            _component_price_adjustment_dialog_price_adjustment_dialog_component__WEBPACK_IMPORTED_MODULE_2__.PriceAdjustmentDialogComponent,
-            _component_invoice_price_config_dialog_invoice_price_config_dialog_component__WEBPACK_IMPORTED_MODULE_3__.InvoicePriceConfigDialogComponent,
-            _component_action_popover_action_popover_component__WEBPACK_IMPORTED_MODULE_5__.ActionPopoverComponent,
-            _components_account_selector_account_selector_component__WEBPACK_IMPORTED_MODULE_4__.AccountSelectorComponent
+            _component_enhanced_item_selector_enhanced_item_selector_component__WEBPACK_IMPORTED_MODULE_2__.EnhancedItemSelectorComponent,
+            _component_price_adjustment_dialog_price_adjustment_dialog_component__WEBPACK_IMPORTED_MODULE_3__.PriceAdjustmentDialogComponent,
+            _component_invoice_price_config_dialog_invoice_price_config_dialog_component__WEBPACK_IMPORTED_MODULE_4__.InvoicePriceConfigDialogComponent,
+            _component_action_popover_action_popover_component__WEBPACK_IMPORTED_MODULE_6__.ActionPopoverComponent,
+            _components_account_selector_account_selector_component__WEBPACK_IMPORTED_MODULE_5__.AccountSelectorComponent,
+            src_app_component_invoice_journal_entry_invoice_journal_entry_component__WEBPACK_IMPORTED_MODULE_7__.InvoiceJournalEntryComponent,
+            _component_export_buttons_export_buttons_component__WEBPACK_IMPORTED_MODULE_8__.ExportButtonsComponent
         ],
         imports: [
-            _angular_common__WEBPACK_IMPORTED_MODULE_8__.CommonModule,
-            _angular_forms__WEBPACK_IMPORTED_MODULE_9__.FormsModule,
-            _ionic_angular__WEBPACK_IMPORTED_MODULE_10__.IonicModule
+            _angular_common__WEBPACK_IMPORTED_MODULE_11__.CommonModule,
+            _angular_forms__WEBPACK_IMPORTED_MODULE_12__.FormsModule,
+            _ionic_angular__WEBPACK_IMPORTED_MODULE_13__.IonicModule
         ],
         exports: [
             _component_item_selector_item_selector_component__WEBPACK_IMPORTED_MODULE_0__.ItemSelectorComponent,
             _component_item_selector_pipe__WEBPACK_IMPORTED_MODULE_1__.FilterPipe,
-            _component_action_popover_action_popover_component__WEBPACK_IMPORTED_MODULE_5__.ActionPopoverComponent,
-            _component_price_adjustment_dialog_price_adjustment_dialog_component__WEBPACK_IMPORTED_MODULE_2__.PriceAdjustmentDialogComponent,
-            _component_invoice_price_config_dialog_invoice_price_config_dialog_component__WEBPACK_IMPORTED_MODULE_3__.InvoicePriceConfigDialogComponent,
-            _components_account_selector_account_selector_component__WEBPACK_IMPORTED_MODULE_4__.AccountSelectorComponent
+            _component_enhanced_item_selector_enhanced_item_selector_component__WEBPACK_IMPORTED_MODULE_2__.EnhancedItemSelectorComponent,
+            _component_action_popover_action_popover_component__WEBPACK_IMPORTED_MODULE_6__.ActionPopoverComponent,
+            _component_price_adjustment_dialog_price_adjustment_dialog_component__WEBPACK_IMPORTED_MODULE_3__.PriceAdjustmentDialogComponent,
+            _component_invoice_price_config_dialog_invoice_price_config_dialog_component__WEBPACK_IMPORTED_MODULE_4__.InvoicePriceConfigDialogComponent,
+            _components_account_selector_account_selector_component__WEBPACK_IMPORTED_MODULE_5__.AccountSelectorComponent,
+            src_app_component_invoice_journal_entry_invoice_journal_entry_component__WEBPACK_IMPORTED_MODULE_7__.InvoiceJournalEntryComponent,
+            _component_export_buttons_export_buttons_component__WEBPACK_IMPORTED_MODULE_8__.ExportButtonsComponent
         ]
     })
 ], SharedModule);
@@ -2451,13 +3668,43 @@ module.exports = ".action-popover-list {\n  min-width: 200px;\n  direction: rtl;
 
 /***/ }),
 
+/***/ 14403:
+/*!***************************************************************************************************!*\
+  !*** ./src/app/component/enhanced-item-selector/enhanced-item-selector.component.scss?ngResource ***!
+  \***************************************************************************************************/
+/***/ ((module) => {
+
+module.exports = ".custInput {\n  border: 1px solid #ccc;\n  border-radius: 4px;\n  margin: 5px 0;\n}\n\n.red {\n  --background: #ffebee;\n  --color: #c62828;\n}\n\n.darko {\n  --background: #f5f5f5;\n  --color: #333;\n}\n\n.cust_Toast {\n  --border-radius: 10px;\n  --box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);\n}\n\n.label-with-buttons-container {\n  direction: rtl;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  position: relative;\n  text-align: right;\n}\n\n.label-with-buttons-container .action-buttons-left {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  order: 1;\n}\n\n.item-refresh-btn-left {\n  --color: var(--ion-color-success);\n  --padding-start: 3px;\n  --padding-end: 3px;\n  height: 32px;\n  width: 32px;\n}\n\n.item-refresh-btn-left ion-icon {\n  font-size: 16px;\n  transition: transform 0.3s ease;\n}\n\n.item-refresh-btn-left ion-icon.spin {\n  animation: spin 1s linear infinite;\n}\n\n.item-refresh-btn-left:hover {\n  --color: var(--ion-color-success-shade);\n  --background: rgba(var(--ion-color-success-rgb), 0.1);\n}\n\n.item-refresh-btn-left[disabled] {\n  --color: var(--ion-color-medium);\n  opacity: 0.5;\n}\n\n.item-loading-spinner-left {\n  width: 18px;\n  height: 18px;\n  margin: 0;\n}\n\n.item-selector-wrapper {\n  width: 100%;\n  margin: 5px 0;\n  z-index: 1000;\n}\n\n.item-selector-wrapper .input-container-wrapper {\n  position: relative;\n  width: 100%;\n}\n\n.item-selector-wrapper .item-selector-input {\n  --background: transparent;\n  --color: var(--ion-color-dark);\n  --placeholder-color: var(--ion-color-medium);\n  width: 100%;\n  direction: rtl;\n  text-align: right;\n  --padding-start: 12px;\n  --padding-end: 45px;\n}\n\n.item-selector-wrapper .item-selector-input input,\n.item-selector-wrapper .item-selector-input .native-input,\n.item-selector-wrapper .item-selector-input .input-wrapper input {\n  overflow: hidden !important;\n  text-overflow: ellipsis !important;\n  white-space: nowrap !important;\n  max-width: calc(100% - 80px) !important;\n  display: block !important;\n}\n\n.item-selector-wrapper .item-selector-input[disabled] {\n  --background: var(--ion-color-light);\n  --color: var(--ion-color-medium);\n  cursor: not-allowed;\n}\n\n.dropdown-container {\n  position: fixed !important;\n  z-index: 2147483647 !important;\n  background: white !important;\n  border: 1px solid var(--ion-color-light) !important;\n  border-radius: 8px !important;\n  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;\n  max-height: 300px !important;\n  overflow-y: auto !important;\n  min-width: 250px !important;\n  transform: translateZ(0) !important;\n  will-change: transform !important;\n  -webkit-backface-visibility: hidden !important;\n          backface-visibility: hidden !important;\n}\n\n.dropdown-container .dropdown-header {\n  background: var(--ion-color-light-tint);\n  border-bottom: 1px solid var(--ion-color-light-shade);\n  padding: 8px;\n}\n\n.dropdown-container .item-dropdown {\n  margin: 0;\n  padding: 0;\n  background: transparent;\n}\n\n.dropdown-container .item-dropdown .item-item {\n  --background: transparent;\n  --border-color: transparent;\n  --color: var(--ion-color-dark);\n  --padding-start: 12px;\n  --padding-end: 12px;\n  --min-height: 60px;\n  direction: rtl;\n  text-align: right;\n}\n\n.dropdown-container .item-dropdown .item-item:hover {\n  --background: var(--ion-color-light);\n}\n\n.dropdown-container .item-dropdown .item-item:active {\n  --background: rgba(var(--ion-color-primary-rgb), 0.1);\n}\n\n.dropdown-container .item-dropdown .item-item.highlighted {\n  --background: rgba(var(--ion-color-primary-rgb), 0.1);\n  border-left: 3px solid var(--ion-color-primary);\n}\n\n.dropdown-container .item-dropdown .item-item ion-label {\n  margin: 0;\n}\n\n.dropdown-container .item-dropdown .item-item ion-label h3 {\n  font-size: 14px;\n  font-weight: 500;\n  color: var(--ion-color-dark);\n  margin: 0 0 4px 0;\n}\n\n.dropdown-container .item-dropdown .item-item ion-label .item-desc {\n  font-size: 12px;\n  color: var(--ion-color-medium);\n  margin: 2px 0;\n}\n\n.dropdown-container .item-dropdown .item-item ion-label .item-prices-compact {\n  display: flex;\n  gap: 12px;\n  font-size: 11px;\n  margin-top: 4px;\n}\n\n.dropdown-container .item-dropdown .item-item ion-label .item-prices-compact .price-sale {\n  color: var(--ion-color-success);\n  font-weight: 600;\n}\n\n.dropdown-container .item-dropdown .item-item ion-label .item-prices-compact .price-purchase {\n  color: var(--ion-color-danger);\n  font-weight: 600;\n}\n\n.dropdown-container .item-dropdown .item-item ion-label .item-prices-compact .stock-qty {\n  color: var(--ion-color-dark);\n  font-weight: 500;\n}\n\n.dropdown-container .item-dropdown .no-results {\n  --color: var(--ion-color-medium);\n  --padding-start: 12px;\n  --padding-end: 12px;\n  text-align: center;\n  font-style: italic;\n}\n\n.dropdown-container .item-dropdown .no-results ion-label p {\n  margin: 0;\n  font-size: 14px;\n}\n\n@keyframes spin {\n  from {\n    transform: rotate(0deg);\n  }\n  to {\n    transform: rotate(360deg);\n  }\n}\n\n@media (max-width: 768px) {\n  .label-with-buttons-container .action-buttons-left {\n    gap: 2px;\n  }\n  .label-with-buttons-container .item-refresh-btn-left {\n    height: 28px;\n    width: 28px;\n    --padding-start: 2px;\n    --padding-end: 2px;\n  }\n  .label-with-buttons-container .item-refresh-btn-left ion-icon {\n    font-size: 14px;\n  }\n  .label-with-buttons-container .item-loading-spinner-left {\n    width: 16px;\n    height: 16px;\n  }\n\n  .item-selector-wrapper .item-selector-input {\n    font-size: 13px;\n    --padding-start: 10px;\n    --padding-end: 40px;\n  }\n  .item-selector-wrapper .item-selector-input input,\n.item-selector-wrapper .item-selector-input .native-input,\n.item-selector-wrapper .item-selector-input .input-wrapper input {\n    max-width: calc(100% - 45px) !important;\n    font-size: 13px !important;\n  }\n\n  .dropdown-container {\n    max-height: 200px;\n  }\n  .dropdown-container .item-dropdown .item-item {\n    --min-height: 50px;\n  }\n  .dropdown-container .item-dropdown .item-item ion-label h3 {\n    font-size: 13px;\n  }\n  .dropdown-container .item-dropdown .item-item ion-label .item-desc {\n    font-size: 11px;\n  }\n  .dropdown-container .item-dropdown .item-item ion-label .item-prices-compact {\n    font-size: 10px;\n  }\n}\n\n.item-selector-wrapper ion-input .native-input,\n.item-selector-wrapper ion-input input {\n  overflow: hidden !important;\n  text-overflow: ellipsis !important;\n  white-space: nowrap !important;\n  width: 100% !important;\n}\n\n.item-selector-wrapper .input-wrapper {\n  overflow: hidden !important;\n}\n\n.item-selector-wrapper .input-wrapper input {\n  overflow: hidden !important;\n  text-overflow: ellipsis !important;\n  white-space: nowrap !important;\n}\n\n:host .dropdown-container {\n  position: fixed !important;\n  z-index: 2147483647 !important;\n  transform: translateZ(0) !important;\n  will-change: transform !important;\n  -webkit-backface-visibility: hidden !important;\n          backface-visibility: hidden !important;\n}\n\n.selected-item-info {\n  margin-top: 8px;\n  padding: 8px 12px;\n  background: #f8f9fa;\n  border-radius: 4px;\n  border: 1px solid #e9ecef;\n}\n\n.selected-item-info .selected-info {\n  font-size: 13px;\n  color: #495057;\n}\n\n@media (prefers-color-scheme: dark) {\n  .item-selector-wrapper .custInput {\n    --background: #1e1e1e;\n    --color: white;\n    border-color: #404040;\n  }\n  .item-selector-wrapper .dropdown-container {\n    background: #1e1e1e;\n    border-color: #404040;\n  }\n  .item-selector-wrapper .dropdown-container .item-dropdown .item-item {\n    --background: #1e1e1e;\n    --color: white;\n  }\n  .item-selector-wrapper .dropdown-container .item-dropdown .item-item:hover {\n    --background: #2a2a2a;\n  }\n  .item-selector-wrapper .dropdown-container .item-dropdown .item-item.highlighted {\n    --background: #1565c0;\n    --color: white;\n  }\n  .item-selector-wrapper .dropdown-container .item-dropdown .item-item ion-label h3 {\n    color: white;\n  }\n  .item-selector-wrapper .dropdown-container .item-dropdown .no-results {\n    --background: #1e1e1e;\n    --color: #aaa;\n  }\n  .item-selector-wrapper .selected-item-info {\n    background: #2a2a2a;\n    border-color: #404040;\n  }\n  .item-selector-wrapper .selected-item-info .selected-info {\n    color: #ccc;\n  }\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImVuaGFuY2VkLWl0ZW0tc2VsZWN0b3IuY29tcG9uZW50LnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQ0E7RUFDRSxzQkFBQTtFQUNBLGtCQUFBO0VBQ0EsYUFBQTtBQUFGOztBQUdBO0VBQ0UscUJBQUE7RUFDQSxnQkFBQTtBQUFGOztBQUdBO0VBQ0UscUJBQUE7RUFDQSxhQUFBO0FBQUY7O0FBR0E7RUFDRSxxQkFBQTtFQUNBLGlEQUFBO0FBQUY7O0FBSUE7RUFDRSxjQUFBO0VBQ0EsYUFBQTtFQUNBLDhCQUFBO0VBQ0EsbUJBQUE7RUFDQSxrQkFBQTtFQUNBLGlCQUFBO0FBREY7O0FBR0U7RUFDRSxhQUFBO0VBQ0EsbUJBQUE7RUFDQSxRQUFBO0VBQ0EsUUFBQTtBQURKOztBQU1BO0VBQ0UsaUNBQUE7RUFDQSxvQkFBQTtFQUNBLGtCQUFBO0VBQ0EsWUFBQTtFQUNBLFdBQUE7QUFIRjs7QUFLRTtFQUNFLGVBQUE7RUFDQSwrQkFBQTtBQUhKOztBQUtJO0VBQ0Usa0NBQUE7QUFITjs7QUFPRTtFQUNFLHVDQUFBO0VBQ0EscURBQUE7QUFMSjs7QUFRRTtFQUNFLGdDQUFBO0VBQ0EsWUFBQTtBQU5KOztBQVdBO0VBQ0UsV0FBQTtFQUNBLFlBQUE7RUFDQSxTQUFBO0FBUkY7O0FBWUE7RUFDRSxXQUFBO0VBQ0EsYUFBQTtFQUVBLGFBQUE7QUFWRjs7QUFhRTtFQUNFLGtCQUFBO0VBQ0EsV0FBQTtBQVhKOztBQWVFO0VBQ0UseUJBQUE7RUFDQSw4QkFBQTtFQUNBLDRDQUFBO0VBQ0EsV0FBQTtFQUNBLGNBQUE7RUFDQSxpQkFBQTtFQUdBLHFCQUFBO0VBQ0EsbUJBQUE7QUFmSjs7QUFrQkk7OztFQUdFLDJCQUFBO0VBQ0Esa0NBQUE7RUFDQSw4QkFBQTtFQUNBLHVDQUFBO0VBQ0EseUJBQUE7QUFoQk47O0FBbUJJO0VBQ0Usb0NBQUE7RUFDQSxnQ0FBQTtFQUNBLG1CQUFBO0FBakJOOztBQXdCQTtFQUNFLDBCQUFBO0VBQ0EsOEJBQUE7RUFDQSw0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bmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiLy8gQ29weSBleGFjdCBzdHlsZXMgZnJvbSBvcmlnaW5hbCBpdGVtLXNlbGVjdG9yXG4uY3VzdElucHV0IHtcbiAgYm9yZGVyOiAxcHggc29saWQgI2NjYztcbiAgYm9yZGVyLXJhZGl1czogNHB4O1xuICBtYXJnaW46IDVweCAwO1xufVxuXG4ucmVkIHtcbiAgLS1iYWNrZ3JvdW5kOiAjZmZlYmVlO1xuICAtLWNvbG9yOiAjYzYyODI4O1xufVxuXG4uZGFya28ge1xuICAtLWJhY2tncm91bmQ6ICNmNWY1ZjU7XG4gIC0tY29sb3I6ICMzMzM7XG59XG5cbi5jdXN0X1RvYXN0IHtcbiAgLS1ib3JkZXItcmFkaXVzOiAxMHB4O1xuICAtLWJveC1zaGFkb3c6IDAgMTBweCAxNXB4IC0zcHggcmdiYSgwLCAwLCAwLCAwLjEpO1xufVxuXG4vLyBMYXlvdXQgZm9yIGxhYmVsIHdpdGggYnV0dG9ucyBpbiB0b3AgbGVmdCAtIE1BVENIIE9SSUdJTkFMIGl0ZW0tc2VsZWN0b3Jcbi5sYWJlbC13aXRoLWJ1dHRvbnMtY29udGFpbmVyIHtcbiAgZGlyZWN0aW9uOiBydGw7XG4gIGRpc3BsYXk6IGZsZXg7XG4gIGp1c3RpZnktY29udGVudDogc3BhY2UtYmV0d2VlbjtcbiAgYWxpZ24taXRlbXM6IGNlbnRlcjsgXG4gIHBvc2l0aW9uOiByZWxhdGl2ZTtcbiAgdGV4dC1hbGlnbjogcmlnaHQ7XG4gIFxuICAuYWN0aW9uLWJ1dHRvbnMtbGVmdCB7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBhbGlnbi1pdGVtczogY2VudGVyO1xuICAgIGdhcDogNHB4O1xuICAgIG9yZGVyOiAxO1xuICB9XG59XG5cbi8vIExlZnQgcG9zaXRpb25lZCByZWZyZXNoIGJ1dHRvbiAtIE1BVENIIE9SSUdJTkFMIGl0ZW0tc2VsZWN0b3Jcbi5pdGVtLXJlZnJlc2gtYnRuLWxlZnQge1xuICAtLWNvbG9yOiB2YXIoLS1pb24tY29sb3Itc3VjY2Vzcyk7XG4gIC0tcGFkZGluZy1zdGFydDogM3B4O1xuICAtLXBhZGRpbmctZW5kOiAzcHg7XG4gIGhlaWdodDogMzJweDtcbiAgd2lkdGg6IDMycHg7XG4gIFxuICBpb24taWNvbiB7XG4gICAgZm9udC1zaXplOiAxNnB4O1xuICAgIHRyYW5zaXRpb246IHRyYW5zZm9ybSAwLjNzIGVhc2U7XG5cbiAgICAmLnNwaW4ge1xuICAgICAgYW5pbWF0aW9uOiBzcGluIDFzIGxpbmVhciBpbmZpbml0ZTtcbiAgICB9XG4gIH1cblxuICAmOmhvdmVyIHtcbiAgICAtLWNvbG9yOiB2YXIoLS1pb24tY29sb3Itc3VjY2Vzcy1zaGFkZSk7XG4gICAgLS1iYWNrZ3JvdW5kOiByZ2JhKHZhcigtLWlvbi1jb2xvci1zdWNjZXNzLXJnYiksIDAuMSk7XG4gIH1cblxuICAmW2Rpc2FibGVkXSB7XG4gICAgLS1jb2xvcjogdmFyKC0taW9uLWNvbG9yLW1lZGl1bSk7XG4gICAgb3BhY2l0eTogMC41O1xuICB9XG59XG5cbi8vIExlZnQgcG9zaXRpb25lZCBsb2FkaW5nIHNwaW5uZXIgLSBNQVRDSCBPUklHSU5BTCBpdGVtLXNlbGVjdG9yXG4uaXRlbS1sb2FkaW5nLXNwaW5uZXItbGVmdCB7XG4gIHdpZHRoOiAxOHB4O1xuICBoZWlnaHQ6IDE4cHg7XG4gIG1hcmdpbjogMDtcbn1cblxuLy8gSXRlbSBTZWxlY3RvciBFbmhhbmNlZCBTdHlsZXMgLSBNYXRjaCBvdGhlciBpbnB1dCBmaWVsZHNcbi5pdGVtLXNlbGVjdG9yLXdyYXBwZXIge1xuICB3aWR0aDogMTAwJTtcbiAgbWFyZ2luOiA1cHggMDsgLy8gU2FtZSBhcyBvdGhlciBjdXN0SW5wdXQgZmllbGRzXG4gIC8vIFJlbW92ZSByZWxhdGl2ZSBwb3NpdGlvbmluZyBzaW5jZSB3ZSdyZSB1c2luZyBmaXhlZCBkcm9wZG93biBwb3NpdGlvbmluZ1xuICB6LWluZGV4OiAxMDAwOyAvLyBFbnN1cmUgd3JhcHBlciBoYXMgaGlnaCB6LWluZGV4XG4gIFxuICAvLyBJbnB1dCBjb250YWluZXIgd3JhcHBlciBmb3IgcHJvcGVyIGRyb3Bkb3duIHBvc2l0aW9uaW5nXG4gIC5pbnB1dC1jb250YWluZXItd3JhcHBlciB7XG4gICAgcG9zaXRpb246IHJlbGF0aXZlO1xuICAgIHdpZHRoOiAxMDAlO1xuICB9XG4gIFxuICAvLyBNYWtlIGl0IGxvb2sgZXhhY3RseSBsaWtlIG90aGVyIGlucHV0IGZpZWxkcyAocXVhbnRpdHksIHBheV9wcmljZSwgZXRjKVxuICAuaXRlbS1zZWxlY3Rvci1pbnB1dCB7XG4gICAgLS1iYWNrZ3JvdW5kOiB0cmFuc3BhcmVudDtcbiAgICAtLWNvbG9yOiB2YXIoLS1pb24tY29sb3ItZGFyayk7XG4gICAgLS1wbGFjZWhvbGRlci1jb2xvcjogdmFyKC0taW9uLWNvbG9yLW1lZGl1bSk7XG4gICAgd2lkdGg6IDEwMCU7XG4gICAgZGlyZWN0aW9uOiBydGw7XG4gICAgdGV4dC1hbGlnbjogcmlnaHQ7XG4gICAgXG4gICAgLy8gRml4IHRleHQgb3ZlcmZsb3cgZm9yIGxvbmcgaXRlbSBuYW1lcyAtIG1pbmltYWwgcGFkZGluZyB0byBtYXhpbWl6ZSB0ZXh0IHNwYWNlXG4gICAgLS1wYWRkaW5nLXN0YXJ0OiAxMnB4OyAvLyBNaW5pbWFsIHBhZGRpbmcgZm9yIHRleHQgc3BhY2VcbiAgICAtLXBhZGRpbmctZW5kOiA0NXB4OyAvLyBTcGFjZSBmb3IgY2xlYXIgYnV0dG9uIG9ubHkgb24gcmlnaHRcbiAgICBcbiAgICAvLyBFbmhhbmNlZCB0ZXh0IG92ZXJmbG93IGhhbmRsaW5nIGZvciBsb25nIGl0ZW0gbmFtZXMgLSB0YXJnZXQgYWxsIHBvc3NpYmxlIGlucHV0IGVsZW1lbnRzXG4gICAgaW5wdXQsXG4gICAgLm5hdGl2ZS1pbnB1dCxcbiAgICAuaW5wdXQtd3JhcHBlciBpbnB1dCB7XG4gICAgICBvdmVyZmxvdzogaGlkZGVuICFpbXBvcnRhbnQ7XG4gICAgICB0ZXh0LW92ZXJmbG93OiBlbGxpcHNpcyAhaW1wb3J0YW50O1xuICAgICAgd2hpdGUtc3BhY2U6IG5vd3JhcCAhaW1wb3J0YW50O1xuICAgICAgbWF4LXdpZHRoOiBjYWxjKDEwMCUgLSA4MHB4KSAhaW1wb3J0YW50OyAvLyBBY2NvdW50IGZvciBidXR0b25zXG4gICAgICBkaXNwbGF5OiBibG9jayAhaW1wb3J0YW50O1xuICAgIH1cblxuICAgICZbZGlzYWJsZWRdIHtcbiAgICAgIC0tYmFja2dyb3VuZDogdmFyKC0taW9uLWNvbG9yLWxpZ2h0KTtcbiAgICAgIC0tY29sb3I6IHZhcigtLWlvbi1jb2xvci1tZWRpdW0pO1xuICAgICAgY3Vyc29yOiBub3QtYWxsb3dlZDtcbiAgICB9XG4gIH1cblxufVxuXG4vLyBEcm9wZG93biBjb250YWluZXIgc3R5bGVzIC0gUE9SVEFML0ZJWEVEIFBPU0lUSU9OSU5HIFZFUlNJT05cbi5kcm9wZG93bi1jb250YWluZXIge1xuICBwb3NpdGlvbjogZml4ZWQgIWltcG9ydGFudDsgLy8gVXNlIGZpeGVkIHBvc2l0aW9uaW5nIHRvIGVzY2FwZSBwYXJlbnQgc3RhY2tpbmcgY29udGV4dHNcbiAgei1pbmRleDogMjE0NzQ4MzY0NyAhaW1wb3J0YW50OyAvLyBNYXhpbXVtIHBvc3NpYmxlIHotaW5kZXhcbiAgYmFja2dyb3VuZDogd2hpdGUgIWltcG9ydGFudDtcbiAgYm9yZGVyOiAxcHggc29saWQgdmFyKC0taW9uLWNvbG9yLWxpZ2h0KSAhaW1wb3J0YW50O1xuICBib3JkZXItcmFkaXVzOiA4cHggIWltcG9ydGFudDtcbiAgYm94LXNoYWRvdzogMCA4cHggMjRweCByZ2JhKDAsIDAsIDAsIDAuMikgIWltcG9ydGFudDtcbiAgbWF4LWhlaWdodDogMzAwcHggIWltcG9ydGFudDtcbiAgb3ZlcmZsb3cteTogYXV0byAhaW1wb3J0YW50O1xuICBtaW4td2lkdGg6IDI1MHB4ICFpbXBvcnRhbnQ7XG4gIC8vIEZvcmNlIHRoZSBoaWdoZXN0IHN0YWNraW5nIGNvbnRleHQgcG9zc2libGVcbiAgdHJhbnNmb3JtOiB0cmFuc2xhdGVaKDApICFpbXBvcnRhbnQ7XG4gIHdpbGwtY2hhbmdlOiB0cmFuc2Zvcm0gIWltcG9ydGFudDtcbiAgLy8gRW5zdXJlIGl0J3Mgbm90IGFmZmVjdGVkIGJ5IHBhcmVudCB0cmFuc2Zvcm1zXG4gIGJhY2tmYWNlLXZpc2liaWxpdHk6IGhpZGRlbiAhaW1wb3J0YW50O1xuXG4gIC5kcm9wZG93bi1oZWFkZXIge1xuICAgIGJhY2tncm91bmQ6IHZhcigtLWlvbi1jb2xvci1saWdodC10aW50KTtcbiAgICBib3JkZXItYm90dG9tOiAxcHggc29saWQgdmFyKC0taW9uLWNvbG9yLWxpZ2h0LXNoYWRlKTtcbiAgICBwYWRkaW5nOiA4cHg7XG4gIH1cblxuICAuaXRlbS1kcm9wZG93biB7XG4gICAgbWFyZ2luOiAwO1xuICAgIHBhZGRpbmc6IDA7XG4gICAgYmFja2dyb3VuZDogdHJhbnNwYXJlbnQ7XG5cbiAgICAuaXRlbS1pdGVtIHtcbiAgICAgIC0tYmFja2dyb3VuZDogdHJhbnNwYXJlbnQ7XG4gICAgICAtLWJvcmRlci1jb2xvcjogdHJhbnNwYXJlbnQ7XG4gICAgICAtLWNvbG9yOiB2YXIoLS1pb24tY29sb3ItZGFyayk7XG4gICAgICAtLXBhZGRpbmctc3RhcnQ6IDEycHg7XG4gICAgICAtLXBhZGRpbmctZW5kOiAxMnB4O1xuICAgICAgLS1taW4taGVpZ2h0OiA2MHB4O1xuICAgICAgZGlyZWN0aW9uOiBydGw7XG4gICAgICB0ZXh0LWFsaWduOiByaWdodDtcblxuICAgICAgJjpob3ZlciB7XG4gICAgICAgIC0tYmFja2dyb3VuZDogdmFyKC0taW9uLWNvbG9yLWxpZ2h0KTtcbiAgICAgIH1cblxuICAgICAgJjphY3RpdmUge1xuICAgICAgICAtLWJhY2tncm91bmQ6IHJnYmEodmFyKC0taW9uLWNvbG9yLXByaW1hcnktcmdiKSwgMC4xKTtcbiAgICAgIH1cblxuICAgICAgJi5oaWdobGlnaHRlZCB7XG4gICAgICAgIC0tYmFja2dyb3VuZDogcmdiYSh2YXIoLS1pb24tY29sb3ItcHJpbWFyeS1yZ2IpLCAwLjEpO1xuICAgICAgICBib3JkZXItbGVmdDogM3B4IHNvbGlkIHZhcigtLWlvbi1jb2xvci1wcmltYXJ5KTtcbiAgICAgIH1cblxuICAgICAgaW9uLWxhYmVsIHtcbiAgICAgICAgbWFyZ2luOiAwO1xuXG4gICAgICAgIGgzIHtcbiAgICAgICAgICBmb250LXNpemU6IDE0cHg7XG4gICAgICAgICAgZm9udC13ZWlnaHQ6IDUwMDtcbiAgICAgICAgICBjb2xvcjogdmFyKC0taW9uLWNvbG9yLWRhcmspO1xuICAgICAgICAgIG1hcmdpbjogMCAwIDRweCAwO1xuICAgICAgICB9XG5cbiAgICAgICAgLml0ZW0tZGVzYyB7XG4gICAgICAgICAgZm9udC1zaXplOiAxMnB4O1xuICAgICAgICAgIGNvbG9yOiB2YXIoLS1pb24tY29sb3ItbWVkaXVtKTtcbiAgICAgICAgICBtYXJnaW46IDJweCAwO1xuICAgICAgICB9XG5cbiAgICAgICAgLml0ZW0tcHJpY2VzLWNvbXBhY3Qge1xuICAgICAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICAgICAgZ2FwOiAxMnB4O1xuICAgICAgICAgIGZvbnQtc2l6ZTogMTFweDtcbiAgICAgICAgICBtYXJnaW4tdG9wOiA0cHg7XG5cbiAgICAgICAgICAucHJpY2Utc2FsZSB7XG4gICAgICAgICAgICBjb2xvcjogdmFyKC0taW9uLWNvbG9yLXN1Y2Nlc3MpO1xuICAgICAgICAgICAgZm9udC13ZWlnaHQ6IDYwMDtcbiAgICAgICAgICB9XG5cbiAgICAgICAgICAucHJpY2UtcHVyY2hhc2Uge1xuICAgICAgICAgICAgY29sb3I6IHZhcigtLWlvbi1jb2xvci1kYW5nZXIpO1xuICAgICAgICAgICAgZm9udC13ZWlnaHQ6IDYwMDtcbiAgICAgICAgICB9XG5cbiAgICAgICAgICAuc3RvY2stcXR5IHtcbiAgICAgICAgICAgIGNvbG9yOiB2YXIoLS1pb24tY29sb3ItZGFyayk7XG4gICAgICAgICAgICBmb250LXdlaWdodDogNTAwO1xuICAgICAgICAgIH1cbiAgICAgICAgfVxuICAgICAgfVxuICAgIH1cblxuICAgIC5uby1yZXN1bHRzIHtcbiAgICAgIC0tY29sb3I6IHZhcigtLWlvbi1jb2xvci1tZWRpdW0pO1xuICAgICAgLS1wYWRkaW5nLXN0YXJ0OiAxMnB4O1xuICAgICAgLS1wYWRkaW5nLWVuZDogMTJweDtcbiAgICAgIHRleHQtYWxpZ246IGNlbnRlcjtcbiAgICAgIGZvbnQtc3R5bGU6IGl0YWxpYztcblxuICAgICAgaW9uLWxhYmVsIHAge1xuICAgICAgICBtYXJnaW46IDA7XG4gICAgICAgIGZvbnQtc2l6ZTogMTRweDtcbiAgICAgIH1cbiAgICB9XG4gIH1cbn1cblxuLy8gU3BpbiBhbmltYXRpb24gZm9yIHJlZnJlc2ggYnV0dG9uXG5Aa2V5ZnJhbWVzIHNwaW4ge1xuICBmcm9tIHtcbiAgICB0cmFuc2Zvcm06IHJvdGF0ZSgwZGVnKTtcbiAgfVxuICB0byB7XG4gICAgdHJhbnNmb3JtOiByb3RhdGUoMzYwZGVnKTtcbiAgfVxufVxuXG4vLyBSZXNwb25zaXZlIGFkanVzdG1lbnRzIGZvciBtb2JpbGUgLSBNQVRDSCBPUklHSU5BTCBpdGVtLXNlbGVjdG9yXG5AbWVkaWEgKG1heC13aWR0aDogNzY4cHgpIHtcbiAgLmxhYmVsLXdpdGgtYnV0dG9ucy1jb250YWluZXIge1xuICAgIC5hY3Rpb24tYnV0dG9ucy1sZWZ0IHtcbiAgICAgIGdhcDogMnB4O1xuICAgIH1cbiAgICBcbiAgICAuaXRlbS1yZWZyZXNoLWJ0bi1sZWZ0IHtcbiAgICAgIGhlaWdodDogMjhweDtcbiAgICAgIHdpZHRoOiAyOHB4O1xuICAgICAgLS1wYWRkaW5nLXN0YXJ0OiAycHg7XG4gICAgICAtLXBhZGRpbmctZW5kOiAycHg7XG4gICAgICBcbiAgICAgIGlvbi1pY29uIHtcbiAgICAgICAgZm9udC1zaXplOiAxNHB4O1xuICAgICAgfVxuICAgIH1cblxuICAgIC5pdGVtLWxvYWRpbmctc3Bpbm5lci1sZWZ0IHtcbiAgICAgIHdpZHRoOiAxNnB4O1xuICAgICAgaGVpZ2h0OiAxNnB4O1xuICAgIH1cbiAgfVxuXG4gIC5pdGVtLXNlbGVjdG9yLXdyYXBwZXIge1xuICAgIC5pdGVtLXNlbGVjdG9yLWlucHV0IHtcbiAgICAgIGZvbnQtc2l6ZTogMTNweDtcbiAgICAgIC0tcGFkZGluZy1zdGFydDogMTBweDsgLy8gTWluaW1hbCBwYWRkaW5nIHRvIG1heGltaXplIHRleHQgc3BhY2VcbiAgICAgIC0tcGFkZGluZy1lbmQ6IDQwcHg7IC8vIFNwYWNlIGZvciBjbGVhciBidXR0b24gb25seVxuICAgICAgXG4gICAgICAvLyBFbmhhbmNlZCBtb2JpbGUgdGV4dCBvdmVyZmxvd1xuICAgICAgaW5wdXQsXG4gICAgICAubmF0aXZlLWlucHV0LFxuICAgICAgLmlucHV0LXdyYXBwZXIgaW5wdXQge1xuICAgICAgICBtYXgtd2lkdGg6IGNhbGMoMTAwJSAtIDQ1cHgpICFpbXBvcnRhbnQ7XG4gICAgICAgIGZvbnQtc2l6ZTogMTNweCAhaW1wb3J0YW50O1xuICAgICAgfVxuICAgIH1cbiAgfVxuXG4gIC5kcm9wZG93bi1jb250YWluZXIge1xuICAgIG1heC1oZWlnaHQ6IDIwMHB4O1xuXG4gICAgLml0ZW0tZHJvcGRvd24gLml0ZW0taXRlbSB7XG4gICAgICAtLW1pbi1oZWlnaHQ6IDUwcHg7XG5cbiAgICAgIGlvbi1sYWJlbCB7XG4gICAgICAgIGgzIHtcbiAgICAgICAgICBmb250LXNpemU6IDEzcHg7XG4gICAgICAgIH1cblxuICAgICAgICAuaXRlbS1kZXNjIHtcbiAgICAgICAgICBmb250LXNpemU6IDExcHg7XG4gICAgICAgIH1cblxuICAgICAgICAuaXRlbS1wcmljZXMtY29tcGFjdCB7XG4gICAgICAgICAgZm9udC1zaXplOiAxMHB4O1xuICAgICAgICB9XG4gICAgICB9XG4gICAgfVxuICB9XG59XG5cbi8vIEdsb2JhbCBmaXggZm9yIGlvbi1pbnB1dCB0ZXh0IG92ZXJmbG93IGluIGl0ZW0gc2VsZWN0b3Jcbi5pdGVtLXNlbGVjdG9yLXdyYXBwZXIge1xuICBpb24taW5wdXQge1xuICAgIC8vIEZvcmNlIHRleHQgb3ZlcmZsb3cgZm9yIGFsbCBuZXN0ZWQgaW5wdXQgZWxlbWVudHNcbiAgICAubmF0aXZlLWlucHV0LFxuICAgIGlucHV0IHtcbiAgICAgIG92ZXJmbG93OiBoaWRkZW4gIWltcG9ydGFudDtcbiAgICAgIHRleHQtb3ZlcmZsb3c6IGVsbGlwc2lzICFpbXBvcnRhbnQ7XG4gICAgICB3aGl0ZS1zcGFjZTogbm93cmFwICFpbXBvcnRhbnQ7XG4gICAgICB3aWR0aDogMTAwJSAhaW1wb3J0YW50O1xuICAgIH1cbiAgfVxuICBcbiAgLy8gQWRkaXRpb25hbCBDU1MgdG8gaGFuZGxlIGlvbi1pbnB1dCB3cmFwcGVyXG4gIC5pbnB1dC13cmFwcGVyIHtcbiAgICBvdmVyZmxvdzogaGlkZGVuICFpbXBvcnRhbnQ7XG4gICAgXG4gICAgaW5wdXQge1xuICAgICAgb3ZlcmZsb3c6IGhpZGRlbiAhaW1wb3J0YW50O1xuICAgICAgdGV4dC1vdmVyZmxvdzogZWxsaXBzaXMgIWltcG9ydGFudDtcbiAgICAgIHdoaXRlLXNwYWNlOiBub3dyYXAgIWltcG9ydGFudDtcbiAgICB9XG4gIH1cbn1cblxuLy8gR0xPQkFMIERST1BET1dOIFotSU5ERVggRklYIC0gRW5zdXJlcyBkcm9wZG93biBhcHBlYXJzIGFib3ZlIEFMTCBjb250ZW50XG46aG9zdCB7XG4gIC5kcm9wZG93bi1jb250YWluZXIge1xuICAgIHBvc2l0aW9uOiBmaXhlZCAhaW1wb3J0YW50O1xuICAgIHotaW5kZXg6IDIxNDc0ODM2NDcgIWltcG9ydGFudDsgLy8gTWF4aW11bSBwb3NzaWJsZSB6LWluZGV4XG4gICAgLy8gRm9yY2UgaGFyZHdhcmUgYWNjZWxlcmF0aW9uIHRvIGNyZWF0ZSBuZXcgc3RhY2tpbmcgY29udGV4dFxuICAgIHRyYW5zZm9ybTogdHJhbnNsYXRlWigwKSAhaW1wb3J0YW50O1xuICAgIHdpbGwtY2hhbmdlOiB0cmFuc2Zvcm0gIWltcG9ydGFudDtcbiAgICBiYWNrZmFjZS12aXNpYmlsaXR5OiBoaWRkZW4gIWltcG9ydGFudDtcbiAgfVxufVxuXG4vLyBTZWxlY3RlZCBpdGVtIGluZm8gc3R5bGluZ1xuLnNlbGVjdGVkLWl0ZW0taW5mbyB7XG4gIG1hcmdpbi10b3A6IDhweDtcbiAgcGFkZGluZzogOHB4IDEycHg7XG4gIGJhY2tncm91bmQ6ICNmOGY5ZmE7XG4gIGJvcmRlci1yYWRpdXM6IDRweDtcbiAgYm9yZGVyOiAxcHggc29saWQgI2U5ZWNlZjtcbiAgXG4gIC5zZWxlY3RlZC1pbmZvIHtcbiAgICBmb250LXNpemU6IDEzcHg7XG4gICAgY29sb3I6ICM0OTUwNTc7XG4gIH1cbn1cblxuLy8gRGFyayB0aGVtZSBzdXBwb3J0XG5AbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7XG4gIC5pdGVtLXNlbGVjdG9yLXdyYXBwZXIge1xuICAgIC5jdXN0SW5wdXQge1xuICAgICAgLS1iYWNrZ3JvdW5kOiAjMWUxZTFlO1xuICAgICAgLS1jb2xvcjogd2hpdGU7XG4gICAgICBib3JkZXItY29sb3I6ICM0MDQwNDA7XG4gICAgfVxuICAgIFxuICAgIC5kcm9wZG93bi1jb250YWluZXIge1xuICAgICAgYmFja2dyb3VuZDogIzFlMWUxZTtcbiAgICAgIGJvcmRlci1jb2xvcjogIzQwNDA0MDtcbiAgICAgIFxuICAgICAgLml0ZW0tZHJvcGRvd24ge1xuICAgICAgICAuaXRlbS1pdGVtIHtcbiAgICAgICAgICAtLWJhY2tncm91bmQ6ICMxZTFlMWU7XG4gICAgICAgICAgLS1jb2xvcjogd2hpdGU7XG4gICAgICAgICAgXG4gICAgICAgICAgJjpob3ZlciB7XG4gICAgICAgICAgICAtLWJhY2tncm91bmQ6ICMyYTJhMmE7XG4gICAgICAgICAgfVxuICAgICAgICAgIFxuICAgICAgICAgICYuaGlnaGxpZ2h0ZWQge1xuICAgICAgICAgICAgLS1iYWNrZ3JvdW5kOiAjMTU2NWMwO1xuICAgICAgICAgICAgLS1jb2xvcjogd2hpdGU7XG4gICAgICAgICAgfVxuICAgICAgICAgIFxuICAgICAgICAgIGlvbi1sYWJlbCBoMyB7XG4gICAgICAgICAgICBjb2xvcjogd2hpdGU7XG4gICAgICAgICAgfVxuICAgICAgICB9XG4gICAgICAgIFxuICAgICAgICAubm8tcmVzdWx0cyB7XG4gICAgICAgICAgLS1iYWNrZ3JvdW5kOiAjMWUxZTFlO1xuICAgICAgICAgIC0tY29sb3I6ICNhYWE7XG4gICAgICAgIH1cbiAgICAgIH1cbiAgICB9XG4gICAgXG4gICAgLnNlbGVjdGVkLWl0ZW0taW5mbyB7XG4gICAgICBiYWNrZ3JvdW5kOiAjMmEyYTJhO1xuICAgICAgYm9yZGVyLWNvbG9yOiAjNDA0MDQwO1xuICAgICAgXG4gICAgICAuc2VsZWN0ZWQtaW5mbyB7XG4gICAgICAgIGNvbG9yOiAjY2NjO1xuICAgICAgfVxuICAgIH1cbiAgfVxufSJdfQ== */";
+
+/***/ }),
+
+/***/ 65225:
+/*!***********************************************************************************!*\
+  !*** ./src/app/component/export-buttons/export-buttons.component.scss?ngResource ***!
+  \***********************************************************************************/
+/***/ ((module) => {
+
+module.exports = ".export-buttons {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n}\n\n.export-btn {\n  --border-width: 1px;\n  --border-radius: 6px;\n  --padding-start: 12px;\n  --padding-end: 12px;\n  height: 32px;\n  font-size: 12px;\n}\n\n.export-btn[disabled] {\n  opacity: 0.4;\n  pointer-events: none;\n}\n\n.export-text {\n  margin-left: 4px;\n  font-weight: 500;\n}\n\n@media (max-width: 768px) {\n  .export-buttons {\n    gap: 6px;\n  }\n\n  .export-btn {\n    --padding-start: 8px;\n    --padding-end: 8px;\n    height: 28px;\n    font-size: 11px;\n  }\n\n  .export-text {\n    display: none;\n  }\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImV4cG9ydC1idXR0b25zLmNvbXBvbmVudC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0VBQ0UsYUFBQTtFQUNBLFFBQUE7RUFDQSxtQkFBQTtBQUNGOztBQUVBO0VBQ0UsbUJBQUE7RUFDQSxvQkFBQTtFQUNBLHFCQUFBO0VBQ0EsbUJBQUE7RUFDQSxZQUFBO0VBQ0EsZUFBQTtBQUNGOztBQUNFO0VBQ0UsWUFBQTtFQUNBLG9CQUFBO0FBQ0o7O0FBR0E7RUFDRSxnQkFBQTtFQUNBLGdCQUFBO0FBQUY7O0FBSUE7RUFDRTtJQUNFLFFBQUE7RUFERjs7RUFJQTtJQUNFLG9CQUFBO0lBQ0Esa0JBQUE7SUFDQSxZQUFBO0lBQ0EsZUFBQTtFQURGOztFQUlBO0lBQ0UsYUFBQTtFQURGO0FBQ0YiLCJmaWxlIjoiZXhwb3J0LWJ1dHRvbnMuY29tcG9uZW50LnNjc3MiLCJzb3VyY2VzQ29udGVudCI6WyIuZXhwb3J0LWJ1dHRvbnMge1xyXG4gIGRpc3BsYXk6IGZsZXg7XHJcbiAgZ2FwOiA4cHg7XHJcbiAgYWxpZ24taXRlbXM6IGNlbnRlcjtcclxufVxyXG5cclxuLmV4cG9ydC1idG4ge1xyXG4gIC0tYm9yZGVyLXdpZHRoOiAxcHg7XHJcbiAgLS1ib3JkZXItcmFkaXVzOiA2cHg7XHJcbiAgLS1wYWRkaW5nLXN0YXJ0OiAxMnB4O1xyXG4gIC0tcGFkZGluZy1lbmQ6IDEycHg7XHJcbiAgaGVpZ2h0OiAzMnB4O1xyXG4gIGZvbnQtc2l6ZTogMTJweDtcclxuICBcclxuICAmW2Rpc2FibGVkXSB7XHJcbiAgICBvcGFjaXR5OiAwLjQ7XHJcbiAgICBwb2ludGVyLWV2ZW50czogbm9uZTtcclxuICB9XHJcbn1cclxuXHJcbi5leHBvcnQtdGV4dCB7XHJcbiAgbWFyZ2luLWxlZnQ6IDRweDtcclxuICBmb250LXdlaWdodDogNTAwO1xyXG59XHJcblxyXG4vLyBSZXNwb25zaXZlIGRlc2lnbiBmb3IgbW9iaWxlXHJcbkBtZWRpYSAobWF4LXdpZHRoOiA3NjhweCkge1xyXG4gIC5leHBvcnQtYnV0dG9ucyB7XHJcbiAgICBnYXA6IDZweDtcclxuICB9XHJcbiAgXHJcbiAgLmV4cG9ydC1idG4ge1xyXG4gICAgLS1wYWRkaW5nLXN0YXJ0OiA4cHg7XHJcbiAgICAtLXBhZGRpbmctZW5kOiA4cHg7XHJcbiAgICBoZWlnaHQ6IDI4cHg7XHJcbiAgICBmb250LXNpemU6IDExcHg7XHJcbiAgfVxyXG4gIFxyXG4gIC5leHBvcnQtdGV4dCB7XHJcbiAgICBkaXNwbGF5OiBub25lOyAvLyBIaWRlIHRleHQgb24gbW9iaWxlLCBzaG93IG9ubHkgaWNvbnNcclxuICB9XHJcbn0iXX0= */";
+
+/***/ }),
+
+/***/ 49206:
+/*!*************************************************************************************************!*\
+  !*** ./src/app/component/invoice-journal-entry/invoice-journal-entry.component.scss?ngResource ***!
+  \*************************************************************************************************/
+/***/ ((module) => {
+
+module.exports = ".journal-entry-main {\n  width: 100%;\n  height: 100%;\n  background: #f8fafc;\n  direction: rtl;\n  overflow: hidden;\n  display: flex;\n  flex-direction: column;\n}\n\n.balance-header-card {\n  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);\n  border-radius: 0 0 24px 24px;\n  padding: 20px;\n  margin-bottom: 16px;\n  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);\n  border: 1px solid #e2e8f0;\n  border-top: none;\n  position: relative;\n  overflow: hidden;\n}\n\n.balance-header-card::before {\n  content: \"\";\n  position: absolute;\n  top: 0;\n  left: 0;\n  right: 0;\n  height: 4px;\n  background: linear-gradient(90deg, #10b981, #059669);\n}\n\n.balance-header-card .balance-content {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  position: relative;\n  z-index: 2;\n}\n\n.balance-header-card .balance-info {\n  flex: 1;\n}\n\n.balance-header-card .balance-info .balance-label {\n  font-size: 0.85rem;\n  color: #6b7280;\n  font-weight: 500;\n  margin-bottom: 4px;\n}\n\n.balance-header-card .balance-info .customer-name {\n  font-size: 1.1rem;\n  font-weight: 700;\n  color: #1f2937;\n  line-height: 1.3;\n}\n\n.balance-header-card .balance-amount {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  padding: 12px 16px;\n  background: rgba(255, 255, 255, 0.8);\n  border-radius: 16px;\n  border: 1px solid #e2e8f0;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);\n}\n\n.balance-header-card .balance-amount[data-status=debit] {\n  background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);\n  border-color: #bbf7d0;\n}\n\n.balance-header-card .balance-amount[data-status=debit] .balance-icon {\n  color: #059669;\n}\n\n.balance-header-card .balance-amount[data-status=debit] .amount-text {\n  color: #059669;\n}\n\n.balance-header-card .balance-amount[data-status=credit] {\n  background: linear-gradient(135deg, #fef2f2 0%, #fef7f7 100%);\n  border-color: #fecaca;\n}\n\n.balance-header-card .balance-amount[data-status=credit] .balance-icon {\n  color: #dc2626;\n}\n\n.balance-header-card .balance-amount[data-status=credit] .amount-text {\n  color: #dc2626;\n}\n\n.balance-header-card .balance-amount[data-status=neutral] {\n  background: linear-gradient(135deg, #f1f5f9 0%, #f8fafc 100%);\n  border-color: #cbd5e1;\n}\n\n.balance-header-card .balance-amount[data-status=neutral] .balance-icon {\n  color: #64748b;\n}\n\n.balance-header-card .balance-amount[data-status=neutral] .amount-text {\n  color: #64748b;\n}\n\n.balance-header-card .balance-amount .balance-icon {\n  font-size: 1.2rem;\n}\n\n.balance-header-card .balance-amount .amount-text {\n  font-weight: 700;\n  font-size: 1rem;\n  white-space: nowrap;\n}\n\n.balance-header-card .balance-amount .amount-text.no-balance {\n  font-style: italic;\n  opacity: 0.8;\n}\n\n.balance-header-card .balance-indicator {\n  position: absolute;\n  left: 0;\n  top: 0;\n  bottom: 0;\n  width: 4px;\n  border-radius: 0 2px 2px 0;\n}\n\n.balance-header-card .balance-indicator[data-status=debit] {\n  background: linear-gradient(180deg, #10b981, #059669);\n}\n\n.balance-header-card .balance-indicator[data-status=credit] {\n  background: linear-gradient(180deg, #ef4444, #dc2626);\n}\n\n.balance-header-card .balance-indicator[data-status=neutral] {\n  background: linear-gradient(180deg, #64748b, #475569);\n}\n\n.balance-header-card::after {\n  content: \"\";\n  position: absolute;\n  top: 0;\n  right: -50px;\n  width: 100px;\n  height: 100px;\n  background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%);\n  border-radius: 50%;\n  z-index: 1;\n}\n\n.content-wrapper {\n  padding: 16px 20px;\n  max-width: 500px;\n  margin: 0 auto;\n  width: 100%;\n  overflow-y: auto;\n  height: 100%;\n  /* Custom scrollbar for better UX */\n}\n\n.content-wrapper::-webkit-scrollbar {\n  width: 4px;\n}\n\n.content-wrapper::-webkit-scrollbar-track {\n  background: transparent;\n}\n\n.content-wrapper::-webkit-scrollbar-thumb {\n  background: #cbd5e1;\n  border-radius: 2px;\n}\n\n.content-wrapper::-webkit-scrollbar-thumb:hover {\n  background: #94a3b8;\n}\n\n.form-section {\n  margin-bottom: 20px;\n  animation: slideInUp 0.4s ease-out;\n}\n\n.form-section.last-field {\n  margin-bottom: 16px;\n}\n\n.form-section .section-label {\n  display: block;\n  font-weight: 600;\n  color: var(--ion-color-dark);\n  margin-bottom: 8px;\n  font-size: 1rem;\n}\n\n.form-item {\n  --background: white;\n  --border-radius: 16px;\n  --padding-start: 16px;\n  --padding-end: 16px;\n  --min-height: 52px;\n  border: 2px solid #e2e8f0;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);\n  transition: all 0.3s ease;\n}\n\n.form-item:hover, .form-item.item-has-focus {\n  border-color: var(--ion-color-primary);\n  box-shadow: 0 4px 16px rgba(var(--ion-color-primary-rgb), 0.15);\n}\n\n.form-item ion-icon {\n  margin-left: 12px;\n  font-size: 1.2em;\n}\n\n.form-item ion-input, .form-item ion-select, .form-item ion-textarea {\n  --color: var(--ion-color-dark);\n  font-weight: 500;\n}\n\n.form-item.readonly-item {\n  --background: #f1f5f9;\n  border-color: #cbd5e1;\n  opacity: 0.8;\n}\n\n.form-item.readonly-item ion-label {\n  color: var(--ion-color-dark);\n  font-weight: 500;\n}\n\n.form-item.amount-item {\n  border-color: #10b981;\n  border-width: 3px;\n  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);\n  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);\n}\n\n.form-item.amount-item:hover, .form-item.amount-item.item-has-focus {\n  border-color: #059669;\n  box-shadow: 0 6px 30px rgba(16, 185, 129, 0.3);\n  transform: translateY(-2px);\n}\n\n.form-item.amount-item .amount-input {\n  font-size: 1.4em;\n  font-weight: 700;\n  text-align: center;\n  --color: #059669;\n  --placeholder-color: #86efac;\n}\n\n.form-item.amount-item .amount-input:focus {\n  animation: amountPulse 0.6s ease-in-out;\n}\n\n.form-item.amount-item ion-note {\n  font-weight: 600;\n  color: #10b981;\n  font-size: 1.1em;\n}\n\n.form-item.description-item {\n  --min-height: auto;\n}\n\n.form-item.description-item ion-textarea {\n  --padding-top: 12px;\n  --padding-bottom: 12px;\n  line-height: 1.5;\n}\n\n.info-note {\n  margin-top: 8px;\n  padding: 8px 12px;\n  background: rgba(var(--ion-color-primary-rgb), 0.05);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85em;\n  color: var(--ion-color-medium);\n}\n\n.info-note ion-icon {\n  font-size: 1em;\n  flex-shrink: 0;\n}\n\n.info-note span {\n  line-height: 1.4;\n}\n\n.error-note {\n  margin-top: 8px;\n  padding: 8px 12px;\n  background: rgba(var(--ion-color-danger-rgb), 0.05);\n  border-radius: 12px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 0.85em;\n  color: var(--ion-color-danger);\n}\n\n.error-note ion-icon {\n  font-size: 1em;\n  flex-shrink: 0;\n}\n\n.error-note span {\n  line-height: 1.4;\n}\n\n.inline-buttons-section {\n  margin-top: 20px;\n  margin-bottom: 20px;\n}\n\n.inline-buttons-section .buttons-row {\n  display: flex;\n  gap: 12px;\n  align-items: center;\n  justify-content: space-between;\n}\n\n.primary-btn {\n  --border-color: var(--ion-color-primary);\n  --color: var(--ion-color-primary);\n  --border-radius: 16px;\n  height: 52px;\n  font-weight: 600;\n  font-size: 1rem;\n  flex: 1;\n  margin: 0;\n  box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.2);\n}\n\n.primary-btn:not([disabled]):hover {\n  --background: rgba(var(--ion-color-primary-rgb), 0.1);\n  transform: translateY(-1px);\n  box-shadow: 0 4px 16px rgba(var(--ion-color-primary-rgb), 0.3);\n}\n\n.primary-btn[disabled] {\n  opacity: 0.5;\n  --color: #9ca3af;\n  --border-color: #9ca3af;\n  transform: none;\n  box-shadow: none;\n}\n\n.primary-btn ion-icon {\n  font-size: 1.1em;\n  margin-left: 6px;\n}\n\n.secondary-btn {\n  --color: #6b7280;\n  --border-color: #d1d5db;\n  --border-radius: 16px;\n  height: 52px;\n  font-weight: 500;\n  font-size: 0.95em;\n  flex: 1;\n  margin: 0;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);\n}\n\n.secondary-btn:hover {\n  --color: var(--ion-color-danger);\n  --border-color: var(--ion-color-danger);\n  --background: rgba(var(--ion-color-danger-rgb), 0.05);\n  transform: translateY(-1px);\n  box-shadow: 0 4px 16px rgba(var(--ion-color-danger-rgb), 0.2);\n}\n\n.secondary-btn ion-icon {\n  font-size: 1em;\n  margin-left: 6px;\n}\n\n@media (max-width: 768px) {\n  .balance-header-card {\n    padding: 16px;\n    margin-bottom: 12px;\n    border-radius: 0 0 20px 20px;\n  }\n  .balance-header-card .balance-content {\n    flex-direction: column;\n    align-items: flex-start;\n    gap: 12px;\n  }\n  .balance-header-card .balance-info .customer-name {\n    font-size: 1rem;\n  }\n  .balance-header-card .balance-amount {\n    align-self: stretch;\n    justify-content: center;\n    padding: 10px 14px;\n  }\n  .balance-header-card .balance-amount .amount-text {\n    font-size: 0.95rem;\n  }\n\n  .content-wrapper {\n    padding: 12px 16px;\n  }\n\n  .form-section {\n    margin-bottom: 16px;\n  }\n  .form-section.last-field {\n    margin-bottom: 12px;\n  }\n\n  .inline-buttons-section {\n    margin-top: 16px;\n    margin-bottom: 16px;\n  }\n  .inline-buttons-section .buttons-row {\n    gap: 8px;\n  }\n\n  .primary-btn,\n.secondary-btn {\n    height: 48px;\n    font-size: 0.9em;\n  }\n  .primary-btn ion-icon,\n.secondary-btn ion-icon {\n    font-size: 1em;\n    margin-left: 4px;\n  }\n}\n\n@keyframes slideInUp {\n  from {\n    opacity: 0;\n    transform: translateY(30px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n\n@keyframes amountPulse {\n  0% {\n    transform: scale(1);\n  }\n  50% {\n    transform: scale(1.02);\n  }\n  100% {\n    transform: scale(1);\n  }\n}\n\n.form-section:nth-child(1) {\n  animation-delay: 0.1s;\n}\n\n.form-section:nth-child(2) {\n  animation-delay: 0.2s;\n}\n\n.form-section:nth-child(3) {\n  animation-delay: 0.3s;\n}\n\n.inline-buttons-section {\n  animation-delay: 0.4s;\n  animation: slideInUp 0.4s ease-out;\n}\n\n* {\n  box-sizing: border-box;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImludm9pY2Utam91cm5hbC1lbnRyeS5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFDQTtFQUNFLFdBQUE7RUFDQSxZQUFBO0VBQ0EsbUJBQUE7RUFDQSxjQUFBO0VBQ0EsZ0JBQUE7RUFDQSxhQUFBO0VBQ0Esc0JBQUE7QUFBRjs7QUFJQTtFQUNFLDZEQUFBO0VBQ0EsNEJBQUE7RUFDQSxhQUFBO0VBQ0EsbUJBQUE7RUFDQSwwQ0FBQTtFQUNBLHlCQUFBO0VBQ0EsZ0JBQUE7RUFDQSxrQkFBQTtFQUNBLGdCQUFBO0FBREY7O0FBR0U7RUFDRSxXQUFBO0VBQ0Esa0JBQUE7RUFDQSxNQUFBO0VBQ0EsT0FBQTtFQUNBLFFBQUE7RUFDQSxXQUFBO0VBQ0Esb0RBQUE7QUFESjs7QUFJRTtFQUNFLGFBQUE7RUFDQSw4QkFBQTtFQUNBLG1CQUFBO0VBQ0Esa0JBQUE7RUFDQSxVQUFBO0FBRko7O0FBS0U7RUFDRSxPQUFBO0FBSEo7O0FBS0k7RUFDRSxrQkFBQTtFQUNBLGNBQUE7RUFDQSxnQkFBQTtFQUNBLGtCQUFBO0FBSE47O0FBTUk7RUFDRSxpQkFBQTtFQUNBLGdCQUFBO0VBQ0EsY0FBQTtFQUNBLGdCQUFBO0FBSk47O0FBUUU7RUFDRSxhQUFBO0VBQ0EsbUJBQUE7RUFDQSxRQUFBO0VBQ0Esa0JBQUE7RUFDQSxvQ0FBQTtFQUNBLG1CQUFBO0VBQ0EseUJBQUE7RUFDQSx5Q0FBQTtBQU5KOztBQVFJO0VBQ0UsNkRBQUE7RUFDQSxxQkFBQTtBQU5OOztBQVFNO0VBQ0UsY0FBQTtBQU5SOztBQVNNO0VBQ0UsY0FBQTtBQVBSOztBQVdJO0VBQ0UsNkRBQUE7RUFDQSxxQkFBQTtBQVROOztBQVdNO0VBQ0UsY0FBQTtBQVRSOztBQVlNO0VBQ0UsY0FBQTtBQVZSOztBQWNJO0VBQ0UsNkRBQUE7RUFDQSxxQkFBQTtBQVpOOztBQWNNO0VBQ0UsY0FBQTtBQVpSOztBQWVNO0VBQ0UsY0FBQTtBQWJSOztBQWlCSTtFQUNFLGlCQUFBO0FBZk47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N0I7O0FBMEVBO0VBQTZCLHFCQUFBO0FBdEU3Qjs7QUF1RUE7RUFBNkIscUJBQUE7QUFuRTdCOztBQW9FQTtFQUEwQixxQkFBQTtFQUF1QixrQ0FBQTtBQS9EakQ7O0FBa0VBO0VBQ0Usc0JBQUE7QUEvREYiLCJmaWxlIjoiaW52b2ljZS1qb3VybmFsLWVudHJ5LmNvbXBvbmVudC5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiLy8gTWFpbiBjb250YWluZXIgLSBzaW1wbGUgYW5kIGNvbXBhY3QgbGF5b3V0XG4uam91cm5hbC1lbnRyeS1tYWluIHtcbiAgd2lkdGg6IDEwMCU7XG4gIGhlaWdodDogMTAwJTtcbiAgYmFja2dyb3VuZDogI2Y4ZmFmYztcbiAgZGlyZWN0aW9uOiBydGw7XG4gIG92ZXJmbG93OiBoaWRkZW47XG4gIGRpc3BsYXk6IGZsZXg7XG4gIGZsZXgtZGlyZWN0aW9uOiBjb2x1bW47XG59XG5cbi8vIEN1c3RvbWVyIEJhbGFuY2UgSGVhZGVyIENhcmQgLSBNb2Rlcm4gRGVzaWduXG4uYmFsYW5jZS1oZWFkZXItY2FyZCB7XG4gIGJhY2tncm91bmQ6IGxpbmVhci1ncmFkaWVudCgxMzVkZWcsICNmZmZmZmYgMCUsICNmOGZhZmMgMTAwJSk7XG4gIGJvcmRlci1yYWRpdXM6IDAgMCAyNHB4IDI0cHg7XG4gIHBhZGRpbmc6IDIwcHg7XG4gIG1hcmdpbi1ib3R0b206IDE2cHg7XG4gIGJveC1zaGFkb3c6IDAgNHB4IDIwcHggcmdiYSgwLCAwLCAwLCAwLjA4KTtcbiAgYm9yZGVyOiAxcHggc29saWQgI2UyZThmMDtcbiAgYm9yZGVyLXRvcDogbm9uZTtcbiAgcG9zaXRpb246IHJlbGF0aXZlO1xuICBvdmVyZmxvdzogaGlkZGVuO1xuICBcbiAgJjo6YmVmb3JlIHtcbiAgICBjb250ZW50OiAnJztcbiAgICBwb3NpdGlvbjogYWJzb2x1dGU7XG4gICAgdG9wOiAwO1xuICAgIGxlZnQ6IDA7XG4gICAgcmlnaHQ6IDA7XG4gICAgaGVpZ2h0OiA0cHg7XG4gICAgYmFja2dyb3VuZDogbGluZWFyLWdyYWRpZW50KDkwZGVnLCAjMTBiOTgxLCAjMDU5NjY5KTtcbiAgfVxuICBcbiAgLmJhbGFuY2UtY29udGVudCB7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBqdXN0aWZ5LWNvbnRlbnQ6IHNwYWNlLWJldHdlZW47XG4gICAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAgICBwb3NpdGlvbjogcmVsYXRpdmU7XG4gICAgei1pbmRleDogMjtcbiAgfVxuICBcbiAgLmJhbGFuY2UtaW5mbyB7XG4gICAgZmxleDogMTtcbiAgICBcbiAgICAuYmFsYW5jZS1sYWJlbCB7XG4gICAgICBmb250LXNpemU6IDAuODVyZW07XG4gICAgICBjb2xvcjogIzZiNzI4MDtcbiAgICAgIGZvbnQtd2VpZ2h0OiA1MDA7XG4gICAgICBtYXJnaW4tYm90dG9tOiA0cHg7XG4gICAgfVxuICAgIFxuICAgIC5jdXN0b21lci1uYW1lIHtcbiAgICAgIGZvbnQtc2l6ZTogMS4xcmVtO1xuICAgICAgZm9udC13ZWlnaHQ6IDcwMDtcbiAgICAgIGNvbG9yOiAjMWYyOTM3O1xuICAgICAgbGluZS1oZWlnaHQ6IDEuMztcbiAgICB9XG4gIH1cbiAgXG4gIC5iYWxhbmNlLWFtb3VudCB7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBhbGlnbi1pdGVtczogY2VudGVyO1xuICAgIGdhcDogOHB4O1xuICAgIHBhZGRpbmc6IDEycHggMTZweDtcbiAgICBiYWNrZ3JvdW5kOiByZ2JhKDI1NSwgMjU1LCAyNTUsIDAuOCk7XG4gICAgYm9yZGVyLXJhZGl1czogMTZweDtcbiAgICBib3JkZXI6IDFweCBzb2xpZCAjZTJlOGYwO1xuICAgIGJveC1zaGFkb3c6IDAgMnB4IDhweCByZ2JhKDAsIDAsIDAsIDAuMDUpO1xuICAgIFxuICAgICZbZGF0YS1zdGF0dXM9XCJkZWJpdFwiXSB7XG4gICAgICBiYWNrZ3JvdW5kOiBsaW5lYXItZ3JhZGllbnQoMTM1ZGVnLCAjZGNmY2U3IDAlLCAjZjBmZGY0IDEwMCUpO1xuICAgICAgYm9yZGVyLWNvbG9yOiAjYmJmN2QwO1xuICAgICAgXG4gICAgICAuYmFsYW5jZS1pY29uIHtcbiAgICAgICAgY29sb3I6ICMwNTk2Njk7XG4gICAgICB9XG4gICAgICBcbiAgICAgIC5hbW91bnQtdGV4dCB7XG4gICAgICAgIGNvbG9yOiAjMDU5NjY5O1xuICAgICAgfVxuICAgIH1cbiAgICBcbiAgICAmW2RhdGEtc3RhdHVzPVwiY3JlZGl0XCJdIHtcbiAgICAgIGJhY2tncm91bmQ6IGxpbmVhci1ncmFkaWVudCgxMzVkZWcsICNmZWYyZjIgMCUsICNmZWY3ZjcgMTAwJSk7XG4gICAgICBib3JkZXItY29sb3I6ICNmZWNhY2E7XG4gICAgICBcbiAgICAgIC5iYWxhbmNlLWljb24ge1xuICAgICAgICBjb2xvcjogI2RjMjYyNjtcbiAgICAgIH1cbiAgICAgIFxuICAgICAgLmFtb3VudC10ZXh0IHtcbiAgICAgICAgY29sb3I6ICNkYzI2MjY7XG4gICAgICB9XG4gICAgfVxuICAgIFxuICAgICZbZGF0YS1zdGF0dXM9XCJuZXV0cmFsXCJdIHtcbiAgICAgIGJhY2tncm91bmQ6IGxpbmVhci1ncmFkaWVudCgxMzVkZWcsICNmMWY1ZjkgMCUsICNmOGZhZmMgMTAwJSk7XG4gICAgICBib3JkZXItY29sb3I6ICNjYmQ1ZTE7XG4gICAgICBcbiAgICAgIC5iYWxhbmNlLWljb24ge1xuICAgICAgICBjb2xvcjogIzY0NzQ4YjtcbiAgICAgIH1cbiAgICAgIFxuICAgICAgLmFtb3VudC10ZXh0IHtcbiAgICAgICAgY29sb3I6ICM2NDc0OGI7XG4gICAgICB9XG4gICAgfVxuICAgIFxuICAgIC5iYWxhbmNlLWljb24ge1xuICAgICAgZm9udC1zaXplOiAxLjJyZW07XG4gICAgfVxuICAgIFxuICAgIC5hbW91bnQtdGV4dCB7XG4gICAgICBmb250LXdlaWdodDogNzAwO1xuICAgICAgZm9udC1zaXplOiAxcmVtO1xuICAgICAgd2hpdGUtc3BhY2U6IG5vd3JhcDtcbiAgICAgIFxuICAgICAgJi5uby1iYWxhbmNlIHtcbiAgICAgICAgZm9udC1zdHlsZTogaXRhbGljO1xuICAgICAgICBvcGFjaXR5OiAwLjg7XG4gICAgICB9XG4gICAgfVxuICB9XG4gIFxuICAuYmFsYW5jZS1pbmRpY2F0b3Ige1xuICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTtcbiAgICBsZWZ0OiAwO1xuICAgIHRvcDogMDtcbiAgICBib3R0b206IDA7XG4gICAgd2lkdGg6IDRweDtcbiAgICBib3JkZXItcmFkaXVzOiAwIDJweCAycHggMDtcbiAgICBcbiAgICAmW2RhdGEtc3RhdHVzPVwiZGViaXRcIl0ge1xuICAgICAgYmFja2dyb3VuZDogbGluZWFyLWdyYWRpZW50KDE4MGRlZywgIzEwYjk4MSwgIzA1OTY2OSk7XG4gICAgfVxuICAgIFxuICAgICZbZGF0YS1zdGF0dXM9XCJjcmVkaXRcIl0ge1xuICAgICAgYmFja2dyb3VuZDogbGluZWFyLWdyYWRpZW50KDE4MGRlZywgI2VmNDQ0NCwgI2RjMjYyNik7XG4gICAgfVxuICAgIFxuICAgICZbZGF0YS1zdGF0dXM9XCJuZXV0cmFsXCJdIHtcbiAgICAgIGJhY2tncm91bmQ6IGxpbmVhci1ncmFkaWVudCgxODBkZWcsICM2NDc0OGIsICM0NzU1NjkpO1xuICAgIH1cbiAgfVxuICBcbiAgLy8gU3VidGxlIGJhY2tncm91bmQgcGF0dGVyblxuICAmOjphZnRlciB7XG4gICAgY29udGVudDogJyc7XG4gICAgcG9zaXRpb246IGFic29sdXRlO1xuICAgIHRvcDogMDtcbiAgICByaWdodDogLTUwcHg7XG4gICAgd2lkdGg6IDEwMHB4O1xuICAgIGhlaWdodDogMTAwcHg7XG4gICAgYmFja2dyb3VuZDogcmFkaWFsLWdyYWRpZW50KGNpcmNsZSwgcmdiYSgxNiwgMTg1LCAxMjksIDAuMDUpIDAlLCB0cmFuc3BhcmVudCA3MCUpO1xuICAgIGJvcmRlci1yYWRpdXM6IDUwJTtcbiAgICB6LWluZGV4OiAxO1xuICB9XG59XG5cbi8vIENvbnRlbnQgd3JhcHBlciAtIHNjcm9sbGFibGUgaWYgbmVlZGVkXG4uY29udGVudC13cmFwcGVyIHtcbiAgcGFkZGluZzogMTZweCAyMHB4O1xuICBtYXgtd2lkdGg6IDUwMHB4O1xuICBtYXJnaW46IDAgYXV0bztcbiAgd2lkdGg6IDEwMCU7XG4gIG92ZXJmbG93LXk6IGF1dG87XG4gIGhlaWdodDogMTAwJTtcbiAgXG4gIC8qIEN1c3RvbSBzY3JvbGxiYXIgZm9yIGJldHRlciBVWCAqL1xuICAmOjotd2Via2l0LXNjcm9sbGJhciB7XG4gICAgd2lkdGg6IDRweDtcbiAgfVxuICBcbiAgJjo6LXdlYmtpdC1zY3JvbGxiYXItdHJhY2sge1xuICAgIGJhY2tncm91bmQ6IHRyYW5zcGFyZW50O1xuICB9XG4gIFxuICAmOjotd2Via2l0LXNjcm9sbGJhci10aHVtYiB7XG4gICAgYmFja2dyb3VuZDogI2NiZDVlMTtcbiAgICBib3JkZXItcmFkaXVzOiAycHg7XG4gICAgXG4gICAgJjpob3ZlciB7XG4gICAgICBiYWNrZ3JvdW5kOiAjOTRhM2I4O1xuICAgIH1cbiAgfVxufVxuXG4vLyBGb3JtIFNlY3Rpb25zIC0gY29tcGFjdCBzcGFjaW5nXG4uZm9ybS1zZWN0aW9uIHtcbiAgbWFyZ2luLWJvdHRvbTogMjBweDtcbiAgYW5pbWF0aW9uOiBzbGlkZUluVXAgMC40cyBlYXNlLW91dDtcbiAgXG4gICYubGFzdC1maWVsZCB7XG4gICAgbWFyZ2luLWJvdHRvbTogMTZweDsgLy8gUmVkdWNlZCBzcGFjZSBhZnRlciDYp9mE2KjZitin2YYgZmllbGRcbiAgfVxuICBcbiAgLnNlY3Rpb24tbGFiZWwge1xuICAgIGRpc3BsYXk6IGJsb2NrO1xuICAgIGZvbnQtd2VpZ2h0OiA2MDA7XG4gICAgY29sb3I6IHZhcigtLWlvbi1jb2xvci1kYXJrKTtcbiAgICBtYXJnaW4tYm90dG9tOiA4cHg7XG4gICAgZm9udC1zaXplOiAxcmVtO1xuICB9XG59XG5cbi8vIEZvcm0gSXRlbXNcbi5mb3JtLWl0ZW0ge1xuICAtLWJhY2tncm91bmQ6IHdoaXRlO1xuICAtLWJvcmRlci1yYWRpdXM6IDE2cHg7XG4gIC0tcGFkZGluZy1zdGFydDogMTZweDtcbiAgLS1wYWRkaW5nLWVuZDogMTZweDtcbiAgLS1taW4taGVpZ2h0OiA1MnB4O1xuICBib3JkZXI6IDJweCBzb2xpZCAjZTJlOGYwO1xuICBib3gtc2hhZG93OiAwIDJweCA4cHggcmdiYSgwLCAwLCAwLCAwLjA2KTtcbiAgdHJhbnNpdGlvbjogYWxsIDAuM3MgZWFzZTtcbiAgXG4gICY6aG92ZXIsICYuaXRlbS1oYXMtZm9jdXMge1xuICAgIGJvcmRlci1jb2xvcjogdmFyKC0taW9uLWNvbG9yLXByaW1hcnkpO1xuICAgIGJveC1zaGFkb3c6IDAgNHB4IDE2cHggcmdiYSh2YXIoLS1pb24tY29sb3ItcHJpbWFyeS1yZ2IpLCAwLjE1KTtcbiAgfVxuICBcbiAgaW9uLWljb24ge1xuICAgIG1hcmdpbi1sZWZ0OiAxMnB4O1xuICAgIGZvbnQtc2l6ZTogMS4yZW07XG4gIH1cbiAgXG4gIGlvbi1pbnB1dCwgaW9uLXNlbGVjdCwgaW9uLXRleHRhcmVhIHtcbiAgICAtLWNvbG9yOiB2YXIoLS1pb24tY29sb3ItZGFyayk7XG4gICAgZm9udC13ZWlnaHQ6IDUwMDtcbiAgfVxuICBcbiAgJi5yZWFkb25seS1pdGVtIHtcbiAgICAtLWJhY2tncm91bmQ6ICNmMWY1Zjk7XG4gICAgYm9yZGVyLWNvbG9yOiAjY2JkNWUxO1xuICAgIG9wYWNpdHk6IDAuODtcbiAgICBcbiAgICBpb24tbGFiZWwge1xuICAgICAgY29sb3I6IHZhcigtLWlvbi1jb2xvci1kYXJrKTtcbiAgICAgIGZvbnQtd2VpZ2h0OiA1MDA7XG4gICAgfVxuICB9XG4gIFxuICAmLmFtb3VudC1pdGVtIHtcbiAgICBib3JkZXItY29sb3I6ICMxMGI5ODE7XG4gICAgYm9yZGVyLXdpZHRoOiAzcHg7XG4gICAgYm94LXNoYWRvdzogMCA0cHggMjBweCByZ2JhKDE2LCAxODUsIDEyOSwgMC4yKTtcbiAgICBiYWNrZ3JvdW5kOiBsaW5lYXItZ3JhZGllbnQoMTM1ZGVnLCAjZjBmZGY0IDAlLCAjZWNmZGY1IDEwMCUpO1xuICAgIFxuICAgICY6aG92ZXIsICYuaXRlbS1oYXMtZm9jdXMge1xuICAgICAgYm9yZGVyLWNvbG9yOiAjMDU5NjY5O1xuICAgICAgYm94LXNoYWRvdzogMCA2cHggMzBweCByZ2JhKDE2LCAxODUsIDEyOSwgMC4zKTtcbiAgICAgIHRyYW5zZm9ybTogdHJhbnNsYXRlWSgtMnB4KTtcbiAgICB9XG4gICAgXG4gICAgLmFtb3VudC1pbnB1dCB7XG4gICAgICBmb250LXNpemU6IDEuNGVtO1xuICAgICAgZm9udC13ZWlnaHQ6IDcwMDtcbiAgICAgIHRleHQtYWxpZ246IGNlbnRlcjtcbiAgICAgIC0tY29sb3I6ICMwNTk2Njk7XG4gICAgICAtLXBsYWNlaG9sZGVyLWNvbG9yOiAjODZlZmFjO1xuICAgICAgXG4gICAgICAmOmZvY3VzIHtcbiAgICAgICAgYW5pbWF0aW9uOiBhbW91bnRQdWxzZSAwLjZzIGVhc2UtaW4tb3V0O1xuICAgICAgfVxuICAgIH1cbiAgICBcbiAgICBpb24tbm90ZSB7XG4gICAgICBmb250LXdlaWdodDogNjAwO1xuICAgICAgY29sb3I6ICMxMGI5ODE7XG4gICAgICBmb250LXNpemU6IDEuMWVtO1xuICAgIH1cbiAgfVxuICBcbiAgJi5kZXNjcmlwdGlvbi1pdGVtIHtcbiAgICAtLW1pbi1oZWlnaHQ6IGF1dG87XG4gICAgXG4gICAgaW9uLXRleHRhcmVhIHtcbiAgICAgIC0tcGFkZGluZy10b3A6IDEycHg7XG4gICAgICAtLXBhZGRpbmctYm90dG9tOiAxMnB4O1xuICAgICAgbGluZS1oZWlnaHQ6IDEuNTtcbiAgICB9XG4gIH1cbn1cblxuLy8gSW5mbyBOb3Rlc1xuLmluZm8tbm90ZSB7XG4gIG1hcmdpbi10b3A6IDhweDtcbiAgcGFkZGluZzogOHB4IDEycHg7XG4gIGJhY2tncm91bmQ6IHJnYmEodmFyKC0taW9uLWNvbG9yLXByaW1hcnktcmdiKSwgMC4wNSk7XG4gIGJvcmRlci1yYWRpdXM6IDEycHg7XG4gIGRpc3BsYXk6IGZsZXg7XG4gIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gIGdhcDogOHB4O1xuICBmb250LXNpemU6IDAuODVlbTtcbiAgY29sb3I6IHZhcigtLWlvbi1jb2xvci1tZWRpdW0pO1xuICBcbiAgaW9uLWljb24ge1xuICAgIGZvbnQtc2l6ZTogMWVtO1xuICAgIGZsZXgtc2hyaW5rOiAwO1xuICB9XG4gIFxuICBzcGFuIHtcbiAgICBsaW5lLWhlaWdodDogMS40O1xuICB9XG59XG5cbi8vIEVycm9yIE5vdGVzXG4uZXJyb3Itbm90ZSB7XG4gIG1hcmdpbi10b3A6IDhweDtcbiAgcGFkZGluZzogOHB4IDEycHg7XG4gIGJhY2tncm91bmQ6IHJnYmEodmFyKC0taW9uLWNvbG9yLWRhbmdlci1yZ2IpLCAwLjA1KTtcbiAgYm9yZGVyLXJhZGl1czogMTJweDtcbiAgZGlzcGxheTogZmxleDtcbiAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAgZ2FwOiA4cHg7XG4gIGZvbnQtc2l6ZTogMC44NWVtO1xuICBjb2xvcjogdmFyKC0taW9uLWNvbG9yLWRhbmdlcik7XG4gIFxuICBpb24taWNvbiB7XG4gICAgZm9udC1zaXplOiAxZW07XG4gICAgZmxleC1zaHJpbms6IDA7XG4gIH1cbiAgXG4gIHNwYW4ge1xuICAgIGxpbmUtaGVpZ2h0OiAxLjQ7XG4gIH1cbn1cblxuLy8gSW5saW5lIEJ1dHRvbnMgU2VjdGlvbiAtIGRpcmVjdGx5IGFmdGVyIGxhc3QgZmllbGRcbi5pbmxpbmUtYnV0dG9ucy1zZWN0aW9uIHtcbiAgbWFyZ2luLXRvcDogMjBweDtcbiAgbWFyZ2luLWJvdHRvbTogMjBweDtcbiAgXG4gIC5idXR0b25zLXJvdyB7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBnYXA6IDEycHg7XG4gICAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAgICBqdXN0aWZ5LWNvbnRlbnQ6IHNwYWNlLWJldHdlZW47XG4gIH1cbn1cblxuLy8gQWN0aW9uIEJ1dHRvbnMgLSBlbmhhbmNlZCBmb3IgYmV0dGVyIHZpc2liaWxpdHlcbi5wcmltYXJ5LWJ0biB7XG4gIC0tYm9yZGVyLWNvbG9yOiB2YXIoLS1pb24tY29sb3ItcHJpbWFyeSk7XG4gIC0tY29sb3I6IHZhcigtLWlvbi1jb2xvci1wcmltYXJ5KTtcbiAgLS1ib3JkZXItcmFkaXVzOiAxNnB4O1xuICBoZWlnaHQ6IDUycHg7XG4gIGZvbnQtd2VpZ2h0OiA2MDA7XG4gIGZvbnQtc2l6ZTogMXJlbTtcbiAgZmxleDogMTtcbiAgbWFyZ2luOiAwO1xuICBib3gtc2hhZG93OiAwIDJweCA4cHggcmdiYSh2YXIoLS1pb24tY29sb3ItcHJpbWFyeS1yZ2IpLCAwLjIpO1xuICBcbiAgJjpub3QoW2Rpc2FibGVkXSk6aG92ZXIge1xuICAgIC0tYmFja2dyb3VuZDogcmdiYSh2YXIoLS1pb24tY29sb3ItcHJpbWFyeS1yZ2IpLCAwLjEpO1xuICAgIHRyYW5zZm9ybTogdHJhbnNsYXRlWSgtMXB4KTtcbiAgICBib3gtc2hhZG93OiAwIDRweCAxNnB4IHJnYmEodmFyKC0taW9uLWNvbG9yLXByaW1hcnktcmdiKSwgMC4zKTtcbiAgfVxuICBcbiAgJltkaXNhYmxlZF0ge1xuICAgIG9wYWNpdHk6IDAuNTtcbiAgICAtLWNvbG9yOiAjOWNhM2FmO1xuICAgIC0tYm9yZGVyLWNvbG9yOiAjOWNhM2FmO1xuICAgIHRyYW5zZm9ybTogbm9uZTtcbiAgICBib3gtc2hhZG93OiBub25lO1xuICB9XG4gIFxuICBpb24taWNvbiB7XG4gICAgZm9udC1zaXplOiAxLjFlbTtcbiAgICBtYXJnaW4tbGVmdDogNnB4O1xuICB9XG59XG5cbi5zZWNvbmRhcnktYnRuIHtcbiAgLS1jb2xvcjogIzZiNzI4MDtcbiAgLS1ib3JkZXItY29sb3I6ICNkMWQ1ZGI7XG4gIC0tYm9yZGVyLXJhZGl1czogMTZweDtcbiAgaGVpZ2h0OiA1MnB4O1xuICBmb250LXdlaWdodDogNTAwO1xuICBmb250LXNpemU6IDAuOTVlbTtcbiAgZmxleDogMTtcbiAgbWFyZ2luOiAwO1xuICBib3gtc2hhZG93OiAwIDJweCA4cHggcmdiYSgwLCAwLCAwLCAwLjEpO1xuICBcbiAgJjpob3ZlciB7XG4gICAgLS1jb2xvcjogdmFyKC0taW9uLWNvbG9yLWRhbmdlcik7XG4gICAgLS1ib3JkZXItY29sb3I6IHZhcigtLWlvbi1jb2xvci1kYW5nZXIpO1xuICAgIC0tYmFja2dyb3VuZDogcmdiYSh2YXIoLS1pb24tY29sb3ItZGFuZ2VyLXJnYiksIDAuMDUpO1xuICAgIHRyYW5zZm9ybTogdHJhbnNsYXRlWSgtMXB4KTtcbiAgICBib3gtc2hhZG93OiAwIDRweCAxNnB4IHJnYmEodmFyKC0taW9uLWNvbG9yLWRhbmdlci1yZ2IpLCAwLjIpO1xuICB9XG4gIFxuICBpb24taWNvbiB7XG4gICAgZm9udC1zaXplOiAxZW07XG4gICAgbWFyZ2luLWxlZnQ6IDZweDtcbiAgfVxufVxuXG4vLyBSZXNwb25zaXZlIERlc2lnblxuQG1lZGlhIChtYXgtd2lkdGg6IDc2OHB4KSB7XG4gIC5iYWxhbmNlLWhlYWRlci1jYXJkIHtcbiAgICBwYWRkaW5nOiAxNnB4O1xuICAgIG1hcmdpbi1ib3R0b206IDEycHg7XG4gICAgYm9yZGVyLXJhZGl1czogMCAwIDIwcHggMjBweDtcbiAgICBcbiAgICAuYmFsYW5jZS1jb250ZW50IHtcbiAgICAgIGZsZXgtZGlyZWN0aW9uOiBjb2x1bW47XG4gICAgICBhbGlnbi1pdGVtczogZmxleC1zdGFydDtcbiAgICAgIGdhcDogMTJweDtcbiAgICB9XG4gICAgXG4gICAgLmJhbGFuY2UtaW5mbyB7XG4gICAgICAuY3VzdG9tZXItbmFtZSB7XG4gICAgICAgIGZvbnQtc2l6ZTogMXJlbTtcbiAgICAgIH1cbiAgICB9XG4gICAgXG4gICAgLmJhbGFuY2UtYW1vdW50IHtcbiAgICAgIGFsaWduLXNlbGY6IHN0cmV0Y2g7XG4gICAgICBqdXN0aWZ5LWNvbnRlbnQ6IGNlbnRlcjtcbiAgICAgIHBhZGRpbmc6IDEwcHggMTRweDtcbiAgICAgIFxuICAgICAgLmFtb3VudC10ZXh0IHtcbiAgICAgICAgZm9udC1zaXplOiAwLjk1cmVtO1xuICAgICAgfVxuICAgIH1cbiAgfVxuXG4gIC5jb250ZW50LXdyYXBwZXIge1xuICAgIHBhZGRpbmc6IDEycHggMTZweDtcbiAgfVxuICBcbiAgLmZvcm0tc2VjdGlvbiB7XG4gICAgbWFyZ2luLWJvdHRvbTogMTZweDtcbiAgICBcbiAgICAmLmxhc3QtZmllbGQge1xuICAgICAgbWFyZ2luLWJvdHRvbTogMTJweDtcbiAgICB9XG4gIH1cbiAgXG4gIC5pbmxpbmUtYnV0dG9ucy1zZWN0aW9uIHtcbiAgICBtYXJnaW4tdG9wOiAxNnB4O1xuICAgIG1hcmdpbi1ib3R0b206IDE2cHg7XG4gICAgXG4gICAgLmJ1dHRvbnMtcm93IHtcbiAgICAgIGdhcDogOHB4O1xuICAgIH1cbiAgfVxuICBcbiAgLnByaW1hcnktYnRuLFxuICAuc2Vjb25kYXJ5LWJ0biB7XG4gICAgaGVpZ2h0OiA0OHB4O1xuICAgIGZvbnQtc2l6ZTogMC45ZW07XG4gICAgXG4gICAgaW9uLWljb24ge1xuICAgICAgZm9udC1zaXplOiAxZW07XG4gICAgICBtYXJnaW4tbGVmdDogNHB4O1xuICAgIH1cbiAgfVxufVxuXG4vLyBBbmltYXRpb25zXG5Aa2V5ZnJhbWVzIHNsaWRlSW5VcCB7XG4gIGZyb20ge1xuICAgIG9wYWNpdHk6IDA7XG4gICAgdHJhbnNmb3JtOiB0cmFuc2xhdGVZKDMwcHgpO1xuICB9XG4gIHRvIHtcbiAgICBvcGFjaXR5OiAxO1xuICAgIHRyYW5zZm9ybTogdHJhbnNsYXRlWSgwKTtcbiAgfVxufVxuXG5Aa2V5ZnJhbWVzIGFtb3VudFB1bHNlIHtcbiAgMCUge1xuICAgIHRyYW5zZm9ybTogc2NhbGUoMSk7XG4gIH1cbiAgNTAlIHtcbiAgICB0cmFuc2Zvcm06IHNjYWxlKDEuMDIpO1xuICB9XG4gIDEwMCUge1xuICAgIHRyYW5zZm9ybTogc2NhbGUoMSk7XG4gIH1cbn1cblxuLy8gU3RhZ2dlcmVkIGFuaW1hdGlvbiBkZWxheXNcbi5mb3JtLXNlY3Rpb246bnRoLWNoaWxkKDEpIHsgYW5pbWF0aW9uLWRlbGF5OiAwLjFzOyB9XG4uZm9ybS1zZWN0aW9uOm50aC1jaGlsZCgyKSB7IGFuaW1hdGlvbi1kZWxheTogMC4yczsgfVxuLmZvcm0tc2VjdGlvbjpudGgtY2hpbGQoMykgeyBhbmltYXRpb24tZGVsYXk6IDAuM3M7IH1cbi5pbmxpbmUtYnV0dG9ucy1zZWN0aW9uIHsgYW5pbWF0aW9uLWRlbGF5OiAwLjRzOyBhbmltYXRpb246IHNsaWRlSW5VcCAwLjRzIGVhc2Utb3V0OyB9XG5cbi8vIFNtb290aCB0cmFuc2l0aW9uc1xuKiB7XG4gIGJveC1zaXppbmc6IGJvcmRlci1ib3g7XG59Il19 */";
+
+/***/ }),
+
 /***/ 58019:
 /*!*************************************************************************************************************!*\
   !*** ./src/app/component/invoice-price-config-dialog/invoice-price-config-dialog.component.scss?ngResource ***!
   \*************************************************************************************************************/
 /***/ ((module) => {
 
-module.exports = ":host {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n}\n\n.modern-header ion-toolbar {\n  --background: linear-gradient(45deg, var(--ion-color-primary), var(--ion-color-primary-shade));\n  --color: white;\n  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);\n}\n\n.modern-header .header-title {\n  font-size: 1.2rem;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n\n.modern-header .header-title .title-icon {\n  font-size: 1.4rem;\n}\n\n.modern-header .close-btn {\n  --color: white;\n  --color-hover: rgba(255, 255, 255, 0.8);\n}\n\n.modern-content {\n  --background: #f8f9fa;\n  padding: 16px;\n  padding-bottom: 80px;\n  flex: 1;\n}\n\n.modern-content .configuration-section,\n.modern-content .summary-section {\n  margin-bottom: 16px;\n  display: block;\n  visibility: visible;\n}\n\n.modern-content .preview-section {\n  margin-bottom: 16px;\n  display: block;\n  visibility: visible;\n}\n\n.modern-content .control-card {\n  background: white;\n  border-radius: 12px;\n  border: 1px solid #dee2e6;\n  margin-bottom: 16px;\n  padding: 20px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);\n}\n\n.modern-content .control-card .card-header {\n  margin-bottom: 20px;\n  text-align: center;\n  padding-bottom: 16px;\n  border-bottom: 1px solid #f1f3f4;\n}\n\n.modern-content .control-card .card-content {\n  display: block;\n}\n\n.modern-content .control-card .section-title {\n  color: var(--ion-color-primary);\n  font-size: 1.3rem;\n  font-weight: 700;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 10px;\n  margin-bottom: 8px;\n}\n\n.modern-content .control-card .section-title ion-icon {\n  font-size: 1.5rem;\n}\n\n.modern-content .control-card .section-description {\n  color: #6c757d;\n  font-size: 1rem;\n  margin: 0;\n  line-height: 1.5;\n}\n\n.modern-content .control-card ion-radio-group {\n  display: flex;\n  flex-direction: column;\n  gap: 12px;\n}\n\n.modern-content .control-card ion-radio-group .option-item {\n  border-radius: 10px;\n  border: 2px solid #e9ecef;\n  background: #f8f9fa;\n  transition: all 0.3s ease;\n  overflow: hidden;\n}\n\n.modern-content .control-card ion-radio-group .option-item.default-option {\n  border-color: var(--ion-color-success);\n  background: #f0f9f0;\n}\n\n.modern-content .control-card ion-radio-group .option-item:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio {\n  --background: transparent;\n  --border-radius: 0;\n  --padding-start: 16px;\n  --padding-end: 16px;\n  --min-height: auto;\n  padding: 16px;\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-radio {\n  --color-checked: var(--ion-color-primary);\n  --border-width: 2px;\n  margin-right: 12px;\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label h3 {\n  color: #495057;\n  font-size: 1.1rem;\n  font-weight: 600;\n  margin: 0 0 6px 0;\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label p {\n  color: #6c757d;\n  font-size: 0.95rem;\n  margin: 0 0 8px 0;\n  line-height: 1.4;\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label .default-chip,\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label .info-chip {\n  --background: var(--ion-color-success);\n  --color: white;\n  margin-top: 4px;\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label .default-chip ion-icon,\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label .info-chip ion-icon {\n  margin-right: 4px;\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label .info-chip {\n  --background: var(--ion-color-warning);\n}\n\n.modern-content .control-card .custom-settings {\n  margin-top: 20px;\n  padding-top: 20px;\n  border-top: 1px solid #e9ecef;\n}\n\n.modern-content .control-card .custom-settings .custom-price-input {\n  margin-bottom: 20px;\n}\n\n.modern-content .control-card .custom-settings .custom-price-input ion-item {\n  --background: white;\n  --border-radius: 8px;\n  border: 1px solid #dee2e6;\n}\n\n.modern-content .control-card .custom-settings .custom-price-input ion-item .price-input {\n  font-size: 1.1rem;\n  font-weight: 500;\n}\n\n.modern-content .control-card .custom-settings .source-price-selection .selection-label {\n  display: block;\n  color: #495057;\n  font-weight: 600;\n  margin-bottom: 12px;\n  font-size: 1rem;\n}\n\n.modern-content .control-card .custom-settings .source-price-selection .modern-segment {\n  background: #f8f9fa;\n  border-radius: 8px;\n  padding: 4px;\n  border: 1px solid #dee2e6;\n}\n\n.modern-content .control-card .custom-settings .source-price-selection .modern-segment .segment-btn {\n  --background-checked: var(--ion-color-primary);\n  --color-checked: white;\n  --border-radius: 6px;\n  font-weight: 500;\n  transition: all 0.3s ease;\n  flex: 1;\n}\n\n.modern-content .control-card .custom-settings .source-price-selection .modern-segment .segment-btn ion-icon {\n  margin-right: 6px;\n  font-size: 1.1rem;\n}\n\n.modern-content .control-card .custom-settings .source-price-selection .modern-segment .segment-btn ion-label {\n  font-size: 0.95rem;\n}\n\n.modern-content .summary-card {\n  --background: white;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);\n  border-radius: 12px;\n  border: 1px solid #e9ecef;\n}\n\n.modern-content .summary-card .summary-grid {\n  padding: 0;\n}\n\n.modern-content .summary-card .summary-grid .summary-item {\n  text-align: center;\n  padding: 12px;\n  border-radius: 8px;\n  background: #f8f9fa;\n  margin: 4px;\n}\n\n.modern-content .summary-card .summary-grid .summary-item .summary-label {\n  font-size: 0.9rem;\n  color: #6c757d;\n  margin-bottom: 8px;\n  font-weight: 500;\n}\n\n.modern-content .summary-card .summary-grid .summary-item .summary-value {\n  font-size: 1.4rem;\n  font-weight: 700;\n  color: #495057;\n}\n\n.modern-content .summary-card .summary-grid .summary-item .summary-value.primary {\n  color: var(--ion-color-primary);\n}\n\n.modern-content .summary-card .summary-grid .summary-item .summary-value.success {\n  color: var(--ion-color-success);\n}\n\n.modern-content .summary-card .summary-grid .difference-item {\n  text-align: center;\n  padding: 16px;\n  border-radius: 8px;\n  background: linear-gradient(135deg, #f8f9fa, #e9ecef);\n  margin: 8px 4px 4px 4px;\n  border: 2px solid transparent;\n}\n\n.modern-content .summary-card .summary-grid .difference-item .difference-label {\n  font-size: 1rem;\n  color: #495057;\n  margin-bottom: 8px;\n  font-weight: 600;\n}\n\n.modern-content .summary-card .summary-grid .difference-item .difference-value {\n  font-size: 1.6rem;\n  font-weight: 800;\n}\n\n.modern-content .summary-card .summary-grid .difference-item .difference-value.positive {\n  color: var(--ion-color-success);\n}\n\n.modern-content .summary-card .summary-grid .difference-item .difference-value.negative {\n  color: var(--ion-color-danger);\n}\n\n.modern-content .items-card {\n  --background: white;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);\n  border-radius: 12px;\n  border: 1px solid #e9ecef;\n}\n\n.modern-content .items-card .items-container {\n  max-height: 300px;\n  overflow-y: auto;\n  margin-bottom: 10px;\n}\n\n.modern-content .items-card .items-container .item-preview {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 16px;\n  border-radius: 8px;\n  margin-bottom: 8px;\n  transition: all 0.3s ease;\n  border: 1px solid #e9ecef;\n}\n\n.modern-content .items-card .items-container .item-preview.even {\n  background: #f8f9fa;\n}\n\n.modern-content .items-card .items-container .item-preview:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);\n}\n\n.modern-content .items-card .items-container .item-preview .item-info {\n  flex: 1;\n}\n\n.modern-content .items-card .items-container .item-preview .item-info .item-name {\n  font-size: 1.1rem;\n  font-weight: 600;\n  color: #495057;\n  margin-bottom: 4px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n\n.modern-content .items-card .items-container .item-preview .item-info .item-name ion-icon {\n  font-size: 1.2rem;\n}\n\n.modern-content .items-card .items-container .item-preview .item-info .item-details {\n  font-size: 0.9rem;\n  color: #6c757d;\n}\n\n.modern-content .items-card .items-container .item-preview .item-info .item-details .quantity {\n  background: var(--ion-color-primary-tint);\n  color: var(--ion-color-primary);\n  padding: 2px 8px;\n  border-radius: 12px;\n  font-weight: 500;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison {\n  text-align: right;\n  min-width: 140px;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-row {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 6px;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-row .price-label {\n  font-size: 0.9rem;\n  color: #6c757d;\n  margin-left: 8px;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-row .original-price {\n  font-weight: 500;\n  color: #495057;\n  text-decoration: line-through;\n  opacity: 0.7;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-row .new-price {\n  font-weight: 700;\n  font-size: 1.1rem;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-row .new-price.increased {\n  color: var(--ion-color-success);\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-row .new-price.decreased {\n  color: var(--ion-color-danger);\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-difference {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 4px;\n  font-size: 0.9rem;\n  font-weight: 600;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-difference span.increased {\n  color: var(--ion-color-success);\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-difference span.decreased {\n  color: var(--ion-color-danger);\n}\n\n.modern-footer {\n  position: relative;\n  margin-top: auto;\n}\n\n.modern-footer ion-toolbar {\n  background: white;\n  padding: 8px 16px;\n  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);\n}\n\n.modern-footer ion-toolbar .action-buttons {\n  display: flex;\n  gap: 12px;\n}\n\n.modern-footer ion-toolbar .action-buttons .cancel-btn,\n.modern-footer ion-toolbar .action-buttons .apply-btn {\n  flex: 1;\n  height: 48px;\n  font-weight: 600;\n  --border-radius: 12px;\n  transition: all 0.3s ease;\n}\n\n.modern-footer ion-toolbar .action-buttons .cancel-btn:hover,\n.modern-footer ion-toolbar .action-buttons .apply-btn:hover {\n  transform: translateY(-2px);\n}\n\n.modern-footer ion-toolbar .action-buttons .apply-btn {\n  --background: linear-gradient(45deg, var(--ion-color-primary), var(--ion-color-primary-shade));\n  box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3);\n}\n\n@media (max-width: 768px) {\n  .modern-content {\n    padding: 12px;\n  }\n  .modern-content .control-card {\n    padding: 16px;\n  }\n  .modern-content .control-card .section-title {\n    font-size: 1.1rem;\n  }\n  .modern-content .control-card .option-item .option-radio {\n    padding: 12px;\n  }\n  .modern-content .control-card .option-item .option-radio ion-label h3 {\n    font-size: 1rem;\n  }\n  .modern-content .control-card .option-item .option-radio ion-label p {\n    font-size: 0.9rem;\n  }\n  .modern-content .summary-grid ion-col[size=\"4\"] {\n    size: 12;\n    margin-bottom: 8px;\n  }\n  .modern-content .item-preview {\n    flex-direction: column;\n    align-items: flex-start;\n    gap: 12px;\n  }\n  .modern-content .item-preview .price-comparison {\n    text-align: left;\n    width: 100%;\n  }\n\n  .modern-footer .action-buttons {\n    flex-direction: column;\n    gap: 8px;\n  }\n  .modern-footer .action-buttons .cancel-btn,\n.modern-footer .action-buttons .apply-btn {\n    height: 44px;\n  }\n}\n\n@keyframes slideInUp {\n  from {\n    opacity: 0;\n    transform: translateY(30px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n\n.configuration-section,\n.summary-section,\n.preview-section {\n  animation: slideInUp 0.5s ease-out;\n}\n\n.configuration-section {\n  animation-delay: 0.1s;\n}\n\n.summary-section {\n  animation-delay: 0.2s;\n}\n\n.preview-section {\n  animation-delay: 0.3s;\n}\n\nion-segment {\n  display: flex !important;\n  flex-direction: row !important;\n  width: 100%;\n}\n\nion-segment-button {\n  flex: 1 !important;\n  display: flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImludm9pY2UtcHJpY2UtY29uZmlnLWRpYWxvZy5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFDQTtFQUNFLGFBQUE7RUFDQSxzQkFBQTtFQUNBLFlBQUE7QUFBRjs7QUFLRTtFQUNFLDhGQUFBO0VBQ0EsY0FBQTtFQUNBLHlDQUFBO0FBRko7O0FBS0U7RUFDRSxpQkFBQTtFQUNBLGdCQUFBO0VBQ0EsYUFBQTtFQUNBLG1CQUFBO0VBQ0EsUUFBQTtBQUhKOztBQUtJO0VBQ0UsaUJBQUE7QUFITjs7QUFPRTtFQUNFLGNBQUE7RUFDQSx1Q0FBQTtBQUxKOztBQVVBO0VBQ0UscUJBQUE7RUFDQSxhQUFBO0VBQ0Esb0JBQUE7RUFDQSxPQUFBO0FBUEY7O0FBU0U7O0VBRUUsbUJBQUE7RUFDQSxjQUFBO0VBQ0EsbUJBQUE7QUFQSjs7QUFVRTtFQUNFLG1CQUFBO0VBQ0EsY0FBQTtFQUNBLG1CQUFBO0FBUko7O0FBWUU7RUFDRSxpQkFBQTtFQUNBLG1CQUFBO0VBQ0EseUJBQUE7RUFDQSxtQkFBQTtFQUNBLGFBQUE7RUFDQSx5Q0FBQTtBQVZKOztBQVlJO0VBQ0UsbUJBQUE7RUFDQSxrQkFBQTtFQUNBLG9CQUFBO0VBQ0EsZ0NBQUE7QUFWTjs7QUFhSTtFQUNFLGNBQUE7QUFYTjs7QUFjSTtFQUNFLCtCQUFBO0VBQ0EsaUJBQUE7RUFDQSxnQkFBQTtFQUNBLGFBQUE7RUFDQSxtQkFBQTtFQUNBLHVCQUFBO0VBQ0EsU0FBQTtFQUNBLGtCQUFBO0FBWk47O0FBY007RUFDRSxpQkFBQTtBQVpSOztBQWdCSTtFQUNFLGNBQUE7RUFDQSxlQUFBO0VBQ0EsU0FBQTtFQUNBLGdCQUFBO0FBZE47O0FBa0JJO0VBQ0UsYUFBQTtFQUNBLHNCQUFBO0VBQ0EsU0FBQTtBQWhCTjs7QUFrQk07RUFDRSxtQkFBQTtFQUNBLHlCQUFBO0VBQ0EsbUJBQUE7RUFDQSx5QkFBQTtFQUNBLGdCQUFBO0FBaEJSOztBQWtCUTtFQUNFLHNDQUFBO0VBQ0EsbUJBQUE7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O0lBQ0EsUUFBQTtFQWxHSjtFQW9HSTs7SUFFRSxZQUFBO0VBbEdOO0FBQ0Y7O0FBd0dBO0VBQ0U7SUFDRSxVQUFBO0lBQ0EsMkJBQUE7RUF0R0Y7RUF3R0E7SUFDRSxVQUFBO0lBQ0Esd0JBQUE7RUF0R0Y7QUFDRjs7QUF5R0E7OztFQUdFLGtDQUFBO0FBdkdGOztBQTBHQTtFQUNFLHFCQUFBO0FBdkdGOztBQTBHQTtFQUNFLHFCQUFBO0FBdkdGOztBQTBHQTtFQUNFLHFCQUFBO0FBdkdGOztBQTJHQTtFQUNFLHdCQUFBO0VBQ0EsOEJBQUE7RUFDQSxXQUFBO0FBeEdGOztBQTJHQTtFQUNFLGtCQUFBO0VBQ0Esd0JBQUE7RUFDQSw4QkFBQTtFQUNBLGtDQUFBO0FBeEdGIiwiZmlsZSI6Imludm9pY2UtcHJpY2UtY29uZmlnLWRpYWxvZy5jb21wb25lbnQuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbIi8vIE1haW4gY29udGFpbmVyXG46aG9zdCB7XG4gIGRpc3BsYXk6IGZsZXg7XG4gIGZsZXgtZGlyZWN0aW9uOiBjb2x1bW47XG4gIGhlaWdodDogMTAwJTtcbn1cblxuLy8gTW9kZXJuIGhlYWRlciBzdHlsaW5nXG4ubW9kZXJuLWhlYWRlciB7XG4gIGlvbi10b29sYmFyIHtcbiAgICAtLWJhY2tncm91bmQ6IGxpbmVhci1ncmFkaWVudCg0NWRlZywgdmFyKC0taW9uLWNvbG9yLXByaW1hcnkpLCB2YXIoLS1pb24tY29sb3ItcHJpbWFyeS1zaGFkZSkpO1xuICAgIC0tY29sb3I6IHdoaXRlO1xuICAgIGJveC1zaGFkb3c6IDAgMnB4IDEwcHggcmdiYSgwLCAwLCAwLCAwLjEpO1xuICB9XG5cbiAgLmhlYWRlci10aXRsZSB7XG4gICAgZm9udC1zaXplOiAxLjJyZW07XG4gICAgZm9udC13ZWlnaHQ6IDYwMDtcbiAgICBkaXNwbGF5OiBmbGV4O1xuICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAgZ2FwOiA4cHg7XG5cbiAgICAudGl0bGUtaWNvbiB7XG4gICAgICBmb250LXNpemU6IDEuNHJlbTtcbiAgICB9XG4gIH1cblxuICAuY2xvc2UtYnRuIHtcbiAgICAtLWNvbG9yOiB3aGl0ZTtcbiAgICAtLWNvbG9yLWhvdmVyOiByZ2JhKDI1NSwgMjU1LCAyNTUsIDAuOCk7XG4gIH1cbn1cblxuLy8gTW9kZXJuIGNvbnRlbnQgc3R5bGluZ1xuLm1vZGVybi1jb250ZW50IHtcbiAgLS1iYWNrZ3JvdW5kOiAjZjhmOWZhO1xuICBwYWRkaW5nOiAxNnB4O1xuICBwYWRkaW5nLWJvdHRvbTogODBweDtcbiAgZmxleDogMTtcblxuICAuY29uZmlndXJhdGlvbi1zZWN0aW9uLFxuICAuc3VtbWFyeS1zZWN0aW9uIHtcbiAgICBtYXJnaW4tYm90dG9tOiAxNnB4O1xuICAgIGRpc3BsYXk6IGJsb2NrO1xuICAgIHZpc2liaWxpdHk6IHZpc2libGU7XG4gIH1cblxuICAucHJldmlldy1zZWN0aW9uIHtcbiAgICBtYXJnaW4tYm90dG9tOiAxNnB4O1xuICAgIGRpc3BsYXk6IGJsb2NrO1xuICAgIHZpc2liaWxpdHk6IHZpc2libGU7XG4gIH1cblxuICAvLyBDb250cm9sIGNhcmQgc3R5bGluZ1xuICAuY29udHJvbC1jYXJkIHtcbiAgICBiYWNrZ3JvdW5kOiB3aGl0ZTtcbiAgICBib3JkZXItcmFkaXVzOiAxMnB4O1xuICAgIGJvcmRlcjogMXB4IHNvbGlkICNkZWUyZTY7XG4gICAgbWFyZ2luLWJvdHRvbTogMTZweDtcbiAgICBwYWRkaW5nOiAyMHB4O1xuICAgIGJveC1zaGFkb3c6IDAgMnB4IDhweCByZ2JhKDAsIDAsIDAsIDAuMDUpO1xuXG4gICAgLmNhcmQtaGVhZGVyIHtcbiAgICAgIG1hcmdpbi1ib3R0b206IDIwcHg7XG4gICAgICB0ZXh0LWFsaWduOiBjZW50ZXI7XG4gICAgICBwYWRkaW5nLWJvdHRvbTogMTZweDtcbiAgICAgIGJvcmRlci1ib3R0b206IDFweCBzb2xpZCAjZjFmM2Y0O1xuICAgIH1cblxuICAgIC5jYXJkLWNvbnRlbnQge1xuICAgICAgZGlzcGxheTogYmxvY2s7XG4gICAgfVxuXG4gICAgLnNlY3Rpb24tdGl0bGUge1xuICAgICAgY29sb3I6IHZhcigtLWlvbi1jb2xvci1wcmltYXJ5KTtcbiAgICAgIGZvbnQtc2l6ZTogMS4zcmVtO1xuICAgICAgZm9udC13ZWlnaHQ6IDcwMDtcbiAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICBhbGlnbi1pdGVtczogY2VudGVyO1xuICAgICAganVzdGlmeS1jb250ZW50OiBjZW50ZXI7XG4gICAgICBnYXA6IDEwcHg7XG4gICAgICBtYXJnaW4tYm90dG9tOiA4cHg7XG5cbiAgICAgIGlvbi1pY29uIHtcbiAgICAgICAgZm9udC1zaXplOiAxLjVyZW07XG4gICAgICB9XG4gICAgfVxuXG4gICAgLnNlY3Rpb24tZGVzY3JpcHRpb24ge1xuICAgICAgY29sb3I6ICM2Yzc1N2Q7XG4gICAgICBmb250LXNpemU6IDFyZW07XG4gICAgICBtYXJnaW46IDA7XG4gICAgICBsaW5lLWhlaWdodDogMS41O1xuICAgIH1cblxuICAgIC8vIFJhZGlvIGdyb3VwIHN0eWxpbmdcbiAgICBpb24tcmFkaW8tZ3JvdXAge1xuICAgICAgZGlzcGxheTogZmxleDtcbiAgICAgIGZsZXgtZGlyZWN0aW9uOiBjb2x1bW47XG4gICAgICBnYXA6IDEycHg7XG5cbiAgICAgIC5vcHRpb24taXRlbSB7XG4gICAgICAgIGJvcmRlci1yYWRpdXM6IDEwcHg7XG4gICAgICAgIGJvcmRlcjogMnB4IHNvbGlkICNlOWVjZWY7XG4gICAgICAgIGJhY2tncm91bmQ6ICNmOGY5ZmE7XG4gICAgICAgIHRyYW5zaXRpb246IGFsbCAwLjNzIGVhc2U7XG4gICAgICAgIG92ZXJmbG93OiBoaWRkZW47XG5cbiAgICAgICAgJi5kZWZhdWx0LW9wdGlvbiB7XG4gICAgICAgICAgYm9yZGVyLWNvbG9yOiB2YXIoLS1pb24tY29sb3Itc3VjY2Vzcyk7XG4gICAgICAgICAgYmFja2dyb3VuZDogI2YwZjlmMDtcbiAgICAgICAgfVxuXG4gICAgICAgICY6aG92ZXIge1xuICAgICAgICAgIHRyYW5zZm9ybTogdHJhbnNsYXRlWSgtMnB4KTtcbiAgICAgICAgICBib3gtc2hhZG93OiAwIDRweCAxMnB4IHJnYmEoMCwgMCwgMCwgMC4xKTtcbiAgICAgICAgfVxuXG4gICAgICAgIC5vcHRpb24tcmFkaW8ge1xuICAgICAgICAgIC0tYmFja2dyb3VuZDogdHJhbnNwYXJlbnQ7XG4gICAgICAgICAgLS1ib3JkZXItcmFkaXVzOiAwO1xuICAgICAgICAgIC0tcGFkZGluZy1zdGFydDogMTZweDtcbiAgICAgICAgICAtLXBhZGRpbmctZW5kOiAxNnB4O1xuICAgICAgICAgIC0tbWluLWhlaWdodDogYXV0bztcbiAgICAgICAgICBwYWRkaW5nOiAxNnB4O1xuXG4gICAgICAgICAgaW9uLXJhZGlvIHtcbiAgICAgICAgICAgIC0tY29sb3ItY2hlY2tlZDogdmFyKC0taW9uLWNvbG9yLXByaW1hcnkpO1xuICAgICAgICAgICAgLS1ib3JkZXItd2lkdGg6IDJweDtcbiAgICAgICAgICAgIG1hcmdpbi1yaWdodDogMTJweDtcbiAgICAgICAgICB9XG5cbiAgICAgICAgICBpb24tbGFiZWwge1xuICAgICAgICAgICAgaDMge1xuICAgICAgICAgICAgICBjb2xvcjogIzQ5NTA1NztcbiAgICAgICAgICAgICAgZm9udC1zaXplOiAxLjFyZW07XG4gICAgICAgICAgICAgIGZvbnQtd2VpZ2h0OiA2MDA7XG4gICAgICAgICAgICAgIG1hcmdpbjogMCAwIDZweCAwO1xuICAgICAgICAgICAgfVxuXG4gICAgICAgICAgICBwIHtcbiAgICAgICAgICAgICAgY29sb3I6ICM2Yzc1N2Q7XG4gICAgICAgICAgICAgIGZvbnQtc2l6ZTogMC45NXJlbTtcbiAgICAgICAgICAgICAgbWFyZ2luOiAwIDAgOHB4IDA7XG4gICAgICAgICAgICAgIGxpbmUtaGVpZ2h0OiAxLjQ7XG4gICAgICAgICAgICB9XG5cbiAgICAgICAgICAgIC5kZWZhdWx0LWNoaXAsXG4gICAgICAgICAgICAuaW5mby1jaGlwIHtcbiAgICAgICAgICAgICAgLS1iYWNrZ3JvdW5kOiB2YXIoLS1pb24tY29sb3Itc3VjY2Vzcyk7XG4gICAgICAgICAgICAgIC0tY29sb3I6IHdoaXRlO1xuICAgICAgICAgICAgICBtYXJnaW4tdG9wOiA0cHg7XG5cbiAgICAgICAgICAgICAgaW9uLWljb24ge1xuICAgICAgICAgICAgICAgIG1hcmdpbi1yaWdodDogNHB4O1xuICAgICAgICAgICAgICB9XG4gICAgICAgICAgICB9XG5cbiAgICAgICAgICAgIC5pbmZvLWNoaXAge1xuICAgICAgICAgICAgICAtLWJhY2tncm91bmQ6IHZhcigtLWlvbi1jb2xvci13YXJuaW5nKTtcbiAgICAgICAgICAgIH1cbiAgICAgICAgICB9XG4gICAgICAgIH1cbiAgICAgIH1cbiAgICB9XG5cbiAgICAvLyBDdXN0b20gc2V0dGluZ3Mgc3R5bGluZ1xuICAgIC5jdXN0b20tc2V0dGluZ3Mge1xuICAgICAgbWFyZ2luLXRvcDogMjBweDtcbiAgICAgIHBhZGRpbmctdG9wOiAyMHB4O1xuICAgICAgYm9yZGVyLXRvcDogMXB4IHNvbGlkICNlOWVjZWY7XG5cbiAgICAgIC5jdXN0b20tcHJpY2UtaW5wdXQge1xuICAgICAgICBtYXJnaW4tYm90dG9tOiAyMHB4O1xuXG4gICAgICAgIGlvbi1pdGVtIHtcbiAgICAgICAgICAtLWJhY2tncm91bmQ6IHdoaXRlO1xuICAgICAgICAgIC0tYm9yZGVyLXJhZGl1czogOHB4O1xuICAgICAgICAgIGJvcmRlcjogMXB4IHNvbGlkICNkZWUyZTY7XG5cbiAgICAgICAgICAucHJpY2UtaW5wdXQge1xuICAgICAgICAgICAgZm9udC1zaXplOiAxLjFyZW07XG4gICAgICAgICAgICBmb250LXdlaWdodDogNTAwO1xuICAgICAgICAgIH1cbiAgICAgICAgfVxuICAgICAgfVxuXG4gICAgICAuc291cmNlLXByaWNlLXNlbGVjdGlvbiB7XG4gICAgICAgIC5zZWxlY3Rpb24tbGFiZWwge1xuICAgICAgICAgIGRpc3BsYXk6IGJsb2NrO1xuICAgICAgICAgIGNvbG9yOiAjNDk1MDU3O1xuICAgICAgICAgIGZvbnQtd2VpZ2h0OiA2MDA7XG4gICAgICAgICAgbWFyZ2luLWJvdHRvbTogMTJweDtcbiAgICAgICAgICBmb250LXNpemU6IDFyZW07XG4gICAgICAgIH1cblxuICAgICAgICAubW9kZXJuLXNlZ21lbnQge1xuICAgICAgICAgIGJhY2tncm91bmQ6ICNmOGY5ZmE7XG4gICAgICAgICAgYm9yZGVyLXJhZGl1czogOHB4O1xuICAgICAgICAgIHBhZGRpbmc6IDRweDtcbiAgICAgICAgICBib3JkZXI6IDFweCBzb2xpZCAjZGVlMmU2O1xuXG4gICAgICAgICAgLnNlZ21lbnQtYnRuIHtcbiAgICAgICAgICAgIC0tYmFja2dyb3VuZC1jaGVja2VkOiB2YXIoLS1pb24tY29sb3ItcHJpbWFyeSk7XG4gICAgICAgICAgICAtLWNvbG9yLWNoZWNrZWQ6IHdoaXRlO1xuICAgICAgICAgICAgLS1ib3JkZXItcmFkaXVzOiA2cHg7XG4gICAgICAgICAgICBmb250LXdlaWdodDogNTAwO1xuICAgICAgICAgICAgdHJhbnNpdGlvbjogYWxsIDAuM3MgZWFzZTtcbiAgICAgICAgICAgIGZsZXg6IDE7XG5cbiAgICAgICAgICAgIGlvbi1pY29uIHtcbiAgICAgICAgICAgICAgbWFyZ2luLXJpZ2h0OiA2cHg7XG4gICAgICAgICAgICAgIGZvbnQtc2l6ZTogMS4xcmVtO1xuICAgICAgICAgICAgfVxuXG4gICAgICAgICAgICBpb24tbGFiZWwge1xuICAgICAgICAgICAgICBmb250LXNpemU6IDAuOTVyZW07XG4gICAgICAgICAgICB9XG4gICAgICAgICAgfVxuICAgICAgICB9XG4gICAgICB9XG4gICAgfVxuICB9XG5cbiAgLy8gU3VtbWFyeSBjYXJkIHN0eWxpbmdcbiAgLnN1bW1hcnktY2FyZCB7XG4gICAgLS1iYWNrZ3JvdW5kOiB3aGl0ZTtcbiAgICBib3gtc2hhZG93OiAwIDRweCAxMnB4IHJnYmEoMCwgMCwgMCwgMC4wNSk7XG4gICAgYm9yZGVyLXJhZGl1czogMTJweDtcbiAgICBib3JkZXI6IDFweCBzb2xpZCAjZTllY2VmO1xuXG4gICAgLnN1bW1hcnktZ3JpZCB7XG4gICAgICBwYWRkaW5nOiAwO1xuXG4gICAgICAuc3VtbWFyeS1pdGVtIHtcbiAgICAgICAgdGV4dC1hbGlnbjogY2VudGVyO1xuICAgICAgICBwYWRkaW5nOiAxMnB4O1xuICAgICAgICBib3JkZXItcmFkaXVzOiA4cHg7XG4gICAgICAgIGJhY2tncm91bmQ6ICNmOGY5ZmE7XG4gICAgICAgIG1hcmdpbjogNHB4O1xuXG4gICAgICAgIC5zdW1tYXJ5LWxhYmVsIHtcbiAgICAgICAgICBmb250LXNpemU6IDAuOXJlbTtcbiAgICAgICAgICBjb2xvcjogIzZjNzU3ZDtcbiAgICAgICAgICBtYXJnaW4tYm90dG9tOiA4cHg7XG4gICAgICAgICAgZm9udC13ZWlnaHQ6IDUwMDtcbiAgICAgICAgfVxuXG4gICAgICAgIC5zdW1tYXJ5LXZhbHVlIHtcbiAgICAgICAgICBmb250LXNpemU6IDEuNHJlbTtcbiAgICAgICAgICBmb250LXdlaWdodDogNzAwO1xuICAgICAgICAgIGNvbG9yOiAjNDk1MDU3O1xuXG4gICAgICAgICAgJi5wcmltYXJ5IHtcbiAgICAgICAgICAgIGNvbG9yOiB2YXIoLS1pb24tY29sb3ItcHJpbWFyeSk7XG4gICAgICAgICAgfVxuXG4gICAgICAgICAgJi5zdWNjZXNzIHtcbiAgICAgICAgICAgIGNvbG9yOiB2YXIoLS1pb24tY29sb3Itc3VjY2Vzcyk7XG4gICAgICAgICAgfVxuICAgICAgICB9XG4gICAgICB9XG5cbiAgICAgIC5kaWZmZXJlbmNlLWl0ZW0ge1xuICAgICAgICB0ZXh0LWFsaWduOiBjZW50ZXI7XG4gICAgICAgIHBhZGRpbmc6IDE2cHg7XG4gICAgICAgIGJvcmRlci1yYWRpdXM6IDhweDtcbiAgICAgICAgYmFja2dyb3VuZDogbGluZWFyLWdyYWRpZW50KDEzNWRlZywgI2Y4ZjlmYSwgI2U5ZWNlZik7XG4gICAgICAgIG1hcmdpbjogOHB4IDRweCA0cHggNHB4O1xuICAgICAgICBib3JkZXI6IDJweCBzb2xpZCB0cmFuc3BhcmVudDtcblxuICAgICAgICAuZGlmZmVyZW5jZS1sYWJlbCB7XG4gICAgICAgICAgZm9udC1zaXplOiAxcmVtO1xuICAgICAgICAgIGNvbG9yOiAjNDk1MDU3O1xuICAgICAgICAgIG1hcmdpbi1ib3R0b206IDhweDtcbiAgICAgICAgICBmb250LXdlaWdodDogNjAwO1xuICAgICAgICB9XG5cbiAgICAgICAgLmRpZmZlcmVuY2UtdmFsdWUge1xuICAgICAgICAgIGZvbnQtc2l6ZTogMS42cmVtO1xuICAgICAgICAgIGZvbnQtd2VpZ2h0OiA4MDA7XG5cbiAgICAgICAgICAmLnBvc2l0aXZlIHtcbiAgICAgICAgICAgIGNvbG9yOiB2YXIoLS1pb24tY29sb3Itc3VjY2Vzcyk7XG4gICAgICAgICAgfVxuXG4gICAgICAgICAgJi5uZWdhdGl2ZSB7XG4gICAgICAgICAgICBjb2xvcjogdmFyKC0taW9uLWNvbG9yLWRhbmdlcik7XG4gICAgICAgICAgfVxuICAgICAgICB9XG4gICAgICB9XG4gICAgfVxuICB9XG5cbiAgLy8gSXRlbXMgcHJldmlldyBzdHlsaW5nXG4gIC5pdGVtcy1jYXJkIHtcbiAgICAtLWJhY2tncm91bmQ6IHdoaXRlO1xuICAgIGJveC1zaGFkb3c6IDAgNHB4IDEycHggcmdiYSgwLCAwLCAwLCAwLjA1KTtcbiAgICBib3JkZXItcmFkaXVzOiAxMnB4O1xuICAgIGJvcmRlcjogMXB4IHNvbGlkICNlOWVjZWY7XG5cbiAgICAuaXRlbXMtY29udGFpbmVyIHtcbiAgICAgIG1heC1oZWlnaHQ6IDMwMHB4O1xuICAgICAgb3ZlcmZsb3cteTogYXV0bztcbiAgICAgIG1hcmdpbi1ib3R0b206IDEwcHg7XG5cbiAgICAgIC5pdGVtLXByZXZpZXcge1xuICAgICAgICBkaXNwbGF5OiBmbGV4O1xuICAgICAgICBqdXN0aWZ5LWNvbnRlbnQ6IHNwYWNlLWJldHdlZW47XG4gICAgICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAgICAgIHBhZGRpbmc6IDE2cHg7XG4gICAgICAgIGJvcmRlci1yYWRpdXM6IDhweDtcbiAgICAgICAgbWFyZ2luLWJvdHRvbTogOHB4O1xuICAgICAgICB0cmFuc2l0aW9uOiBhbGwgMC4zcyBlYXNlO1xuICAgICAgICBib3JkZXI6IDFweCBzb2xpZCAjZTllY2VmO1xuXG4gICAgICAgICYuZXZlbiB7XG4gICAgICAgICAgYmFja2dyb3VuZDogI2Y4ZjlmYTtcbiAgICAgICAgfVxuXG4gICAgICAgICY6aG92ZXIge1xuICAgICAgICAgIHRyYW5zZm9ybTogdHJhbnNsYXRlWSgtMnB4KTtcbiAgICAgICAgICBib3gtc2hhZG93OiAwIDRweCA4cHggcmdiYSgwLCAwLCAwLCAwLjEpO1xuICAgICAgICB9XG5cbiAgICAgICAgLml0ZW0taW5mbyB7XG4gICAgICAgICAgZmxleDogMTtcblxuICAgICAgICAgIC5pdGVtLW5hbWUge1xuICAgICAgICAgICAgZm9udC1zaXplOiAxLjFyZW07XG4gICAgICAgICAgICBmb250LXdlaWdodDogNjAwO1xuICAgICAgICAgICAgY29sb3I6ICM0OTUwNTc7XG4gICAgICAgICAgICBtYXJnaW4tYm90dG9tOiA0cHg7XG4gICAgICAgICAgICBkaXNwbGF5OiBmbGV4O1xuICAgICAgICAgICAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAgICAgICAgICAgIGdhcDogOHB4O1xuXG4gICAgICAgICAgICBpb24taWNvbiB7XG4gICAgICAgICAgICAgIGZvbnQtc2l6ZTogMS4ycmVtO1xuICAgICAgICAgICAgfVxuICAgICAgICAgIH1cblxuICAgICAgICAgIC5pdGVtLWRldGFpbHMge1xuICAgICAgICAgICAgZm9udC1zaXplOiAwLjlyZW07XG4gICAgICAgICAgICBjb2xvcjogIzZjNzU3ZDtcblxuICAgICAgICAgICAgLnF1YW50aXR5IHtcbiAgICAgICAgICAgICAgYmFja2dyb3VuZDogdmFyKC0taW9uLWNvbG9yLXByaW1hcnktdGludCk7XG4gICAgICAgICAgICAgIGNvbG9yOiB2YXIoLS1pb24tY29sb3ItcHJpbWFyeSk7XG4gICAgICAgICAgICAgIHBhZGRpbmc6IDJweCA4cHg7XG4gICAgICAgICAgICAgIGJvcmRlci1yYWRpdXM6IDEycHg7XG4gICAgICAgICAgICAgIGZvbnQtd2VpZ2h0OiA1MDA7XG4gICAgICAgICAgICB9XG4gICAgICAgICAgfVxuICAgICAgICB9XG5cbiAgICAgICAgLnByaWNlLWNvbXBhcmlzb24ge1xuICAgICAgICAgIHRleHQtYWxpZ246IHJpZ2h0O1xuICAgICAgICAgIG1pbi13aWR0aDogMTQwcHg7XG5cbiAgICAgICAgICAucHJpY2Utcm93IHtcbiAgICAgICAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICAgICAgICBqdXN0aWZ5LWNvbnRlbnQ6IHNwYWNlLWJldHdlZW47XG4gICAgICAgICAgICBhbGlnbi1pdGVtczogY2VudGVyO1xuICAgICAgICAgICAgbWFyZ2luLWJvdHRvbTogNnB4O1xuXG4gICAgICAgICAgICAucHJpY2UtbGFiZWwge1xuICAgICAgICAgICAgICBmb250LXNpemU6IDAuOXJlbTtcbiAgICAgICAgICAgICAgY29sb3I6ICM2Yzc1N2Q7XG4gICAgICAgICAgICAgIG1hcmdpbi1sZWZ0OiA4cHg7XG4gICAgICAgICAgICB9XG5cbiAgICAgICAgICAgIC5vcmlnaW5hbC1wcmljZSB7XG4gICAgICAgICAgICAgIGZvbnQtd2VpZ2h0OiA1MDA7XG4gICAgICAgICAgICAgIGNvbG9yOiAjNDk1MDU3O1xuICAgICAgICAgICAgICB0ZXh0LWRlY29yYXRpb246IGxpbmUtdGhyb3VnaDtcbiAgICAgICAgICAgICAgb3BhY2l0eTogMC43O1xuICAgICAgICAgICAgfVxuXG4gICAgICAgICAgICAubmV3LXByaWNlIHtcbiAgICAgICAgICAgICAgZm9udC13ZWlnaHQ6IDcwMDtcbiAgICAgICAgICAgICAgZm9udC1zaXplOiAxLjFyZW07XG5cbiAgICAgICAgICAgICAgJi5pbmNyZWFzZWQge1xuICAgICAgICAgICAgICAgIGNvbG9yOiB2YXIoLS1pb24tY29sb3Itc3VjY2Vzcyk7XG4gICAgICAgICAgICAgIH1cblxuICAgICAgICAgICAgICAmLmRlY3JlYXNlZCB7XG4gICAgICAgICAgICAgICAgY29sb3I6IHZhcigtLWlvbi1jb2xvci1kYW5nZXIpO1xuICAgICAgICAgICAgICB9XG4gICAgICAgICAgICB9XG4gICAgICAgICAgfVxuXG4gICAgICAgICAgLnByaWNlLWRpZmZlcmVuY2Uge1xuICAgICAgICAgICAgZGlzcGxheTogZmxleDtcbiAgICAgICAgICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAgICAgICAgICBqdXN0aWZ5LWNvbnRlbnQ6IGZsZXgtZW5kO1xuICAgICAgICAgICAgZ2FwOiA0cHg7XG4gICAgICAgICAgICBmb250LXNpemU6IDAuOXJlbTtcbiAgICAgICAgICAgIGZvbnQtd2VpZ2h0OiA2MDA7XG5cbiAgICAgICAgICAgIHNwYW4ge1xuICAgICAgICAgICAgICAmLmluY3JlYXNlZCB7XG4gICAgICAgICAgICAgICAgY29sb3I6IHZhcigtLWlvbi1jb2xvci1zdWNjZXNzKTtcbiAgICAgICAgICAgICAgfVxuXG4gICAgICAgICAgICAgICYuZGVjcmVhc2VkIHtcbiAgICAgICAgICAgICAgICBjb2xvcjogdmFyKC0taW9uLWNvbG9yLWRhbmdlcik7XG4gICAgICAgICAgICAgIH1cbiAgICAgICAgICAgIH1cbiAgICAgICAgICB9XG4gICAgICAgIH1cbiAgICAgIH1cbiAgICB9XG4gIH1cbn1cblxuLy8gTW9kZXJuIGZvb3RlciBzdHlsaW5nXG4ubW9kZXJuLWZvb3RlciB7XG4gIHBvc2l0aW9uOiByZWxhdGl2ZTtcbiAgbWFyZ2luLXRvcDogYXV0bztcbiAgXG4gIGlvbi10b29sYmFyIHtcbiAgICBiYWNrZ3JvdW5kOiB3aGl0ZTtcbiAgICBwYWRkaW5nOiA4cHggMTZweDtcbiAgICBib3gtc2hhZG93OiAwIC0ycHggOHB4IHJnYmEoMCwgMCwgMCwgMC4xKTtcblxuICAgIC5hY3Rpb24tYnV0dG9ucyB7XG4gICAgICBkaXNwbGF5OiBmbGV4O1xuICAgICAgZ2FwOiAxMnB4O1xuXG4gICAgICAuY2FuY2VsLWJ0bixcbiAgICAgIC5hcHBseS1idG4ge1xuICAgICAgICBmbGV4OiAxO1xuICAgICAgICBoZWlnaHQ6IDQ4cHg7XG4gICAgICAgIGZvbnQtd2VpZ2h0OiA2MDA7XG4gICAgICAgIC0tYm9yZGVyLXJhZGl1czogMTJweDtcbiAgICAgICAgdHJhbnNpdGlvbjogYWxsIDAuM3MgZWFzZTtcblxuICAgICAgICAmOmhvdmVyIHtcbiAgICAgICAgICB0cmFuc2Zvcm06IHRyYW5zbGF0ZVkoLTJweCk7XG4gICAgICAgIH1cbiAgICAgIH1cblxuICAgICAgLmFwcGx5LWJ0biB7XG4gICAgICAgIC0tYmFja2dyb3VuZDogbGluZWFyLWdyYWRpZW50KDQ1ZGVnLCB2YXIoLS1pb24tY29sb3ItcHJpbWFyeSksIHZhcigtLWlvbi1jb2xvci1wcmltYXJ5LXNoYWRlKSk7XG4gICAgICAgIGJveC1zaGFkb3c6IDAgNHB4IDEycHggcmdiYSh2YXIoLS1pb24tY29sb3ItcHJpbWFyeS1yZ2IpLCAwLjMpO1xuICAgICAgfVxuICAgIH1cbiAgfVxufVxuXG4vLyBSZXNwb25zaXZlIGRlc2lnblxuQG1lZGlhIChtYXgtd2lkdGg6IDc2OHB4KSB7XG4gIC5tb2Rlcm4tY29udGVudCB7XG4gICAgcGFkZGluZzogMTJweDtcblxuICAgIC5jb250cm9sLWNhcmQge1xuICAgICAgcGFkZGluZzogMTZweDtcblxuICAgICAgLnNlY3Rpb24tdGl0bGUge1xuICAgICAgICBmb250LXNpemU6IDEuMXJlbTtcbiAgICAgIH1cblxuICAgICAgLm9wdGlvbi1pdGVtIHtcbiAgICAgICAgLm9wdGlvbi1yYWRpbyB7XG4gICAgICAgICAgcGFkZGluZzogMTJweDtcblxuICAgICAgICAgIGlvbi1sYWJlbCB7XG4gICAgICAgICAgICBoMyB7XG4gICAgICAgICAgICAgIGZvbnQtc2l6ZTogMXJlbTtcbiAgICAgICAgICAgIH1cblxuICAgICAgICAgICAgcCB7XG4gICAgICAgICAgICAgIGZvbnQtc2l6ZTogMC45cmVtO1xuICAgICAgICAgICAgfVxuICAgICAgICAgIH1cbiAgICAgICAgfVxuICAgICAgfVxuICAgIH1cblxuICAgIC5zdW1tYXJ5LWdyaWQge1xuICAgICAgaW9uLWNvbFtzaXplPVwiNFwiXSB7XG4gICAgICAgIHNpemU6IDEyO1xuICAgICAgICBtYXJnaW4tYm90dG9tOiA4cHg7XG4gICAgICB9XG4gICAgfVxuXG4gICAgLml0ZW0tcHJldmlldyB7XG4gICAgICBmbGV4LWRpcmVjdGlvbjogY29sdW1uO1xuICAgICAgYWxpZ24taXRlbXM6IGZsZXgtc3RhcnQ7XG4gICAgICBnYXA6IDEycHg7XG5cbiAgICAgIC5wcmljZS1jb21wYXJpc29uIHtcbiAgICAgICAgdGV4dC1hbGlnbjogbGVmdDtcbiAgICAgICAgd2lkdGg6IDEwMCU7XG4gICAgICB9XG4gICAgfVxuICB9XG5cbiAgLm1vZGVybi1mb290ZXIge1xuICAgIC5hY3Rpb24tYnV0dG9ucyB7XG4gICAgICBmbGV4LWRpcmVjdGlvbjogY29sdW1uO1xuICAgICAgZ2FwOiA4cHg7XG5cbiAgICAgIC5jYW5jZWwtYnRuLFxuICAgICAgLmFwcGx5LWJ0biB7XG4gICAgICAgIGhlaWdodDogNDRweDtcbiAgICAgIH1cbiAgICB9XG4gIH1cbn1cblxuLy8gQW5pbWF0aW9uIGNsYXNzZXNcbkBrZXlmcmFtZXMgc2xpZGVJblVwIHtcbiAgZnJvbSB7XG4gICAgb3BhY2l0eTogMDtcbiAgICB0cmFuc2Zvcm06IHRyYW5zbGF0ZVkoMzBweCk7XG4gIH1cbiAgdG8ge1xuICAgIG9wYWNpdHk6IDE7XG4gICAgdHJhbnNmb3JtOiB0cmFuc2xhdGVZKDApO1xuICB9XG59XG5cbi5jb25maWd1cmF0aW9uLXNlY3Rpb24sXG4uc3VtbWFyeS1zZWN0aW9uLFxuLnByZXZpZXctc2VjdGlvbiB7XG4gIGFuaW1hdGlvbjogc2xpZGVJblVwIDAuNXMgZWFzZS1vdXQ7XG59XG5cbi5jb25maWd1cmF0aW9uLXNlY3Rpb24ge1xuICBhbmltYXRpb24tZGVsYXk6IDAuMXM7XG59XG5cbi5zdW1tYXJ5LXNlY3Rpb24ge1xuICBhbmltYXRpb24tZGVsYXk6IDAuMnM7XG59XG5cbi5wcmV2aWV3LXNlY3Rpb24ge1xuICBhbmltYXRpb24tZGVsYXk6IDAuM3M7XG59XG5cbi8vIFNlZ21lbnQgc3R5bGluZyBmaXhlc1xuaW9uLXNlZ21lbnQge1xuICBkaXNwbGF5OiBmbGV4ICFpbXBvcnRhbnQ7XG4gIGZsZXgtZGlyZWN0aW9uOiByb3cgIWltcG9ydGFudDtcbiAgd2lkdGg6IDEwMCU7XG59XG5cbmlvbi1zZWdtZW50LWJ1dHRvbiB7XG4gIGZsZXg6IDEgIWltcG9ydGFudDtcbiAgZGlzcGxheTogZmxleCAhaW1wb3J0YW50O1xuICBhbGlnbi1pdGVtczogY2VudGVyICFpbXBvcnRhbnQ7XG4gIGp1c3RpZnktY29udGVudDogY2VudGVyICFpbXBvcnRhbnQ7XG59Il19 */";
+module.exports = ":host {\n  display: flex;\n  flex-direction: column;\n  height: 100vh;\n  overflow: hidden;\n}\n\n.modern-header ion-toolbar {\n  --background: linear-gradient(45deg, var(--ion-color-primary), var(--ion-color-primary-shade));\n  --color: white;\n  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);\n}\n\n.modern-header .header-title {\n  font-size: 1.2rem;\n  font-weight: 600;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n\n.modern-header .header-title .title-icon {\n  font-size: 1.4rem;\n}\n\n.modern-header .close-btn {\n  --color: white;\n  --color-hover: rgba(255, 255, 255, 0.8);\n}\n\n.modern-content {\n  --background: #f8f9fa;\n  padding: 16px;\n  padding-bottom: 100px;\n  flex: 1;\n  overflow-y: auto;\n  min-height: 0;\n}\n\n.modern-content .configuration-section,\n.modern-content .summary-section {\n  margin-bottom: 12px;\n  display: block;\n  visibility: visible;\n}\n\n.modern-content .preview-section {\n  margin-bottom: 12px;\n  display: block;\n  visibility: visible;\n}\n\n.modern-content .control-card {\n  background: white;\n  border-radius: 12px;\n  border: 1px solid #dee2e6;\n  margin-bottom: 12px;\n  padding: 16px;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);\n}\n\n.modern-content .control-card .card-header {\n  margin-bottom: 16px;\n  text-align: center;\n  padding-bottom: 12px;\n  border-bottom: 1px solid #f1f3f4;\n}\n\n.modern-content .control-card .card-content {\n  display: block;\n}\n\n.modern-content .control-card .section-title {\n  color: var(--ion-color-primary);\n  font-size: 1.2rem;\n  font-weight: 700;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  margin-bottom: 6px;\n}\n\n.modern-content .control-card .section-title ion-icon {\n  font-size: 1.3rem;\n}\n\n.modern-content .control-card .section-description {\n  color: #6c757d;\n  font-size: 0.95rem;\n  margin: 0;\n  line-height: 1.4;\n}\n\n.modern-content .control-card ion-radio-group {\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n\n.modern-content .control-card ion-radio-group .option-item {\n  border-radius: 8px;\n  border: 2px solid #e9ecef;\n  background: #f8f9fa;\n  transition: all 0.3s ease;\n  overflow: hidden;\n}\n\n.modern-content .control-card ion-radio-group .option-item.default-option {\n  border-color: var(--ion-color-success);\n  background: #f0f9f0;\n}\n\n.modern-content .control-card ion-radio-group .option-item:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio {\n  --background: transparent;\n  --border-radius: 0;\n  --padding-start: 12px;\n  --padding-end: 12px;\n  --min-height: auto;\n  padding: 12px;\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-radio {\n  --color-checked: var(--ion-color-primary);\n  --border-width: 2px;\n  margin-right: 12px;\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label h3 {\n  color: #495057;\n  font-size: 1rem;\n  font-weight: 600;\n  margin: 0 0 4px 0;\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label p {\n  color: #6c757d;\n  font-size: 0.9rem;\n  margin: 0 0 6px 0;\n  line-height: 1.3;\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label .default-chip,\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label .info-chip {\n  --background: var(--ion-color-success);\n  --color: white;\n  margin-top: 4px;\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label .default-chip ion-icon,\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label .info-chip ion-icon {\n  margin-right: 4px;\n}\n\n.modern-content .control-card ion-radio-group .option-item .option-radio ion-label .info-chip {\n  --background: var(--ion-color-warning);\n}\n\n.modern-content .control-card .custom-settings {\n  margin-top: 16px;\n  padding-top: 16px;\n  border-top: 1px solid #e9ecef;\n}\n\n.modern-content .control-card .custom-settings .custom-price-input {\n  margin-bottom: 16px;\n}\n\n.modern-content .control-card .custom-settings .custom-price-input ion-item {\n  --background: white;\n  --border-radius: 8px;\n  border: 1px solid #dee2e6;\n}\n\n.modern-content .control-card .custom-settings .custom-price-input ion-item .price-input {\n  font-size: 1.1rem;\n  font-weight: 500;\n}\n\n.modern-content .control-card .custom-settings .source-price-selection .selection-label {\n  display: block;\n  color: #495057;\n  font-weight: 600;\n  margin-bottom: 10px;\n  font-size: 0.95rem;\n}\n\n.modern-content .control-card .custom-settings .source-price-selection .modern-segment {\n  background: #f8f9fa;\n  border-radius: 8px;\n  padding: 4px;\n  border: 1px solid #dee2e6;\n}\n\n.modern-content .control-card .custom-settings .source-price-selection .modern-segment .segment-btn {\n  --background-checked: var(--ion-color-primary);\n  --color-checked: white;\n  --border-radius: 6px;\n  font-weight: 500;\n  transition: all 0.3s ease;\n  flex: 1;\n}\n\n.modern-content .control-card .custom-settings .source-price-selection .modern-segment .segment-btn ion-icon {\n  margin-right: 6px;\n  font-size: 1.1rem;\n}\n\n.modern-content .control-card .custom-settings .source-price-selection .modern-segment .segment-btn ion-label {\n  font-size: 0.95rem;\n}\n\n.modern-content .summary-card {\n  --background: white;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);\n  border-radius: 12px;\n  border: 1px solid #e9ecef;\n}\n\n.modern-content .summary-card .summary-grid {\n  padding: 0;\n}\n\n.modern-content .summary-card .summary-grid .summary-item {\n  text-align: center;\n  padding: 12px;\n  border-radius: 8px;\n  background: #f8f9fa;\n  margin: 4px;\n}\n\n.modern-content .summary-card .summary-grid .summary-item .summary-label {\n  font-size: 0.9rem;\n  color: #6c757d;\n  margin-bottom: 8px;\n  font-weight: 500;\n}\n\n.modern-content .summary-card .summary-grid .summary-item .summary-value {\n  font-size: 1.4rem;\n  font-weight: 700;\n  color: #495057;\n}\n\n.modern-content .summary-card .summary-grid .summary-item .summary-value.primary {\n  color: var(--ion-color-primary);\n}\n\n.modern-content .summary-card .summary-grid .summary-item .summary-value.success {\n  color: var(--ion-color-success);\n}\n\n.modern-content .summary-card .summary-grid .difference-item {\n  text-align: center;\n  padding: 16px;\n  border-radius: 8px;\n  background: linear-gradient(135deg, #f8f9fa, #e9ecef);\n  margin: 8px 4px 4px 4px;\n  border: 2px solid transparent;\n}\n\n.modern-content .summary-card .summary-grid .difference-item .difference-label {\n  font-size: 1rem;\n  color: #495057;\n  margin-bottom: 8px;\n  font-weight: 600;\n}\n\n.modern-content .summary-card .summary-grid .difference-item .difference-value {\n  font-size: 1.6rem;\n  font-weight: 800;\n}\n\n.modern-content .summary-card .summary-grid .difference-item .difference-value.positive {\n  color: var(--ion-color-success);\n}\n\n.modern-content .summary-card .summary-grid .difference-item .difference-value.negative {\n  color: var(--ion-color-danger);\n}\n\n.modern-content .items-card {\n  --background: white;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);\n  border-radius: 12px;\n  border: 1px solid #e9ecef;\n}\n\n.modern-content .items-card .items-container {\n  max-height: 250px;\n  overflow-y: auto;\n  margin-bottom: 10px;\n}\n\n.modern-content .items-card .items-container .item-preview {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 16px;\n  border-radius: 8px;\n  margin-bottom: 8px;\n  transition: all 0.3s ease;\n  border: 1px solid #e9ecef;\n}\n\n.modern-content .items-card .items-container .item-preview.even {\n  background: #f8f9fa;\n}\n\n.modern-content .items-card .items-container .item-preview:hover {\n  transform: translateY(-2px);\n  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);\n}\n\n.modern-content .items-card .items-container .item-preview .item-info {\n  flex: 1;\n}\n\n.modern-content .items-card .items-container .item-preview .item-info .item-name {\n  font-size: 1.1rem;\n  font-weight: 600;\n  color: #495057;\n  margin-bottom: 4px;\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n\n.modern-content .items-card .items-container .item-preview .item-info .item-name ion-icon {\n  font-size: 1.2rem;\n}\n\n.modern-content .items-card .items-container .item-preview .item-info .item-details {\n  font-size: 0.9rem;\n  color: #6c757d;\n}\n\n.modern-content .items-card .items-container .item-preview .item-info .item-details .quantity {\n  background: var(--ion-color-primary-tint);\n  color: var(--ion-color-primary);\n  padding: 2px 8px;\n  border-radius: 12px;\n  font-weight: 500;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison {\n  text-align: right;\n  min-width: 140px;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-row {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  margin-bottom: 6px;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-row .price-label {\n  font-size: 0.9rem;\n  color: #6c757d;\n  margin-left: 8px;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-row .original-price {\n  font-weight: 500;\n  color: #495057;\n  text-decoration: line-through;\n  opacity: 0.7;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-row .new-price {\n  font-weight: 700;\n  font-size: 1.1rem;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-row .new-price.increased {\n  color: var(--ion-color-success);\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-row .new-price.decreased {\n  color: var(--ion-color-danger);\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-difference {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 4px;\n  font-size: 0.9rem;\n  font-weight: 600;\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-difference span.increased {\n  color: var(--ion-color-success);\n}\n\n.modern-content .items-card .items-container .item-preview .price-comparison .price-difference span.decreased {\n  color: var(--ion-color-danger);\n}\n\n.modern-footer {\n  position: fixed;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  z-index: 1000;\n  flex-shrink: 0;\n}\n\n.modern-footer ion-toolbar {\n  background: white;\n  padding: 12px 20px 16px;\n  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);\n  border-top: 1px solid #e9ecef;\n  min-height: 70px;\n}\n\n.modern-footer ion-toolbar .action-buttons {\n  display: flex;\n  gap: 12px;\n  max-width: 500px;\n  margin: 0 auto;\n}\n\n.modern-footer ion-toolbar .action-buttons .cancel-btn,\n.modern-footer ion-toolbar .action-buttons .apply-btn {\n  flex: 1;\n  height: 50px;\n  font-weight: 600;\n  --border-radius: 12px;\n  transition: all 0.3s ease;\n  margin: 0;\n}\n\n.modern-footer ion-toolbar .action-buttons .cancel-btn:hover,\n.modern-footer ion-toolbar .action-buttons .apply-btn:hover {\n  transform: translateY(-1px);\n  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);\n}\n\n.modern-footer ion-toolbar .action-buttons .apply-btn {\n  --background: linear-gradient(45deg, var(--ion-color-primary), var(--ion-color-primary-shade));\n  box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3);\n}\n\n@media (max-width: 768px) {\n  .modern-content {\n    padding: 12px;\n    padding-bottom: 90px;\n  }\n  .modern-content .control-card {\n    padding: 16px;\n  }\n  .modern-content .control-card .section-title {\n    font-size: 1.1rem;\n  }\n  .modern-content .control-card .option-item .option-radio {\n    padding: 12px;\n  }\n  .modern-content .control-card .option-item .option-radio ion-label h3 {\n    font-size: 1rem;\n  }\n  .modern-content .control-card .option-item .option-radio ion-label p {\n    font-size: 0.9rem;\n  }\n  .modern-content .summary-grid ion-col[size=\"4\"] {\n    size: 12;\n    margin-bottom: 8px;\n  }\n  .modern-content .item-preview {\n    flex-direction: column;\n    align-items: flex-start;\n    gap: 12px;\n  }\n  .modern-content .item-preview .price-comparison {\n    text-align: left;\n    width: 100%;\n  }\n\n  .modern-footer ion-toolbar {\n    padding: 10px 16px 14px;\n    min-height: 65px;\n  }\n  .modern-footer .action-buttons {\n    flex-direction: column;\n    gap: 8px;\n  }\n  .modern-footer .action-buttons .cancel-btn,\n.modern-footer .action-buttons .apply-btn {\n    height: 46px;\n  }\n}\n\n@keyframes slideInUp {\n  from {\n    opacity: 0;\n    transform: translateY(30px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n\n.configuration-section,\n.summary-section,\n.preview-section {\n  animation: slideInUp 0.5s ease-out;\n}\n\n.configuration-section {\n  animation-delay: 0.1s;\n}\n\n.summary-section {\n  animation-delay: 0.2s;\n}\n\n.preview-section {\n  animation-delay: 0.3s;\n}\n\nion-segment {\n  display: flex !important;\n  flex-direction: row !important;\n  width: 100%;\n}\n\nion-segment-button {\n  flex: 1 !important;\n  display: flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImludm9pY2UtcHJpY2UtY29uZmlnLWRpYWxvZy5jb21wb25lbnQuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFDQTtFQUNFLGFBQUE7RUFDQSxzQkFBQTtFQUNBLGFBQUE7RUFDQSxnQkFBQTtBQUFGOztBQUtFO0VBQ0UsOEZBQUE7RUFDQSxjQUFBO0VBQ0EseUNBQUE7QUFGSjs7QUFLRTtFQUNFLGlCQUFBO0VBQ0EsZ0JBQUE7RUFDQSxhQUFBO0VBQ0EsbUJBQUE7RUFDQSxRQUFBO0FBSEo7O0FBS0k7RUFDRSxpQkFBQTtBQUhOOztBQU9FO0VBQ0UsY0FBQTtFQUNBLHVDQUFBO0FBTEo7O0FBVUE7RUFDRSxxQkFBQTtFQUNBLGFBQUE7RUFDQSxxQkFBQTtFQUNBLE9BQUE7RUFDQSxnQkFBQTtFQUNBLGFBQUE7QUFQRjs7QUFTRTs7RUFFRSxtQkFBQTtFQUNBLGNBQUE7RUFDQSxtQkFBQTtBQVBKOztBQVVFO0VBQ0UsbUJBQUE7RUFDQSxjQUFBO0VBQ0EsbUJBQUE7QUFSSjs7QUFZRTtFQUNFLGlCQUFBO0VBQ0EsbUJBQUE7RUFDQSx5QkFBQTtFQUNBLG1CQUFBO0VBQ0EsYUFBQTtFQUNBLHlDQUFBO0FBVko7O0FBWUk7RUFDRSxtQkFBQTtFQUNBLGtCQUFBO0VBQ0Esb0JBQUE7RUFDQSxnQ0FBQTtBQVZOOztBQWFJO0VBQ0UsY0FBQTtBQVhOOztBQWNJO0VBQ0UsK0JBQUE7RUFDQSxpQkFBQTtFQUNBLGdCQUFBO0VBQ0EsYUFBQTtFQUNBLG1CQUFBO0VBQ0EsdUJBQUE7RUFDQSxRQUFBO0VBQ0Esa0JBQUE7QUFaTjs7QUFjTTtFQUNFLGlCQUFBO0FBWlI7O0FBZ0JJO0VBQ0UsY0FBQTtFQUNBLGtCQUFBO0VBQ0EsU0FBQTtFQUNBLGdCQUFBO0FBZE47O0FBa0JJO0VBQ0UsYUFBQTtFQUNBLHNCQUFBO0VBQ0EsU0FBQTtBQWhCTjs7QUFrQk07RUFDRSxrQkFBQTtFQUNBLHlCQUFBO0VBQ0EsbUJBQUE7RUFDQSx5QkFBQTtFQUNBLGdCQUFBO0FB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VTtJQUNFLGlCQUFBO0VBdkZaO0VBK0ZJO0lBQ0UsUUFBQTtJQUNBLGtCQUFBO0VBN0ZOO0VBaUdFO0lBQ0Usc0JBQUE7SUFDQSx1QkFBQTtJQUNBLFNBQUE7RUEvRko7RUFpR0k7SUFDRSxnQkFBQTtJQUNBLFdBQUE7RUEvRk47O0VBcUdFO0lBQ0UsdUJBQUE7SUFDQSxnQkFBQTtFQWxHSjtFQXFHRTtJQUNFLHNCQUFBO0lBQ0EsUUFBQTtFQW5HSjtFQXFHSTs7SUFFRSxZQUFBO0VBbkdOO0FBQ0Y7O0FBeUdBO0VBQ0U7SUFDRSxVQUFBO0lBQ0EsMkJBQUE7RUF2R0Y7RUF5R0E7SUFDRSxVQUFBO0lBQ0Esd0JBQUE7RUF2R0Y7QUFDRjs7QUEwR0E7OztFQUdFLGtDQUFBO0FBeEdGOztBQTJHQTtFQUNFLHFCQUFBO0FBeEdGOztBQTJHQTtFQUNFLHFCQUFBO0FBeEdGOztBQTJHQTtFQUNFLHFCQUFBO0FBeEdGOztBQTRHQTtFQUNFLHdCQUFBO0VBQ0EsOEJBQUE7RUFDQSxXQUFBO0FBekdGOztBQTRHQTtFQUNFLGtCQUFBO0VBQ0Esd0JBQUE7RUFDQSw4QkFBQTtFQUNBLGtDQUFBO0FBekdGIiwiZmlsZSI6Imludm9pY2UtcHJpY2UtY29uZmlnLWRpYWxvZy5jb21wb25lbnQuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbIi8vIE1haW4gY29udGFpbmVyXG46aG9zdCB7XG4gIGRpc3BsYXk6IGZsZXg7XG4gIGZsZXgtZGlyZWN0aW9uOiBjb2x1bW47XG4gIGhlaWdodDogMTAwdmg7XG4gIG92ZXJmbG93OiBoaWRkZW47XG59XG5cbi8vIE1vZGVybiBoZWFkZXIgc3R5bGluZ1xuLm1vZGVybi1oZWFkZXIge1xuICBpb24tdG9vbGJhciB7XG4gICAgLS1iYWNrZ3JvdW5kOiBsaW5lYXItZ3JhZGllbnQoNDVkZWcsIHZhcigtLWlvbi1jb2xvci1wcmltYXJ5KSwgdmFyKC0taW9uLWNvbG9yLXByaW1hcnktc2hhZGUpKTtcbiAgICAtLWNvbG9yOiB3aGl0ZTtcbiAgICBib3gtc2hhZG93OiAwIDJweCAxMHB4IHJnYmEoMCwgMCwgMCwgMC4xKTtcbiAgfVxuXG4gIC5oZWFkZXItdGl0bGUge1xuICAgIGZvbnQtc2l6ZTogMS4ycmVtO1xuICAgIGZvbnQtd2VpZ2h0OiA2MDA7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBhbGlnbi1pdGVtczogY2VudGVyO1xuICAgIGdhcDogOHB4O1xuXG4gICAgLnRpdGxlLWljb24ge1xuICAgICAgZm9udC1zaXplOiAxLjRyZW07XG4gICAgfVxuICB9XG5cbiAgLmNsb3NlLWJ0biB7XG4gICAgLS1jb2xvcjogd2hpdGU7XG4gICAgLS1jb2xvci1ob3ZlcjogcmdiYSgyNTUsIDI1NSwgMjU1LCAwLjgpO1xuICB9XG59XG5cbi8vIE1vZGVybiBjb250ZW50IHN0eWxpbmdcbi5tb2Rlcm4tY29udGVudCB7XG4gIC0tYmFja2dyb3VuZDogI2Y4ZjlmYTtcbiAgcGFkZGluZzogMTZweDtcbiAgcGFkZGluZy1ib3R0b206IDEwMHB4O1xuICBmbGV4OiAxO1xuICBvdmVyZmxvdy15OiBhdXRvO1xuICBtaW4taGVpZ2h0OiAwO1xuXG4gIC5jb25maWd1cmF0aW9uLXNlY3Rpb24sXG4gIC5zdW1tYXJ5LXNlY3Rpb24ge1xuICAgIG1hcmdpbi1ib3R0b206IDEycHg7XG4gICAgZGlzcGxheTogYmxvY2s7XG4gICAgdmlzaWJpbGl0eTogdmlzaWJsZTtcbiAgfVxuXG4gIC5wcmV2aWV3LXNlY3Rpb24ge1xuICAgIG1hcmdpbi1ib3R0b206IDEycHg7XG4gICAgZGlzcGxheTogYmxvY2s7XG4gICAgdmlzaWJpbGl0eTogdmlzaWJsZTtcbiAgfVxuXG4gIC8vIENvbnRyb2wgY2FyZCBzdHlsaW5nXG4gIC5jb250cm9sLWNhcmQge1xuICAgIGJhY2tncm91bmQ6IHdoaXRlO1xuICAgIGJvcmRlci1yYWRpdXM6IDEycHg7XG4gICAgYm9yZGVyOiAxcHggc29saWQgI2RlZTJlNjtcbiAgICBtYXJnaW4tYm90dG9tOiAxMnB4O1xuICAgIHBhZGRpbmc6IDE2cHg7XG4gICAgYm94LXNoYWRvdzogMCAycHggOHB4IHJnYmEoMCwgMCwgMCwgMC4wNSk7XG5cbiAgICAuY2FyZC1oZWFkZXIge1xuICAgICAgbWFyZ2luLWJvdHRvbTogMTZweDtcbiAgICAgIHRleHQtYWxpZ246IGNlbnRlcjtcbiAgICAgIHBhZGRpbmctYm90dG9tOiAxMnB4O1xuICAgICAgYm9yZGVyLWJvdHRvbTogMXB4IHNvbGlkICNmMWYzZjQ7XG4gICAgfVxuXG4gICAgLmNhcmQtY29udGVudCB7XG4gICAgICBkaXNwbGF5OiBibG9jaztcbiAgICB9XG5cbiAgICAuc2VjdGlvbi10aXRsZSB7XG4gICAgICBjb2xvcjogdmFyKC0taW9uLWNvbG9yLXByaW1hcnkpO1xuICAgICAgZm9udC1zaXplOiAxLjJyZW07XG4gICAgICBmb250LXdlaWdodDogNzAwO1xuICAgICAgZGlzcGxheTogZmxleDtcbiAgICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAgICBqdXN0aWZ5LWNvbnRlbnQ6IGNlbnRlcjtcbiAgICAgIGdhcDogOHB4O1xuICAgICAgbWFyZ2luLWJvdHRvbTogNnB4O1xuXG4gICAgICBpb24taWNvbiB7XG4gICAgICAgIGZvbnQtc2l6ZTogMS4zcmVtO1xuICAgICAgfVxuICAgIH1cblxuICAgIC5zZWN0aW9uLWRlc2NyaXB0aW9uIHtcbiAgICAgIGNvbG9yOiAjNmM3NTdkO1xuICAgICAgZm9udC1zaXplOiAwLjk1cmVtO1xuICAgICAgbWFyZ2luOiAwO1xuICAgICAgbGluZS1oZWlnaHQ6IDEuNDtcbiAgICB9XG5cbiAgICAvLyBSYWRpbyBncm91cCBzdHlsaW5nXG4gICAgaW9uLXJhZGlvLWdyb3VwIHtcbiAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICBmbGV4LWRpcmVjdGlvbjogY29sdW1uO1xuICAgICAgZ2FwOiAxMHB4O1xuXG4gICAgICAub3B0aW9uLWl0ZW0ge1xuICAgICAgICBib3JkZXItcmFkaXVzOiA4cHg7XG4gICAgICAgIGJvcmRlcjogMnB4IHNvbGlkICNlOWVjZWY7XG4gICAgICAgIGJhY2tncm91bmQ6ICNmOGY5ZmE7XG4gICAgICAgIHRyYW5zaXRpb246IGFsbCAwLjNzIGVhc2U7XG4gICAgICAgIG92ZXJmbG93OiBoaWRkZW47XG5cbiAgICAgICAgJi5kZWZhdWx0LW9wdGlvbiB7XG4gICAgICAgICAgYm9yZGVyLWNvbG9yOiB2YXIoLS1pb24tY29sb3Itc3VjY2Vzcyk7XG4gICAgICAgICAgYmFja2dyb3VuZDogI2YwZjlmMDtcbiAgICAgICAgfVxuXG4gICAgICAgICY6aG92ZXIge1xuICAgICAgICAgIHRyYW5zZm9ybTogdHJhbnNsYXRlWSgtMnB4KTtcbiAgICAgICAgICBib3gtc2hhZG93OiAwIDRweCAxMnB4IHJnYmEoMCwgMCwgMCwgMC4xKTtcbiAgICAgICAgfVxuXG4gICAgICAgIC5vcHRpb24tcmFkaW8ge1xuICAgICAgICAgIC0tYmFja2dyb3VuZDogdHJhbnNwYXJlbnQ7XG4gICAgICAgICAgLS1ib3JkZXItcmFkaXVzOiAwO1xuICAgICAgICAgIC0tcGFkZGluZy1zdGFydDogMTJweDtcbiAgICAgICAgICAtLXBhZGRpbmctZW5kOiAxMnB4O1xuICAgICAgICAgIC0tbWluLWhlaWdodDogYXV0bztcbiAgICAgICAgICBwYWRkaW5nOiAxMnB4O1xuXG4gICAgICAgICAgaW9uLXJhZGlvIHtcbiAgICAgICAgICAgIC0tY29sb3ItY2hlY2tlZDogdmFyKC0taW9uLWNvbG9yLXByaW1hcnkpO1xuICAgICAgICAgICAgLS1ib3JkZXItd2lkdGg6IDJweDtcbiAgICAgICAgICAgIG1hcmdpbi1yaWdodDogMTJweDtcbiAgICAgICAgICB9XG5cbiAgICAgICAgICBpb24tbGFiZWwge1xuICAgICAgICAgICAgaDMge1xuICAgICAgICAgICAgICBjb2xvcjogIzQ5NTA1NztcbiAgICAgICAgICAgICAgZm9udC1zaXplOiAxcmVtO1xuICAgICAgICAgICAgICBmb250LXdlaWdodDogNjAwO1xuICAgICAgICAgICAgICBtYXJnaW46IDAgMCA0cHggMDtcbiAgICAgICAgICAgIH1cblxuICAgICAgICAgICAgcCB7XG4gICAgICAgICAgICAgIGNvbG9yOiAjNmM3NTdkO1xuICAgICAgICAgICAgICBmb250LXNpemU6IDAuOXJlbTtcbiAgICAgICAgICAgICAgbWFyZ2luOiAwIDAgNnB4IDA7XG4gICAgICAgICAgICAgIGxpbmUtaGVpZ2h0OiAxLjM7XG4gICAgICAgICAgICB9XG5cbiAgICAgICAgICAgIC5kZWZhdWx0LWNoaXAsXG4gICAgICAgICAgICAuaW5mby1jaGlwIHtcbiAgICAgICAgICAgICAgLS1iYWNrZ3JvdW5kOiB2YXIoLS1pb24tY29sb3Itc3VjY2Vzcyk7XG4gICAgICAgICAgICAgIC0tY29sb3I6IHdoaXRlO1xuICAgICAgICAgICAgICBtYXJnaW4tdG9wOiA0cHg7XG5cbiAgICAgICAgICAgICAgaW9uLWljb24ge1xuICAgICAgICAgICAgICAgIG1hcmdpbi1yaWdodDogNHB4O1xuICAgICAgICAgICAgICB9XG4gICAgICAgICAgICB9XG5cbiAgICAgICAgICAgIC5pbmZvLWNoaXAge1xuICAgICAgICAgICAgICAtLWJhY2tncm91bmQ6IHZhcigtLWlvbi1jb2xvci13YXJuaW5nKTtcbiAgICAgICAgICAgIH1cbiAgICAgICAgICB9XG4gICAgICAgIH1cbiAgICAgIH1cbiAgICB9XG5cbiAgICAvLyBDdXN0b20gc2V0dGluZ3Mgc3R5bGluZ1xuICAgIC5jdXN0b20tc2V0dGluZ3Mge1xuICAgICAgbWFyZ2luLXRvcDogMTZweDtcbiAgICAgIHBhZGRpbmctdG9wOiAxNnB4O1xuICAgICAgYm9yZGVyLXRvcDogMXB4IHNvbGlkICNlOWVjZWY7XG5cbiAgICAgIC5jdXN0b20tcHJpY2UtaW5wdXQge1xuICAgICAgICBtYXJnaW4tYm90dG9tOiAxNnB4O1xuXG4gICAgICAgIGlvbi1pdGVtIHtcbiAgICAgICAgICAtLWJhY2tncm91bmQ6IHdoaXRlO1xuICAgICAgICAgIC0tYm9yZGVyLXJhZGl1czogOHB4O1xuICAgICAgICAgIGJvcmRlcjogMXB4IHNvbGlkICNkZWUyZTY7XG5cbiAgICAgICAgICAucHJpY2UtaW5wdXQge1xuICAgICAgICAgICAgZm9udC1zaXplOiAxLjFyZW07XG4gICAgICAgICAgICBmb250LXdlaWdodDogNTAwO1xuICAgICAgICAgIH1cbiAgICAgICAgfVxuICAgICAgfVxuXG4gICAgICAuc291cmNlLXByaWNlLXNlbGVjdGlvbiB7XG4gICAgICAgIC5zZWxlY3Rpb24tbGFiZWwge1xuICAgICAgICAgIGRpc3BsYXk6IGJsb2NrO1xuICAgICAgICAgIGNvbG9yOiAjNDk1MDU3O1xuICAgICAgICAgIGZvbnQtd2VpZ2h0OiA2MDA7XG4gICAgICAgICAgbWFyZ2luLWJvdHRvbTogMTBweDtcbiAgICAgICAgICBmb250LXNpemU6IDAuOTVyZW07XG4gICAgICAgIH1cblxuICAgICAgICAubW9kZXJuLXNlZ21lbnQge1xuICAgICAgICAgIGJhY2tncm91bmQ6ICNmOGY5ZmE7XG4gICAgICAgICAgYm9yZGVyLXJhZGl1czogOHB4O1xuICAgICAgICAgIHBhZGRpbmc6IDRweDtcbiAgICAgICAgICBib3JkZXI6IDFweCBzb2xpZCAjZGVlMmU2O1xuXG4gICAgICAgICAgLnNlZ21lbnQtYnRuIHtcbiAgICAgICAgICAgIC0tYmFja2dyb3VuZC1jaGVja2VkOiB2YXIoLS1pb24tY29sb3ItcHJpbWFyeSk7XG4gICAgICAgICAgICAtLWNvbG9yLWNoZWNrZWQ6IHdoaXRlO1xuICAgICAgICAgICAgLS1ib3JkZXItcmFkaXVzOiA2cHg7XG4gICAgICAgICAgICBmb250LXdlaWdodDogNTAwO1xuICAgICAgICAgICAgdHJhbnNpdGlvbjogYWxsIDAuM3MgZWFzZTtcbiAgICAgICAgICAgIGZsZXg6IDE7XG5cbiAgICAgICAgICAgIGlvbi1pY29uIHtcbiAgICAgICAgICAgICAgbWFyZ2luLXJpZ2h0OiA2cHg7XG4gICAgICAgICAgICAgIGZvbnQtc2l6ZTogMS4xcmVtO1xuICAgICAgICAgICAgfVxuXG4gICAgICAgICAgICBpb24tbGFiZWwge1xuICAgICAgICAgICAgICBmb250LXNpemU6IDAuOTVyZW07XG4gICAgICAgICAgICB9XG4gICAgICAgICAgfVxuICAgICAgICB9XG4gICAgICB9XG4gICAgfVxuICB9XG5cbiAgLy8gU3VtbWFyeSBjYXJkIHN0eWxpbmdcbiAgLnN1bW1hcnktY2FyZCB7XG4gICAgLS1iYWNrZ3JvdW5kOiB3aGl0ZTtcbiAgICBib3gtc2hhZG93OiAwIDRweCAxMnB4IHJnYmEoMCwgMCwgMCwgMC4wNSk7XG4gICAgYm9yZGVyLXJhZGl1czogMTJweDtcbiAgICBib3JkZXI6IDFweCBzb2xpZCAjZTllY2VmO1xuXG4gICAgLnN1bW1hcnktZ3JpZCB7XG4gICAgICBwYWRkaW5nOiAwO1xuXG4gICAgICAuc3VtbWFyeS1pdGVtIHtcbiAgICAgICAgdGV4dC1hbGlnbjogY2VudGVyO1xuICAgICAgICBwYWRkaW5nOiAxMnB4O1xuICAgICAgICBib3JkZXItcmFkaXVzOiA4cHg7XG4gICAgICAgIGJhY2tncm91bmQ6ICNmOGY5ZmE7XG4gICAgICAgIG1hcmdpbjogNHB4O1xuXG4gICAgICAgIC5zdW1tYXJ5LWxhYmVsIHtcbiAgICAgICAgICBmb250LXNpemU6IDAuOXJlbTtcbiAgICAgICAgICBjb2xvcjogIzZjNzU3ZDtcbiAgICAgICAgICBtYXJnaW4tYm90dG9tOiA4cHg7XG4gICAgICAgICAgZm9udC13ZWlnaHQ6IDUwMDtcbiAgICAgICAgfVxuXG4gICAgICAgIC5zdW1tYXJ5LXZhbHVlIHtcbiAgICAgICAgICBmb250LXNpemU6IDEuNHJlbTtcbiAgICAgICAgICBmb250LXdlaWdodDogNzAwO1xuICAgICAgICAgIGNvbG9yOiAjNDk1MDU3O1xuXG4gICAgICAgICAgJi5wcmltYXJ5IHtcbiAgICAgICAgICAgIGNvbG9yOiB2YXIoLS1pb24tY29sb3ItcHJpbWFyeSk7XG4gICAgICAgICAgfVxuXG4gICAgICAgICAgJi5zdWNjZXNzIHtcbiAgICAgICAgICAgIGNvbG9yOiB2YXIoLS1pb24tY29sb3Itc3VjY2Vzcyk7XG4gICAgICAgICAgfVxuICAgICAgICB9XG4gICAgICB9XG5cbiAgICAgIC5kaWZmZXJlbmNlLWl0ZW0ge1xuICAgICAgICB0ZXh0LWFsaWduOiBjZW50ZXI7XG4gICAgICAgIHBhZGRpbmc6IDE2cHg7XG4gICAgICAgIGJvcmRlci1yYWRpdXM6IDhweDtcbiAgICAgICAgYmFja2dyb3VuZDogbGluZWFyLWdyYWRpZW50KDEzNWRlZywgI2Y4ZjlmYSwgI2U5ZWNlZik7XG4gICAgICAgIG1hcmdpbjogOHB4IDRweCA0cHggNHB4O1xuICAgICAgICBib3JkZXI6IDJweCBzb2xpZCB0cmFuc3BhcmVudDtcblxuICAgICAgICAuZGlmZmVyZW5jZS1sYWJlbCB7XG4gICAgICAgICAgZm9udC1zaXplOiAxcmVtO1xuICAgICAgICAgIGNvbG9yOiAjNDk1MDU3O1xuICAgICAgICAgIG1hcmdpbi1ib3R0b206IDhweDtcbiAgICAgICAgICBmb250LXdlaWdodDogNjAwO1xuICAgICAgICB9XG5cbiAgICAgICAgLmRpZmZlcmVuY2UtdmFsdWUge1xuICAgICAgICAgIGZvbnQtc2l6ZTogMS42cmVtO1xuICAgICAgICAgIGZvbnQtd2VpZ2h0OiA4MDA7XG5cbiAgICAgICAgICAmLnBvc2l0aXZlIHtcbiAgICAgICAgICAgIGNvbG9yOiB2YXIoLS1pb24tY29sb3Itc3VjY2Vzcyk7XG4gICAgICAgICAgfVxuXG4gICAgICAgICAgJi5uZWdhdGl2ZSB7XG4gICAgICAgICAgICBjb2xvcjogdmFyKC0taW9uLWNvbG9yLWRhbmdlcik7XG4gICAgICAgICAgfVxuICAgICAgICB9XG4gICAgICB9XG4gICAgfVxuICB9XG5cbiAgLy8gSXRlbXMgcHJldmlldyBzdHlsaW5nXG4gIC5pdGVtcy1jYXJkIHtcbiAgICAtLWJhY2tncm91bmQ6IHdoaXRlO1xuICAgIGJveC1zaGFkb3c6IDAgNHB4IDEycHggcmdiYSgwLCAwLCAwLCAwLjA1KTtcbiAgICBib3JkZXItcmFkaXVzOiAxMnB4O1xuICAgIGJvcmRlcjogMXB4IHNvbGlkICNlOWVjZWY7XG5cbiAgICAuaXRlbXMtY29udGFpbmVyIHtcbiAgICAgIG1heC1oZWlnaHQ6IDI1MHB4O1xuICAgICAgb3ZlcmZsb3cteTogYXV0bztcbiAgICAgIG1hcmdpbi1ib3R0b206IDEwcHg7XG5cbiAgICAgIC5pdGVtLXByZXZpZXcge1xuICAgICAgICBkaXNwbGF5OiBmbGV4O1xuICAgICAgICBqdXN0aWZ5LWNvbnRlbnQ6IHNwYWNlLWJldHdlZW47XG4gICAgICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAgICAgIHBhZGRpbmc6IDE2cHg7XG4gICAgICAgIGJvcmRlci1yYWRpdXM6IDhweDtcbiAgICAgICAgbWFyZ2luLWJvdHRvbTogOHB4O1xuICAgICAgICB0cmFuc2l0aW9uOiBhbGwgMC4zcyBlYXNlO1xuICAgICAgICBib3JkZXI6IDFweCBzb2xpZCAjZTllY2VmO1xuXG4gICAgICAgICYuZXZlbiB7XG4gICAgICAgICAgYmFja2dyb3VuZDogI2Y4ZjlmYTtcbiAgICAgICAgfVxuXG4gICAgICAgICY6aG92ZXIge1xuICAgICAgICAgIHRyYW5zZm9ybTogdHJhbnNsYXRlWSgtMnB4KTtcbiAgICAgICAgICBib3gtc2hhZG93OiAwIDRweCA4cHggcmdiYSgwLCAwLCAwLCAwLjEpO1xuICAgICAgICB9XG5cbiAgICAgICAgLml0ZW0taW5mbyB7XG4gICAgICAgICAgZmxleDogMTtcblxuICAgICAgICAgIC5pdGVtLW5hbWUge1xuICAgICAgICAgICAgZm9udC1zaXplOiAxLjFyZW07XG4gICAgICAgICAgICBmb250LXdlaWdodDogNjAwO1xuICAgICAgICAgICAgY29sb3I6ICM0OTUwNTc7XG4gICAgICAgICAgICBtYXJnaW4tYm90dG9tOiA0cHg7XG4gICAgICAgICAgICBkaXNwbGF5OiBmbGV4O1xuICAgICAgICAgICAgYWxpZ24taXRlbXM6IGNlbnRlcjtcbiAgICAgICAgICAgIGdhcDogOHB4O1xuXG4gICAgICAgICAgICBpb24taWNvbiB7XG4gICAgICAgICAgICAgIGZvbnQtc2l6ZTogMS4ycmVtO1xuICAgICAgICAgICAgfVxuICAgICAgICAgIH1cblxuICAgICAgICAgIC5pdGVtLWRldGFpbHMge1xuICAgICAgICAgICAgZm9udC1zaXplOiAwLjlyZW07XG4gICAgICAgICAgICBjb2xvcjogIzZjNzU3ZDtcblxuICAgICAgICAgICAgLnF1YW50aXR5IHtcbiAgICAgICAgICAgICAgYmFja2dyb3VuZDogdmFyKC0taW9uLWNvbG9yLXByaW1hcnktdGludCk7XG4gICAgICAgICAgICAgIGNvbG9yOiB2YXIoLS1pb24tY29sb3ItcHJpbWFyeSk7XG4gICAgICAgICAgICAgIHBhZGRpbmc6IDJweCA4cHg7XG4gICAgICAgICAgICAgIGJvcmRlci1yYWRpdXM6IDEycHg7XG4gICAgICAgICAgICAgIGZvbnQtd2VpZ2h0OiA1MDA7XG4gICAgICAgICAgICB9XG4gICAgICAgICAgfVxuICAgICAgICB9XG5cbiAgICAgICAgLnByaWNlLWNvbXBhcmlzb24ge1xuICAgICAgICAgIHRleHQtYWxpZ246IHJpZ2h0O1xuICAgICAgICAgIG1pbi13aWR0aDogMTQwcHg7XG5cbiAgICAgICAgICAucHJpY2Utcm93IHtcbiAgICAgICAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICAgICAgICBqdXN0aWZ5LWNvbnRlbnQ6IHNwYWNlLWJldHdlZW47XG4gICAgICAgICAgICBhbGlnbi1pdGVtczogY2VudGVyO1xuICAgICAgICAgICAgbWFyZ2luLWJvdHRvbTogNnB4O1xuXG4gICAgICAgICAgICAucHJpY2UtbGFiZWwge1xuICAgICAgICAgICAgICBmb250LXNpemU6IDAuOXJlbTtcbiAgICAgICAgICAgICAgY29sb3I6ICM2Yzc1N2Q7XG4gICAgICAgICAgICAgIG1hcmdpbi1sZWZ0OiA4cHg7XG4gICAgICAgICAgICB9XG5cbiAgICAgICAgICAgIC5vcmlnaW5hbC1wcmljZSB7XG4gICAgICAgICAgICAgIGZvbnQtd2VpZ2h0OiA1MDA7XG4gICAgICAgICAgICAgIGNvbG9yOiAjNDk1MDU3O1xuICAgICAgICAgICAgICB0ZXh0LWRlY29yYXRpb246IGxpbmUtdGhyb3VnaDtcbiAgICAgICAgICAgICAgb3BhY2l0eTogMC43O1xuICAgICAgICAgICAgfVxuXG4gICAgICAgICAgICAubmV3LXByaWNlIHtcbiAgICAgICAgICAgICAgZm9udC13ZWlnaHQ6IDcwMDtcbiAgICAgICAgICAgICAgZm9udC1zaXplOiAxLjFyZW07XG5cbiAgICAgICAgICAgICAgJi5pbmNyZWFzZWQge1xuICAgICAgICAgICAgICAgIGNvbG9yOiB2YXIoLS1pb24tY29sb3Itc3VjY2Vzcyk7XG4gICAgICAgICAgICAgIH1cblxuICAgICAgICAgICAgICAmLmRlY3JlYXNlZCB7XG4gICAgICAgICAgICAgICAgY29sb3I6IHZhcigtLWlvbi1jb2xvci1kYW5nZXIpO1xuICAgICAgICAgICAgICB9XG4gICAgICAgICAgICB9XG4gICAgICAgICAgfVxuXG4gICAgICAgICAgLnByaWNlLWRpZmZlcmVuY2Uge1xuICAgICAgICAgICAgZGlzcGxheTogZmxleDtcbiAgICAgICAgICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAgICAgICAgICBqdXN0aWZ5LWNvbnRlbnQ6IGZsZXgtZW5kO1xuICAgICAgICAgICAgZ2FwOiA0cHg7XG4gICAgICAgICAgICBmb250LXNpemU6IDAuOXJlbTtcbiAgICAgICAgICAgIGZvbnQtd2VpZ2h0OiA2MDA7XG5cbiAgICAgICAgICAgIHNwYW4ge1xuICAgICAgICAgICAgICAmLmluY3JlYXNlZCB7XG4gICAgICAgICAgICAgICAgY29sb3I6IHZhcigtLWlvbi1jb2xvci1zdWNjZXNzKTtcbiAgICAgICAgICAgICAgfVxuXG4gICAgICAgICAgICAgICYuZGVjcmVhc2VkIHtcbiAgICAgICAgICAgICAgICBjb2xvcjogdmFyKC0taW9uLWNvbG9yLWRhbmdlcik7XG4gICAgICAgICAgICAgIH1cbiAgICAgICAgICAgIH1cbiAgICAgICAgICB9XG4gICAgICAgIH1cbiAgICAgIH1cbiAgICB9XG4gIH1cbn1cblxuLy8gTW9kZXJuIGZvb3RlciBzdHlsaW5nXG4ubW9kZXJuLWZvb3RlciB7XG4gIHBvc2l0aW9uOiBmaXhlZDtcbiAgYm90dG9tOiAwO1xuICBsZWZ0OiAwO1xuICByaWdodDogMDtcbiAgei1pbmRleDogMTAwMDtcbiAgZmxleC1zaHJpbms6IDA7XG4gIFxuICBpb24tdG9vbGJhciB7XG4gICAgYmFja2dyb3VuZDogd2hpdGU7XG4gICAgcGFkZGluZzogMTJweCAyMHB4IDE2cHg7XG4gICAgYm94LXNoYWRvdzogMCAtNHB4IDEycHggcmdiYSgwLCAwLCAwLCAwLjE1KTtcbiAgICBib3JkZXItdG9wOiAxcHggc29saWQgI2U5ZWNlZjtcbiAgICBtaW4taGVpZ2h0OiA3MHB4O1xuXG4gICAgLmFjdGlvbi1idXR0b25zIHtcbiAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICBnYXA6IDEycHg7XG4gICAgICBtYXgtd2lkdGg6IDUwMHB4O1xuICAgICAgbWFyZ2luOiAwIGF1dG87XG5cbiAgICAgIC5jYW5jZWwtYnRuLFxuICAgICAgLmFwcGx5LWJ0biB7XG4gICAgICAgIGZsZXg6IDE7XG4gICAgICAgIGhlaWdodDogNTBweDtcbiAgICAgICAgZm9udC13ZWlnaHQ6IDYwMDtcbiAgICAgICAgLS1ib3JkZXItcmFkaXVzOiAxMnB4O1xuICAgICAgICB0cmFuc2l0aW9uOiBhbGwgMC4zcyBlYXNlO1xuICAgICAgICBtYXJnaW46IDA7XG5cbiAgICAgICAgJjpob3ZlciB7XG4gICAgICAgICAgdHJhbnNmb3JtOiB0cmFuc2xhdGVZKC0xcHgpO1xuICAgICAgICAgIGJveC1zaGFkb3c6IDAgNHB4IDE2cHggcmdiYSgwLCAwLCAwLCAwLjEpO1xuICAgICAgICB9XG4gICAgICB9XG5cbiAgICAgIC5hcHBseS1idG4ge1xuICAgICAgICAtLWJhY2tncm91bmQ6IGxpbmVhci1ncmFkaWVudCg0NWRlZywgdmFyKC0taW9uLWNvbG9yLXByaW1hcnkpLCB2YXIoLS1pb24tY29sb3ItcHJpbWFyeS1zaGFkZSkpO1xuICAgICAgICBib3gtc2hhZG93OiAwIDRweCAxMnB4IHJnYmEodmFyKC0taW9uLWNvbG9yLXByaW1hcnktcmdiKSwgMC4zKTtcbiAgICAgIH1cbiAgICB9XG4gIH1cbn1cblxuLy8gUmVzcG9uc2l2ZSBkZXNpZ25cbkBtZWRpYSAobWF4LXdpZHRoOiA3NjhweCkge1xuICAubW9kZXJuLWNvbnRlbnQge1xuICAgIHBhZGRpbmc6IDEycHg7XG4gICAgcGFkZGluZy1ib3R0b206IDkwcHg7XG5cbiAgICAuY29udHJvbC1jYXJkIHtcbiAgICAgIHBhZGRpbmc6IDE2cHg7XG5cbiAgICAgIC5zZWN0aW9uLXRpdGxlIHtcbiAgICAgICAgZm9udC1zaXplOiAxLjFyZW07XG4gICAgICB9XG5cbiAgICAgIC5vcHRpb24taXRlbSB7XG4gICAgICAgIC5vcHRpb24tcmFkaW8ge1xuICAgICAgICAgIHBhZGRpbmc6IDEycHg7XG5cbiAgICAgICAgICBpb24tbGFiZWwge1xuICAgICAgICAgICAgaDMge1xuICAgICAgICAgICAgICBmb250LXNpemU6IDFyZW07XG4gICAgICAgICAgICB9XG5cbiAgICAgICAgICAgIHAge1xuICAgICAgICAgICAgICBmb250LXNpemU6IDAuOXJlbTtcbiAgICAgICAgICAgIH1cbiAgICAgICAgICB9XG4gICAgICAgIH1cbiAgICAgIH1cbiAgICB9XG5cbiAgICAuc3VtbWFyeS1ncmlkIHtcbiAgICAgIGlvbi1jb2xbc2l6ZT1cIjRcIl0ge1xuICAgICAgICBzaXplOiAxMjtcbiAgICAgICAgbWFyZ2luLWJvdHRvbTogOHB4O1xuICAgICAgfVxuICAgIH1cblxuICAgIC5pdGVtLXByZXZpZXcge1xuICAgICAgZmxleC1kaXJlY3Rpb246IGNvbHVtbjtcbiAgICAgIGFsaWduLWl0ZW1zOiBmbGV4LXN0YXJ0O1xuICAgICAgZ2FwOiAxMnB4O1xuXG4gICAgICAucHJpY2UtY29tcGFyaXNvbiB7XG4gICAgICAgIHRleHQtYWxpZ246IGxlZnQ7XG4gICAgICAgIHdpZHRoOiAxMDAlO1xuICAgICAgfVxuICAgIH1cbiAgfVxuXG4gIC5tb2Rlcm4tZm9vdGVyIHtcbiAgICBpb24tdG9vbGJhciB7XG4gICAgICBwYWRkaW5nOiAxMHB4IDE2cHggMTRweDtcbiAgICAgIG1pbi1oZWlnaHQ6IDY1cHg7XG4gICAgfVxuICAgIFxuICAgIC5hY3Rpb24tYnV0dG9ucyB7XG4gICAgICBmbGV4LWRpcmVjdGlvbjogY29sdW1uO1xuICAgICAgZ2FwOiA4cHg7XG5cbiAgICAgIC5jYW5jZWwtYnRuLFxuICAgICAgLmFwcGx5LWJ0biB7XG4gICAgICAgIGhlaWdodDogNDZweDtcbiAgICAgIH1cbiAgICB9XG4gIH1cbn1cblxuLy8gQW5pbWF0aW9uIGNsYXNzZXNcbkBrZXlmcmFtZXMgc2xpZGVJblVwIHtcbiAgZnJvbSB7XG4gICAgb3BhY2l0eTogMDtcbiAgICB0cmFuc2Zvcm06IHRyYW5zbGF0ZVkoMzBweCk7XG4gIH1cbiAgdG8ge1xuICAgIG9wYWNpdHk6IDE7XG4gICAgdHJhbnNmb3JtOiB0cmFuc2xhdGVZKDApO1xuICB9XG59XG5cbi5jb25maWd1cmF0aW9uLXNlY3Rpb24sXG4uc3VtbWFyeS1zZWN0aW9uLFxuLnByZXZpZXctc2VjdGlvbiB7XG4gIGFuaW1hdGlvbjogc2xpZGVJblVwIDAuNXMgZWFzZS1vdXQ7XG59XG5cbi5jb25maWd1cmF0aW9uLXNlY3Rpb24ge1xuICBhbmltYXRpb24tZGVsYXk6IDAuMXM7XG59XG5cbi5zdW1tYXJ5LXNlY3Rpb24ge1xuICBhbmltYXRpb24tZGVsYXk6IDAuMnM7XG59XG5cbi5wcmV2aWV3LXNlY3Rpb24ge1xuICBhbmltYXRpb24tZGVsYXk6IDAuM3M7XG59XG5cbi8vIFNlZ21lbnQgc3R5bGluZyBmaXhlc1xuaW9uLXNlZ21lbnQge1xuICBkaXNwbGF5OiBmbGV4ICFpbXBvcnRhbnQ7XG4gIGZsZXgtZGlyZWN0aW9uOiByb3cgIWltcG9ydGFudDtcbiAgd2lkdGg6IDEwMCU7XG59XG5cbmlvbi1zZWdtZW50LWJ1dHRvbiB7XG4gIGZsZXg6IDEgIWltcG9ydGFudDtcbiAgZGlzcGxheTogZmxleCAhaW1wb3J0YW50O1xuICBhbGlnbi1pdGVtczogY2VudGVyICFpbXBvcnRhbnQ7XG4gIGp1c3RpZnktY29udGVudDogY2VudGVyICFpbXBvcnRhbnQ7XG59Il19 */";
 
 /***/ }),
 
@@ -2501,6 +3748,36 @@ module.exports = "<ion-list class=\"action-popover-list\">\n  <ion-item button (
 
 /***/ }),
 
+/***/ 98766:
+/*!***************************************************************************************************!*\
+  !*** ./src/app/component/enhanced-item-selector/enhanced-item-selector.component.html?ngResource ***!
+  \***************************************************************************************************/
+/***/ ((module) => {
+
+module.exports = "<!-- Match exact structure from original item-selector -->\n<ion-grid class=\"ion-no-margin ion-no-padding\">\n  <ion-row>\n    <ion-col size=\"12\" class=\"ion-no-margin ion-no-padding\">\n      <!-- Label with Buttons Container - Same as original item-selector -->\n      <div class=\"label-with-buttons-container\">\n        <div class=\"action-buttons-left\">\n          <!-- Refresh Button positioned in top left -->\n          <ion-button \n            fill=\"clear\" \n            size=\"small\"\n            class=\"item-refresh-btn-left\"\n            (click)=\"refreshItems()\"\n            [disabled]=\"loadingItems\">\n            <ion-icon \n              name=\"refresh\" \n              color=\"primary\"\n              [class.spin]=\"loadingItems\">\n            </ion-icon>\n          </ion-button>\n          \n          <!-- Loading Spinner -->\n          <ion-spinner \n            *ngIf=\"loadingItems\" \n            name=\"dots\" \n            class=\"item-loading-spinner-left\">\n          </ion-spinner>\n        </div>\n        \n        <ion-label style=\"text-align: right;\">\n          <strong>الصنف</strong> \n        </ion-label>\n      </div>\n    </ion-col>\n  </ion-row>\n  <ion-row>\n    <ion-col size=\"12\" class=\"ion-no-margin ion-no-padding\">\n      <!-- Search Input Container - Match other field styles with proper positioning -->\n      <ion-item class=\"custInput item-selector-wrapper\">\n        <div class=\"input-container-wrapper\" #inputWrapper>\n          <ion-input\n            #searchInput\n            [(ngModel)]=\"searchTerm\"\n            (ngModelChange)=\"onModelChange($event)\"\n            [placeholder]=\"placeholder || 'اختر الصنف'\"\n            [disabled]=\"loadingItems\"\n            [clearInput]=\"true\"\n            class=\"item-selector-input\"\n            (ionInput)=\"onSearchInput($event)\"\n            (ionClear)=\"onInputClear($event)\"\n            (ionFocus)=\"onInputFocus()\"\n            (ionBlur)=\"onInputBlur()\"\n            (click)=\"onInputFocus()\"\n            (keydown)=\"onKeyDown($event)\">\n          </ion-input>\n        </div>\n      </ion-item>\n\n      <!-- Note: Dropdown is now rendered as a portal attached to document.body -->\n    </ion-col>\n  </ion-row>\n</ion-grid>\n\n<!-- Optional: Show selected item info below -->\n<div *ngIf=\"showQuantityDisplay && selectedItem.id\" class=\"selected-item-info\">\n  <ion-text color=\"medium\" class=\"selected-info\">\n    الصنف المختار: <strong>{{selectedItem.item_name}}</strong> | \n    المخزون: <strong color=\"danger\">{{selectedItem.availQty || 0}}</strong>\n  </ion-text>\n</div>";
+
+/***/ }),
+
+/***/ 86427:
+/*!***********************************************************************************!*\
+  !*** ./src/app/component/export-buttons/export-buttons.component.html?ngResource ***!
+  \***********************************************************************************/
+/***/ ((module) => {
+
+module.exports = "<div class=\"export-buttons\">\r\n  <ion-button \r\n    fill=\"outline\" \r\n    color=\"danger\" \r\n    size=\"small\"\r\n    [disabled]=\"!hasData || isLoading || disabled\"\r\n    (click)=\"onExportPDF()\"\r\n    class=\"export-btn\">\r\n    <ion-icon name=\"document-text-outline\" slot=\"start\"></ion-icon>\r\n    <span class=\"export-text\">PDF</span>\r\n  </ion-button>\r\n  \r\n  <ion-button \r\n    fill=\"outline\" \r\n    color=\"success\" \r\n    size=\"small\"\r\n    [disabled]=\"!hasData || isLoading || disabled\"\r\n    (click)=\"onExportExcel()\"\r\n    class=\"export-btn\">\r\n    <ion-icon name=\"grid-outline\" slot=\"start\"></ion-icon>\r\n    <span class=\"export-text\">Excel</span>\r\n  </ion-button>\r\n</div>";
+
+/***/ }),
+
+/***/ 57663:
+/*!*************************************************************************************************!*\
+  !*** ./src/app/component/invoice-journal-entry/invoice-journal-entry.component.html?ngResource ***!
+  \*************************************************************************************************/
+/***/ ((module) => {
+
+module.exports = "<!-- Main Content Container -->\n<div class=\"journal-entry-main\" *ngIf=\"invoiceData\">\n  \n  <!-- Customer Balance Display -->\n  <div class=\"balance-header-card\" *ngIf=\"invoiceData?.customerAccount\">\n    <div class=\"balance-content\">\n      <div class=\"balance-info\">\n        <div class=\"balance-label\">الرصيد الحالي</div>\n        <div class=\"customer-name\">{{ getCustomerName() }}</div>\n      </div>\n      <div class=\"balance-amount\" [attr.data-status]=\"getCustomerBalance()?.status\">\n        <ion-icon name=\"wallet-outline\" class=\"balance-icon\"></ion-icon>\n        <span class=\"amount-text\" *ngIf=\"getCustomerBalance()\">{{ formatCustomerBalance(getCustomerBalance()) }}</span>\n        <span class=\"amount-text no-balance\" *ngIf=\"!getCustomerBalance()\">لا يوجد رصيد</span>\n      </div>\n    </div>\n    <div class=\"balance-indicator\" [attr.data-status]=\"getCustomerBalance()?.status || 'neutral'\"></div>\n  </div>\n  \n  <!-- Content with inline form and buttons -->\n  <div class=\"content-wrapper\">\n    \n    <!-- Hidden Transaction Type (auto-set based on invoice type) -->\n    <input type=\"hidden\" [(ngModel)]=\"jType\">\n\n    <!-- Amount (without currency label) -->\n    <div class=\"form-section\">\n      <ion-label class=\"section-label\">المبلغ</ion-label>\n      <ion-item class=\"form-item amount-item\" [class.has-error]=\"!isValidAmount() && pay > 0\" #amountItemRef>\n        <ion-icon name=\"cash-outline\" slot=\"start\" [color]=\"isValidAmount() || pay === 0 ? 'success' : 'danger'\"></ion-icon>\n        <ion-input \n          #amountInput\n          type=\"number\" \n          placeholder=\"0.00\" \n          [(ngModel)]=\"pay\"\n          (ionInput)=\"onAmountChange($event)\"\n          class=\"amount-input\">\n        </ion-input>\n      </ion-item>\n      <div class=\"info-note\" *ngIf=\"isValidAmount() || pay === 0\">\n        <ion-icon name=\"information-circle-outline\" color=\"medium\"></ion-icon>\n        <span>المبلغ مملوء تلقائياً من الفاتورة، يمكن تعديله</span>\n      </div>\n      <div class=\"error-note\" *ngIf=\"!isValidAmount() && pay > 0\">\n        <ion-icon name=\"warning-outline\" color=\"danger\"></ion-icon>\n        <span>{{ getAmountValidationError() }}</span>\n      </div>\n    </div>\n\n    <!-- Source (المصدر) -->\n    <div class=\"form-section\">\n      <ion-label class=\"section-label\">المصدر</ion-label>\n      <ion-item class=\"form-item\">\n        <ion-icon name=\"wallet-outline\" slot=\"start\" color=\"primary\"></ion-icon>\n        <ion-select \n          [(ngModel)]=\"radioVal\" \n          (ionChange)=\"pickAccountBank($event)\" \n          placeholder=\"اختر المصدر\"\n          interface=\"action-sheet\">\n          <ion-select-option value=\"1\">الخزينة</ion-select-option>\n          <ion-select-option *ngFor=\"let bank of banksAccountArray\" [value]=\"bank.id\">\n            {{ bank.sub_name }}\n          </ion-select-option>\n        </ion-select>\n      </ion-item>\n    </div>\n\n    <!-- Hidden Customer Account -->\n    <input type=\"hidden\" [(ngModel)]=\"invoiceData.customerAccount\">\n\n    <!-- Date (hidden, keeping for data binding) -->\n    <input type=\"hidden\" [(ngModel)]=\"journal.j_date\">\n\n    <!-- Description (single line, readonly) -->\n    <div class=\"form-section last-field\">\n      <ion-label class=\"section-label\">البيان</ion-label>\n      <ion-item class=\"form-item description-item\">\n        <ion-icon name=\"document-text-outline\" slot=\"start\" color=\"tertiary\"></ion-icon>\n        <ion-input \n          [(ngModel)]=\"journal.j_details\"\n          placeholder=\"وصف المعاملة...\"\n          readonly=\"true\">\n        </ion-input>\n      </ion-item>\n    </div>\n\n    <!-- Action Buttons - directly after last field -->\n    <div class=\"inline-buttons-section\">\n      <div class=\"buttons-row\">\n        <ion-button \n          fill=\"outline\"\n          color=\"primary\"\n          (click)=\"save()\"\n          class=\"primary-btn\"\n          [disabled]=\"!isFormValid()\">\n          <ion-icon name=\"checkmark-circle-outline\" slot=\"start\"></ion-icon>\n          حفظ القيد\n        </ion-button>\n        \n        <ion-button \n          fill=\"outline\" \n          (click)=\"cancel()\"\n          class=\"secondary-btn\">\n          <ion-icon name=\"close-circle-outline\" slot=\"start\"></ion-icon>\n          إلغاء\n        </ion-button>\n      </div>\n    </div>\n    \n  </div>\n\n</div>";
+
+/***/ }),
+
 /***/ 90559:
 /*!*************************************************************************************************************!*\
   !*** ./src/app/component/invoice-price-config-dialog/invoice-price-config-dialog.component.html?ngResource ***!
@@ -2517,7 +3794,7 @@ module.exports = "<ion-header class=\"modern-header\" dir=\"rtl\">\n  <ion-toolb
   \*********************************************************************************/
 /***/ ((module) => {
 
-module.exports = "<ion-grid>\n  <ion-row>\n    <ion-col size=\"4\" *ngIf=\"loadingItems == true\">\n      <ion-item class=\"custInput\">\n        <ion-input [disabled]=\"true\"></ion-input>\n        <ion-spinner></ion-spinner>\n      </ion-item>\n    </ion-col>\n    <ion-col size=\"4\" *ngIf=\"loadingItems == false\">\n      <ion-grid class=\"ion-no-margin ion-no-padding\">\n        <ion-row>\n          <ion-col size=\"12\" class=\"ion-no-margin ion-no-padding\">\n            <div class=\"label-with-buttons-container\">\n              <div class=\"action-buttons-left\">\n                <!-- Refresh Button positioned in top left -->\n                <ion-button \n                  fill=\"clear\" \n                  size=\"small\"\n                  class=\"item-refresh-btn-left\"\n                  (click)=\"refresh()\"\n                  [disabled]=\"loadingItems\">\n                  <ion-icon \n                    name=\"refresh\" \n                    color=\"primary\"\n                    [class.spin]=\"loadingItems\">\n                  </ion-icon>\n                </ion-button>\n                \n                <!-- Add New Item Button -->\n                <ion-button size=\"small\" fill=\"clear\" class=\"add-item-btn-left\" (click)=\"presentModal2()\">\n                  <ion-icon name=\"add-circle-outline\" color=\"primary\" slot=\"icon-only\"></ion-icon>\n                </ion-button>\n                \n                <!-- Loading Spinner -->\n                <ion-spinner \n                  *ngIf=\"loadingItems\" \n                  name=\"dots\" \n                  class=\"item-loading-spinner-left\">\n                </ion-spinner>\n              </div>\n              \n              <ion-label  style=\"text-align: right;\">\n                <strong>الصنف</strong> \n              </ion-label>\n            </div>\n          </ion-col>\n        </ion-row>\n        <ion-row>\n          <!-- Search Input Container - Match other field styles with proper positioning -->\n          <ion-item class=\"custInput item-selector-wrapper\">\n            <div class=\"input-container-wrapper\" #inputWrapper>\n              <ion-input\n                #searchInput\n                [(ngModel)]=\"searchTerm\"\n                (ngModelChange)=\"onModelChange($event)\"\n                [placeholder]=\"placeholder\"\n                [disabled]=\"loadingItems\"\n                [clearInput]=\"true\"\n                class=\"item-selector-input\"\n                (ionInput)=\"onSearchInput($event)\"\n                (ionClear)=\"onInputClear($event)\"\n                (ionFocus)=\"onInputFocus()\"\n                (ionBlur)=\"onInputBlur()\"\n                (click)=\"onInputFocus()\"\n                (keydown)=\"onKeyDown($event)\">\n              </ion-input>\n              \n            \n            </div>\n          </ion-item>\n\n          <!-- Dropdown List -->\n          <div class=\"dropdown-container\" \n               *ngIf=\"showDropdown && getFilteredItems().length > 0\"\n               [style.top]=\"dropdownPosition.top\"\n               [style.left]=\"dropdownPosition.left\"\n               [style.width]=\"dropdownPosition.width\">\n            \n            <ion-list class=\"item-dropdown\">\n              <ion-item \n                *ngFor=\"let item of getFilteredItems(); let i = index; trackBy: trackByItemId\" \n                button \n                class=\"item-item\"\n                [class.highlighted]=\"i === highlightedIndex\"\n                (click)=\"selectItem(item)\"\n                (mousedown)=\"$event.preventDefault()\"\n                (mouseenter)=\"highlightedIndex = i\">\n                <ion-label>\n                  <h3>{{ item.item_name }}</h3>\n                  <p *ngIf=\"item.item_desc\" class=\"item-desc\">{{ item.item_desc }}</p>\n                  <div class=\"item-prices-compact\">\n                    <span class=\"price-sale\">بيع: {{ item.pay_price }}</span>\n                    <span class=\"price-purchase\">شراء: {{ item.perch_price }}</span>\n                    <!-- <span class=\"stock-qty\">مخزون: {{ item.quantity }}</span> -->\n                  </div>\n                </ion-label>\n              </ion-item>\n            </ion-list>\n          </div>\n\n\n          <!-- No Results Dropdown -->\n          <div class=\"dropdown-container\" \n               *ngIf=\"showDropdown && getFilteredItems().length === 0 && searchTerm.length > 0\"\n               [style.top]=\"dropdownPosition.top\"\n               [style.left]=\"dropdownPosition.left\"\n               [style.width]=\"dropdownPosition.width\">\n            <ion-list class=\"item-dropdown\">\n              <ion-item class=\"no-results\">\n                <ion-label>\n                  <p>لا توجد نتائج مطابقة</p>\n                </ion-label>\n              </ion-item>\n            </ion-list>\n          </div>\n        </ion-row>\n      </ion-grid>\n\n\n      <div class=\"stock-info-container\">\n        <div *ngIf=\"loadingQty && selectedItem.id\" class=\"stock-info-line\">\n          <ion-spinner name=\"crescent\" color=\"primary\"></ion-spinner>\n          <ion-text class=\"loading-text\">جاري التحميل...</ion-text>\n        </div>\n\n        <div class=\"stock-display-container\">\n          <div *ngIf=\"items.length > 0 && selectedItem.id && !qtyError && !loadingQty\" class=\"stock-info-single-line\">\n            <!-- Stock quantity section -->\n            <div class=\"stock-section\">\n              <ion-text>المخزون: </ion-text>\n              <ion-text color=\"danger\" class=\"qty-value\">{{availQty}}</ion-text>\n              <ion-button fill=\"clear\" size=\"small\" class=\"refresh-btn\" (click)=\"refreshQuantity()\">\n                <ion-icon name=\"refresh-outline\" color=\"primary\"></ion-icon>\n              </ion-button>\n            </div>\n\n            <!-- Report button section -->\n            <div class=\"report-section\">\n              <ion-label> <strong> | </strong></ion-label>\n              <ion-button fill=\"outline\" *ngIf=\"selectedItem && selectedItem.id\" fill=\"clear\" size=\"small\" (click)=\"viewSelectedItemReport()\" color=\"primary\">\n                <ion-icon name=\"analytics-outline\" slot=\"icon-only\"></ion-icon>\n                <ion-text color=\"dark\"> تقرير الصنف </ion-text>\n              </ion-button>\n            </div>\n\n            <!-- Price info section -->\n            <div class=\"price-info-section\">\n              <ion-label> <strong> | </strong></ion-label>\n              <ion-text color=\"dark\">شراء</ion-text>\n              <ion-text color=\"dark\">{{selectedItem.perch_price}}</ion-text>\n              <ion-label> <strong> | </strong></ion-label>\n              <ion-text color=\"dark\">بيع</ion-text>\n              <ion-text color=\"dark\">{{selectedItem.pay_price}}</ion-text>\n              <ion-label> <strong> | </strong></ion-label>\n            </div>\n\n            <!-- Details button section -->\n            <div class=\"action-button-section\">\n              <ion-button \n                fill=\"clear\" \n                size=\"small\" \n                (click)=\"viewSelectedItemDetails()\" \n                color=\"primary\"\n                style=\"cursor: pointer; z-index: 1000; position: relative;\">\n                <ion-icon name=\"information-circle-outline\" slot=\"start\"></ion-icon>\n                تفاصيل الصنف\n              </ion-button>\n            </div>\n          </div>\n        </div>\n        <div *ngIf=\"qtyError && selectedItem.id && !loadingQty\" class=\"stock-info-line error-line\">\n          <ion-text color=\"danger\" class=\"error-text\">{{qtyErrorMsg}}</ion-text>\n          <ion-button fill=\"clear\" size=\"small\" class=\"refresh-btn\" (click)=\"refreshQuantity()\">\n            <ion-icon name=\"refresh-outline\" color=\"danger\"></ion-icon>\n          </ion-button>\n        </div>\n      </div> \n    </ion-col>\n\n    <ion-col size=\"2\" *ngIf=\"showQuantityInput\" class=\"ion-margin-top\">\n      <ion-label class=\"ion-padding\"><strong>الكمية</strong></ion-label>\n      <ion-item class=\"custInput\" [ngClass]=\"{'qty-warning': showQtyWarning}\"> \n        <ion-input #qtyId (keyup.enter)=\"addToList()\" (ionFocus)=\"isFocused($event)\" [(ngModel)]=\"selectedItem.qty\"\n          (ionChange)=\"qtyChange($event)\"   select-all></ion-input>\n      </ion-item>\n    </ion-col>\n\n    <ion-col size=\"2\" *ngIf=\"showPriceInput\" class=\"ion-margin-top\">\n      <ion-label class=\"ion-padding\"><strong>سعر الوحدة</strong></ion-label>\n      <ion-item class=\"custInput\">\n        <ion-input (keyup.enter)=\"addToList()\" [(ngModel)]=\"selectedItem.pay_price\"\n          (ionChange)=\"onPayPriceChange($event)\"></ion-input>\n      </ion-item>\n    </ion-col>\n\n     <ion-col size=\"2\" *ngIf=\"showPerchPriceInput\" class=\"ion-margin-top\">\n      <ion-label class=\"ion-padding\"><strong>سعر الشراء</strong></ion-label>\n      <ion-item class=\"custInput\">\n        <ion-input (keyup.enter)=\"addToList()\" [(ngModel)]=\"selectedItem.perch_price\"\n          (ionChange)=\"onPerchPriceChange($event)\"></ion-input>\n      </ion-item>\n    </ion-col>\n\n    <ion-col size=\"2\" class=\"ion-margin-top\">\n      <ion-label class=\"ion-padding\"><strong>المجموع</strong></ion-label>\n      <ion-item class=\"custInput\">\n        <ion-input [readonly]=\"true\" [(ngModel)]=\"selectedItem.tot\"></ion-input>\n      </ion-item>\n    </ion-col>\n\n    <ion-col size=\"2\" class=\"ion-padding\" class=\"ion-margin-top ion-padding-top\">\n      <ion-button class=\"ion-margin-top\" expand=\"block\" routerDirection=\"root\" color=\"primary\" (click)=\"addToList()\">\n        <ion-label class=\"ion-text-center\">+</ion-label>\n      </ion-button>\n    </ion-col>\n  </ion-row>\n</ion-grid>";
+module.exports = "<ion-grid>\n  <ion-row>\n    <ion-col size=\"4\" *ngIf=\"loadingItems == true\">\n      <ion-item class=\"custInput\">\n        <ion-input [disabled]=\"true\"></ion-input>\n        <ion-spinner></ion-spinner>\n      </ion-item>\n    </ion-col>\n    <ion-col size=\"4\" *ngIf=\"loadingItems == false\">\n      <ion-grid class=\"ion-no-margin ion-no-padding\">\n        <ion-row>\n          <ion-col size=\"12\" class=\"ion-no-margin ion-no-padding\">\n            <div class=\"label-with-buttons-container\">\n              <div class=\"action-buttons-left\">\n                <!-- Refresh Button positioned in top left -->\n                <ion-button \n                  fill=\"clear\" \n                  size=\"small\"\n                  class=\"item-refresh-btn-left\"\n                  (click)=\"refresh()\"\n                  [disabled]=\"loadingItems\">\n                  <ion-icon \n                    name=\"refresh\" \n                    color=\"primary\"\n                    [class.spin]=\"loadingItems\">\n                  </ion-icon>\n                </ion-button>\n                \n                <!-- Add New Item Button -->\n                <ion-button size=\"small\" fill=\"clear\" class=\"add-item-btn-left\" (click)=\"presentModal2()\">\n                  <ion-icon name=\"add-circle-outline\" color=\"primary\" slot=\"icon-only\"></ion-icon>\n                </ion-button>\n                \n                <!-- Loading Spinner -->\n                <ion-spinner \n                  *ngIf=\"loadingItems\" \n                  name=\"dots\" \n                  class=\"item-loading-spinner-left\">\n                </ion-spinner>\n              </div>\n             \n            </div>\n          </ion-col>\n        </ion-row>\n        <ion-row>\n          <!-- Search Input Container - Match other field styles with proper positioning -->\n          <ion-item class=\"custInput item-selector-wrapper\">\n            <div class=\"input-container-wrapper\" #inputWrapper>\n              <ion-input\n                #searchInput\n                [(ngModel)]=\"searchTerm\"\n                (ngModelChange)=\"onModelChange($event)\"\n                [placeholder]=\"placeholder\"\n                [disabled]=\"loadingItems\"\n                [clearInput]=\"true\"\n                class=\"item-selector-input\"\n                (ionInput)=\"onSearchInput($event)\"\n                (ionClear)=\"onInputClear($event)\"\n                (ionFocus)=\"onInputFocus()\"\n                (ionBlur)=\"onInputBlur()\"\n                (click)=\"onInputFocus()\"\n                (keydown)=\"onKeyDown($event)\">\n              </ion-input>\n              \n            \n            </div>\n          </ion-item>\n\n          <!-- Dropdown List -->\n          <div class=\"dropdown-container\" \n               *ngIf=\"showDropdown && getFilteredItems().length > 0\"\n               [style.top]=\"dropdownPosition.top\"\n               [style.left]=\"dropdownPosition.left\"\n               [style.width]=\"dropdownPosition.width\">\n            \n            <ion-list class=\"item-dropdown\">\n              <ion-item \n                *ngFor=\"let item of getFilteredItems(); let i = index; trackBy: trackByItemId\" \n                button \n                class=\"item-item\"\n                [class.highlighted]=\"i === highlightedIndex\"\n                (click)=\"selectItem(item)\"\n                (mousedown)=\"$event.preventDefault()\"\n                (mouseenter)=\"highlightedIndex = i\">\n                <ion-label>\n                  <h3>{{ item.item_name }}</h3>\n                  <p *ngIf=\"item.item_desc\" class=\"item-desc\">{{ item.item_desc }}</p>\n                  <div class=\"item-prices-compact\">\n                    <span class=\"price-sale\">بيع: {{ item.pay_price }}</span>\n                    <span class=\"price-purchase\">شراء: {{ item.perch_price }}</span>\n                    <!-- <span class=\"stock-qty\">مخزون: {{ item.quantity }}</span> -->\n                  </div>\n                </ion-label>\n              </ion-item>\n            </ion-list>\n          </div>\n\n\n          <!-- No Results Dropdown -->\n          <div class=\"dropdown-container\" \n               *ngIf=\"showDropdown && getFilteredItems().length === 0 && searchTerm.length > 0\"\n               [style.top]=\"dropdownPosition.top\"\n               [style.left]=\"dropdownPosition.left\"\n               [style.width]=\"dropdownPosition.width\">\n            <ion-list class=\"item-dropdown\">\n              <ion-item class=\"no-results\">\n                <ion-label>\n                  <p>لا توجد نتائج مطابقة</p>\n                </ion-label>\n              </ion-item>\n            </ion-list>\n          </div>\n        </ion-row>\n      </ion-grid>\n\n\n      <div class=\"stock-info-container\">\n        <div *ngIf=\"loadingQty && selectedItem.id\" class=\"stock-info-line\">\n          <ion-spinner name=\"crescent\" color=\"primary\"></ion-spinner>\n          <ion-text class=\"loading-text\">جاري التحميل...</ion-text>\n        </div>\n\n        <div class=\"stock-display-container\">\n          <div *ngIf=\"items.length > 0 && selectedItem.id && !qtyError && !loadingQty\" class=\"stock-info-single-line\">\n            <!-- Stock quantity section -->\n            <div class=\"stock-section\">\n              <ion-text>المخزون: </ion-text>\n              <ion-text color=\"danger\" class=\"qty-value\">{{availQty}}</ion-text>\n              <ion-button fill=\"clear\" size=\"small\" class=\"refresh-btn\" (click)=\"refreshQuantity()\">\n                <ion-icon name=\"refresh-outline\" color=\"primary\"></ion-icon>\n              </ion-button>\n            </div>\n\n            <!-- Report button section -->\n            <div class=\"report-section\">\n              <ion-label> <strong> | </strong></ion-label>\n              <ion-button fill=\"outline\" *ngIf=\"selectedItem && selectedItem.id\" fill=\"clear\" size=\"small\" (click)=\"viewSelectedItemReport()\" color=\"primary\">\n                <ion-icon name=\"analytics-outline\" slot=\"icon-only\"></ion-icon>\n                <ion-text color=\"dark\"> تقرير الصنف </ion-text>\n              </ion-button>\n            </div>\n\n            <!-- Price info section -->\n            <div class=\"price-info-section\">\n              <ion-label> <strong> | </strong></ion-label>\n              <ion-text color=\"dark\">شراء</ion-text>\n              <ion-text color=\"dark\">{{selectedItem.perch_price}}</ion-text>\n              <ion-label> <strong> | </strong></ion-label>\n              <ion-text color=\"dark\">بيع</ion-text>\n              <ion-text color=\"dark\">{{selectedItem.pay_price}}</ion-text>\n              <ion-label> <strong> | </strong></ion-label>\n            </div>\n\n            <!-- Details button section -->\n            <div class=\"action-button-section\">\n              <ion-button \n                fill=\"clear\" \n                size=\"small\" \n                (click)=\"viewSelectedItemDetails()\" \n                color=\"primary\"\n                style=\"cursor: pointer; z-index: 1000; position: relative;\">\n                <ion-icon name=\"information-circle-outline\" slot=\"start\"></ion-icon>\n                تفاصيل الصنف\n              </ion-button>\n            </div>\n          </div>\n        </div>\n        <div *ngIf=\"qtyError && selectedItem.id && !loadingQty\" class=\"stock-info-line error-line\">\n          <ion-text color=\"danger\" class=\"error-text\">{{qtyErrorMsg}}</ion-text>\n          <ion-button fill=\"clear\" size=\"small\" class=\"refresh-btn\" (click)=\"refreshQuantity()\">\n            <ion-icon name=\"refresh-outline\" color=\"danger\"></ion-icon>\n          </ion-button>\n        </div>\n      </div> \n    </ion-col>\n\n    <ion-col size=\"2\" *ngIf=\"showQuantityInput\" class=\"ion-margin-top\">\n      <ion-label class=\"ion-padding\"><strong>الكمية</strong></ion-label>\n      <ion-item class=\"custInput\" [ngClass]=\"{'qty-warning': showQtyWarning}\"> \n        <ion-input #qtyId (keyup.enter)=\"addToList()\" (ionFocus)=\"isFocused($event)\" [(ngModel)]=\"selectedItem.qty\"\n          (ionChange)=\"qtyChange($event)\"   select-all></ion-input>\n      </ion-item>\n    </ion-col>\n\n    <ion-col size=\"2\" *ngIf=\"showPriceInput\" class=\"ion-margin-top\">\n      <ion-label class=\"ion-padding\"><strong>سعر الوحدة</strong></ion-label>\n      <ion-item class=\"custInput\">\n        <ion-input (keyup.enter)=\"addToList()\" [(ngModel)]=\"selectedItem.pay_price\"\n          (ionChange)=\"onPayPriceChange($event)\"></ion-input>\n      </ion-item>\n    </ion-col>\n\n     <ion-col size=\"2\" *ngIf=\"showPerchPriceInput\" class=\"ion-margin-top\">\n      <ion-label class=\"ion-padding\"><strong>سعر الشراء</strong></ion-label>\n      <ion-item class=\"custInput\">\n        <ion-input (keyup.enter)=\"addToList()\" [(ngModel)]=\"selectedItem.perch_price\"\n          (ionChange)=\"onPerchPriceChange($event)\"></ion-input>\n      </ion-item>\n    </ion-col>\n\n    <ion-col size=\"2\" class=\"ion-margin-top\">\n      <ion-label class=\"ion-padding\"><strong>المجموع</strong></ion-label>\n      <ion-item class=\"custInput\">\n        <ion-input [readonly]=\"true\" [(ngModel)]=\"selectedItem.tot\"></ion-input>\n      </ion-item>\n    </ion-col>\n\n    <ion-col size=\"2\" class=\"ion-padding\" class=\"ion-margin-top ion-padding-top\">\n      <ion-button class=\"ion-margin-top\" expand=\"block\" routerDirection=\"root\" color=\"primary\" (click)=\"addToList()\">\n        <ion-label class=\"ion-text-center\">+</ion-label>\n      </ion-button>\n    </ion-col>\n  </ion-row>\n</ion-grid>";
 
 /***/ }),
 

@@ -1,0 +1,399 @@
+// Copy exact styles from original item-selector
+.custInput {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 5px 0;
+}
+
+.red {
+  --background: #ffebee;
+  --color: #c62828;
+}
+
+.darko {
+  --background: #f5f5f5;
+  --color: #333;
+}
+
+.cust_Toast {
+  --border-radius: 10px;
+  --box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+// Layout for label with buttons in top left - MATCH ORIGINAL item-selector
+.label-with-buttons-container {
+  direction: rtl;
+  display: flex;
+  justify-content: space-between;
+  align-items: center; 
+  position: relative;
+  text-align: right;
+  
+  .action-buttons-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    order: 1;
+  }
+}
+
+// Left positioned refresh button - MATCH ORIGINAL item-selector
+.item-refresh-btn-left {
+  --color: var(--ion-color-success);
+  --padding-start: 3px;
+  --padding-end: 3px;
+  height: 32px;
+  width: 32px;
+  
+  ion-icon {
+    font-size: 16px;
+    transition: transform 0.3s ease;
+
+    &.spin {
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  &:hover {
+    --color: var(--ion-color-success-shade);
+    --background: rgba(var(--ion-color-success-rgb), 0.1);
+  }
+
+  &[disabled] {
+    --color: var(--ion-color-medium);
+    opacity: 0.5;
+  }
+}
+
+// Left positioned loading spinner - MATCH ORIGINAL item-selector
+.item-loading-spinner-left {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+// Item Selector Enhanced Styles - Match other input fields
+.item-selector-wrapper {
+  width: 100%;
+  margin: 5px 0; // Same as other custInput fields
+  // Remove relative positioning since we're using fixed dropdown positioning
+  z-index: 1000; // Ensure wrapper has high z-index
+  
+  // Input container wrapper for proper dropdown positioning
+  .input-container-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  
+  // Make it look exactly like other input fields (quantity, pay_price, etc)
+  .item-selector-input {
+    --background: transparent;
+    --color: var(--ion-color-dark);
+    --placeholder-color: var(--ion-color-medium);
+    width: 100%;
+    direction: rtl;
+    text-align: right;
+    
+    // Fix text overflow for long item names - minimal padding to maximize text space
+    --padding-start: 12px; // Minimal padding for text space
+    --padding-end: 45px; // Space for clear button only on right
+    
+    // Enhanced text overflow handling for long item names - target all possible input elements
+    input,
+    .native-input,
+    .input-wrapper input {
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      max-width: calc(100% - 80px) !important; // Account for buttons
+      display: block !important;
+    }
+
+    &[disabled] {
+      --background: var(--ion-color-light);
+      --color: var(--ion-color-medium);
+      cursor: not-allowed;
+    }
+  }
+
+}
+
+// Dropdown container styles - PORTAL/FIXED POSITIONING VERSION
+.dropdown-container {
+  position: fixed !important; // Use fixed positioning to escape parent stacking contexts
+  z-index: 2147483647 !important; // Maximum possible z-index
+  background: white !important;
+  border: 1px solid var(--ion-color-light) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  min-width: 250px !important;
+  // Force the highest stacking context possible
+  transform: translateZ(0) !important;
+  will-change: transform !important;
+  // Ensure it's not affected by parent transforms
+  backface-visibility: hidden !important;
+
+  .dropdown-header {
+    background: var(--ion-color-light-tint);
+    border-bottom: 1px solid var(--ion-color-light-shade);
+    padding: 8px;
+  }
+
+  .item-dropdown {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+
+    .item-item {
+      --background: transparent;
+      --border-color: transparent;
+      --color: var(--ion-color-dark);
+      --padding-start: 12px;
+      --padding-end: 12px;
+      --min-height: 60px;
+      direction: rtl;
+      text-align: right;
+
+      &:hover {
+        --background: var(--ion-color-light);
+      }
+
+      &:active {
+        --background: rgba(var(--ion-color-primary-rgb), 0.1);
+      }
+
+      &.highlighted {
+        --background: rgba(var(--ion-color-primary-rgb), 0.1);
+        border-left: 3px solid var(--ion-color-primary);
+      }
+
+      ion-label {
+        margin: 0;
+
+        h3 {
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--ion-color-dark);
+          margin: 0 0 4px 0;
+        }
+
+        .item-desc {
+          font-size: 12px;
+          color: var(--ion-color-medium);
+          margin: 2px 0;
+        }
+
+        .item-prices-compact {
+          display: flex;
+          gap: 12px;
+          font-size: 11px;
+          margin-top: 4px;
+
+          .price-sale {
+            color: var(--ion-color-success);
+            font-weight: 600;
+          }
+
+          .price-purchase {
+            color: var(--ion-color-danger);
+            font-weight: 600;
+          }
+
+          .stock-qty {
+            color: var(--ion-color-dark);
+            font-weight: 500;
+          }
+        }
+      }
+    }
+
+    .no-results {
+      --color: var(--ion-color-medium);
+      --padding-start: 12px;
+      --padding-end: 12px;
+      text-align: center;
+      font-style: italic;
+
+      ion-label p {
+        margin: 0;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// Spin animation for refresh button
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive adjustments for mobile - MATCH ORIGINAL item-selector
+@media (max-width: 768px) {
+  .label-with-buttons-container {
+    .action-buttons-left {
+      gap: 2px;
+    }
+    
+    .item-refresh-btn-left {
+      height: 28px;
+      width: 28px;
+      --padding-start: 2px;
+      --padding-end: 2px;
+      
+      ion-icon {
+        font-size: 14px;
+      }
+    }
+
+    .item-loading-spinner-left {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .item-selector-wrapper {
+    .item-selector-input {
+      font-size: 13px;
+      --padding-start: 10px; // Minimal padding to maximize text space
+      --padding-end: 40px; // Space for clear button only
+      
+      // Enhanced mobile text overflow
+      input,
+      .native-input,
+      .input-wrapper input {
+        max-width: calc(100% - 45px) !important;
+        font-size: 13px !important;
+      }
+    }
+  }
+
+  .dropdown-container {
+    max-height: 200px;
+
+    .item-dropdown .item-item {
+      --min-height: 50px;
+
+      ion-label {
+        h3 {
+          font-size: 13px;
+        }
+
+        .item-desc {
+          font-size: 11px;
+        }
+
+        .item-prices-compact {
+          font-size: 10px;
+        }
+      }
+    }
+  }
+}
+
+// Global fix for ion-input text overflow in item selector
+.item-selector-wrapper {
+  ion-input {
+    // Force text overflow for all nested input elements
+    .native-input,
+    input {
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      width: 100% !important;
+    }
+  }
+  
+  // Additional CSS to handle ion-input wrapper
+  .input-wrapper {
+    overflow: hidden !important;
+    
+    input {
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+  }
+}
+
+// GLOBAL DROPDOWN Z-INDEX FIX - Ensures dropdown appears above ALL content
+:host {
+  .dropdown-container {
+    position: fixed !important;
+    z-index: 2147483647 !important; // Maximum possible z-index
+    // Force hardware acceleration to create new stacking context
+    transform: translateZ(0) !important;
+    will-change: transform !important;
+    backface-visibility: hidden !important;
+  }
+}
+
+// Selected item info styling
+.selected-item-info {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  
+  .selected-info {
+    font-size: 13px;
+    color: #495057;
+  }
+}
+
+// Dark theme support
+@media (prefers-color-scheme: dark) {
+  .item-selector-wrapper {
+    .custInput {
+      --background: #1e1e1e;
+      --color: white;
+      border-color: #404040;
+    }
+    
+    .dropdown-container {
+      background: #1e1e1e;
+      border-color: #404040;
+      
+      .item-dropdown {
+        .item-item {
+          --background: #1e1e1e;
+          --color: white;
+          
+          &:hover {
+            --background: #2a2a2a;
+          }
+          
+          &.highlighted {
+            --background: #1565c0;
+            --color: white;
+          }
+          
+          ion-label h3 {
+            color: white;
+          }
+        }
+        
+        .no-results {
+          --background: #1e1e1e;
+          --color: #aaa;
+        }
+      }
+    }
+    
+    .selected-item-info {
+      background: #2a2a2a;
+      border-color: #404040;
+      
+      .selected-info {
+        color: #ccc;
+      }
+    }
+  }
+}

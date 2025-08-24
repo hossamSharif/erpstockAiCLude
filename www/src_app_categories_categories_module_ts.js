@@ -124,6 +124,7 @@ let CategoriesPage = class CategoriesPage {
         this.selectedEndpointCategoryId = null;
         this.currentEndpoint = '';
         this.selectedCategoryName = '';
+        this.isInitializingEndpoint = false;
     }
     ngOnInit() {
         this.loadCategories();
@@ -301,6 +302,7 @@ let CategoriesPage = class CategoriesPage {
     // Endpoint switching management methods
     loadEndpointSettings() {
         return (0,tslib__WEBPACK_IMPORTED_MODULE_4__.__awaiter)(this, void 0, void 0, function* () {
+            this.isInitializingEndpoint = true;
             yield this.storage.create();
             const savedCategoryId = yield this.storage.get('SELECTED_CATEGORY_ID');
             const savedEndpoint = yield this.storage.get('SELECTED_ENDPOINT');
@@ -323,11 +325,19 @@ let CategoriesPage = class CategoriesPage {
                 this.currentEndpoint = '';
                 this.selectedCategoryName = '';
             }
+            // Allow some time for the UI to settle before allowing user interactions
+            setTimeout(() => {
+                this.isInitializingEndpoint = false;
+            }, 500);
         });
     }
     setEndpointCategory(event) {
         return (0,tslib__WEBPACK_IMPORTED_MODULE_4__.__awaiter)(this, void 0, void 0, function* () {
             const selectedId = event.detail.value;
+            // Don't show dialog during initialization
+            if (this.isInitializingEndpoint) {
+                return;
+            }
             if (!selectedId) {
                 yield this.clearEndpointSettings();
                 return;
@@ -376,7 +386,10 @@ let CategoriesPage = class CategoriesPage {
             this.selectedEndpointCategoryId = null;
             this.currentEndpoint = '';
             this.selectedCategoryName = '';
-            this.presentToast('تم إلغاء نقطة الاتصال المحددة', 'warning');
+            // Only show toast if not during initialization
+            if (!this.isInitializingEndpoint) {
+                this.presentToast('تم إلغاء نقطة الاتصال المحددة', 'warning');
+            }
         });
     }
     getSelectedEndpointName() {

@@ -1,0 +1,82 @@
+<div class="progress-stepper" *ngIf="steps.length > 0">
+  <!-- Progress Bar -->
+  <div class="progress-bar-container">
+    <div class="progress-bar-background"></div>
+    <div 
+      class="progress-bar-fill" 
+      [style.width.%]="getProgressPercentage()">
+    </div>
+    <div class="progress-percentage">{{ getProgressPercentage() }}%</div>
+  </div>
+
+  <!-- Steps Container -->
+  <div class="steps-container">
+    <div 
+      *ngFor="let step of steps; let i = index"
+      class="step-wrapper"
+      [class.step-hidden]="!isStepVisible(step)">
+      
+      <!-- Step -->
+      <div class="step-item" [ngClass]="getStepClass(step)">
+        <div class="step-circle">
+          <ion-icon 
+            [name]="step.icon" 
+            *ngIf="step.status !== 'completed'; else completedIcon">
+          </ion-icon>
+          <ng-template #completedIcon>
+            <ion-icon name="checkmark-outline"></ion-icon>
+          </ng-template>
+          
+          <!-- Optional indicator -->
+          <div class="optional-indicator" *ngIf="step.optional">
+            <span>اختياري</span>
+          </div>
+        </div>
+        
+        <div class="step-content">
+          <h4 class="step-title">{{ step.title }}</h4>
+          <p class="step-description">{{ step.description }}</p>
+          
+          <!-- Status indicators -->
+          <div class="step-status">
+            <span *ngIf="step.status === 'active'" class="status-active">
+              <ion-icon name="play-outline"></ion-icon>
+              جاري التنفيذ
+            </span>
+            <span *ngIf="step.status === 'completed'" class="status-completed">
+              <ion-icon name="checkmark-circle-outline"></ion-icon>
+              مكتمل
+            </span>
+            <span *ngIf="step.status === 'pending'" class="status-pending">
+              <ion-icon name="time-outline"></ion-icon>
+              في الانتظار
+            </span>
+            <span *ngIf="step.status === 'skipped'" class="status-skipped">
+              <ion-icon name="remove-circle-outline"></ion-icon>
+              تم التخطي
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connector line -->
+      <div 
+        *ngIf="i < steps.length - 1 && isStepVisible(step)" 
+        class="step-connector"
+        [ngClass]="getConnectorClass(i)">
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="progress-summary">
+    <div class="summary-item">
+      <ion-icon name="document-outline" color="primary"></ion-icon>
+      <span>{{ invoiceType === 'sales' ? 'فاتورة مبيعات' : 'فاتورة مشتريات' }}</span>
+    </div>
+    <div class="summary-item">
+      <ion-icon name="stats-chart-outline" color="success"></ion-icon>
+      <span>{{ getProgressPercentage() }}% مكتمل</span>
+    </div>
+  </div>
+</div>

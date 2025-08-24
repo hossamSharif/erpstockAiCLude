@@ -9,6 +9,8 @@ import { PrintModalPage } from '../print-modal/print-modal.page';
 import { ActionPopoverComponent } from '../component/action-popover/action-popover.component';
 import { InvoicePriceConfigDialogComponent } from '../component/invoice-price-config-dialog/invoice-price-config-dialog.component';
 import { CategoriesPage } from '../categories/categories.page';
+import { SortingService, SortConfig } from '../services/sorting.service';
+import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
  
 @Component({
   selector: 'app-purchase-record',
@@ -17,15 +19,12 @@ import { CategoriesPage } from '../categories/categories.page';
 })
 export class PurchaseRecordPage implements OnInit {
   payArray:Array<any> =[]
-  filteredPayArray:Array<any> =[] // Filtered invoices based on selected category
+  sortedPayArray:Array<any> =[] // Sorted invoices for display
+  currentSort: SortConfig | null = null
   printArr:Array<any> =[]
   sub_account:Array<any> =[]
   sub_accountLocalPurch:Array<any> =[]
   selectedAccount : {id:any ,ac_id:any,sub_name:any,sub_type:any,sub_code:any,sub_balance:any,store_id:any ,cat_id:any,cat_name:any,currentCustumerStatus:any};
-  // Category properties
-  categories: Array<any> = [];
-  selectedCategoryId: any = null;
-  isCategoryVisibilityEnabled: boolean = true;
   sub_accountPurch:Array<any> =[]
   store_info : {id:any , location :any ,store_name:any , store_ref:any }
   user_info : {id:any ,user_name:any ,store_id :any,full_name:any,password:any}
@@ -58,7 +57,7 @@ export class PurchaseRecordPage implements OnInit {
   color :any ='dark'
   sums : {pay:any ,change:any,discount:any,tot:any,totAfterDiscout:any}
   year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
-  constructor(private popoverController: PopoverController ,private platform :Platform ,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) { 
+  constructor(private popoverController: PopoverController ,private platform :Platform ,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private exportService: ExportService) { 
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
     this.sums = {pay:0 ,change:0,discount:0,tot:0,totAfterDiscout:0}
     this.checkPlatform()
@@ -81,7 +80,8 @@ export class PurchaseRecordPage implements OnInit {
   
   ngOnInit() {
     this.payArray =[]
-    this.filteredPayArray =[]
+    this.sortedPayArray =[]
+    this.currentSort = null
     // Check category visibility setting
    // this.isCategoryVisibilityEnabled = CategoriesPage.isCategoryVisibilityEnabled();
     //console.log('ngOnInit')
@@ -92,6 +92,7 @@ export class PurchaseRecordPage implements OnInit {
 
   ionViewDidEnter(){
     this.payArray =[]
+    this.sortedPayArray =[]
     this.purchLocal =[]
     this.purchOffline =[]
     this.purchase =[]
@@ -263,6 +264,7 @@ private navigateToInvoicePage(itemList: any[], type: 'sales' | 'purchase') {
     clear(){
       this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
       this.payArray = []
+        this.sortedPayArray = []
       this.purchLocal = []
       this.showEmpty = false
       this.loading = false
@@ -338,8 +340,6 @@ private navigateToInvoicePage(itemList: any[], type: 'sales' | 'purchase') {
         //console.log(response)
         //console.log(this.store_info) 
         this.getSalesAccount()
-        // Load categories for purchase records
-        this.loadCategories();
       // this.search() 
      }
    });
@@ -351,98 +351,6 @@ private navigateToInvoicePage(itemList: any[], type: 'sales' | 'purchase') {
   });
  }
 
-  // Category management methods
-  loadCategories() {
-    if (this.store_info && this.store_info.id) {
-      this.api.getCategories(this.store_info.id).subscribe(
-        (data: any) => {
-          if (data && data.data) {
-            this.categories = data.data;
-            console.log('Categories loaded in purchase-record:', this.categories);
-            
-            // Set initial category from localStorage or first category
-            const savedCategoryId = localStorage.getItem('SELECTED_CATEGORY_ID');
-            if (savedCategoryId && this.categories.some(cat => cat.id == savedCategoryId)) {
-              this.selectedCategoryId = savedCategoryId;
-            } else if (this.categories.length > 0) {
-              this.selectedCategoryId = this.categories[0].id;
-              localStorage.setItem('SELECTED_CATEGORY_ID', this.categories[0].id);
-            }
-          }
-        },
-        (error: any) => {
-          console.error('Error loading categories in purchase-record:', error);
-        }
-      );
-    }
-  }
-
-  onCategoryChange(event: any) {
-    this.selectedCategoryId = event.detail.value;
-    
-    // Save selected category
-    if (this.selectedCategoryId) {
-      localStorage.setItem('SELECTED_CATEGORY_ID', this.selectedCategoryId);
-    }
-    
-    console.log('Purchase record category changed to:', this.selectedCategoryId);
-    
-    // Apply category filtering when category selection changes
-    this.filterInvoicesByCategory();
-  }
-
-// Filter invoices by selected category
-filterInvoicesByCategory() {
-  console.log('🔍 FILTERING PURCHASE INVOICES BY CATEGORY');
-  console.log('Selected category ID:', this.selectedCategoryId);
-  console.log('Total invoices to filter:', this.payArray.length);
-
-  if (!this.selectedCategoryId || this.selectedCategoryId === 'all') {
-    // Show all invoices if no category selected or "all" is selected
-    this.filteredPayArray = [...this.payArray];
-    console.log('No category filter applied, showing all invoices:', this.filteredPayArray.length);
-    return;
-  }
-
-  // Filter invoices that match the selected category
-  this.filteredPayArray = this.payArray.filter(invoice => {
-    // Check multiple possible category property names
-    const possibleCategoryIds = [
-      invoice.category_id,
-      invoice.categoryId,
-      invoice.category ? invoice.category.id : null,
-      invoice.cat_id
-    ];
-
-    let invoiceCategoryId = null;
-
-    // Find the first valid category ID from possible properties
-    for (const catId of possibleCategoryIds) {
-      if (catId !== null && catId !== undefined && catId !== '') {
-        invoiceCategoryId = catId;
-        break;
-      }
-    }
-
-    if (invoiceCategoryId === null || invoiceCategoryId === undefined) {
-      console.log(`Invoice "${invoice.pay_ref}" - NO VALID category_id found`);
-      return false;
-    }
-
-    // Compare with type coercion (== instead of ===) to handle string/number differences
-    const categoryMatches = (invoiceCategoryId == this.selectedCategoryId);
-
-    console.log(`Invoice "${invoice.pay_ref}":`, {
-      invoiceCategoryId: invoiceCategoryId,
-      selectedCategoryId: this.selectedCategoryId,
-      matches: categoryMatches
-    });
-
-    return categoryMatches;
-  });
-
-  console.log('Purchase invoices after category filter:', this.filteredPayArray.length);
-}
 
  prepareOffline(){ 
  this.storage.get('sub_accountLocalPurch').then((response) => {
@@ -631,6 +539,7 @@ getSalesAccount(){
     }
     //console.log( this.selectedAccount);
     this.payArray = []
+    this.sortedPayArray = []
     this.purchLocal = []
     this.showEmpty = false
     this.loading = false
@@ -730,9 +639,19 @@ getSalesAccount(){
           const element = this.purchLocal[i];
           this.payArray.push(element.payInvo)
         }
+       }
+
+        //custName - apply account filter if selected
+        if( this.selectedAccount.sub_name != ""){
+          if(this.payArray.length>0){
+            this.payArray= this.payArray.filter(x=>+x.cust_id == +this.selectedAccount.id)
+          }
+        }
+
         this.getTotal()
-        // Apply category filtering after loading purchase data from localStorage in getTopSales
-        this.filterInvoicesByCategory();
+        // Apply category filtering after loading all purchase data in getTopSales  
+        this.applySorting();
+        
         if(this.payArray.length==0){
           this.showEmpty = true
         }else{
@@ -740,17 +659,7 @@ getSalesAccount(){
         }
         this.loading=false
         //console.log(this.payArray)
-       }
-        //custName
-     if( this.selectedAccount.sub_name != ""){
-      if(this.payArray.length>0){
-      this.payArray= this.payArray.filter(x=>+x.cust_id == +this.selectedAccount.id)
         
-      }
-    }
-       this.getTotal()
-       // Apply category filtering after account filter in getTopSales  
-       this.filterInvoicesByCategory();
        // this.store_tot = this.items.reduce( (acc, obj)=> { return acc + +(obj.perch_price * obj.quantity ); }, 0);
      }, (err) => {
      //console.log(err);
@@ -798,6 +707,8 @@ getSalesAccount(){
         }
       }
       this.getTotal()
+      // Apply category filtering after loading purchase data from localStorage in getTopSalesOffline
+      this.applySorting();
 
       if(this.payArray.length==0){
         this.showEmpty = true
@@ -815,7 +726,7 @@ getSalesAccount(){
     }
     this.getTotal()
     // Apply category filtering after loading data in getTopSalesOffline
-    this.filterInvoicesByCategory();
+    this.applySorting();
    });
   }
 
@@ -840,7 +751,17 @@ getSalesAccount(){
         const element = this.purchLocal[i];
         this.payArray.push(element.payInvo)
       }
+     } 
+      //custName - apply account filter if selected
+      if( this.selectedAccount.sub_name != ""){
+        if(this.payArray.length>0){
+        this.payArray= this.payArray.filter(x=>+x.cust_id == +this.selectedAccount.id)
+        }
+      }
+
       this.getTotal()
+      // Apply category filtering after loading all purchase data in getSalesByDate
+      this.applySorting();
 
       if(this.payArray.length==0){
         this.showEmpty= true
@@ -850,17 +771,6 @@ getSalesAccount(){
       this.loading=false
       //console.log(this.payArray)
 
-     } 
-      //custName
-      if( this.selectedAccount.sub_name != ""){
-        if(this.payArray.length>0){
-        this.payArray= this.payArray.filter(x=>+x.cust_id == +this.selectedAccount.id)
-          
-        }
-      }
-     this.getTotal()
-     // Apply category filtering after loading data in getSalesByDate
-     this.filterInvoicesByCategory();
        // this.store_tot = this.items.reduce( (acc, obj)=> { return acc + +(obj.perch_price * obj.quantity ); }, 0);
      }, (err) => {
      //console.log(err);
@@ -907,6 +817,8 @@ getSalesAccount(){
           } 
         }
         this.getTotal()
+        // Apply category filtering after loading purchase data from localStorage in getSalesByDateOffline
+        this.applySorting();
        
         if(this.payArray.length==0){
           this.showEmpty = true
@@ -932,7 +844,7 @@ getSalesAccount(){
     }
       this.getTotal()
       // Apply category filtering after loading data in getSalesByDateOffline
-      this.filterInvoicesByCategory();
+      this.applySorting();
      
     });
 
@@ -963,25 +875,24 @@ getSalesAccount(){
         this.payArray.push(element.payInvo)
       }
       //console.log(this.payArray)
+     }
+      //custName - apply account filter if selected
+      if( this.selectedAccount.sub_name != ""){
+        if(this.payArray.length>0){
+        this.payArray= this.payArray.filter(x=>+x.cust_id == +this.selectedAccount.id)
+        }
+      }
     
       this.getTotal()
+      // Apply category filtering after loading all purchase data in getSales2Date
+      this.applySorting();
       if(this.payArray.length==0){
         this.showEmpty = true
       }else{
         this.showEmpty = false
       }
       this.loading=false
-     }
-      //custName
-      if( this.selectedAccount.sub_name != ""){
-        if(this.payArray.length>0){
-        this.payArray= this.payArray.filter(x=>+x.cust_id == +this.selectedAccount.id)
-          
-        }
-      }
-     this.getTotal()
-     // Apply category filtering after loading data in getSales2Date
-     this.filterInvoicesByCategory();
+      
      }, (err) => {
      //console.log(err);
    },()=>{
@@ -1026,6 +937,8 @@ getSalesAccount(){
         } 
        
         this.getTotal()
+        // Apply category filtering after loading purchase data from localStorage in getSales2DateOffline
+        this.applySorting();
         if(this.payArray.length==0){
           this.showEmpty = true
         }else{
@@ -1043,13 +956,14 @@ getSalesAccount(){
     }
       this.getTotal()
       // Apply category filtering after loading data in getSales2DateOffline
-      this.filterInvoicesByCategory();
+      this.applySorting();
     });  
   }
   
    radioChange(ev){
     //console.log(ev.target.value) 
     this.payArray = []
+    this.sortedPayArray = []
     this.purchLocal = []
     this.showEmpty = false
     this.loading = false
@@ -1198,6 +1112,7 @@ onAccountSelected(account: any) {
     
     // Clear existing data and reload records for selected account
     this.payArray = [];
+    this.sortedPayArray = [];
     this.purchLocal = [];
     this.showEmpty = false;
     this.loading = false;
@@ -1213,6 +1128,119 @@ onAccountBalanceLoaded(balance: any) {
     this.selectedAccount.sub_balance = balance.current_balance;
     console.log('Account balance loaded in purchase-record:', balance);
   }
+}
+
+// Format balance display with number separators
+formatBalance(balance: number): string {
+  if (!balance && balance !== 0) return '0.00';
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Math.abs(balance));
+}
+
+// Apply sorting to data
+applySorting() {
+  if (this.currentSort) {
+    this.sortedPayArray = this.sortingService.sortData(
+      this.payArray, 
+      this.currentSort.column, 
+      this.currentSort.direction
+    );
+  } else {
+    this.sortedPayArray = [...this.payArray];
+  }
+}
+
+// Handle column sort
+sortBy(column: string) {
+  const direction = this.sortingService.getNextSortDirection(column, this.currentSort);
+  this.currentSort = { column, direction };
+  this.applySorting();
+}
+
+// Get sort icon for column
+getSortIcon(column: string): string {
+  return this.sortingService.getSortIcon(column, this.currentSort);
+}
+
+// Export functionality
+async exportToPDF(): Promise<void> {
+  if (!this.sortedPayArray || this.sortedPayArray.length === 0) {
+    await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+    return;
+  }
+
+  const config: ExportConfig = {
+    title: this.exportService.generateDynamicTitle('purchase-record'),
+    subtitle: this.generateSubtitle(),
+    fileName: `purchase-record-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+    data: this.sortedPayArray,
+    columns: this.getExportColumns(),
+    userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف',
+    pageType: 'purchase-record',
+    currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+  };
+
+  await this.exportService.exportToPDF(config);
+}
+
+async exportToExcel(): Promise<void> {
+  if (!this.sortedPayArray || this.sortedPayArray.length === 0) {
+    await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+    return;
+  }
+
+  const config: ExportConfig = {
+    title: this.exportService.generateDynamicTitle('purchase-record'),
+    subtitle: this.generateSubtitle(),
+    fileName: `purchase-record-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+    data: this.sortedPayArray,
+    columns: this.getExportColumns(),
+    userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف',
+    pageType: 'purchase-record',
+    currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+  };
+
+  await this.exportService.exportToExcel(config);
+}
+
+private generateSubtitle(): string {
+  const filters = {
+    selectedAccount: this.selectedAccount.sub_name ? this.selectedAccount : null,
+    dateFilter: this.getDateFilter(),
+    searchTerm: null
+  };
+
+  return this.exportService.generateDynamicSubtitle('purchase-record', filters);
+}
+
+private getDateFilter(): any {
+  if (this.radioVal === 1 && this.startingDate) {
+    return {
+      type: 'single',
+      date: this.startingDate
+    };
+  } else if (this.radioVal === 2 && this.startingDate && this.endDate) {
+    return {
+      type: 'range',
+      startDate: this.startingDate,
+      endDate: this.endDate
+    };
+  }
+  return null;
+}
+
+private getExportColumns(): ExportColumn[] {
+  return [
+    { key: 'sub_name', title: 'المورد', width: 20, type: 'text' },
+    { key: 'pay_date', title: 'التاريخ', width: 12, type: 'date' },
+    { key: 'tot_pr', title: 'إجمالي المبلغ', width: 15, type: 'currency' },
+    { key: 'discount', title: 'الخصم', width: 12, type: 'currency' },
+    { key: 'finalAmount', title: 'الإجمالي بعد الخصم', width: 18, type: 'currency' },
+    { key: 'payComment', title: 'تعليق', width: 20, type: 'text' },
+    { key: 'user_name', title: 'المستخدم', width: 15, type: 'text' }
+  ];
 }
 
 }

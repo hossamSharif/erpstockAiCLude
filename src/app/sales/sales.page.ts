@@ -14,6 +14,7 @@ import { element } from 'protractor';
 import { StockServiceService } from '../syncService/stock-service.service';
 import { AccountCommunicationService } from '../services/account-communication.service';
 import { PriceAdjustmentDialogComponent } from '../component/price-adjustment-dialog/price-adjustment-dialog.component';
+import { InvoiceJournalEntryComponent, InvoiceJournalData } from '../component/invoice-journal-entry/invoice-journal-entry.component';
 import * as momentObj from 'moment';
  
 @Component({
@@ -104,6 +105,11 @@ export class SalesPage implements OnInit, OnDestroy {
   defaultCategoryId: any = null;
   statusFromRoute: string = '';
   showBackButton: boolean = false;
+  
+  // New workflow properties
+  showJournalEntryModal: boolean = false;
+  invoiceJournalData: InvoiceJournalData = null;
+  customerBalance: any = null;
   constructor(private rout : Router ,private platform:Platform,private behavApi:StockServiceService ,private _location: Location, private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private accountCommunicationService: AccountCommunicationService) {
   this.selectedAccount = {id:"",ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",phone:"",address:"",currentCustumerStatus:0};
     this.route.queryParams.subscribe(params => {
@@ -123,6 +129,7 @@ export class SalesPage implements OnInit, OnDestroy {
         this.user_info = JSON.parse(params.user_info);
         this.store_info = JSON.parse(params.store_info);
         this.itemList = JSON.parse(params.itemList);
+        this.resortItemList()
         //console.log('lksjda',this.payInvo, this.store_info,  this.user_info ,this.itemList ,this.selectedAccount.sub_name )
         this.discountPerc = ((+this.payInvo.discount /+this.payInvo.tot_pr) * 100 ).toFixed(2)
        
@@ -395,6 +402,7 @@ export class SalesPage implements OnInit, OnDestroy {
             if(initial){
             this.deleteSalesInvoInit()
             }else{
+             
               this.presentModal(this.printArr , 'sales')
             } 
           }
@@ -1025,7 +1033,7 @@ saveIntial(){
   })
   this.storage.set('initialInvoices', this.initialInvoices).then((response) => {
     this.printArr = []
-    
+   
     this.printArr.push({
       'payInvo': this.payInvo,
       'itemList':this.itemList,
@@ -1043,6 +1051,10 @@ saveIntial(){
     });  
 }
 
+resortItemList(){
+  this.isItemListSorted = false
+  this.sortItemListAlphabetically()
+}
 
 saveInvoInit() {
   // Optimized: Save invoice and items together in single API call
@@ -1054,7 +1066,7 @@ saveInvoInit() {
   console.log('Sending invoice data to saveInvoInit:', invoiceWithItems);
   console.log('PayInvo object:', this.payInvo);
   console.log('ItemList array:', this.itemList);
-  
+   
   this.api.saveSalesInvoInitWithItems(invoiceWithItems).subscribe(
     (response: any) => {
       console.log('Initial invoice and items saved:', response);
@@ -1141,7 +1153,8 @@ deleteSalesitemListInit(){
     let d: Date = this.payInvo.pay_date
     this.payInvo.sub_name = this.selectedAccount.sub_name
     this.payInvo.pay_date = this.datePipe.transform(d, 'yyyy-MM-dd')
-    //console.log('save testing', this.payInvo, this.payInvo.sub_name)
+    
+    
     if (this.validate() == true) {
       // Check quantity validation for final invoices (radioVal2 = 1)
       if (this.radioVal2 == 1) {
@@ -1386,13 +1399,14 @@ deleteSalesitemListInit(){
   // Shared success handler for optimized save process
   private handleSaveSuccess() {
     this.presentToast('تم الحفظ بنجاح', 'success');
+    
 
      // Check if invoice was converted from initial to final and delete initial invoice
      if (this.status == 'toFinal') {
       console.log('case delete intial', this.status)
       this.deleteSalesInvoInit();
     }
-
+     
     this.printArr = []; 
     this.printArr.push({
       'payInvo': this.payInvo,
@@ -1405,19 +1419,13 @@ deleteSalesitemListInit(){
     });
     
     console.log('Print array prepared:', this.printArr);
-    this.presentAlertConfirm();
-    this.prepareInvo();
     
-   
-    
-    this.status = 'new';
-
-    
-    // Navigate back if coming from items page
-    if (this.showBackButton) {
-      setTimeout(() => {
-        this.goBack();
-      }, 1500); // Give time for toast to show
+    // For final invoices, show journal entry confirmation
+    if (this.radioVal2 == 1) {
+      this.presentJournalEntryConfirmation();
+    } else {
+      // For initial invoices, go directly to print confirmation
+      this.presentAlertConfirm();
     }
     
     this.loadingController.dismiss();
@@ -1429,7 +1437,7 @@ deleteSalesitemListInit(){
       //console.log(data)  
       this.presentToast('تم الحفظ بنجاح' , 'success') 
       this.printArr = []
-   
+      
       this.printArr.push({
         'payInvo': this.payInvo,
         'itemList':this.itemList,
@@ -1456,10 +1464,11 @@ deleteSalesitemListInit(){
 
  // Legacy method - kept for compatibility but no longer used in optimized flow
  saveitemListinit(){  
+  
   this.api.saveSalesitemListInit(this.itemList).subscribe(data=>{ 
    
     this.printArr = []
-   
+    
     this.printArr.push({
       'payInvo': this.payInvo,
       'itemList':this.itemList,
@@ -1494,6 +1503,93 @@ goBack() {
   this._location.back();
 }
 
+// New methods for journal entry workflow
+async presentJournalEntryConfirmation() {
+  const totalAfterDiscount = (+this.payInvo.tot_pr - +this.payInvo.discount);
+  const alert = await this.alertController.create({
+    cssClass: 'my-custom-class',
+    header: 'تأكيد استلام المبلغ',
+    mode: 'ios',
+    message: `هل تريد استلام مبلغ ${totalAfterDiscount.toFixed(2)} من العميل الآن؟`,
+    buttons: [
+      {
+        text: 'لا، انتقل للطباعة مباشرة',
+        role: 'cancel',
+        cssClass: 'secondary',
+        handler: () => {
+          this.presentAlertConfirm();
+          this.cleanupAfterInvoice();
+        }
+      },
+      {
+        text: 'نعم، استلام المبلغ',
+        handler: () => {
+          this.showJournalEntryDialog();
+        }
+      }
+    ]
+  });
+  await alert.present();
+}
+
+showJournalEntryDialog() {
+  
+  const totalAfterDiscount = (+this.payInvo.tot_pr - +this.payInvo.discount);
+  
+  this.invoiceJournalData = {
+    invoiceAmount: totalAfterDiscount,
+    totalAfterDiscount: totalAfterDiscount,
+    customerAccount: this.selectedAccount,
+    customerBalance: this.customerBalance,
+    invoiceRef: this.payInvo.pay_ref,
+    invoiceType: 'sales',
+    invoiceDate: this.payInvo.pay_date,
+    store_info: this.store_info,
+    user_info: this.user_info,
+    year: this.year
+  };
+  
+  this.showJournalEntryModal = true;
+}
+
+onJournalSaved(success: boolean) {
+  this.showJournalEntryModal = false;
+  
+  if (success) {
+    this.presentToast('تم حفظ قيد اليومية بنجاح', 'success');
+  }
+  
+  // Show print confirmation
+  setTimeout(() => {
+    this.presentAlertConfirm();
+  }, 500);
+  
+  this.cleanupAfterInvoice();
+}
+
+onJournalCancelled() {
+  this.showJournalEntryModal = false;
+  
+  // Show print confirmation
+  setTimeout(() => {
+    this.presentAlertConfirm();
+  }, 500);
+  
+  this.cleanupAfterInvoice();
+}
+
+private cleanupAfterInvoice() {
+  this.prepareInvo();
+  this.status = 'new';
+  
+  // Navigate back if coming from items page
+  if (this.showBackButton) {
+    setTimeout(() => {
+      this.goBack();
+    }, 1500);
+  }
+}
+
 // Handle account selection from AccountSelectorComponent
 onAccountSelected(account: any) {
   if (account) {
@@ -1523,6 +1619,8 @@ onAccountSelected(account: any) {
 // Handle account balance loaded
 onAccountBalanceLoaded(balance: any) {
   if (balance && this.selectedAccount) {
+    // Store the balance for invoice journal entry
+    this.customerBalance = balance;
     // Update the current customer status based on balance
     this.currentCustumerStatus = balance.status === 'debit' ? 0 : 1;
     console.log('Account balance loaded in sales:', balance);
@@ -1637,6 +1735,7 @@ onSearchTermChange() {
     }
   });
   
+  
   if (this.searchMatches.length > 0) {
     this.highlightedIndex = 0;
     this.scrollToHighlightedItem();
@@ -1695,6 +1794,15 @@ highlightText(text: string, searchTerm: string): string {
   
   const regex = new RegExp(`(${searchTerm.trim()})`, 'gi');
   return text.replace(regex, '<mark>$1</mark>');
+}
+
+// Format balance display with number separators
+formatBalance(balance: number): string {
+  if (!balance && balance !== 0) return '0.00';
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Math.abs(balance));
 }
 
 }

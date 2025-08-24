@@ -5,7 +5,9 @@ import { AlertController, IonInput, LoadingController, ModalController, ToastCon
 import { DatePipe } from '@angular/common';
 import { ItemModalPage } from '../item-modal/item-modal.page';
 import { Router } from '@angular/router';
-import { Storage } from '@ionic/storage'; 
+import { Storage } from '@ionic/storage';
+import { SortingService, SortConfig } from '../services/sorting.service';
+import { ExportService, ExportConfig, ExportColumn } from '../services/export.service'; 
 
 @Component({
   selector: 'app-sub-account2',
@@ -21,6 +23,8 @@ export class SubAccount2Page implements OnInit, OnDestroy {
   main_account: Array<any> = [];
   displayedAccounts: Array<any> = [];
   filteredAccounts: Array<any> = [];
+  sortedAccounts: Array<any> = [];
+  currentSort: SortConfig | null = null;
   
   // App info
   store_info: {id: any, location: any, store_name: any, store_ref: any};
@@ -57,7 +61,9 @@ export class SubAccount2Page implements OnInit, OnDestroy {
     private datePipe: DatePipe,
     private api: ServicesService,
     private toast: ToastController,
-    private router: Router
+    private router: Router,
+    private sortingService: SortingService,
+    private exportService: ExportService
   ) { 
     this.initializeData();
     this.getAppInfo();
@@ -89,6 +95,7 @@ export class SubAccount2Page implements OnInit, OnDestroy {
     this.store_info = {id: '', store_ref: '', store_name: '', location: ''};
     this.displayedAccounts = [];
     this.filteredAccounts = [];
+    this.sortedAccounts = [];
     this.currentPage = 1;
     this.hasMoreAccounts = true;
     this.searchTerm = '';
@@ -366,6 +373,9 @@ export class SubAccount2Page implements OnInit, OnDestroy {
         
         // Since search is now handled by backend, filteredAccounts should always match displayedAccounts
         this.filteredAccounts = [...this.displayedAccounts];
+        
+        // Apply sorting to filtered accounts
+        this.applySorting();
         
         // Check if there are more accounts to load
         this.hasMoreAccounts = newAccounts.length === this.pageSize;
@@ -735,6 +745,117 @@ getAccountCategory () {
     }
   }
 
+  // Apply sorting to filtered accounts
+  applySorting() {
+    if (this.currentSort) {
+      this.sortedAccounts = this.sortingService.sortData(
+        this.filteredAccounts, 
+        this.currentSort.column, 
+        this.currentSort.direction
+      );
+    } else {
+      this.sortedAccounts = [...this.filteredAccounts];
+    }
+  }
 
+  // Handle column sort
+  sortBy(column: string) {
+    const direction = this.sortingService.getNextSortDirection(column, this.currentSort);
+    this.currentSort = { column, direction };
+    this.applySorting();
+  }
+
+  // Get sort icon for column
+  getSortIcon(column: string): string {
+    return this.sortingService.getSortIcon(column, this.currentSort);
+  }
+
+  // Export functionality
+  async exportToPDF(): Promise<void> {
+    if (!this.filteredAccounts || this.filteredAccounts.length === 0) {
+      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      return;
+    }
+
+    const config: ExportConfig = {
+      title: this.exportService.generateDynamicTitle('sub-account2'),
+      subtitle: this.generateSubtitle(),
+      fileName: `sub-accounts-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+      data: this.filteredAccounts,
+      columns: this.getExportColumns(),
+      userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف',
+      pageType: 'sub-account2',
+      currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+    };
+
+    await this.exportService.exportToPDF(config);
+  }
+
+  async exportToExcel(): Promise<void> {
+    if (!this.filteredAccounts || this.filteredAccounts.length === 0) {
+      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      return;
+    }
+
+    const config: ExportConfig = {
+      title: this.exportService.generateDynamicTitle('sub-account2'),
+      subtitle: this.generateSubtitle(),
+      fileName: `sub-accounts-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+      data: this.filteredAccounts,
+      columns: this.getExportColumns(),
+      userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف',
+      pageType: 'sub-account2',
+      currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+    };
+
+    await this.exportService.exportToExcel(config);
+  }
+
+  private generateSubtitle(): string {
+    let subtitle = '';
+    
+    // Add search term if present
+    if (this.currentSearchTerm && this.currentSearchTerm.trim() !== '') {
+      subtitle = `البحث: ${this.currentSearchTerm}`;
+    }
+    
+    // Add active filters
+    const activeFilterTexts: string[] = [];
+    
+    if (this.filters.cat_name && this.filters.cat_name !== '') {
+      activeFilterTexts.push(`التصنيف: ${this.filters.cat_name}`);
+    }
+    
+    if (this.filters.balance_type && this.filters.balance_type !== '') {
+      const balanceTypeText = this.filters.balance_type === 'debit' ? 'مدين' : 'دائن';
+      activeFilterTexts.push(`نوع الرصيد: ${balanceTypeText}`);
+    }
+    
+    if (this.filters.sub_type && this.filters.sub_type !== '') {
+      const subTypeText = this.filters.sub_type === 'debit' ? 'مدين' : 'دائن';
+      activeFilterTexts.push(`طبيعة الحساب: ${subTypeText}`);
+    }
+    
+    if (this.filters.has_balance) {
+      activeFilterTexts.push('الحسابات ذات الرصيد فقط');
+    }
+    
+    if (activeFilterTexts.length > 0) {
+      const filtersText = activeFilterTexts.join(' - ');
+      subtitle = subtitle ? `${subtitle} | ${filtersText}` : filtersText;
+    }
+    
+    return subtitle;
+  }
+
+  private getExportColumns(): ExportColumn[] {
+    return [
+      { key: 'sub_code', title: 'كود الحساب', width: 15, type: 'text' },
+      { key: 'sub_name', title: 'اسم الحساب', width: 30, type: 'text' },
+      { key: 'sub_type', title: 'نوع الحساب', width: 15, type: 'text' },
+      { key: 'cat_name', title: 'التصنيف', width: 20, type: 'text' },
+      { key: 'current_balance', title: 'الرصيد الحالي', width: 20, type: 'currency' }
+    ];
+  }
 
 }

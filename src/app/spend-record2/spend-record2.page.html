@@ -98,17 +98,25 @@
       
       
       <!-- Records Table Card -->
-      <ion-card class="table-card" *ngIf="searchMode == false">
-        <ion-card-header class="card-header">
-          <div class="header-content">
-            <ion-card-title class="card-title">سجل السندات</ion-card-title>
-            <ion-input 
-              [(ngModel)]="searchTerm" 
-              (ionChange)="searchItem($event)" 
-              placeholder="بحث في البيانات..."
-              class="header-search-input">
-              <ion-icon name="search-outline" slot="start"></ion-icon>
-            </ion-input>
+      <ion-card class="table-card" *ngIf="searchMode == false" color="primary">
+        <ion-card-header class="card-header ion-no-padding">
+          <div class="card-header-with-export">
+            <div class="header-left">
+              <ion-card-title class="card-title">سجل السندات</ion-card-title>
+              <ion-input 
+                [(ngModel)]="searchTerm" 
+                (ionChange)="searchItem($event)" 
+                placeholder="بحث في البيانات..."
+                class="header-search-input">
+                <ion-icon name="search-outline" slot="start"></ion-icon>
+              </ion-input>
+            </div>
+            <app-export-buttons 
+              [hasData]="payArray && payArray.length > 0"
+              [isLoading]="loading"
+              (exportPDF)="exportToPDF()"
+              (exportExcel)="exportToExcel()">
+            </app-export-buttons>
           </div>
         </ion-card-header>
         <ion-card-content class="table-content">
@@ -118,12 +126,30 @@
               <thead>
                 <tr>
                   <th>التسلسل</th>
-                  <th>التاريخ</th>
-                  <th>نوع السند</th>
-                  <th>البيان</th>
-                  <th>المبلغ</th>
-                  <th>من <ion-icon name="arrow-up-outline" color="danger"></ion-icon></th>  
-                  <th>إلى <ion-icon name="arrow-down-outline" color="success"></ion-icon></th>
+                  <th class="sortable-header" (click)="sortBy('j_date')">
+                    <ion-icon [name]="getSortIcon('j_date')" class="sort-icon"></ion-icon>
+                    التاريخ
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('j_type')">
+                    <ion-icon [name]="getSortIcon('j_type')" class="sort-icon"></ion-icon>
+                    نوع السند
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('j_details')">
+                    <ion-icon [name]="getSortIcon('j_details')" class="sort-icon"></ion-icon>
+                    البيان
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('j_pay')">
+                    <ion-icon [name]="getSortIcon('j_pay')" class="sort-icon"></ion-icon>
+                    المبلغ
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('to1')">
+                    <ion-icon [name]="getSortIcon('to1')" class="sort-icon"></ion-icon>
+                    من <ion-icon name="arrow-up-outline" color="danger"></ion-icon>
+                  </th>  
+                  <th class="sortable-header" (click)="sortBy('from1')">
+                    <ion-icon [name]="getSortIcon('from1')" class="sort-icon"></ion-icon>
+                    إلى <ion-icon name="arrow-down-outline" color="success"></ion-icon>
+                  </th>
                   <th>العمليات</th>
                 </tr>
               </thead>
@@ -161,7 +187,7 @@
                 </tr>
                 
                 <!-- Data Rows -->
-                <tr *ngFor="let pay of payArray; let i = index" class="data-row">
+                <tr *ngFor="let pay of sortedPayArray; let i = index" class="data-row">
                   <td>{{i+1}}</td>
                   <td>{{pay.j_date}}</td>
                   <td><span class="type-badge" [class.type-receipt]="pay.j_type == 'سند قبض'" [class.type-payment]="pay.j_type == 'سند دفع'">{{pay.j_type}}</span></td>
@@ -193,7 +219,7 @@
       </ion-card>
       
       <!-- Search Results Table Card -->
-      <ion-card class="table-card" *ngIf="searchMode == true">
+      <ion-card class="table-card" *ngIf="searchMode == true" color="primary">
         <ion-card-header class="card-header">
           <div class="header-content">
             <ion-card-title class="card-title">نتائج البحث</ion-card-title>
@@ -213,12 +239,30 @@
               <thead>
                 <tr>
                   <th>التسلسل</th>
-                  <th>التاريخ</th>
-                  <th>نوع السند</th>
-                  <th>البيان</th>
-                  <th>المبلغ</th>
-                  <th>من <ion-icon name="arrow-up-outline" color="danger"></ion-icon></th>  
-                  <th>إلى <ion-icon name="arrow-down-outline" color="success"></ion-icon></th>
+                  <th class="sortable-header" (click)="sortBy('j_date')">
+                    <ion-icon [name]="getSortIcon('j_date')" class="sort-icon"></ion-icon>
+                    التاريخ
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('j_type')">
+                    <ion-icon [name]="getSortIcon('j_type')" class="sort-icon"></ion-icon>
+                    نوع السند
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('j_details')">
+                    <ion-icon [name]="getSortIcon('j_details')" class="sort-icon"></ion-icon>
+                    البيان
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('j_pay')">
+                    <ion-icon [name]="getSortIcon('j_pay')" class="sort-icon"></ion-icon>
+                    المبلغ
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('to1')">
+                    <ion-icon [name]="getSortIcon('to1')" class="sort-icon"></ion-icon>
+                    من <ion-icon name="arrow-up-outline" color="danger"></ion-icon>
+                  </th>  
+                  <th class="sortable-header" (click)="sortBy('from1')">
+                    <ion-icon [name]="getSortIcon('from1')" class="sort-icon"></ion-icon>
+                    إلى <ion-icon name="arrow-down-outline" color="success"></ion-icon>
+                  </th>
                   <th>العمليات</th>
                 </tr>
               </thead>

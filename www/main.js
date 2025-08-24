@@ -35,19 +35,19 @@ const routes = [
     },
     {
         path: 'folder/sales',
-        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_syncService_stock-service_service_ts"), __webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_sales_sales_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./sales/sales.module */ 29146)).then(m => m.SalesPageModule), canActivate: [_auth_auth_gaurd_service__WEBPACK_IMPORTED_MODULE_0__.AuthGaurdService]
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_syncService_stock-service_service_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_sales_sales_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./sales/sales.module */ 29146)).then(m => m.SalesPageModule), canActivate: [_auth_auth_gaurd_service__WEBPACK_IMPORTED_MODULE_0__.AuthGaurdService]
     },
     {
         path: 'folder/sales-record',
-        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("src_app_sales-record_sales-record_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./sales-record/sales-record.module */ 40994)).then(m => m.SalesRecordPageModule)
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("default-node_modules_jspdf_dist_jspdf_es_min_js-node_modules_xlsx_xlsx_mjs"), __webpack_require__.e("default-src_app_services_export_service_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_sales-record_sales-record_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./sales-record/sales-record.module */ 40994)).then(m => m.SalesRecordPageModule)
     },
     {
         path: 'folder/purchase',
-        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_syncService_stock-service_service_ts"), __webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("src_app_purchase_purchase_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./purchase/purchase.module */ 10930)).then(m => m.PurchasePageModule)
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_syncService_stock-service_service_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("src_app_purchase_purchase_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./purchase/purchase.module */ 10930)).then(m => m.PurchasePageModule)
     },
     {
         path: 'folder/purchase-record',
-        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("src_app_purchase-record_purchase-record_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./purchase-record/purchase-record.module */ 96923)).then(m => m.PurchaseRecordPageModule)
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("default-node_modules_jspdf_dist_jspdf_es_min_js-node_modules_xlsx_xlsx_mjs"), __webpack_require__.e("default-src_app_services_export_service_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_purchase-record_purchase-record_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./purchase-record/purchase-record.module */ 96923)).then(m => m.PurchaseRecordPageModule)
     },
     {
         path: 'folder/spends',
@@ -59,7 +59,7 @@ const routes = [
     },
     {
         path: 'folder/items',
-        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_syncService_stock-service_service_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-node_modules_dom-to-image_src_dom-to-image_js-node_modules_jspdf_dist_jspdf_es_min_js-fa9575"), __webpack_require__.e("src_app_items_items_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./items/items.module */ 92029)).then(m => m.ItemsPageModule)
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_syncService_stock-service_service_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-node_modules_jspdf_dist_jspdf_es_min_js-node_modules_xlsx_xlsx_mjs"), __webpack_require__.e("default-node_modules_html2canvas_dist_html2canvas_js"), __webpack_require__.e("common"), __webpack_require__.e("src_app_items_items_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./items/items.module */ 92029)).then(m => m.ItemsPageModule)
     },
     {
         path: 'item-modal',
@@ -99,7 +99,7 @@ const routes = [
     },
     {
         path: 'folder/items-report',
-        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("common"), __webpack_require__.e("src_app_items-report_items-report_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./items-report/items-report.module */ 90435)).then(m => m.ItemsReportPageModule)
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_items-report_items-report_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./items-report/items-report.module */ 90435)).then(m => m.ItemsReportPageModule)
     },
     {
         path: 'folder/balance-sheet',
@@ -127,19 +127,19 @@ const routes = [
     },
     {
         path: 'folder/statement2',
-        loadChildren: () => __webpack_require__.e(/*! import() */ "src_app_statement2_statement2_module_ts").then(__webpack_require__.bind(__webpack_require__, /*! ./statement2/statement2.module */ 16793)).then(m => m.Statement2PageModule)
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("default-node_modules_jspdf_dist_jspdf_es_min_js-node_modules_xlsx_xlsx_mjs"), __webpack_require__.e("default-src_app_services_export_service_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_statement2_statement2_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./statement2/statement2.module */ 16793)).then(m => m.Statement2PageModule)
     },
     {
         path: 'folder/spend-record2',
-        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("src_app_spend-record2_spend-record2_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./spend-record2/spend-record2.module */ 40447)).then(m => m.SpendRecord2PageModule)
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("default-node_modules_jspdf_dist_jspdf_es_min_js-node_modules_xlsx_xlsx_mjs"), __webpack_require__.e("default-src_app_services_export_service_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_spend-record2_spend-record2_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./spend-record2/spend-record2.module */ 40447)).then(m => m.SpendRecord2PageModule)
     },
     {
         path: 'folder/balance-sheet2',
-        loadChildren: () => __webpack_require__.e(/*! import() */ "src_app_balance-sheet2_balance-sheet2_module_ts").then(__webpack_require__.bind(__webpack_require__, /*! ./balance-sheet2/balance-sheet2.module */ 8505)).then(m => m.BalanceSheet2PageModule)
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("default-node_modules_jspdf_dist_jspdf_es_min_js-node_modules_xlsx_xlsx_mjs"), __webpack_require__.e("default-src_app_services_export_service_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_balance-sheet2_balance-sheet2_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./balance-sheet2/balance-sheet2.module */ 8505)).then(m => m.BalanceSheet2PageModule)
     },
     {
         path: 'folder/sub-account2',
-        loadChildren: () => __webpack_require__.e(/*! import() */ "src_app_sub-account2_sub-account2_module_ts").then(__webpack_require__.bind(__webpack_require__, /*! ./sub-account2/sub-account2.module */ 34588)).then(m => m.SubAccount2PageModule)
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("default-node_modules_jspdf_dist_jspdf_es_min_js-node_modules_xlsx_xlsx_mjs"), __webpack_require__.e("default-src_app_services_export_service_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_sub-account2_sub-account2_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./sub-account2/sub-account2.module */ 34588)).then(m => m.SubAccount2PageModule)
     },
     {
         path: 'folder/notifications',
@@ -151,7 +151,7 @@ const routes = [
     },
     {
         path: 'folder/prch-order',
-        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_prch-order_prch-order_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./prch-order/prch-order.module */ 36435)).then(m => m.PrchOrderPageModule)
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_prch-order_prch-order_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./prch-order/prch-order.module */ 36435)).then(m => m.PrchOrderPageModule)
     },
     {
         path: 'folder/prch-order-record',
@@ -183,7 +183,7 @@ const routes = [
     },
     {
         path: 'folder/purchase-mob',
-        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_syncService_stock-service_service_ts"), __webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_purchase-mob_purchase-mob_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./purchase-mob/purchase-mob.module */ 87860)).then(m => m.PurchaseMobPageModule)
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_syncService_stock-service_service_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_purchase-mob_purchase-mob_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./purchase-mob/purchase-mob.module */ 87860)).then(m => m.PurchaseMobPageModule)
     },
     {
         path: 'folder/edit-purchase-mob',
@@ -207,7 +207,7 @@ const routes = [
     },
     {
         path: 'folder/purchsnd',
-        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_syncService_stock-service_service_ts"), __webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_purchsnd_purchsnd_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./purchsnd/purchsnd.module */ 25822)).then(m => m.PurchsndPageModule)
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_syncService_stock-service_service_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_print-modal_print-modal_page_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_purchsnd_purchsnd_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./purchsnd/purchsnd.module */ 25822)).then(m => m.PurchsndPageModule)
     },
     {
         path: 'folder/purchsndrecord',
@@ -227,7 +227,7 @@ const routes = [
     },
     {
         path: 'item-stock',
-        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_syncService_stock-service_service_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-node_modules_dom-to-image_src_dom-to-image_js-node_modules_jspdf_dist_jspdf_es_min_js-fa9575"), __webpack_require__.e("src_app_item-stock_item-stock_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./item-stock/item-stock.module */ 5221)).then(m => m.ItemStockPageModule)
+        loadChildren: () => Promise.all(/*! import() */[__webpack_require__.e("default-src_app_syncService_stock-service_service_ts"), __webpack_require__.e("default-src_app_item-modal_item-modal_page_ts"), __webpack_require__.e("default-src_app_module_shared_shared_module_ts"), __webpack_require__.e("default-node_modules_jspdf_dist_jspdf_es_min_js-node_modules_xlsx_xlsx_mjs"), __webpack_require__.e("default-src_app_services_export_service_ts"), __webpack_require__.e("common"), __webpack_require__.e("src_app_item-stock_item-stock_module_ts")]).then(__webpack_require__.bind(__webpack_require__, /*! ./item-stock/item-stock.module */ 5221)).then(m => m.ItemStockPageModule)
     },
     {
         path: 'edit-journal',
@@ -1223,6 +1223,10 @@ let ServicesService = class ServicesService {
     setEndpointFromCategory(categoryId) {
         return (0,tslib__WEBPACK_IMPORTED_MODULE_2__.__awaiter)(this, void 0, void 0, function* () {
             yield this.storage.create();
+            // Make sure we have categories loaded
+            if (this.categories.length === 0) {
+                yield this.getCachedCategories();
+            }
             const category = this.categories.find(cat => cat.id == categoryId);
             if (category && category.category_desc) {
                 // Validate and format endpoint URL
@@ -2340,6 +2344,21 @@ let ServicesService = class ServicesService {
             itemList: itemList
         };
         return this.http.post(this.api + 'items/validateStockQuantity.php', requestData);
+    }
+    // Single API endpoint for complete item report data
+    getCompleteItemReport(store_id, item_id, yearId, reportType = 0, startDate = null, endDate = null) {
+        let params = new _angular_common_http__WEBPACK_IMPORTED_MODULE_3__.HttpParams();
+        params = params.append('store_id', store_id);
+        params = params.append('item_id', item_id);
+        params = params.append('yearId', yearId);
+        params = params.append('report_type', reportType.toString());
+        if (startDate && startDate.trim() !== '') {
+            params = params.append('start_date', startDate.trim());
+        }
+        if (endDate && endDate.trim() !== '') {
+            params = params.append('end_date', endDate.trim());
+        }
+        return this.http.get(this.api + 'items/getCompleteItemReport.php', { params: params });
     }
 };
 ServicesService.ctorParameters = () => [

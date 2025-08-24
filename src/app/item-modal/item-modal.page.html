@@ -64,19 +64,7 @@
                   </ion-col>
                 </ion-row>
 
-                <ion-row>
-                  <ion-col size="12">
-                    <ion-item class="modern-input" fill="outline">
-                      <ion-label position="stacked">التصنيف</ion-label>
-                      <ion-select [(ngModel)]="selectedItem.category_id" placeholder="اختر التصنيف">
-                        <ion-select-option value="">بدون تصنيف</ion-select-option>
-                        <ion-select-option *ngFor="let category of categories" [value]="category.id">
-                          {{category.category_name}}
-                        </ion-select-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
+                
               </div>
 
               <!-- Product Details Section -->
@@ -482,49 +470,8 @@
       </ion-row>
     </ion-grid> 
 
-  <!-- Add Category Modal -->
-  <ion-modal [isOpen]="showAddCategoryModal" (didDismiss)="closeAddCategoryModal()">
-    <ng-template>
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>إضافة تصنيف جديد</ion-title>
-          <ion-buttons slot="end">
-            <ion-button fill="clear" (click)="closeAddCategoryModal()">
-              <ion-icon name="close"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-      
-      <ion-content class="ion-padding">
-        <ion-item>
-          <ion-label position="stacked">اسم التصنيف *</ion-label>
-          <ion-input [(ngModel)]="newCategory.category_name" placeholder="اسم التصنيف"></ion-input>
-        </ion-item>
-        
-        <ion-item>
-          <ion-label position="stacked">وصف التصنيف</ion-label>
-          <ion-textarea [(ngModel)]="newCategory.category_desc" placeholder="وصف التصنيف (اختياري)"></ion-textarea>
-        </ion-item>
-        
-        <div class="ion-padding-top">
-          <ion-button 
-            expand="block" 
-            (click)="addCategory()"
-            [disabled]="!newCategory.category_name?.trim()">
-            إضافة التصنيف
-          </ion-button>
-          
-          <ion-button 
-            expand="block" 
-            fill="outline" 
-            (click)="closeAddCategoryModal()">
-            إلغاء
-          </ion-button>
-        </div>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
+  
+  
 
 </ion-content>
 <ion-footer>

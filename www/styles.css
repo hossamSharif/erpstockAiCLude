@@ -355,7 +355,7 @@
  * For more information on global stylesheets, visit the documentation:
  * https://ionicframework.com/docs/layout/global-stylesheets
  */
-/* Core CSS required for Ionic components to work properly */
+/* Import sorting functionality styles */
 html.ios {
   --ion-default-font: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Roboto", sans-serif;
 }
@@ -651,7 +651,6 @@ ion-accordion-group.accordion-group-expand-inset.md > ion-accordion.accordion-ex
 ion-input input::-webkit-date-and-time-value {
   text-align: start;
 }
-/* Basic CSS for apps built with Ionic */
 audio,
 canvas,
 progress,
@@ -941,7 +940,6 @@ sub {
     display: none !important;
   }
 }
-/* Optional CSS utils that can be commented out */
 .ion-no-padding {
   --padding-start: 0;
   --padding-end: 0;
@@ -1496,6 +1494,71 @@ sub {
 .ion-align-items-baseline {
   align-items: baseline !important;
 }
+.sortable-header {
+  cursor: pointer;
+  -webkit-user-select: none;
+          user-select: none;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 8px 12px;
+}
+.sortable-header:hover {
+  background-color: rgba(var(--ion-color-primary-rgb), 0.1);
+}
+.sortable-header .sort-icon {
+  font-size: 14px;
+  margin-left: 4px;
+  margin-right: 4px;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+.sortable-header:hover .sort-icon {
+  opacity: 1;
+}
+.modern-table .sortable-header {
+  background: rgba(var(--ion-color-primary-rgb), 0.05);
+}
+.modern-table .sortable-header:hover {
+  background: rgba(var(--ion-color-primary-rgb), 0.15);
+}
+.glass-table .sortable-header {
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+}
+.glass-table .sortable-header:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.glass-table .sortable-header .sort-icon {
+  color: var(--ion-color-primary);
+}
+.table .sortable-header {
+  background: rgba(var(--ion-color-primary-rgb), 0.05);
+}
+.table .sortable-header:hover {
+  background: rgba(var(--ion-color-primary-rgb), 0.15);
+}
+.table .sortable-header .sort-icon {
+  color: var(--ion-color-primary);
+}
+.sort-icon[name=chevron-up-outline] {
+  color: var(--ion-color-success) !important;
+  opacity: 1 !important;
+}
+.sort-icon[name=chevron-down-outline] {
+  color: var(--ion-color-warning) !important;
+  opacity: 1 !important;
+}
+.sort-icon[name=swap-vertical-outline] {
+  color: var(--ion-color-medium);
+}
+[dir=rtl] .sortable-header .sort-icon {
+  margin-left: 4px;
+  margin-right: 4px;
+}
+/* Core CSS required for Ionic components to work properly */
+/* Basic CSS for apps built with Ionic */
+/* Optional CSS utils that can be commented out */
 .cust_Toast {
   font-size: larger;
   color: white;

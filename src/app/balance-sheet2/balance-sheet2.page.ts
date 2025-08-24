@@ -4,6 +4,8 @@ import { AlertController, LoadingController, ModalController, Platform, ToastCon
 import { DatePipe } from '@angular/common'; 
 import { Storage } from '@ionic/storage';
 import { NavigationExtras, Router } from '@angular/router';
+import { SortingService, SortConfig } from '../services/sorting.service';
+import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
 
 @Component({
   selector: 'app-balance-sheet2',
@@ -15,6 +17,8 @@ export class BalanceSheet2Page implements OnInit {
   // Core data
   accounts: Array<any> = [];
   filteredAccounts: Array<any> = [];
+  sortedAccounts: Array<any> = [];
+  currentSort: SortConfig | null = null;
   
   // App info
   store_info: {id: any, location: any, store_name: any, store_ref: any} | null = null;
@@ -50,7 +54,9 @@ export class BalanceSheet2Page implements OnInit {
     private loadingController: LoadingController,
     private datePipe: DatePipe,
     private api: ServicesService,
-    private toast: ToastController
+    private toast: ToastController,
+    private sortingService: SortingService,
+    private exportService: ExportService
   ) { 
     this.checkPlatform();
     this.getAppInfo();
@@ -163,6 +169,7 @@ export class BalanceSheet2Page implements OnInit {
     
     this.filteredAccounts = filtered;
     this.calculateFilteredTotals();
+    this.applySorting();
   }
 
   calculateFilteredTotals() {
@@ -222,4 +229,107 @@ export class BalanceSheet2Page implements OnInit {
     });
     await toast.present();
   }
+
+  // Apply sorting to filtered accounts
+  applySorting() {
+    if (this.currentSort) {
+      this.sortedAccounts = this.sortingService.sortData(
+        this.filteredAccounts, 
+        this.currentSort.column, 
+        this.currentSort.direction
+      );
+    } else {
+      this.sortedAccounts = [...this.filteredAccounts];
+    }
+  }
+
+  // Handle column sort
+  sortBy(column: string) {
+    const direction = this.sortingService.getNextSortDirection(column, this.currentSort);
+    this.currentSort = { column, direction };
+    this.applySorting();
+  }
+
+  // Get sort icon for column
+  getSortIcon(column: string): string {
+    return this.sortingService.getSortIcon(column, this.currentSort);
+  }
+
+  // Export functionality
+  async exportToPDF(): Promise<void> {
+    if (!this.filteredAccounts || this.filteredAccounts.length === 0) {
+      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      return;
+    }
+
+    const config: ExportConfig = {
+      title: this.exportService.generateDynamicTitle('balance-sheet2'),
+      subtitle: this.generateSubtitle(),
+      fileName: `balance-sheet-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+      data: this.filteredAccounts,
+      columns: this.getExportColumns(),
+      userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف',
+      pageType: 'balance-sheet2',
+      currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+    };
+
+    await this.exportService.exportToPDF(config);
+  }
+
+  async exportToExcel(): Promise<void> {
+    if (!this.filteredAccounts || this.filteredAccounts.length === 0) {
+      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      return;
+    }
+
+    const config: ExportConfig = {
+      title: this.exportService.generateDynamicTitle('balance-sheet2'),
+      subtitle: this.generateSubtitle(),
+      fileName: `balance-sheet-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+      data: this.filteredAccounts,
+      columns: this.getExportColumns(),
+      userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف',
+      pageType: 'balance-sheet2',
+      currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+    };
+
+    await this.exportService.exportToExcel(config);
+  }
+
+  private generateSubtitle(): string {
+    let subtitle = '';
+    
+    // Add filter type
+    const filterLabels: { [key: string]: string } = {
+      'all': 'جميع الحسابات',
+      'customer': 'العملاء',
+      'supplier': 'الموردون',
+      'sales': 'حسابات المبيعات',
+      'purchases': 'حسابات المشتريات',
+      'other': 'الحسابات الأخرى'
+    };
+    
+    if (this.segmentValue && this.segmentValue !== 'all') {
+      subtitle = `فلتر: ${filterLabels[this.segmentValue]}`;
+    }
+    
+    if (this.showOnlyWithBalance) {
+      subtitle = subtitle ? `${subtitle} - الحسابات ذات الرصيد فقط` : 'الحسابات ذات الرصيد فقط';
+    }
+    
+    return subtitle;
+  }
+
+  private getExportColumns(): ExportColumn[] {
+    return [
+      { key: 'sub_name', title: 'اسم الحساب', width: 25, type: 'text' },
+      { key: 'cat_name', title: 'نوع الحساب', width: 15, type: 'text' },
+      { key: 'opening_balance', title: 'الرصيد الافتتاحي', width: 15, type: 'currency' },
+      { key: 'total_debit', title: 'إجمالي المدين', width: 15, type: 'currency' },
+      { key: 'total_credit', title: 'إجمالي الدائن', width: 15, type: 'currency' },
+      { key: 'current_balance', title: 'الرصيد الحالي', width: 15, type: 'currency' },
+      { key: 'balance_type', title: 'نوع الرصيد', width: 10, type: 'text' }
+    ];
+  }
+
 }

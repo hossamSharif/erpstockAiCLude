@@ -1,0 +1,112 @@
+<!-- Main Content Container -->
+<div class="journal-entry-main" *ngIf="invoiceData">
+  
+  <!-- Customer Balance Display -->
+  <div class="balance-header-card" *ngIf="invoiceData?.customerAccount">
+    <div class="balance-content">
+      <div class="balance-info">
+        <div class="balance-label">الرصيد الحالي</div>
+        <div class="customer-name">{{ getCustomerName() }}</div>
+      </div>
+      <div class="balance-amount" [attr.data-status]="getCustomerBalance()?.status">
+        <ion-icon name="wallet-outline" class="balance-icon"></ion-icon>
+        <span class="amount-text" *ngIf="getCustomerBalance()">{{ formatCustomerBalance(getCustomerBalance()) }}</span>
+        <span class="amount-text no-balance" *ngIf="!getCustomerBalance()">لا يوجد رصيد</span>
+      </div>
+    </div>
+    <div class="balance-indicator" [attr.data-status]="getCustomerBalance()?.status || 'neutral'"></div>
+  </div>
+  
+  <!-- Content with inline form and buttons -->
+  <div class="content-wrapper">
+    
+    <!-- Hidden Transaction Type (auto-set based on invoice type) -->
+    <input type="hidden" [(ngModel)]="jType">
+
+    <!-- Amount (without currency label) -->
+    <div class="form-section">
+      <ion-label class="section-label">المبلغ</ion-label>
+      <ion-item class="form-item amount-item" [class.has-error]="!isValidAmount() && pay > 0" #amountItemRef>
+        <ion-icon name="cash-outline" slot="start" [color]="isValidAmount() || pay === 0 ? 'success' : 'danger'"></ion-icon>
+        <ion-input 
+          #amountInput
+          type="number" 
+          placeholder="0.00" 
+          [(ngModel)]="pay"
+          (ionInput)="onAmountChange($event)"
+          class="amount-input">
+        </ion-input>
+      </ion-item>
+      <div class="info-note" *ngIf="isValidAmount() || pay === 0">
+        <ion-icon name="information-circle-outline" color="medium"></ion-icon>
+        <span>المبلغ مملوء تلقائياً من الفاتورة، يمكن تعديله</span>
+      </div>
+      <div class="error-note" *ngIf="!isValidAmount() && pay > 0">
+        <ion-icon name="warning-outline" color="danger"></ion-icon>
+        <span>{{ getAmountValidationError() }}</span>
+      </div>
+    </div>
+
+    <!-- Source (المصدر) -->
+    <div class="form-section">
+      <ion-label class="section-label">المصدر</ion-label>
+      <ion-item class="form-item">
+        <ion-icon name="wallet-outline" slot="start" color="primary"></ion-icon>
+        <ion-select 
+          [(ngModel)]="radioVal" 
+          (ionChange)="pickAccountBank($event)" 
+          placeholder="اختر المصدر"
+          interface="action-sheet">
+          <ion-select-option value="1">الخزينة</ion-select-option>
+          <ion-select-option *ngFor="let bank of banksAccountArray" [value]="bank.id">
+            {{ bank.sub_name }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+    </div>
+
+    <!-- Hidden Customer Account -->
+    <input type="hidden" [(ngModel)]="invoiceData.customerAccount">
+
+    <!-- Date (hidden, keeping for data binding) -->
+    <input type="hidden" [(ngModel)]="journal.j_date">
+
+    <!-- Description (single line, readonly) -->
+    <div class="form-section last-field">
+      <ion-label class="section-label">البيان</ion-label>
+      <ion-item class="form-item description-item">
+        <ion-icon name="document-text-outline" slot="start" color="tertiary"></ion-icon>
+        <ion-input 
+          [(ngModel)]="journal.j_details"
+          placeholder="وصف المعاملة..."
+          readonly="true">
+        </ion-input>
+      </ion-item>
+    </div>
+
+    <!-- Action Buttons - directly after last field -->
+    <div class="inline-buttons-section">
+      <div class="buttons-row">
+        <ion-button 
+          fill="outline"
+          color="primary"
+          (click)="save()"
+          class="primary-btn"
+          [disabled]="!isFormValid()">
+          <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+          حفظ القيد
+        </ion-button>
+        
+        <ion-button 
+          fill="outline" 
+          (click)="cancel()"
+          class="secondary-btn">
+          <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+          إلغاء
+        </ion-button>
+      </div>
+    </div>
+    
+  </div>
+
+</div>

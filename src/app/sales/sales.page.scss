@@ -301,6 +301,25 @@ ion-segment {
   }
 }
 
+// Add styles for the total after discount field and progress stepper
+.total-after-discount {
+  --background: #f0fdf4;
+  border: 2px solid #16a34a;
+  font-weight: 600;
+  
+  ion-input {
+    --color: #15803d;
+    font-size: 1.1em;
+    text-align: center;
+  }
+}
+
+// Modal styling
+ion-modal {
+  --height: 90%;
+  --border-radius: 16px 16px 0 0;
+}
+
 // Insufficient Stock Modal Styling
 .insufficient-stock-modal {
   --height: 80vh;

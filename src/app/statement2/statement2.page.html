@@ -154,14 +154,22 @@
 
       <!-- Desktop Table -->
       <ion-card class="table-card" *ngIf="device == 'desktop'" color="primary">
-        <ion-card-header class="table-header">
-          <ion-card-title class="table-title">
-            <ion-icon name="document-text-outline" slot="start"></ion-icon>
-كشف حساب - {{ selectedAccount.sub_name === 'لم يتم اختيار حساب' ? 'اختر حساب لعرض البيانات' : selectedAccount.sub_name }}
-            <span class="transaction-count" *ngIf="totalTransactions > 0">
-              ({{ totalTransactions }} معاملة)
-            </span>
-          </ion-card-title>
+        <ion-card-header class="table-header ion-no-padding">
+          <div class="card-header-with-export">
+            <ion-card-title class="table-title">
+              <ion-icon name="document-text-outline" slot="start"></ion-icon>
+              كشف حساب - {{ selectedAccount.sub_name === 'لم يتم اختيار حساب' ? 'اختر حساب لعرض البيانات' : selectedAccount.sub_name }}
+              <span class="transaction-count" *ngIf="totalTransactions > 0">
+                ({{ totalTransactions }} معاملة)
+              </span>
+            </ion-card-title>
+            <app-export-buttons 
+              [hasData]="displayedTransactions && displayedTransactions.length > 0"
+              [isLoading]="loading"
+              (exportPDF)="exportToPDF()"
+              (exportExcel)="exportToExcel()">
+            </app-export-buttons>
+          </div>
         </ion-card-header>
         <ion-card-content class="table-content">
           <div class="table-container">
@@ -169,15 +177,30 @@
               <thead>
                 <tr>
                   <th>التسلسل</th>
-                  <th>التاريخ</th>
-                  <th>نوع القيد</th>
-                  <th>البيان</th>
-                  <th>مدين (عليه)</th>
-                  <th>دائن (له)</th>
+                  <th class="sortable-header" (click)="sortBy('j_date')">
+                    <ion-icon [name]="getSortIcon('j_date')" class="sort-icon"></ion-icon>
+                    التاريخ
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('source_type')">
+                    <ion-icon [name]="getSortIcon('source_type')" class="sort-icon"></ion-icon>
+                    نوع القيد
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('j_details')">
+                    <ion-icon [name]="getSortIcon('j_details')" class="sort-icon"></ion-icon>
+                    البيان
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('debit')">
+                    <ion-icon [name]="getSortIcon('debit')" class="sort-icon"></ion-icon>
+                    مدين (عليه)
+                  </th>
+                  <th class="sortable-header" (click)="sortBy('credit')">
+                    <ion-icon [name]="getSortIcon('credit')" class="sort-icon"></ion-icon>
+                    دائن (له)
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let transaction of displayedTransactions; let i = index" class="table-row">
+                <tr *ngFor="let transaction of sortedTransactions; let i = index" class="table-row">
                   <td class="serial">{{ i + 1 }}</td>
                   <td class="date">{{ transaction.j_date | date:'dd/MM/yyyy' }}</td>
                   <td class="type">
@@ -256,7 +279,7 @@
         </ion-card-header>
         <ion-card-content class="mobile-content">
           <ion-accordion-group *ngIf="displayedTransactions.length > 0">
-            <ion-accordion *ngFor="let transaction of displayedTransactions; let i = index" [value]="i" toggleIcon="caret-down-circle" toggleIconSlot="end">
+            <ion-accordion *ngFor="let transaction of sortedTransactions; let i = index" [value]="i" toggleIcon="caret-down-circle" toggleIconSlot="end">
               <ion-item slot="header" color="light">
                 <ion-icon name="newspaper-outline" color="primary" slot="start"></ion-icon>
                 <div class="accordion-header">

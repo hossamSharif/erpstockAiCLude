@@ -469,5 +469,13 @@ modelChange(ev){
     await this.modalController.dismiss(this.selectedItem, 'delete');
   }
 
+  // Format balance display with number separators
+  formatBalance(balance: number): string {
+    if (!balance && balance !== 0) return '0.00';
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(Math.abs(balance));
+  }
   
 }

@@ -1,0 +1,70 @@
+<!-- Match exact structure from original item-selector -->
+<ion-grid class="ion-no-margin ion-no-padding">
+  <ion-row>
+    <ion-col size="12" class="ion-no-margin ion-no-padding">
+      <!-- Label with Buttons Container - Same as original item-selector -->
+      <div class="label-with-buttons-container">
+        <div class="action-buttons-left">
+          <!-- Refresh Button positioned in top left -->
+          <ion-button 
+            fill="clear" 
+            size="small"
+            class="item-refresh-btn-left"
+            (click)="refreshItems()"
+            [disabled]="loadingItems">
+            <ion-icon 
+              name="refresh" 
+              color="primary"
+              [class.spin]="loadingItems">
+            </ion-icon>
+          </ion-button>
+          
+          <!-- Loading Spinner -->
+          <ion-spinner 
+            *ngIf="loadingItems" 
+            name="dots" 
+            class="item-loading-spinner-left">
+          </ion-spinner>
+        </div>
+        
+        <ion-label style="text-align: right;">
+          <strong>الصنف</strong> 
+        </ion-label>
+      </div>
+    </ion-col>
+  </ion-row>
+  <ion-row>
+    <ion-col size="12" class="ion-no-margin ion-no-padding">
+      <!-- Search Input Container - Match other field styles with proper positioning -->
+      <ion-item class="custInput item-selector-wrapper">
+        <div class="input-container-wrapper" #inputWrapper>
+          <ion-input
+            #searchInput
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="onModelChange($event)"
+            [placeholder]="placeholder || 'اختر الصنف'"
+            [disabled]="loadingItems"
+            [clearInput]="true"
+            class="item-selector-input"
+            (ionInput)="onSearchInput($event)"
+            (ionClear)="onInputClear($event)"
+            (ionFocus)="onInputFocus()"
+            (ionBlur)="onInputBlur()"
+            (click)="onInputFocus()"
+            (keydown)="onKeyDown($event)">
+          </ion-input>
+        </div>
+      </ion-item>
+
+      <!-- Note: Dropdown is now rendered as a portal attached to document.body -->
+    </ion-col>
+  </ion-row>
+</ion-grid>
+
+<!-- Optional: Show selected item info below -->
+<div *ngIf="showQuantityDisplay && selectedItem.id" class="selected-item-info">
+  <ion-text color="medium" class="selected-info">
+    الصنف المختار: <strong>{{selectedItem.item_name}}</strong> | 
+    المخزون: <strong color="danger">{{selectedItem.availQty || 0}}</strong>
+  </ion-text>
+</div>

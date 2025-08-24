@@ -8,6 +8,7 @@ import { AuthServiceService } from '../auth/auth-service.service';
 import { PrintModalPage } from '../print-modal/print-modal.page';
 import { ItemModalPage } from '../item-modal/item-modal.page';
 import { PriceAdjustmentDialogComponent } from '../component/price-adjustment-dialog/price-adjustment-dialog.component';
+import { InvoiceJournalEntryComponent, InvoiceJournalData } from '../component/invoice-journal-entry/invoice-journal-entry.component';
 import { FilterPipe } from './pipe';
 import { FilterPipe2 } from './pipe2';
 import { FilterPipe3 } from './pipe3';
@@ -83,6 +84,11 @@ status:any = 'new'
 year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
 pendingItemsFromStock: Array<any> = [];
   statusFromRoute: string = '';
+  
+  // New workflow properties
+  showJournalEntryModal: boolean = false;
+  invoiceJournalData: InvoiceJournalData = null;
+  customerBalance: any = null;
 
 currenQty:any = 0
 firstQty:any = 0
@@ -1576,7 +1582,8 @@ save() {
   let d : Date = this.payInvo.pay_date 
   
   this.payInvo.pay_date = this.datePipe.transform(d, 'yyyy-MM-dd')
-  //console.log('save testing',this.payInvo ,  this.payInvo.sub_name)
+  
+  
     if (this.validate() == true) {
        this.presentLoadingWithOptions('جاري حفظ البيانات ...')
        this.saveInvo()    
@@ -1742,6 +1749,7 @@ saveInvo(){
 }
 
 private handleSaveSuccess() {
+  
   // Prepare print array
   this.printArr = [];
   this.printArr.push({
@@ -1781,16 +1789,10 @@ private handleSaveSuccess() {
     "store_id": this.store_info.id
   });
 
-  // Show success feedback
-  this.presentAlertConfirm();
   this.presentToast('تم الحفظ بنجاح', 'success');
   
-  // Navigate back if coming from items page
-  if (this.showBackButton) {
-    setTimeout(() => {
-      this.goBack();
-    }, 1500);
-  }
+  // Show journal entry confirmation for all purchase invoices
+  this.presentJournalEntryConfirmation();
   
   // Dismiss loading
   this.loadingController.dismiss();
@@ -2140,6 +2142,97 @@ async  performSyncItem(item_name?){
     }
   }
 
+  // New methods for journal entry workflow
+  async presentJournalEntryConfirmation() {
+    const totalAfterDiscount = (+this.payInvo.tot_pr - +this.payInvo.discount);
+    const alert = await this.alertController.create({
+      cssClass: 'my-custom-class',
+      header: 'تأكيد دفع المبلغ',
+      mode: 'ios',
+      message: `هل تريد دفع مبلغ ${totalAfterDiscount.toFixed(2)} للمورد الآن؟`,
+      buttons: [
+        {
+          text: 'لا، انتقل للطباعة مباشرة',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+            this.presentAlertConfirm();
+            this.cleanupAfterInvoice();
+          }
+        },
+        {
+          text: 'نعم، دفع المبلغ',
+          handler: () => {
+            this.showJournalEntryDialog();
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  showJournalEntryDialog() {
+    
+    const totalAfterDiscount = (+this.payInvo.tot_pr - +this.payInvo.discount);
+    
+    this.invoiceJournalData = {
+      invoiceAmount: totalAfterDiscount,
+      totalAfterDiscount: totalAfterDiscount,
+      customerAccount: this.selectedAccount,
+      customerBalance: this.customerBalance,
+      invoiceRef: this.payInvo.pay_ref,
+      invoiceType: 'purchase',
+      invoiceDate: this.payInvo.pay_date,
+      store_info: this.store_info,
+      user_info: this.user_info,
+      year: this.year
+    };
+    
+    this.showJournalEntryModal = true;
+  }
+
+  onJournalSaved(success: boolean) {
+    this.showJournalEntryModal = false;
+    
+    if (success) {
+      this.presentToast('تم حفظ قيد اليومية بنجاح', 'success');
+    }
+    
+    // Show print confirmation
+    setTimeout(() => {
+      this.presentAlertConfirm();
+    }, 500);
+    
+    this.cleanupAfterInvoice();
+  }
+
+  onJournalCancelled() {
+    this.showJournalEntryModal = false;
+    
+    // Show print confirmation
+    setTimeout(() => {
+      this.presentAlertConfirm();
+    }, 500);
+    
+    this.cleanupAfterInvoice();
+  }
+
+  private cleanupAfterInvoice() {
+    this.prepareInvo();
+    this.status = 'new';
+    
+    // Navigate back if coming from items page
+    if (this.showBackButton) {
+      setTimeout(() => {
+        this.goBack();
+      }, 1500);
+    }
+  }
+
+  goBack() {
+    this._location.back();
+  }
+
   getDisplayItemList() {
     return this.sortedItemList.length > 0 ? this.sortedItemList : this.itemList;
   }
@@ -2229,10 +2322,6 @@ async  performSyncItem(item_name?){
     return text.replace(regex, '<mark>$1</mark>');
   }
 
-  goBack() {
-    this._location.back();
-  }
-
   // Handle account selection from AccountSelectorComponent
   onAccountSelected(account: any) {
     if (account) {
@@ -2261,10 +2350,19 @@ async  performSyncItem(item_name?){
   // Handle account balance loaded
   onAccountBalanceLoaded(balance: any) {
     if (balance && this.selectedAccount) {
+      // Store the balance for invoice journal entry
+      this.customerBalance = balance;
       console.log('Account balance loaded in purchase:', balance);
     }
   }
 
-    
+  // Format balance display with number separators
+  formatBalance(balance: number): string {
+    if (!balance && balance !== 0) return '0.00';
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(Math.abs(balance));
+  }
 
 }

@@ -7,9 +7,9 @@ import { Subject } from 'rxjs';
 import { DatePipe } from '@angular/common';
 import { ItemModalPage } from '../item-modal/item-modal.page';
 import { Storage } from '@ionic/storage';
-import * as XLSX from 'xlsx'; 
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+// import * as XLSX from 'xlsx'; 
+// import jsPDF from 'jspdf';
+// import html2canvas from 'html2canvas';
 import * as momentObj from 'moment';
 import { StockServiceService } from '../syncService/stock-service.service';
 import domtoimage from 'dom-to-image';
@@ -17,6 +17,7 @@ import { FileOpener } from '@ionic-native/file-opener/ngx';
 import { File, IWriteOptions } from '@ionic-native/file/ngx'; 
 import { NavigationExtras, Router } from '@angular/router'; // Add 
 import { stat } from 'fs';
+import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
 @Component({
   selector: 'app-item-stock',
   templateUrl: './item-stock.page.html',
@@ -145,7 +146,7 @@ itemsAll:Array<any> =[]
   stockValuePayPrice: number = 0;
   stockValuePerchPrice: number = 0;
   loadingStockTotals: boolean = false;
-  constructor(private router:Router ,private file: File, private fileOpener: FileOpener,private behavApi:StockServiceService,private storage: Storage,private alertController: AlertController,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) { 
+  constructor(private router:Router ,private file: File, private fileOpener: FileOpener,private behavApi:StockServiceService,private storage: Storage,private alertController: AlertController,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private exportService: ExportService) { 
     this.store_info = {id:"" ,store_ref:"" , store_name:"" , location :"" }
     this.selectedItem = {id:null ,item_name:"" ,model:"" ,part_no:""  ,min_qty:0 ,brand:"",pay_price:0,perch_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:""};
     this.selectedItem2 = {id:null ,item_name:"" ,model:"" ,part_no:""  ,min_qty:0 ,brand:"",pay_price:0,perch_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:""};
@@ -1239,103 +1240,7 @@ updateItemArrays(itemId,status?) {
     }
 
     
-    
-    createPdf() {
-      this.exportMode = true
-      let pdfBlock: any = document.getElementById('exceltable');
-      let options = {
-        background: 'white',
-        height: pdfBlock.clientWidth,
-        width: pdfBlock.clientHeight,
-      };
-      domtoimage
-        .toPng(pdfBlock, options)
-        .then((fileUrl) => {
-          var doc = new jsPDF('p', 'mm', 'a4');
-          doc.addImage(fileUrl, 'PNG', 10, 10, 240, 180);
-          doc.save('items.pdf');
-
-          // let docRes = doc.output();
-          // let buffer = new ArrayBuffer(docRes.length);
-          // let array = new Uint8Array(buffer);
-          // for (var i = 0; i < docRes.length; i++) {
-          //   array[i] = docRes.charCodeAt(i);
-          // }
-          // const directory = this.file.dataDirectory;
-          // const fileName = 'user-data.pdf';
-          // let options: IWriteOptions = {
-          //   replace: true,
-          // };
-          // this.file
-          //   .checkFile(directory, fileName)
-          //   .then((res) => {
-          //     this.file
-          //       .writeFile(directory, fileName, buffer, options)
-          //       .then((res) => {
-          //         //console.log('File generated' + JSON.stringify(res));
-          //         this.fileOpener
-          //           .open(this.file.dataDirectory + fileName, 'application/pdf')
-          //           .then(() => //console.log('File is exported'))
-          //           .catch((e) => //console.log(e));
-          //       })
-          //       .catch((error) => {
-          //         //console.log(JSON.stringify(error));
-          //       });
-          //   })
-          //   .catch((error) => {
-          //     this.file
-          //       .writeFile(directory, fileName, buffer)
-          //       .then((res) => {
-          //         //console.log('File generated' + JSON.stringify(res));
-          //         this.fileOpener
-          //           .open(this.file.dataDirectory + fileName, 'application/pdf')
-          //           .then(() => //console.log('File exported'))
-          //           .catch((e) => //console.log(e));
-          //       })
-          //       .catch((error) => {
-          //         //console.log(JSON.stringify(error));
-          //       });
-          //   });
-        })
-        .catch(function (error) {
-          console.error(error);
-        });
-    }
-
-
-     openPDF(): void {
-      this.exportMode = true
-      let DATA: any = document.getElementById('exceltable');
-      //console.log(DATA.width)
-      html2canvas(DATA).then((canvas) => { 
-        let fileWidth = 208;
-        let fileHeight = (canvas.height * fileWidth) / canvas.width;
-        const FILEURI = canvas.toDataURL('image/png');
-        let PDF = new jsPDF('l', 'mm', 'a4');
-        let position = 0;
-        PDF.addImage(FILEURI, 'PNG', 0, position, fileWidth, fileHeight);
-        PDF.save('items.pdf');
-        this.exportMode = false
-      });
-    }
-
-
-        exportexcel(): void 
-        {
-          this.exportMode = true
-          /* table id is passed over here */   
-          let element = document.getElementById('exceltable'); 
-          const ws: XLSX.WorkSheet =XLSX.utils.table_to_sheet(element);
-
-          /* generate workbook and add the worksheet */
-          const wb: XLSX.WorkBook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-
-          /* save to file */
-          XLSX.writeFile(wb, this.fileName);
-          this.exportMode = false
-        }
- 
+  
   
   getStockItems(){
         console.log('data inrange')
@@ -2657,6 +2562,132 @@ incresePrice(data){
       showSearchView: this.showSearchView,
       showPaginatedView: this.showPaginatedView
     });
+  }
+
+  // Format balance display with number separators
+  formatBalance(balance: number): string {
+    if (!balance && balance !== 0) return '0.00';
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(Math.abs(balance));
+  }
+
+  // Get current active table data based on view state
+  getCurrentTableData(): any[] {
+    if (this.showAllItemsView) {
+      return this.allItemsData || [];
+    } else if (this.showSearchView) {
+      return this.searchData || [];
+    } else if (this.hasActiveFilters()) {
+      return this.filterArray || [];
+    } else if (this.showPaginatedView) {
+      return this.paginatedItems || [];
+    } else {
+      return this.items || [];
+    }
+  }
+
+  // Export functionality
+  async exportToPDF(): Promise<void> {
+    const currentData = this.getCurrentTableData();
+    if (!currentData || currentData.length === 0) {
+      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      return;
+    }
+
+    const config: ExportConfig = {
+      title: this.exportService.generateDynamicTitle('item-stock'),
+      subtitle: this.generateSubtitle(),
+      fileName: `item-stock-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+      data: currentData,
+      columns: this.getExportColumns(),
+      userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف',
+      pageType: 'item-stock',
+      currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+    };
+
+    await this.exportService.exportToPDF(config);
+  }
+
+  async exportToExcel(): Promise<void> {
+    const currentData = this.getCurrentTableData();
+    if (!currentData || currentData.length === 0) {
+      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      return;
+    }
+
+    const config: ExportConfig = {
+      title: this.exportService.generateDynamicTitle('item-stock'),
+      subtitle: this.generateSubtitle(),
+      fileName: `item-stock-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+      data: currentData,
+      columns: this.getExportColumns(),
+      userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف',
+      pageType: 'item-stock',
+      currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+    };
+
+    await this.exportService.exportToExcel(config);
+  }
+
+  private generateSubtitle(): string {
+    let subtitle = '';
+    
+    // Add filter information
+    if (this.hasActiveFilters()) {
+      const activeFilters = [];
+      
+      if (this.filterState.brand.selectedBrands && this.filterState.brand.selectedBrands.length > 0) {
+        activeFilters.push(`ماركة: ${this.filterState.brand.selectedBrands.join(', ')}`);
+      }
+      if (this.filterState.model.selectedModels && this.filterState.model.selectedModels.length > 0) {
+        activeFilters.push(`موديل: ${this.filterState.model.selectedModels.join(', ')}`);
+      }
+      if (this.filterState.quantity.isActive) {
+        if (this.filterState.quantity.filterType === 'min') {
+          activeFilters.push(`الحد الأدنى: ${this.filterState.quantity.minQuantity}`);
+        } else if (this.filterState.quantity.filterType === 'max') {
+          activeFilters.push(`الحد الأقصى: ${this.filterState.quantity.maxQuantity}`);
+        } else if (this.filterState.quantity.filterType === 'range') {
+          activeFilters.push(`نطاق الكمية: ${this.filterState.quantity.minQuantity} - ${this.filterState.quantity.maxQuantity}`);
+        }
+      }
+      
+      if (activeFilters.length > 0) {
+        subtitle = `فلتر: ${activeFilters.join(' - ')}`;
+      }
+    }
+    
+    if (this.searchTerm) {
+      subtitle = subtitle ? `${subtitle} - البحث: ${this.searchTerm}` : `البحث: ${this.searchTerm}`;
+    }
+    
+    // Add view type
+    if (this.showAllItemsView) {
+      subtitle = subtitle ? `${subtitle} - عرض جميع الأصناف` : 'عرض جميع الأصناف';
+    } else if (this.showSearchView) {
+      subtitle = subtitle ? `${subtitle} - نتائج البحث` : 'نتائج البحث';
+    }
+
+    return subtitle;
+  }
+
+  private getExportColumns(): ExportColumn[] {
+    const columns: ExportColumn[] = [];
+    
+    if (this.colSetting.item_name) columns.push({ key: 'item_name', title: 'اسم الصنف', width: 25, type: 'text' });
+    if (this.colSetting.brand) columns.push({ key: 'brand', title: 'الماركة', width: 15, type: 'text' });
+    if (this.colSetting.model) columns.push({ key: 'model', title: 'الموديل', width: 15, type: 'text' });
+    if (this.colSetting.part_no) columns.push({ key: 'part_no', title: 'رقم القطعة', width: 15, type: 'text' });
+    if (this.colSetting.item_unit) columns.push({ key: 'item_unit', title: 'الوحدة', width: 10, type: 'text' });
+    if (this.colSetting.perch_price) columns.push({ key: 'perch_price', title: 'سعر الشراء', width: 12, type: 'currency' });
+    if (this.colSetting.pay_price) columns.push({ key: 'pay_price', title: 'سعر البيع', width: 12, type: 'currency' });
+    if (this.colSetting.min_qty) columns.push({ key: 'min_qty', title: 'الحد الأدنى', width: 10, type: 'number' });
+    if (this.colSetting.instock) columns.push({ key: 'quantity', title: 'الكمية المتاحة', width: 12, type: 'number' });
+    if (this.colSetting.total) columns.push({ key: 'stockValue', title: 'قيمة المخزون', width: 15, type: 'currency' });
+    
+    return columns;
   }
 
 }

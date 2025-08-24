@@ -94,6 +94,7 @@ calculatedDiscountAmount: number = 0;
         this.user_info = JSON.parse(params.user_info);
         this.store_info = JSON.parse(params.store_info);
         this.itemList = JSON.parse(params.itemList);
+        this.resortItemList()
         //console.log('lksjda',this.payInvo, this.store_info,  this.user_info ,this.itemList ,this.selectedAccount.sub_name )
        // this.discountPerc = ((+this.payInvo.discount /+this.payInvo.tot_pr) * 100 ).toFixed(2)
       this.initializeDiscountValues();
@@ -1390,6 +1391,12 @@ sortItemListAlphabetically() {
   }
 }
 
+resortItemList(){
+  this.isItemListSorted = false
+  this.sortItemListAlphabetically()
+}
+
+
 getDisplayItemList() {
   return this.sortedItemList.length > 0 ? this.sortedItemList : this.itemList;
 }
@@ -1477,6 +1484,15 @@ highlightText(text: string, searchTerm: string): string {
   
   const regex = new RegExp(`(${searchTerm.trim()})`, 'gi');
   return text.replace(regex, '<mark>$1</mark>');
+}
+
+// Format balance display with number separators
+formatBalance(balance: number): string {
+  if (!balance && balance !== 0) return '0.00';
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Math.abs(balance));
 }
 
 }

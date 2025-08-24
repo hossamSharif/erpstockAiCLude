@@ -1,5 +1,783 @@
-"use strict";
 (self["webpackChunkapp"] = self["webpackChunkapp"] || []).push([["src_app_items_items_module_ts"],{
+
+/***/ 93463:
+/*!*******************************************************!*\
+  !*** ./node_modules/dom-to-image/src/dom-to-image.js ***!
+  \*******************************************************/
+/***/ (function(module) {
+
+(function (global) {
+    'use strict';
+
+    var util = newUtil();
+    var inliner = newInliner();
+    var fontFaces = newFontFaces();
+    var images = newImages();
+
+    // Default impl options
+    var defaultOptions = {
+        // Default is to fail on error, no placeholder
+        imagePlaceholder: undefined,
+        // Default cache bust is false, it will use the cache
+        cacheBust: false
+    };
+
+    var domtoimage = {
+        toSvg: toSvg,
+        toPng: toPng,
+        toJpeg: toJpeg,
+        toBlob: toBlob,
+        toPixelData: toPixelData,
+        impl: {
+            fontFaces: fontFaces,
+            images: images,
+            util: util,
+            inliner: inliner,
+            options: {}
+        }
+    };
+
+    if (true)
+        module.exports = domtoimage;
+    else
+        {}
+
+
+    /**
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - Rendering options
+     * @param {Function} options.filter - Should return true if passed node should be included in the output
+     *          (excluding node means excluding it's children as well). Not called on the root node.
+     * @param {String} options.bgcolor - color for the background, any valid CSS color value.
+     * @param {Number} options.width - width to be applied to node before rendering.
+     * @param {Number} options.height - height to be applied to node before rendering.
+     * @param {Object} options.style - an object whose properties to be copied to node's style before rendering.
+     * @param {Number} options.quality - a Number between 0 and 1 indicating image quality (applicable to JPEG only),
+                defaults to 1.0.
+     * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
+     * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
+     * @return {Promise} - A promise that is fulfilled with a SVG image data URL
+     * */
+    function toSvg(node, options) {
+        options = options || {};
+        copyOptions(options);
+        return Promise.resolve(node)
+            .then(function (node) {
+                return cloneNode(node, options.filter, true);
+            })
+            .then(embedFonts)
+            .then(inlineImages)
+            .then(applyOptions)
+            .then(function (clone) {
+                return makeSvgDataUri(clone,
+                    options.width || util.width(node),
+                    options.height || util.height(node)
+                );
+            });
+
+        function applyOptions(clone) {
+            if (options.bgcolor) clone.style.backgroundColor = options.bgcolor;
+
+            if (options.width) clone.style.width = options.width + 'px';
+            if (options.height) clone.style.height = options.height + 'px';
+
+            if (options.style)
+                Object.keys(options.style).forEach(function (property) {
+                    clone.style[property] = options.style[property];
+                });
+
+            return clone;
+        }
+    }
+
+    /**
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - Rendering options, @see {@link toSvg}
+     * @return {Promise} - A promise that is fulfilled with a Uint8Array containing RGBA pixel data.
+     * */
+    function toPixelData(node, options) {
+        return draw(node, options || {})
+            .then(function (canvas) {
+                return canvas.getContext('2d').getImageData(
+                    0,
+                    0,
+                    util.width(node),
+                    util.height(node)
+                ).data;
+            });
+    }
+
+    /**
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - Rendering options, @see {@link toSvg}
+     * @return {Promise} - A promise that is fulfilled with a PNG image data URL
+     * */
+    function toPng(node, options) {
+        return draw(node, options || {})
+            .then(function (canvas) {
+                return canvas.toDataURL();
+            });
+    }
+
+    /**
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - Rendering options, @see {@link toSvg}
+     * @return {Promise} - A promise that is fulfilled with a JPEG image data URL
+     * */
+    function toJpeg(node, options) {
+        options = options || {};
+        return draw(node, options)
+            .then(function (canvas) {
+                return canvas.toDataURL('image/jpeg', options.quality || 1.0);
+            });
+    }
+
+    /**
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - Rendering options, @see {@link toSvg}
+     * @return {Promise} - A promise that is fulfilled with a PNG image blob
+     * */
+    function toBlob(node, options) {
+        return draw(node, options || {})
+            .then(util.canvasToBlob);
+    }
+
+    function copyOptions(options) {
+        // Copy options to impl options for use in impl
+        if(typeof(options.imagePlaceholder) === 'undefined') {
+            domtoimage.impl.options.imagePlaceholder = defaultOptions.imagePlaceholder;
+        } else {
+            domtoimage.impl.options.imagePlaceholder = options.imagePlaceholder;
+        }
+
+        if(typeof(options.cacheBust) === 'undefined') {
+            domtoimage.impl.options.cacheBust = defaultOptions.cacheBust;
+        } else {
+            domtoimage.impl.options.cacheBust = options.cacheBust;
+        }
+    }
+
+    function draw(domNode, options) {
+        return toSvg(domNode, options)
+            .then(util.makeImage)
+            .then(util.delay(100))
+            .then(function (image) {
+                var canvas = newCanvas(domNode);
+                canvas.getContext('2d').drawImage(image, 0, 0);
+                return canvas;
+            });
+
+        function newCanvas(domNode) {
+            var canvas = document.createElement('canvas');
+            canvas.width = options.width || util.width(domNode);
+            canvas.height = options.height || util.height(domNode);
+
+            if (options.bgcolor) {
+                var ctx = canvas.getContext('2d');
+                ctx.fillStyle = options.bgcolor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            return canvas;
+        }
+    }
+
+    function cloneNode(node, filter, root) {
+        if (!root && filter && !filter(node)) return Promise.resolve();
+
+        return Promise.resolve(node)
+            .then(makeNodeCopy)
+            .then(function (clone) {
+                return cloneChildren(node, clone, filter);
+            })
+            .then(function (clone) {
+                return processClone(node, clone);
+            });
+
+        function makeNodeCopy(node) {
+            if (node instanceof HTMLCanvasElement) return util.makeImage(node.toDataURL());
+            return node.cloneNode(false);
+        }
+
+        function cloneChildren(original, clone, filter) {
+            var children = original.childNodes;
+            if (children.length === 0) return Promise.resolve(clone);
+
+            return cloneChildrenInOrder(clone, util.asArray(children), filter)
+                .then(function () {
+                    return clone;
+                });
+
+            function cloneChildrenInOrder(parent, children, filter) {
+                var done = Promise.resolve();
+                children.forEach(function (child) {
+                    done = done
+                        .then(function () {
+                            return cloneNode(child, filter);
+                        })
+                        .then(function (childClone) {
+                            if (childClone) parent.appendChild(childClone);
+                        });
+                });
+                return done;
+            }
+        }
+
+        function processClone(original, clone) {
+            if (!(clone instanceof Element)) return clone;
+
+            return Promise.resolve()
+                .then(cloneStyle)
+                .then(clonePseudoElements)
+                .then(copyUserInput)
+                .then(fixSvg)
+                .then(function () {
+                    return clone;
+                });
+
+            function cloneStyle() {
+                copyStyle(window.getComputedStyle(original), clone.style);
+
+                function copyStyle(source, target) {
+                    if (source.cssText) target.cssText = source.cssText;
+                    else copyProperties(source, target);
+
+                    function copyProperties(source, target) {
+                        util.asArray(source).forEach(function (name) {
+                            target.setProperty(
+                                name,
+                                source.getPropertyValue(name),
+                                source.getPropertyPriority(name)
+                            );
+                        });
+                    }
+                }
+            }
+
+            function clonePseudoElements() {
+                [':before', ':after'].forEach(function (element) {
+                    clonePseudoElement(element);
+                });
+
+                function clonePseudoElement(element) {
+                    var style = window.getComputedStyle(original, element);
+                    var content = style.getPropertyValue('content');
+
+                    if (content === '' || content === 'none') return;
+
+                    var className = util.uid();
+                    clone.className = clone.className + ' ' + className;
+                    var styleElement = document.createElement('style');
+                    styleElement.appendChild(formatPseudoElementStyle(className, element, style));
+                    clone.appendChild(styleElement);
+
+                    function formatPseudoElementStyle(className, element, style) {
+                        var selector = '.' + className + ':' + element;
+                        var cssText = style.cssText ? formatCssText(style) : formatCssProperties(style);
+                        return document.createTextNode(selector + '{' + cssText + '}');
+
+                        function formatCssText(style) {
+                            var content = style.getPropertyValue('content');
+                            return style.cssText + ' content: ' + content + ';';
+                        }
+
+                        function formatCssProperties(style) {
+
+                            return util.asArray(style)
+                                .map(formatProperty)
+                                .join('; ') + ';';
+
+                            function formatProperty(name) {
+                                return name + ': ' +
+                                    style.getPropertyValue(name) +
+                                    (style.getPropertyPriority(name) ? ' !important' : '');
+                            }
+                        }
+                    }
+                }
+            }
+
+            function copyUserInput() {
+                if (original instanceof HTMLTextAreaElement) clone.innerHTML = original.value;
+                if (original instanceof HTMLInputElement) clone.setAttribute("value", original.value);
+            }
+
+            function fixSvg() {
+                if (!(clone instanceof SVGElement)) return;
+                clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+                if (!(clone instanceof SVGRectElement)) return;
+                ['width', 'height'].forEach(function (attribute) {
+                    var value = clone.getAttribute(attribute);
+                    if (!value) return;
+
+                    clone.style.setProperty(attribute, value);
+                });
+            }
+        }
+    }
+
+    function embedFonts(node) {
+        return fontFaces.resolveAll()
+            .then(function (cssText) {
+                var styleNode = document.createElement('style');
+                node.appendChild(styleNode);
+                styleNode.appendChild(document.createTextNode(cssText));
+                return node;
+            });
+    }
+
+    function inlineImages(node) {
+        return images.inlineAll(node)
+            .then(function () {
+                return node;
+            });
+    }
+
+    function makeSvgDataUri(node, width, height) {
+        return Promise.resolve(node)
+            .then(function (node) {
+                node.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+                return new XMLSerializer().serializeToString(node);
+            })
+            .then(util.escapeXhtml)
+            .then(function (xhtml) {
+                return '<foreignObject x="0" y="0" width="100%" height="100%">' + xhtml + '</foreignObject>';
+            })
+            .then(function (foreignObject) {
+                return '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
+                    foreignObject + '</svg>';
+            })
+            .then(function (svg) {
+                return 'data:image/svg+xml;charset=utf-8,' + svg;
+            });
+    }
+
+    function newUtil() {
+        return {
+            escape: escape,
+            parseExtension: parseExtension,
+            mimeType: mimeType,
+            dataAsUrl: dataAsUrl,
+            isDataUrl: isDataUrl,
+            canvasToBlob: canvasToBlob,
+            resolveUrl: resolveUrl,
+            getAndEncode: getAndEncode,
+            uid: uid(),
+            delay: delay,
+            asArray: asArray,
+            escapeXhtml: escapeXhtml,
+            makeImage: makeImage,
+            width: width,
+            height: height
+        };
+
+        function mimes() {
+            /*
+             * Only WOFF and EOT mime types for fonts are 'real'
+             * see http://www.iana.org/assignments/media-types/media-types.xhtml
+             */
+            var WOFF = 'application/font-woff';
+            var JPEG = 'image/jpeg';
+
+            return {
+                'woff': WOFF,
+                'woff2': WOFF,
+                'ttf': 'application/font-truetype',
+                'eot': 'application/vnd.ms-fontobject',
+                'png': 'image/png',
+                'jpg': JPEG,
+                'jpeg': JPEG,
+                'gif': 'image/gif',
+                'tiff': 'image/tiff',
+                'svg': 'image/svg+xml'
+            };
+        }
+
+        function parseExtension(url) {
+            var match = /\.([^\.\/]*?)$/g.exec(url);
+            if (match) return match[1];
+            else return '';
+        }
+
+        function mimeType(url) {
+            var extension = parseExtension(url).toLowerCase();
+            return mimes()[extension] || '';
+        }
+
+        function isDataUrl(url) {
+            return url.search(/^(data:)/) !== -1;
+        }
+
+        function toBlob(canvas) {
+            return new Promise(function (resolve) {
+                var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
+                var length = binaryString.length;
+                var binaryArray = new Uint8Array(length);
+
+                for (var i = 0; i < length; i++)
+                    binaryArray[i] = binaryString.charCodeAt(i);
+
+                resolve(new Blob([binaryArray], {
+                    type: 'image/png'
+                }));
+            });
+        }
+
+        function canvasToBlob(canvas) {
+            if (canvas.toBlob)
+                return new Promise(function (resolve) {
+                    canvas.toBlob(resolve);
+                });
+
+            return toBlob(canvas);
+        }
+
+        function resolveUrl(url, baseUrl) {
+            var doc = document.implementation.createHTMLDocument();
+            var base = doc.createElement('base');
+            doc.head.appendChild(base);
+            var a = doc.createElement('a');
+            doc.body.appendChild(a);
+            base.href = baseUrl;
+            a.href = url;
+            return a.href;
+        }
+
+        function uid() {
+            var index = 0;
+
+            return function () {
+                return 'u' + fourRandomChars() + index++;
+
+                function fourRandomChars() {
+                    /* see http://stackoverflow.com/a/6248722/2519373 */
+                    return ('0000' + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
+                }
+            };
+        }
+
+        function makeImage(uri) {
+            return new Promise(function (resolve, reject) {
+                var image = new Image();
+                image.onload = function () {
+                    resolve(image);
+                };
+                image.onerror = reject;
+                image.src = uri;
+            });
+        }
+
+        function getAndEncode(url) {
+            var TIMEOUT = 30000;
+            if(domtoimage.impl.options.cacheBust) {
+                // Cache bypass so we dont have CORS issues with cached images
+                // Source: https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
+                url += ((/\?/).test(url) ? "&" : "?") + (new Date()).getTime();
+            }
+
+            return new Promise(function (resolve) {
+                var request = new XMLHttpRequest();
+
+                request.onreadystatechange = done;
+                request.ontimeout = timeout;
+                request.responseType = 'blob';
+                request.timeout = TIMEOUT;
+                request.open('GET', url, true);
+                request.send();
+
+                var placeholder;
+                if(domtoimage.impl.options.imagePlaceholder) {
+                    var split = domtoimage.impl.options.imagePlaceholder.split(/,/);
+                    if(split && split[1]) {
+                        placeholder = split[1];
+                    }
+                }
+
+                function done() {
+                    if (request.readyState !== 4) return;
+
+                    if (request.status !== 200) {
+                        if(placeholder) {
+                            resolve(placeholder);
+                        } else {
+                            fail('cannot fetch resource: ' + url + ', status: ' + request.status);
+                        }
+
+                        return;
+                    }
+
+                    var encoder = new FileReader();
+                    encoder.onloadend = function () {
+                        var content = encoder.result.split(/,/)[1];
+                        resolve(content);
+                    };
+                    encoder.readAsDataURL(request.response);
+                }
+
+                function timeout() {
+                    if(placeholder) {
+                        resolve(placeholder);
+                    } else {
+                        fail('timeout of ' + TIMEOUT + 'ms occured while fetching resource: ' + url);
+                    }
+                }
+
+                function fail(message) {
+                    console.error(message);
+                    resolve('');
+                }
+            });
+        }
+
+        function dataAsUrl(content, type) {
+            return 'data:' + type + ';base64,' + content;
+        }
+
+        function escape(string) {
+            return string.replace(/([.*+?^${}()|\[\]\/\\])/g, '\\$1');
+        }
+
+        function delay(ms) {
+            return function (arg) {
+                return new Promise(function (resolve) {
+                    setTimeout(function () {
+                        resolve(arg);
+                    }, ms);
+                });
+            };
+        }
+
+        function asArray(arrayLike) {
+            var array = [];
+            var length = arrayLike.length;
+            for (var i = 0; i < length; i++) array.push(arrayLike[i]);
+            return array;
+        }
+
+        function escapeXhtml(string) {
+            return string.replace(/#/g, '%23').replace(/\n/g, '%0A');
+        }
+
+        function width(node) {
+            var leftBorder = px(node, 'border-left-width');
+            var rightBorder = px(node, 'border-right-width');
+            return node.scrollWidth + leftBorder + rightBorder;
+        }
+
+        function height(node) {
+            var topBorder = px(node, 'border-top-width');
+            var bottomBorder = px(node, 'border-bottom-width');
+            return node.scrollHeight + topBorder + bottomBorder;
+        }
+
+        function px(node, styleProperty) {
+            var value = window.getComputedStyle(node).getPropertyValue(styleProperty);
+            return parseFloat(value.replace('px', ''));
+        }
+    }
+
+    function newInliner() {
+        var URL_REGEX = /url\(['"]?([^'"]+?)['"]?\)/g;
+
+        return {
+            inlineAll: inlineAll,
+            shouldProcess: shouldProcess,
+            impl: {
+                readUrls: readUrls,
+                inline: inline
+            }
+        };
+
+        function shouldProcess(string) {
+            return string.search(URL_REGEX) !== -1;
+        }
+
+        function readUrls(string) {
+            var result = [];
+            var match;
+            while ((match = URL_REGEX.exec(string)) !== null) {
+                result.push(match[1]);
+            }
+            return result.filter(function (url) {
+                return !util.isDataUrl(url);
+            });
+        }
+
+        function inline(string, url, baseUrl, get) {
+            return Promise.resolve(url)
+                .then(function (url) {
+                    return baseUrl ? util.resolveUrl(url, baseUrl) : url;
+                })
+                .then(get || util.getAndEncode)
+                .then(function (data) {
+                    return util.dataAsUrl(data, util.mimeType(url));
+                })
+                .then(function (dataUrl) {
+                    return string.replace(urlAsRegex(url), '$1' + dataUrl + '$3');
+                });
+
+            function urlAsRegex(url) {
+                return new RegExp('(url\\([\'"]?)(' + util.escape(url) + ')([\'"]?\\))', 'g');
+            }
+        }
+
+        function inlineAll(string, baseUrl, get) {
+            if (nothingToInline()) return Promise.resolve(string);
+
+            return Promise.resolve(string)
+                .then(readUrls)
+                .then(function (urls) {
+                    var done = Promise.resolve(string);
+                    urls.forEach(function (url) {
+                        done = done.then(function (string) {
+                            return inline(string, url, baseUrl, get);
+                        });
+                    });
+                    return done;
+                });
+
+            function nothingToInline() {
+                return !shouldProcess(string);
+            }
+        }
+    }
+
+    function newFontFaces() {
+        return {
+            resolveAll: resolveAll,
+            impl: {
+                readAll: readAll
+            }
+        };
+
+        function resolveAll() {
+            return readAll(document)
+                .then(function (webFonts) {
+                    return Promise.all(
+                        webFonts.map(function (webFont) {
+                            return webFont.resolve();
+                        })
+                    );
+                })
+                .then(function (cssStrings) {
+                    return cssStrings.join('\n');
+                });
+        }
+
+        function readAll() {
+            return Promise.resolve(util.asArray(document.styleSheets))
+                .then(getCssRules)
+                .then(selectWebFontRules)
+                .then(function (rules) {
+                    return rules.map(newWebFont);
+                });
+
+            function selectWebFontRules(cssRules) {
+                return cssRules
+                    .filter(function (rule) {
+                        return rule.type === CSSRule.FONT_FACE_RULE;
+                    })
+                    .filter(function (rule) {
+                        return inliner.shouldProcess(rule.style.getPropertyValue('src'));
+                    });
+            }
+
+            function getCssRules(styleSheets) {
+                var cssRules = [];
+                styleSheets.forEach(function (sheet) {
+                    try {
+                        util.asArray(sheet.cssRules || []).forEach(cssRules.push.bind(cssRules));
+                    } catch (e) {
+                        console.log('Error while reading CSS rules from ' + sheet.href, e.toString());
+                    }
+                });
+                return cssRules;
+            }
+
+            function newWebFont(webFontRule) {
+                return {
+                    resolve: function resolve() {
+                        var baseUrl = (webFontRule.parentStyleSheet || {}).href;
+                        return inliner.inlineAll(webFontRule.cssText, baseUrl);
+                    },
+                    src: function () {
+                        return webFontRule.style.getPropertyValue('src');
+                    }
+                };
+            }
+        }
+    }
+
+    function newImages() {
+        return {
+            inlineAll: inlineAll,
+            impl: {
+                newImage: newImage
+            }
+        };
+
+        function newImage(element) {
+            return {
+                inline: inline
+            };
+
+            function inline(get) {
+                if (util.isDataUrl(element.src)) return Promise.resolve();
+
+                return Promise.resolve(element.src)
+                    .then(get || util.getAndEncode)
+                    .then(function (data) {
+                        return util.dataAsUrl(data, util.mimeType(element.src));
+                    })
+                    .then(function (dataUrl) {
+                        return new Promise(function (resolve, reject) {
+                            element.onload = resolve;
+                            element.onerror = reject;
+                            element.src = dataUrl;
+                        });
+                    });
+            }
+        }
+
+        function inlineAll(node) {
+            if (!(node instanceof Element)) return Promise.resolve(node);
+
+            return inlineBackground(node)
+                .then(function () {
+                    if (node instanceof HTMLImageElement)
+                        return newImage(node).inline();
+                    else
+                        return Promise.all(
+                            util.asArray(node.childNodes).map(function (child) {
+                                return inlineAll(child);
+                            })
+                        );
+                });
+
+            function inlineBackground(node) {
+                var background = node.style.getPropertyValue('background');
+
+                if (!background) return Promise.resolve(node);
+
+                return inliner.inlineAll(background)
+                    .then(function (inlined) {
+                        node.style.setProperty(
+                            'background',
+                            inlined,
+                            node.style.getPropertyPriority('background')
+                        );
+                    })
+                    .then(function () {
+                        return node;
+                    });
+            }
+        }
+    }
+})(this);
+
+
+/***/ }),
 
 /***/ 34228:
 /*!***********************************************!*\
@@ -7,6 +785,7 @@
   \***********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "ItemsPageRoutingModule": () => (/* binding */ ItemsPageRoutingModule)
@@ -44,6 +823,7 @@ ItemsPageRoutingModule = (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__decorate)([
   \***************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "ItemsPageModule": () => (/* binding */ ItemsPageModule)
@@ -92,6 +872,7 @@ ItemsPageModule = (0,tslib__WEBPACK_IMPORTED_MODULE_4__.__decorate)([
   \*************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "ItemsPage": () => (/* binding */ ItemsPage)
@@ -1683,6 +2464,7 @@ ItemsPage = (0,tslib__WEBPACK_IMPORTED_MODULE_12__.__decorate)([
   \**************************************************/
 /***/ ((module) => {
 
+"use strict";
 module.exports = ".showMe {\n  color: black;\n}\n\n.hideMe {\n  display: none;\n}\n\n.custInput {\n  border-style: solid;\n  border-color: var(--ion-color-light);\n  border-radius: 5px;\n}\n\n.cust-card {\n  border-radius: 5px;\n}\n\n.custContent {\n  white-space: nowrap;\n}\n\n.custRow {\n  margin-top: 5rem;\n}\n\n.custCol {\n  overflow-x: auto;\n  height: 400px;\n}\n\n.table {\n  text-align: center;\n  width: 100%;\n  margin: 12px;\n}\n\ntr:nth-child(even) {\n  background-color: #dddddd;\n}\n\ntd, th {\n  border: 1px solid #dddddd;\n  text-align: center;\n  padding: 4px;\n  font-size: 16px;\n  font-weight: bold;\n  color: black;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIml0ZW1zLnBhZ2Uuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNDLFlBQUE7QUFDRDs7QUFDQTtFQUNFLGFBQUE7QUFFRjs7QUFJQTtFQUNJLG1CQUFBO0VBQ0Esb0NBQUE7RUFDQSxrQkFBQTtBQURKOztBQUdJO0VBQ0ksa0JBQUE7QUFBUjs7QUFFQTtFQUdFLG1CQUFBO0FBREY7O0FBR0k7RUFDSSxnQkFBQTtBQUFSOztBQUVBO0VBQ0UsZ0JBQUE7RUFDQSxhQUFBO0FBQ0Y7O0FBQ0U7RUFDSyxrQkFBQTtFQUNILFdBQUE7RUFDQSxZQUFBO0FBRUo7O0FBRUU7RUFDRSx5QkFBQTtBQUNKOztBQUNFO0VBQVEseUJBQUE7RUFBMEIsa0JBQUE7RUFBbUIsWUFBQTtFQUFjLGVBQUE7RUFBZ0IsaUJBQUE7RUFBa0IsWUFBQTtBQVF2RyIsImZpbGUiOiJpdGVtcy5wYWdlLnNjc3MiLCJzb3VyY2VzQ29udGVudCI6WyIuc2hvd01le1xuIGNvbG9yOmJsYWNrO1xufVxuLmhpZGVNZXtcbiAgZGlzcGxheTogbm9uZTsgXG4gfVxuXG5cbiBcbiBcbi5jdXN0SW5wdXR7XG4gICAgYm9yZGVyLXN0eWxlOiBzb2xpZDtcbiAgICBib3JkZXItY29sb3I6IHZhcigtLWlvbi1jb2xvci1saWdodCk7XG4gICAgYm9yZGVyLXJhZGl1czogNXB4O1xuICAgIH1cbiAgICAuY3VzdC1jYXJke1xuICAgICAgICBib3JkZXItcmFkaXVzOiA1cHg7XG4gICAgfVxuLmN1c3RDb250ZW50e1xuICBcbiAgXG4gIHdoaXRlLXNwYWNlOiBub3dyYXA7XG59XG4gICAgLmN1c3RSb3d7XG4gICAgICAgIG1hcmdpbi10b3A6IDVyZW07XG4gICAgICAgIH1cbi5jdXN0Q29se1xuICBvdmVyZmxvdy14OiBhdXRvO1xuICBoZWlnaHQ6IDQwMHB4O1xufVxuICAudGFibGV7XG4gICAgICAgdGV4dC1hbGlnbjogY2VudGVyO1xuICAgIHdpZHRoOiAxMDAlO1xuICAgIG1hcmdpbjogMTJweDsgXG4gICAgXG4gIH1cblxuICB0cjpudGgtY2hpbGQoZXZlbikge1xuICAgIGJhY2tncm91bmQtY29sb3I6ICNkZGRkZGQ7XG4gIH1cbiAgdGQsIHRoIHtib3JkZXI6IDFweCBzb2xpZCAjZGRkZGRkO3RleHQtYWxpZ246IGNlbnRlcjtwYWRkaW5nOiA0cHg7IGZvbnQtc2l6ZTogMTZweDtmb250LXdlaWdodDogYm9sZDtjb2xvcjogYmxhY2s7fSJdfQ== */";
 
 /***/ }),
@@ -1693,6 +2475,7 @@ module.exports = ".showMe {\n  color: black;\n}\n\n.hideMe {\n  display: none;\n
   \**************************************************/
 /***/ ((module) => {
 
+"use strict";
 module.exports = "<ion-header>\n  <ion-toolbar>\n    <ion-buttons slot=\"start\">\n      <ion-menu-button></ion-menu-button>\n    </ion-buttons>\n    <ion-buttons slot=\"end\" class=\"poRel\" (click)=\"presentPopover($event)\">\n      <div class=\"poRel\">\n        <div class=\"posAb noti\">\n         <ion-label>\n           <ion-text *ngIf=\"showNotif == true && notifArr.length> 0\">{{notifArr.length}}</ion-text> \n         </ion-label> \n       </div>\n       <div (click)=\"presentPopover($event)\">\n         <ion-icon name=\"notifications-outline\"  class=\"dark\"  [ngClass]=\"{'warn':showNotif == true && notifArr.length> 0 , 'dark': showNotif == false }\"></ion-icon> \n       </div>\n     </div> \n     <ion-button fill=\"clear\" (click)=\"presentPopover($event)\">\n      <ion-label><ion-text color=\"dark\" >الإشعارات</ion-text></ion-label>  \n     </ion-button>\n    </ion-buttons>  \n    <ion-title>الأصنــاف</ion-title>\n  </ion-toolbar>\n  <ion-popover  #popoverNotif33 [isOpen]=\"isOpenNotif\" (didDismiss)=\"didDissmis()\">\n    <ng-template>\n      <ion-header>\n        <ion-toolbar dir=\"rtl\" class=\"ion-text-center\">\n          الإشعارات\n        </ion-toolbar>\n      </ion-header>\n      <ion-content  dir=\"rtl\">  \n        <ion-list class=\"ion-text-center\"  *ngIf=\"LogHistoryLocalArr.length>0\">\n         <ion-item *ngFor=\"let log of LogHistoryLocalArr\" >\n         <ion-grid >\n           <ion-row>\n             <ion-col size=\"9\"> \n                 {{log.desc}}    \n             </ion-col>\n             <ion-col size=\"3\">\n               <ion-text color = \"primary\">{{log.datee | dateAgo}}</ion-text>\n             </ion-col>\n           </ion-row>\n         </ion-grid>\n       </ion-item> \n        </ion-list> \n      </ion-content>\n    </ng-template>\n  </ion-popover>\n</ion-header>\n\n<ion-content class=\"custContent\">\n  <ion-grid>\n    <ion-row dir=\"rtl\">\n      <ion-col size=\"12\">\n        <ion-card class=\"ion-no-margin\">\n          <ion-grid>\n            <ion-row>\n              <ion-col size=\"5\"> \n                <ion-item lines=\"none\" >\n                  <!-- <input placeholder=\"اختر  حساب العميل\" list=\"accounts\" id=\"account\" [(ngModel)]=\"selectedAccount.sub_name\"  (change)=\"pickAccount($event)\">\n                 \n                  <datalist style=\"border: none;\" id=\"accounts\" style=\"height: auto;max-height: 20px;\">\n                    <option *ngFor=\"let ac of sub_account ; let i = index\"   [value]=\"ac.sub_name\"></option>\n                </datalist> -->\n                <!-- <ion-input [(ngModel)]=\"searchTerm\" placeholder=\"بحــث\"></ion-input> -->\n                <ion-searchbar  [(ngModel)]=\"searchTerm\" (ionChange)=\"searching($event)\" showCancelButton=\"never\" placeholder=\"بحــث\" ></ion-searchbar>\n                </ion-item>  \n  \n              </ion-col>\n              <ion-col size=\"7\" >\n                <ion-item lines=\"none\">\n                  <ion-buttons slot=\"end\">\n                    <ion-button  fill=\"outline\" color=\"success\" shape=\"round\"  (click)=\"presentModal('null', 'settings')\"  > \n                      <ion-icon name=\"settings-outline\" color=\"success\"></ion-icon>\n                     <ion-label><ion-text color=\"dark\"> إخفاء الأعمدة</ion-text></ion-label> \n                    </ion-button>\n                    <ion-button  fill=\"outline\" color=\"success\" shape=\"round\"   (click)=\"presentModal('null', 'price')\"  > \n                      <ion-icon name=\"create-outline\" color=\"success\"></ion-icon>\n                      <ion-label><ion-text color=\"dark\">تعديل الأسعار</ion-text></ion-label> \n                    </ion-button>\n                    <ion-button  fill=\"outline\" color=\"success\" shape=\"round\"  (click)=\"presentModal('null', 'save')\"  > \n                      <ion-icon name=\"add-circle-outline\" color=\"success\"></ion-icon>\n                     <ion-label><ion-text color=\"dark\">صنف جديد</ion-text></ion-label> \n                    </ion-button>\n                    <ion-button  fill=\"outline\" color=\"success\"  shape=\"round\"  (click)=\"exportexcel()\"  > \n                     \n                      <ion-icon name=\"document-outline\" color=\"success\"></ion-icon>\n                     <ion-label class=\"ion-margin-start ion-margin-end\"><ion-text color=\"dark\"> تصدير XLS </ion-text></ion-label> \n                    </ion-button>\n                    <ion-button  fill=\"outline\" color=\"success\"  shape=\"round\"  (click)=\"openPDF()\"  > \n                     \n                      <ion-icon name=\"document-outline\" color=\"success\"></ion-icon>\n                     <ion-label class=\"ion-margin-start ion-margin-end\"><ion-text color=\"dark\"> تصدير PDF </ion-text></ion-label> \n                    </ion-button>\n                  </ion-buttons>\n                </ion-item>\n              </ion-col>\n            </ion-row>\n           </ion-grid> \n        </ion-card>\n      </ion-col>\n    </ion-row>\n  </ion-grid>\n\n  <ion-grid>\n    <ion-row dir=\"rtl\">\n       <!--<ion-col size=\"6\" class=\"ion-text-center\">\n        <ion-label>\n          <strong>اسم الفرع :</strong> {{store_info.store_name}}\n          </ion-label>\n      </ion-col> -->\n\n      <ion-col size=\"6\" class=\"ion-text-end\">\n        <!-- <ion-label *ngIf = \"filterMode == true\"> \n          <strong >قيمة المخزون :</strong> {{store_fltTot.toFixed(2)}} \n          </ion-label> -->\n          <ion-label *ngIf = \"filterMode == false\">\n            <ion-text><strong >قيمة المخزون :  </strong> </ion-text>\n          </ion-label> \n      </ion-col>\n      <ion-col size=\"3\" class=\"ion-text-start\">\n          <ion-label *ngIf = \"filterMode == false\"> \n            <ion-text *ngIf = \"loadingTot == false\">{{store_tot.toFixed(2)}}</ion-text> \n            <ion-text *ngIf = \"loadingTot == true\">\n              <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text>\n            </ion-text>\n          </ion-label> \n      </ion-col>\n    </ion-row>\n    <ion-row dir=\"rtl\"> \n      <ion-col size=\"5\" >\n        <ion-item lines=\"none\">\n          <!-- filter buttons -->\n          <!-- <ion-buttons >\n            <ion-button  fill=\"outline\" color=\"success\"  shape=\"round\"  (click)=\"presentModal('null', 'filter')\"  > \n              <ion-icon name=\"filter-outline\" color=\"success\"></ion-icon>\n             <ion-label class=\"ion-margin-start ion-margin-end\"><ion-text color=\"dark\"> فلتر </ion-text></ion-label> \n            </ion-button>\n             <ion-button *ngIf=\"showBrand == true\"  fill=\"outline\" color=\"medium\" shape=\"round\"   (click)=\"removeFilter('brand')\"  > \n              <ion-label><ion-text color=\"dark\">  الماركة (brand) </ion-text></ion-label> \n              <ion-icon name=\"close\" color=\"medium\"></ion-icon> \n            </ion-button> \n            <ion-label class=\"ion-margin-right\"><strong>:</strong></ion-label>\n            <ion-button *ngIf=\"showMdel == true\" fill=\"outline\" color=\"medium\" shape=\"round\"   (click)=\"removeFilter('model')\"  > \n              \n              <ion-label><ion-text color=\"dark\"> الموديل (model)  </ion-text></ion-label>\n              <ion-icon name=\"close\" color=\"medium\"></ion-icon> \n            </ion-button> \n          </ion-buttons> -->\n        </ion-item>\n      </ion-col>\n      <ion-col size=\"7\" >\n        <ion-buttons>\n         \n        </ion-buttons>\n      </ion-col>\n    </ion-row>\n  </ion-grid>\n<!-- \n  <ion-grid *ngIf=\"items\">\n    <ion-row> \n      <ion-col size=\"2\" class=\"ion-no-padding ion-padding-top\">\n        <ion-label>\n          <strong>تصفية النتائج :</strong>\n        </ion-label>\n      </ion-col>\n      <ion-col size=\"6\" > \n        <ion-badge (click)=\"prepareFilters()\" class=\"ion-padding\" >\n          <ion-label class=\"ion-margin-end\">All</ion-label>\n        </ion-badge>\n        <ion-select   multiple=\"true\" cancelText=\"cancel\" okText=\"ok\">\n          <ion-select-option *ngFor=\"let b of brandList\" value=\"b.brand\">\n            {{b.brand}}\n          </ion-select-option>\n        </ion-select>\n        <ion-badge (click)=\"filter('all')\" class=\"ion-padding\" [ngClass]=\"{'selected': selectedIdx == 'all' , 'noneSelected': selectedIdx !='all' }\">\n          <ion-label class=\"ion-margin-end\">All</ion-label>\n        </ion-badge>\n        <ion-badge *ngFor=\"let st of stores ; let i = index\" class=\"ion-padding\" (click)=\"filter(i)\" [ngClass]=\"{'selected':+selectedIdx == +st.id  , 'noneSelected': +selectedIdx != +st.id  }\" >\n          <ion-label>{{st.store_name}}</ion-label>\n        </ion-badge>\n      </ion-col>\n       \n    </ion-row>\n  </ion-grid> -->\n\n  <ion-grid>\n    <ion-row dir=\"rtl\" >\n      <ion-col size=\"12\" class=\"ion-no-padding custCol\">\n        <ion-grid>\n          <!-- <ion-row>\n            <ion-col size=\"12\">\n              <ion-card>\n                <ion-grid>\n                  <ion-row>\n                    <ion-col size=\"4\"> \n                     <ion-label  class=\"ion-padding\"><strong>الصنف</strong></ion-label> \n                        <ion-item class=\"custInput\">\n                          <input  list=\"browsers\" id=\"browser\" [(ngModel)]=\"selectedItem.item_name\"  (change)=\"pickDetail($event)\">\n                         \n                          <datalist style=\"border: none;\" id=\"browsers\" style=\"height: auto;max-height: 20px;\">\n                            <option *ngFor=\"let item of items ; let i = index\"   [value]=\"item.item_name\"></option>\n                        </datalist>\n                        </ion-item>  \n                    </ion-col>\n                    <ion-col size=\"2\"> \n                      <ion-label class=\"ion-padding\"><strong>الكمية</strong></ion-label>\n                      <ion-item class=\"custInput\">\n                        <ion-input  [(ngModel)]=\"selectedItem.qty\"  (ionChange)=\"qtyhange($event)\" #qtyId  ></ion-input>\n                      </ion-item> \n                    </ion-col>\n                    <ion-col size=\"2\">\n                      <ion-label class=\"ion-padding\"><strong>سعر الوحده</strong></ion-label>\n                      <ion-item class=\"custInput\">\n                        <ion-input [(ngModel)]=\"selectedItem.pay_price\"></ion-input>\n                      </ion-item>\n                    </ion-col>\n                    <ion-col size=\"2\">\n                      <ion-label class=\"ion-padding\"><strong>المجموع</strong></ion-label>\n                      <ion-item class=\"custInput\">\n                        <ion-input [(ngModel)]=\"selectedItem.tot\"></ion-input>\n                      </ion-item>\n                    </ion-col>\n                    <ion-col size=\"2\" class=\"ion-padding\"> \n                      <ion-button expand=\"block\" routerDirection=\"root\" color=\"success\"  (click)=\"addTolist()\" >\n                        <ion-label class=\"ion-text-center\"> +</ion-label>\n                      </ion-button> \n                    </ion-col>\n                  </ion-row>\n                </ion-grid>\n              </ion-card>\n            </ion-col>\n          </ion-row> -->\n          <ion-row>\n            <ion-col size=\"12\" >\n               <table  class=\"table\"  *ngIf=\"searchMode == false && filterMode == false && searchTerm == ''\" >\n                <ion-item>\n                <ion-label class=\"ion-padding\"><strong>الاصناف</strong></ion-label>\n                </ion-item>\n                 <tr *ngIf=\"colSetting\">\n                  <th> \n                    التسلسل\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('id', sortStatus[0].type,'items')\">\n                      <ion-icon *ngIf=\"sortStatus[0].type == 'asc' || sortStatus[0].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[0].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.item_name == false , 'showMe': colSetting.item_name == true }\">\n                    الصنف\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('item_name', sortStatus[1].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[1].type == 'asc' || sortStatus[1].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[1].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.item_desc== false , 'showMe': colSetting.item_desc== true }\">اسم الصنف  (English)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('item_desc', sortStatus[0].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[2].type == 'asc' || sortStatus[2].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[2].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th> \n                  <th  [ngClass]=\"{'hideMe': colSetting.aliasEn== false , 'showMe': colSetting.aliasEn== true }\">اسم  مستعار  (Alias)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('aliasEn', sortStatus[0].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[2].type == 'asc' || sortStatus[2].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[2].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.model == false , 'showMe': colSetting.model == true }\">الموديل (model)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('model', sortStatus[3].type,'items')\">\n                      <ion-icon *ngIf=\"sortStatus[3].type == 'asc' || sortStatus[3].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[3].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                 \n                  <th  [ngClass]=\"{'hideMe': colSetting.part_no == false , 'showMe': colSetting.part_no == true }\">الكود (part no)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('part_no', sortStatus[4].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[4].type == 'asc' || sortStatus[4].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[4].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.brand == false , 'showMe': colSetting.brand == true }\">الماركة (brand) \n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('brand', sortStatus[5].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[5].type == 'asc' || sortStatus[5].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[5].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th> \n                  <th  [ngClass]=\"{'hideMe': colSetting.min_qty == false , 'showMe': colSetting.min_qty == true }\">اقل كمية (MSQ)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('min_qty', sortStatus[6].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[6].type == 'asc' || sortStatus[6].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[6].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.item_unit== false , 'showMe': colSetting.item_unit== true }\">الوحده (unit)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('item_unit', sortStatus[7].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[7].type == 'asc' || sortStatus[7].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[7].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th> \n                  <th  [ngClass]=\"{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }\">سعر الشراء (purch price)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('perch_price', sortStatus[8].type,'items')\">\n                      <ion-icon *ngIf=\"sortStatus[8].type == 'asc' || sortStatus[8].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[8].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }\">سعر الوحده (selling price)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('pay_price', sortStatus[9].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[9].type == 'asc' || sortStatus[9].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[9].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th> \n                  <th  [ngClass]=\"{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }\">نسبة الفائدة (profit perc)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('profit', sortStatus[10].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[10].type == 'asc' || sortStatus[10].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[10].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>  \n                  <th  [ngClass]=\"{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }\">المخزون (in stock)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('quantity', sortStatus[11].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[11].type == 'asc' || sortStatus[11].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[11].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }\">المجموع\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('total', sortStatus[12].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[12].type == 'asc' || sortStatus[12].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[12].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }\">اخر عملية بيع\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('lastSold', sortStatus[13].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[13].type == 'asc' || sortStatus[13].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[13].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <!-- <th>sales28</th>\n                  <th>sales29</th>\n                  <th>purch28</th>\n                  <th>purch29</th>-->\n                  <th>المخزون الإفتتاحي</th> \n                  <th  [ngClass]=\"{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }\"><strong>تعديل</strong>  </th> \n                  <th  [ngClass]=\"{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }\"><strong>حذف</strong>  </th> \n                 </tr>\n                 <tr *ngFor=\"let item of items ; let i = index\"   (dblclick)=\"prClick(i , item)\">\n                  <!-- <td>{{i+1}}</td> -->\n                  <td>{{item.id}}</td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.item_name == false , 'showMe': colSetting.item_name == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.item_name}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.item_name\"  ></ion-input>\n                     </ion-item>\n                  </td> \n                  <td  [ngClass]=\"{'hideMe': colSetting.item_desc == false , 'showMe': colSetting.item_desc == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.item_desc}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.item_desc\"  ></ion-input>\n                     </ion-item>\n                  </td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.aliasEn == false , 'showMe': colSetting.aliasEn == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.aliasEn}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.aliasEn\"  ></ion-input>\n                     </ion-item>\n                  </td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.model == false , 'showMe': colSetting.model == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.model}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.model\"  ></ion-input>\n                     </ion-item>\n                  </td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.part_no == false , 'showMe': colSetting.part_no == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.part_no}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.part_no\"  ></ion-input>\n                     </ion-item>\n                  </td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.brand == false , 'showMe': colSetting.brand == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.brand}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.brand\"  ></ion-input>\n                     </ion-item>\n                  </td> \n                  <td  [ngClass]=\"{'hideMe': colSetting.min_qty == false , 'showMe': colSetting.min_qty == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.min_qty}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.min_qty\"  ></ion-input>\n                     </ion-item>\n                  </td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.item_unit == false , 'showMe': colSetting.item_unit == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.item_unit}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.item_unit\"  ></ion-input>\n                     </ion-item> \n                  </td> \n                  <td  [ngClass]=\"{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.perch_price}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.perch_price\"  ></ion-input>\n                     </ion-item> \n                  </td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.pay_price}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.pay_price\"  ></ion-input>\n                     </ion-item> \n                  </td> \n                  <td  [ngClass]=\"{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }\">\n                    <ion-text *ngIf=\"(item.pay_price && item.perch_price) && item.pay_price >= item.perch_price\">\n                      {{(((+item.pay_price - +item.perch_price)/+item.perch_price) * 100).toFixed(2)}}\n                    </ion-text>\n                    <ion-text *ngIf=\"(item.pay_price && item.perch_price) && item.pay_price < item.perch_price\">\n                      {{(((+item.perch_price - +item.pay_price)/+item.perch_price) * 100).toFixed(2)}}\n                    </ion-text>\n                  </td>\n                \n                  <td  [ngClass]=\"{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }\">{{item.quantity}}</td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }\">{{+item.quantity * +item.perch_price }}</td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }\">{{item.lastSoldDate }}</td>\n                  <!-- new -->\n                  <!-- <td   >{{item.sales28 }}</td>\n                  <td   >{{item.salesQuantity }}</td>\n                  <td   >{{item.purch28 }}</td> \n                  <td   >{{item.perchQuantity }}</td> -->\n                  <td>\n                     <ion-item *ngIf=\"showMe == i\">\n                    <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.quantity\"  ></ion-input>\n                     </ion-item>\n\n                    <ion-text *ngIf=\"showMe != i\">\n                      {{item.firstQuantity}}\n                    </ion-text> \n                  </td>\n                  \n\n                  <!-- end new -->\n\n                  <td  [ngClass]=\"{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }\">\n                    <ion-button fill=\"clear\" size=\"small\" (click)=\"presentModal(item.id , 'edit')\">\n                      <ion-icon name=\"create-outline\" color=\"success\" ></ion-icon> \n                    </ion-button>\n                  </td>\n                   <td  [ngClass]=\"{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }\">\n                    <ion-button fill=\"clear\" size=\"small\" (click)=\"deleteItem(item)\">\n                      <ion-icon name=\"trash\" color=\"danger\" ></ion-icon>\n                    </ion-button>\n                  </td>  \n                 </tr> \n                 <tr  *ngIf=\"loading == true \" >\n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td>  <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                 </tr>\n                 <tr  *ngIf=\"loading == true\">\n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td>  <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                 </tr>\n               </table>  \n                <!-- filte mode  -->\n                <table  class=\"table\"  *ngIf=\"filterMode == true && searchTerm == ''\" >\n                  <tr *ngIf=\"colSetting\">\n                   <th>التسلسل</th>\n                   <th  [ngClass]=\"{'hideMe': colSetting.item_name == false , 'showMe': colSetting.item_name == true }\">\n                     الصنف\n                   </th>\n                   <th  [ngClass]=\"{'hideMe': colSetting.item_desc== false , 'showMe': colSetting.item_desc== true }\">اسم الصنف  (English)</th>\n                   <th  [ngClass]=\"{'hideMe': colSetting.aliasEn== false , 'showMe': colSetting.aliasEn== true }\">اسم مستعار   (Alias) </th>  \n                   <th  [ngClass]=\"{'hideMe': colSetting.model == false , 'showMe': colSetting.model == true }\">الموديل (model)</th>\n                  \n                   <th  [ngClass]=\"{'hideMe': colSetting.part_no == false , 'showMe': colSetting.part_no == true }\">الكود (part no)</th>\n                   <th  [ngClass]=\"{'hideMe': colSetting.brand == false , 'showMe': colSetting.brand == true }\">الماركة (brand) </th> \n                   <th  [ngClass]=\"{'hideMe': colSetting.min_qty == false , 'showMe': colSetting.min_qty == true }\">اقل كمية (MSQ)</th>\n                   <th  [ngClass]=\"{'hideMe': colSetting.item_unit== false , 'showMe': colSetting.item_unit== true }\">الوحده (unit)</th> \n                   <th  [ngClass]=\"{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }\">سعر الشراء (purch price)</th>\n                   <th  [ngClass]=\"{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }\">سعر الوحده (selling price)</th> \n                   <th  [ngClass]=\"{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }\">نسبة الفائدة (profit perc)</th>  \n                   <th  [ngClass]=\"{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }\">المخزون (in stock)</th>\n                   <th  [ngClass]=\"{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }\">اخر عملية بيع\n                    \n                  </th>\n                   <th  [ngClass]=\"{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }\">المجموع</th>\n                   <th  [ngClass]=\"{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }\"><strong>تعديل</strong>  </th> \n                   <th  [ngClass]=\"{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }\"><strong>حذف</strong>  </th> \n                  </tr>\n                  <tr *ngFor=\"let item of filterArray ; let i = index\"   (dblclick)=\"prClick(i , item)\">\n                    <td>{{i+1}}</td>\n                     \n                   <td  [ngClass]=\"{'hideMe': colSetting.item_name == false , 'showMe': colSetting.item_name == true }\">\n                     <ion-text *ngIf=\"showMe != i\">{{item.item_name}}</ion-text>\n                     <ion-item *ngIf=\"showMe == i\">\n                       <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.item_name\"  ></ion-input>\n                      </ion-item>\n                   </td> \n                   <td  [ngClass]=\"{'hideMe': colSetting.item_desc == false , 'showMe': colSetting.item_desc == true }\">\n                     <ion-text *ngIf=\"showMe != i\">{{item.item_desc}}</ion-text>\n                     <ion-item *ngIf=\"showMe == i\">\n                       <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.item_desc\"  ></ion-input>\n                      </ion-item>\n                   </td>\n                   <td  [ngClass]=\"{'hideMe': colSetting.aliasEn == false , 'showMe': colSetting.aliasEn == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.aliasEn}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.aliasEn\"  ></ion-input>\n                     </ion-item>\n                  </td>\n                   <td  [ngClass]=\"{'hideMe': colSetting.model == false , 'showMe': colSetting.model == true }\">\n                     <ion-text *ngIf=\"showMe != i\">{{item.model}}</ion-text>\n                     <ion-item *ngIf=\"showMe == i\">\n                       <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.model\"  ></ion-input>\n                      </ion-item>\n                   </td>\n                   <td  [ngClass]=\"{'hideMe': colSetting.part_no == false , 'showMe': colSetting.part_no == true }\">\n                     <ion-text *ngIf=\"showMe != i\">{{item.part_no}}</ion-text>\n                     <ion-item *ngIf=\"showMe == i\">\n                       <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.part_no\"  ></ion-input>\n                      </ion-item>\n                   </td>\n                   <td  [ngClass]=\"{'hideMe': colSetting.brand == false , 'showMe': colSetting.brand == true }\">\n                     <ion-text *ngIf=\"showMe != i\">{{item.brand}}</ion-text>\n                     <ion-item *ngIf=\"showMe == i\">\n                       <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.brand\"  ></ion-input>\n                      </ion-item>\n                   </td> \n                   <td  [ngClass]=\"{'hideMe': colSetting.min_qty == false , 'showMe': colSetting.min_qty == true }\">\n                     <ion-text *ngIf=\"showMe != i\">{{item.min_qty}}</ion-text>\n                     <ion-item *ngIf=\"showMe == i\">\n                       <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.min_qty\"  ></ion-input>\n                      </ion-item>\n                   </td>\n                   <td  [ngClass]=\"{'hideMe': colSetting.item_unit == false , 'showMe': colSetting.item_unit == true }\">\n                     <ion-text *ngIf=\"showMe != i\">{{item.item_unit}}</ion-text>\n                     <ion-item *ngIf=\"showMe == i\">\n                       <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.item_unit\"  ></ion-input>\n                      </ion-item> \n                   </td> \n                   <td  [ngClass]=\"{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }\">\n                     <ion-text *ngIf=\"showMe != i\">{{item.perch_price}}</ion-text>\n                     <ion-item *ngIf=\"showMe == i\">\n                       <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.perch_price\"  ></ion-input>\n                      </ion-item> \n                   </td>\n                   <td  [ngClass]=\"{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }\">\n                     <ion-text *ngIf=\"showMe != i\">{{item.pay_price}}</ion-text>\n                     <ion-item *ngIf=\"showMe == i\">\n                       <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.pay_price\"  ></ion-input>\n                      </ion-item> \n                   </td> \n                   <td  [ngClass]=\"{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }\">\n                     <ion-text *ngIf=\"(item.pay_price && item.perch_price) && item.pay_price >= item.perch_price\">\n                       {{(((+item.pay_price - +item.perch_price)/+item.perch_price) * 100).toFixed(2)}}\n                     </ion-text>\n                     <ion-text *ngIf=\"(item.pay_price && item.perch_price) && item.pay_price < item.perch_price\">\n                       {{(((+item.perch_price - +item.pay_price)/+item.perch_price) * 100).toFixed(2)}}\n                     </ion-text>\n                   </td>\n                 \n                   <td  [ngClass]=\"{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }\">{{item.quantity}}</td>\n                   <td  [ngClass]=\"{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }\">{{+item.quantity * +item.perch_price }}</td>\n                   <td  [ngClass]=\"{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }\">{{item.lastSoldDate }}</td>\n                   <td  [ngClass]=\"{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }\">\n                     <ion-button fill=\"clear\" size=\"small\" (click)=\"presentModal(item.id , 'edit')\">\n                       <ion-icon name=\"create-outline\" color=\"success\" ></ion-icon> \n                     </ion-button>\n                   </td>\n                    <td  [ngClass]=\"{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }\">\n                     <ion-button fill=\"clear\" size=\"small\" (click)=\"deleteItem(item)\">\n                       <ion-icon name=\"trash\" color=\"danger\" ></ion-icon>\n                     </ion-button>\n                   </td>  \n                  </tr> \n                  <tr  *ngIf=\"loading == true \" >\n                   <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                   <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                   <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                   <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                   <td>  <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  </tr>\n                  <tr  *ngIf=\"loading == true\">\n                   <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                   <td>  <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                   <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  </tr>\n                </table>  \n\n           <!-- ///search  -->\n\n               <table class=\"table\" *ngIf=\"searchMode == true && searchTerm != ''\">\n                 <ion-item>\n                  <ion-label class=\"ion-padding\"><strong>البحث</strong></ion-label>\n                 </ion-item>\n                 <tr *ngIf=\"colSetting\">\n                  <th> \n                    التسلسل\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('id', sortStatus[0].type,'items')\">\n                      <ion-icon *ngIf=\"sortStatus[0].type == 'asc' || sortStatus[0].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[0].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.item_name == false , 'showMe': colSetting.item_name == true }\">\n                    الصنف\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('item_name', sortStatus[1].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[1].type == 'asc' || sortStatus[1].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[1].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.item_desc== false , 'showMe': colSetting.item_desc== true }\">اسم الصنف  (English)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('item_desc', sortStatus[0].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[2].type == 'asc' || sortStatus[2].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[2].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th> \n                  <th  [ngClass]=\"{'hideMe': colSetting.aliasEn== false , 'showMe': colSetting.aliasEn== true }\">اسم  مستعار  (Alias)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('aliasEn', sortStatus[0].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[2].type == 'asc' || sortStatus[2].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[2].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.model == false , 'showMe': colSetting.model == true }\">الموديل (model)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('model', sortStatus[3].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[3].type == 'asc' || sortStatus[3].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[3].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                 \n                  <th  [ngClass]=\"{'hideMe': colSetting.part_no == false , 'showMe': colSetting.part_no == true }\">الكود (part no)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('part_no', sortStatus[4].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[4].type == 'asc' || sortStatus[4].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[4].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.brand == false , 'showMe': colSetting.brand == true }\">الماركة (brand) \n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('brand', sortStatus[5].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[5].type == 'asc' || sortStatus[5].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[5].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th> \n                  <th  [ngClass]=\"{'hideMe': colSetting.min_qty == false , 'showMe': colSetting.min_qty == true }\">اقل كمية (MSQ)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('min_qty', sortStatus[6].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[6].type == 'asc' || sortStatus[6].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[6].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.item_unit== false , 'showMe': colSetting.item_unit== true }\">الوحده (unit)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('item_unit', sortStatus[7].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[7].type == 'asc' || sortStatus[7].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[7].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th> \n                  <th  [ngClass]=\"{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }\">سعر الشراء (purch price)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('perch_price', sortStatus[8].type,'items')\">\n                      <ion-icon *ngIf=\"sortStatus[8].type == 'asc' || sortStatus[8].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[8].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }\">سعر الوحده (selling price)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('pay_price', sortStatus[9].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[9].type == 'asc' || sortStatus[9].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[9].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th> \n                  <th  [ngClass]=\"{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }\">نسبة الفائدة (profit perc)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('profit', sortStatus[10].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[10].type == 'asc' || sortStatus[10].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[10].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>  \n                  <th  [ngClass]=\"{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }\">المخزون (in stock)\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('quantity', sortStatus[11].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[11].type == 'asc' || sortStatus[11].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[11].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }\">المجموع\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('total', sortStatus[12].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[12].type == 'asc' || sortStatus[12].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[12].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <th  [ngClass]=\"{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }\">اخر عملية بيع\n                    <ion-button class=\"ion-no-margin ion-no-padding\" color=\"success\" fill=\"clear\" size=\"small\" (click)=\"sorting('lastSold', sortStatus[13].type,'items')\">\n                    \n                      <ion-icon *ngIf=\"sortStatus[13].type == 'asc' || sortStatus[13].type == null\" name=\"chevron-down-outline\"></ion-icon>\n                      <ion-icon *ngIf=\"sortStatus[13].type == 'desc'\" name=\"chevron-up-outline\"></ion-icon>\n                    </ion-button>\n                  </th>\n                  <!-- <th>sales28</th>\n                  <th>sales29</th>\n                  <th>purch28</th>\n                  <th>purch29</th>-->\n                  <th>   المخزون الإفتتاحي </th> \n                  <th  [ngClass]=\"{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }\"><strong>تعديل</strong>  </th> \n                  <th  [ngClass]=\"{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }\"><strong>حذف</strong>  </th> \n                 </tr>\n                 <tr *ngFor=\"let item of itemsAll | filter : searchTerm ; let i = index\"   (dblclick)=\"prClick(i , item)\">\n                  <!-- <td>{{i+1}}</td> -->\n                  <td>{{item.id}}</td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.item_name == false , 'showMe': colSetting.item_name == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.item_name}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.item_name\"  ></ion-input>\n                     </ion-item>\n                  </td> \n                  <td  [ngClass]=\"{'hideMe': colSetting.item_desc == false , 'showMe': colSetting.item_desc == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.item_desc}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.item_desc\"  ></ion-input>\n                     </ion-item>\n                  </td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.aliasEn == false , 'showMe': colSetting.aliasEn == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.aliasEn}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.aliasEn\"  ></ion-input>\n                     </ion-item>\n                  </td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.model == false , 'showMe': colSetting.model == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.model}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.model\"  ></ion-input>\n                     </ion-item>\n                  </td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.part_no == false , 'showMe': colSetting.part_no == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.part_no}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.part_no\"  ></ion-input>\n                     </ion-item>\n                  </td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.brand == false , 'showMe': colSetting.brand == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.brand}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.brand\"  ></ion-input>\n                     </ion-item>\n                  </td> \n                  <td  [ngClass]=\"{'hideMe': colSetting.min_qty == false , 'showMe': colSetting.min_qty == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.min_qty}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.min_qty\"  ></ion-input>\n                     </ion-item>\n                  </td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.item_unit == false , 'showMe': colSetting.item_unit == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.item_unit}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.item_unit\"  ></ion-input>\n                     </ion-item> \n                  </td> \n                  <td  [ngClass]=\"{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.perch_price}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                      <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.perch_price\"  ></ion-input>\n                     </ion-item> \n                  </td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }\">\n                    <ion-text *ngIf=\"showMe != i\">{{item.pay_price}}</ion-text>\n                    <ion-item *ngIf=\"showMe == i\">\n                    <ion-input  (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.pay_price\"></ion-input>\n                     </ion-item> \n                  </td> \n                  <td  [ngClass]=\"{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }\">\n                    <ion-text *ngIf=\"(item.pay_price && item.perch_price) && item.pay_price >= item.perch_price\">\n                      {{(((+item.pay_price - +item.perch_price)/+item.perch_price) * 100).toFixed(2)}}\n                    </ion-text>\n                    <ion-text *ngIf=\"(item.pay_price && item.perch_price) && item.pay_price < item.perch_price\">\n                      {{(((+item.perch_price - +item.pay_price)/+item.perch_price) * 100).toFixed(2)}}\n                    </ion-text>\n                  </td>\n                \n                  <td  [ngClass]=\"{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }\">{{item.quantity}}</td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }\">{{+item.quantity * +item.perch_price }}</td>\n                  <td  [ngClass]=\"{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }\">{{item.lastSoldDate }}</td>\n                  <!-- new -->\n                  <!-- <td   >{{item.sales28 }}</td>\n                  <td   >{{item.salesQuantity }}</td>\n                  <td   >{{item.purch28 }}</td> \n                  <td   >{{item.perchQuantity }}</td> -->\n                  <td>\n                     <ion-item *ngIf=\"showMe == i\">\n                    <ion-input (keyup.enter)=\"editCell(i ,item)\" [(ngModel)] =\"this.selectedItem2.quantity\"  ></ion-input>\n                     </ion-item>\n\n                    <ion-text *ngIf=\"showMe != i\">\n                      {{item.firstQuantity}}\n                    </ion-text> \n                  </td>\n                  \n\n                  <!-- end new -->\n\n                  <td  [ngClass]=\"{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }\">\n                    <ion-button fill=\"clear\" size=\"small\" (click)=\"presentModal(item.id , 'edit')\">\n                      <ion-icon name=\"create-outline\" color=\"success\" ></ion-icon> \n                    </ion-button>\n                  </td>\n                   <td  [ngClass]=\"{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }\">\n                    <ion-button fill=\"clear\" size=\"small\" (click)=\"deleteItem(item)\">\n                      <ion-icon name=\"trash\" color=\"danger\" ></ion-icon>\n                    </ion-button>\n                  </td>  \n                 </tr> \n                 <tr  *ngIf=\"loading == true \" >\n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td>  <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                 </tr>\n                 <tr  *ngIf=\"loading == true\">\n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td>  <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>  \n                 </tr>\n              </table>  \n            \n           </ion-col>\n\n           <!-- exporting mode   -->\n\n\n          <ion-col  *ngIf=\"exportMode == true\">\n\n         <!-- <div   #exceltable> -->\n           <table  id=\"exceltable\" class=\"table\" *ngIf=\"searchMode == false && filterMode == false\"  >\n            <tr *ngIf=\"colSetting\">\n             <th> \n               التسلسل\n               \n             </th>\n             <th *ngIf=\"colSetting.item_name == true\" >\n               الصنف\n               \n             </th>\n             <th *ngIf=\"colSetting.item_desc == true\"  >اسم الصنف  (English)\n                \n             </th> \n\n             <th *ngIf=\"colSetting.aliasEn true\"  >اسم  مستعار  ( Alias)\n                \n            </th>\n             <th *ngIf=\"colSetting.model == true\"  >الموديل (model)\n                \n             </th>\n            \n             <th *ngIf=\"colSetting.part_no == true\" >الكود (part no)\n              \n             </th>\n             <th *ngIf=\"colSetting.brand == true\"  >الماركة (brand) \n                \n             </th> \n             <th *ngIf=\"colSetting.min_qty == true\"  >اقل كمية (MSQ)\n              \n             </th>\n             <th *ngIf=\"colSetting.item_unit == true\"  >الوحده (unit)\n               \n             </th> \n             <th *ngIf=\"colSetting.perch_price == true\"  >سعر الشراء (purch price)\n                \n             </th>\n             <th *ngIf=\" colSetting.pay_price == true\"  >سعر الوحده (selling price)\n               \n             </th> \n             <th *ngIf=\"colSetting.profit == true\" >نسبة الفائدة (profit perc)\n               \n             </th>  \n             <th *ngIf=\"colSetting.instock == true\"  >المخزون (in stock)\n              \n             </th>\n             <th *ngIf=\" colSetting.total == true\"  >المجموع\n              \n             </th>\n             <th *ngIf=\"colSetting.lastSold == true\" >اخر عملية بيع\n                \n             </th>\n            \n            </tr>\n            <tr *ngFor=\"let item of items ; let i = index\" >\n             <!-- <td>{{i+1}}</td> -->\n             <td>{{item.id}}</td>\n             <td *ngIf=\"colSetting.item_name == true\" >\n               <ion-text *ngIf=\"showMe != i\">{{item.item_name}}</ion-text>\n               \n             </td> \n             <td *ngIf=\"colSetting.item_desc == true\" >\n               <ion-text *ngIf=\"showMe != i\">{{item.item_desc}}</ion-text>\n                \n             </td>\n             <td *ngIf=\"colSetting.aliasEn == true\" >\n              <ion-text *ngIf=\"showMe != i\">{{item.aliasEn}}</ion-text>\n               \n            </td>\n             <td *ngIf=\"colSetting.model == true\" >\n               <ion-text *ngIf=\"showMe != i\">{{item.model}}</ion-text>\n               \n             </td>\n             <td *ngIf=\"colSetting.part_no == true\" >\n               <ion-text *ngIf=\"showMe != i\">{{item.part_no}}</ion-text>\n                \n             </td>\n             <td *ngIf=\"colSetting.brand == true\" >\n               <ion-text *ngIf=\"showMe != i\">{{item.brand}}</ion-text>\n                \n             </td> \n             <td *ngIf=\"colSetting.min_qty == true\" >\n               <ion-text *ngIf=\"showMe != i\">{{item.min_qty}}</ion-text>\n               \n             </td>\n             <td *ngIf=\"colSetting.item_unit == true\" >\n               <ion-text *ngIf=\"showMe != i\">{{item.item_unit}}</ion-text>\n                \n             </td> \n             <td *ngIf=\"colSetting.perch_price == true\" >\n               <ion-text *ngIf=\"showMe != i\">{{item.perch_price}}</ion-text>\n                \n             </td>\n             <td *ngIf=\"colSetting.pay_price == true\" >\n               <ion-text *ngIf=\"showMe != i\">{{item.pay_price}}</ion-text>\n               \n             </td> \n             <td *ngIf=\"colSetting.profit == true\">\n               <ion-text *ngIf=\"(item.pay_price && item.perch_price) && item.pay_price >= item.perch_price\">\n                 {{(((+item.pay_price - +item.perch_price)/+item.perch_price) * 100).toFixed(2)}}\n               </ion-text>\n               <ion-text *ngIf=\"(item.pay_price && item.perch_price) && item.pay_price < item.perch_price\">\n                 {{(((+item.perch_price - +item.pay_price)/+item.perch_price) * 100).toFixed(2)}}\n               </ion-text>\n             </td>\n           \n             <td *ngIf=\"colSetting.profit == true\" >{{item.quantity}}</td>\n             <td *ngIf=\"colSetting.total == true\"  >{{+item.quantity * +item.perch_price }}</td>\n             <td *ngIf=\"colSetting.lastSold == true\" >{{item.lastSoldDate }}</td>\n\n\n               \n            </tr> \n         \n         \n          </table>\n         <!-- </div>   -->\n           <!-- filte mode  -->\n           <table id=\"exceltable\" class=\"table\"  *ngIf=\"filterMode == true\" >\n            <tr *ngIf=\"colSetting\">\n              <th> \n                التسلسل\n                \n              </th>\n              <th *ngIf=\"colSetting.item_name == true\" >\n                الصنف\n                \n              </th>\n              <th *ngIf=\"colSetting.item_desc == true\" >اسم الصنف  (English)\n                 \n              </th> \n              <th *ngIf=\"colSetting.aliasEn == true\" >اسم مستعار  (Alias)\n                 \n              </th> \n              <th *ngIf=\"colSetting.model == true\" >الموديل (model)\n                 \n              </th>\n             \n              <th *ngIf=\"colSetting.part_no == true\" >الكود (part no)\n               \n              </th>\n              <th *ngIf=\"colSetting.brand == true\" >الماركة (brand) \n                 \n              </th> \n              <th *ngIf=\"colSetting.min_qty == true\">اقل كمية (MSQ)\n               \n              </th>\n              <th *ngIf=\"colSetting.item_unit == true\" >الوحده (unit)\n                \n              </th> \n              <th *ngIf=\"colSetting.perch_price == true\" >سعر الشراء (purch price)\n                 \n              </th>\n              <th *ngIf=\" colSetting.pay_price == true\">سعر الوحده (selling price)\n                \n              </th> \n              <th *ngIf=\"colSetting.profit == true\" >نسبة الفائدة (profit perc)\n                \n              </th>  \n              <th *ngIf=\"colSetting.instock == true\" >المخزون (in stock)\n               \n              </th>\n              <th *ngIf=\" colSetting.total == true\" >المجموع\n               \n              </th>\n              <th *ngIf=\"colSetting.lastSold == true\" >اخر عملية بيع\n                 \n              </th>\n             \n             </tr>\n             <tr *ngFor=\"let item of filterArray ; let i = index\"   >\n              <!-- <td>{{i+1}}</td> -->\n              <td>{{item.id}}</td>\n              <td *ngIf=\"colSetting.item_name == true\"  >\n                <ion-text *ngIf=\"showMe != i\">{{item.item_name}}</ion-text>\n                \n              </td> \n              <td *ngIf=\"colSetting.item_desc == true\"  >\n                <ion-text *ngIf=\"showMe != i\">{{item.item_desc}}</ion-text>\n                 \n              </td>\n              <td *ngIf=\"colSetting.aliasEn\"  >\n                <ion-text *ngIf=\"showMe != i\">{{item.aliasEn}}</ion-text>\n                 \n              </td>\n\n              <td *ngIf=\"colSetting.model == true\"  >\n                <ion-text *ngIf=\"showMe != i\">{{item.model}}</ion-text>\n                \n              </td>\n              <td *ngIf=\"colSetting.part_no == true\"  >\n                <ion-text *ngIf=\"showMe != i\">{{item.part_no}}</ion-text>\n                 \n              </td>\n              <td *ngIf=\"colSetting.brand == true\"  >\n                <ion-text *ngIf=\"showMe != i\">{{item.brand}}</ion-text>\n                 \n              </td> \n              <td *ngIf=\"colSetting.min_qty == true\" >\n                <ion-text *ngIf=\"showMe != i\">{{item.min_qty}}</ion-text>\n                \n              </td>\n              <td *ngIf=\"colSetting.item_unit == true\">\n                <ion-text *ngIf=\"showMe != i\">{{item.item_unit}}</ion-text>\n                 \n              </td> \n              <td *ngIf=\"colSetting.perch_price == true\" >\n                <ion-text *ngIf=\"showMe != i\">{{item.perch_price}}</ion-text>\n                 \n              </td>\n              <td *ngIf=\"colSetting.pay_price == true\">\n                <ion-text *ngIf=\"showMe != i\">{{item.pay_price}}</ion-text>\n                \n              </td> \n              <td *ngIf=\"colSetting.profit == true\" >\n                <ion-text *ngIf=\"(item.pay_price && item.perch_price) && item.pay_price >= item.perch_price\">\n                  {{(((+item.pay_price - +item.perch_price)/+item.perch_price) * 100).toFixed(2)}}\n                </ion-text>\n                <ion-text *ngIf=\"(item.pay_price && item.perch_price) && item.pay_price < item.perch_price\">\n                  {{(((+item.perch_price - +item.pay_price)/+item.perch_price) * 100).toFixed(2)}}\n                </ion-text>\n              </td>\n            \n              <td *ngIf=\"colSetting.instock == true\" >{{item.quantity}}</td>\n              <td *ngIf=\"colSetting.total == true\" >{{+item.quantity * +item.perch_price }}</td>\n              <td *ngIf=\"colSetting.lastSold == true\" >{{item.lastSoldDate }}</td>\n \n \n                \n             </tr> \n           </table>  \n         </ion-col>\n\n\n          </ion-row>\n        </ion-grid>\n      </ion-col> \n    </ion-row>\n  </ion-grid>\n  \n\n  <!-- Pagination Controls -->\n<ion-grid *ngIf=\"!loading && !searchMode && !filterMode\">\n  <ion-row dir=\"rtl\" class=\"ion-align-items-center ion-justify-content-center\">\n    <ion-col size=\"12\" class=\"ion-text-center\">\n      <ion-item lines=\"none\">\n        <ion-label>عناصر لكل صفحة:</ion-label>\n        <ion-select [value]=\"itemsPerPage\" (ionChange)=\"changeItemsPerPage($event)\">\n          <ion-select-option *ngFor=\"let option of pageSizeOptions\" [value]=\"option\">{{ option }}</ion-select-option>\n        </ion-select>\n      </ion-item>\n      \n      <ion-button fill=\"clear\" [disabled]=\"currentPage === 1\" (click)=\"prevPage()\">\n        <ion-icon name=\"chevron-forward\"></ion-icon>\n        السابق\n      </ion-button>\n     \n\n\n      <ion-button *ngFor=\"let page of getPageNumbers()\" \n                 [fill]=\"page === currentPage ? 'solid' : 'clear'\"\n                 [color]=\"page === currentPage ? 'primary' : 'medium'\"\n                 (click)=\"goToPage(page)\">\n        {{ page }}\n      </ion-button>\n      \n      <ion-button fill=\"clear\" [disabled]=\"currentPage === totalPages\" (click)=\"nextPage()\">\n        التالي \n        <ion-icon name=\"chevron-back\"></ion-icon>\n      </ion-button>\n\n\n       \n      <ion-text color=\"medium\">\n        صفحة {{ currentPage }} من {{ totalPages }} (إجمالي العناصر: {{ totalItems }})\n      </ion-text>\n    </ion-col>\n  </ion-row>\n</ion-grid>\n\n</ion-content>\n<!-- <ion-footer>\n  <ion-item button (click)=\"createPdf()\"></ion-item>\n</ion-footer> -->";
 
 /***/ })

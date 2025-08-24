@@ -162,6 +162,8 @@ year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
       this.user_info = JSON.parse(params.user_info);
       this.store_info = JSON.parse(params.store_info);
       this.itemList = JSON.parse(params.itemList);
+      this.resortItemList()
+
        this.initializeDiscountValues();
       
       this.getAppInfo()
@@ -1400,6 +1402,13 @@ sortItemListAlphabetically() {
   }
 }
 
+resortItemList(){
+  this.isItemListSorted = false
+  this.sortItemListAlphabetically()
+}
+
+
+
 getDisplayItemList() {
   return this.sortedItemList.length > 0 ? this.sortedItemList : this.itemList;
 }
@@ -1410,6 +1419,15 @@ updateSortedList() {
   } else {
     this.sortedItemList = [...this.itemList];
   }
+}
+
+// Format balance display with number separators
+formatBalance(balance: number): string {
+  if (!balance && balance !== 0) return '0.00';
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Math.abs(balance));
 }
 
 }

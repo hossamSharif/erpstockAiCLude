@@ -110,14 +110,22 @@
 
     <!-- Desktop Table -->
     <ion-card class="table-card" *ngIf="device == 'desktop'" color="primary">
-      <ion-card-header class="table-header">
-        <ion-card-title class="table-title">
-          <ion-icon name="analytics-outline" slot="start"></ion-icon>
-          ميزان المراجعة والأرصدة
-          <span class="account-count" *ngIf="filteredAccounts.length > 0">
-            ({{ filteredAccounts.length }} حساب)
-          </span>
-        </ion-card-title>
+      <ion-card-header class="table-header ion-no-padding">
+        <div class="card-header-with-export">
+          <ion-card-title class="table-title">
+            <ion-icon name="analytics-outline" slot="start"></ion-icon>
+            ميزان المراجعة والأرصدة
+            <span class="account-count" *ngIf="filteredAccounts.length > 0">
+              ({{ filteredAccounts.length }} حساب)
+            </span>
+          </ion-card-title>
+          <app-export-buttons 
+            [hasData]="filteredAccounts && filteredAccounts.length > 0"
+            [isLoading]="loading"
+            (exportPDF)="exportToPDF()"
+            (exportExcel)="exportToExcel()">
+          </app-export-buttons>
+        </div>
       </ion-card-header>
       <ion-card-content class="table-content">
         <div class="table-container">
@@ -125,17 +133,38 @@
             <thead>
               <tr>
                 <th>التسلسل</th>
-                <th>اسم الحساب</th>
-                <th>رقم الحساب</th>
-                <th>نوع الحساب</th>
-                <th>الرصيد الافتتاحي</th>
-                <th>مدين (عليه)</th>
-                <th>دائن (له)</th>
-                <th>حالة الرصيد</th>
+                <th class="sortable-header" (click)="sortBy('sub_name')">
+                  <ion-icon [name]="getSortIcon('sub_name')" class="sort-icon"></ion-icon>
+                  اسم الحساب
+                </th>
+                <th class="sortable-header" (click)="sortBy('sub_code')">
+                  <ion-icon [name]="getSortIcon('sub_code')" class="sort-icon"></ion-icon>
+                  رقم الحساب
+                </th>
+                <th class="sortable-header" (click)="sortBy('ac_id')">
+                  <ion-icon [name]="getSortIcon('ac_id')" class="sort-icon"></ion-icon>
+                  نوع الحساب
+                </th>
+                <th class="sortable-header" (click)="sortBy('opening_balance')">
+                  <ion-icon [name]="getSortIcon('opening_balance')" class="sort-icon"></ion-icon>
+                  الرصيد الافتتاحي
+                </th>
+                <th class="sortable-header" (click)="sortBy('display_debit')">
+                  <ion-icon [name]="getSortIcon('display_debit')" class="sort-icon"></ion-icon>
+                  مدين (عليه)
+                </th>
+                <th class="sortable-header" (click)="sortBy('display_credit')">
+                  <ion-icon [name]="getSortIcon('display_credit')" class="sort-icon"></ion-icon>
+                  دائن (له)
+                </th>
+                <th class="sortable-header" (click)="sortBy('balance_status')">
+                  <ion-icon [name]="getSortIcon('balance_status')" class="sort-icon"></ion-icon>
+                  حالة الرصيد
+                </th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let account of filteredAccounts; let i = index" class="table-row">
+              <tr *ngFor="let account of sortedAccounts; let i = index" class="table-row">
                 <td class="serial">{{ i + 1 }}</td>
                 <td class="account-name">{{ account.sub_name }}</td>
                 <td class="account-code">{{ account.sub_code || 'غير محدد' }}</td>
@@ -217,7 +246,7 @@
         </ion-card-header>
       </ion-card>
 
-      <ion-card class="mobile-account-card" *ngFor="let account of filteredAccounts; let i = index">
+      <ion-card class="mobile-account-card" *ngFor="let account of sortedAccounts; let i = index">
         <ion-card-content class="mobile-content">
           <div class="mobile-header">
             <div class="account-info">

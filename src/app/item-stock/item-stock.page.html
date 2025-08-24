@@ -46,16 +46,8 @@
                       <ion-icon name="add-circle-outline" color="primary"></ion-icon>
                      <ion-label><ion-text color="dark">صنف جديد</ion-text></ion-label> 
                     </ion-button>
-                    <ion-button  fill="outline" color="primary"  shape="round"  (click)="exportexcel()"  > 
-                     
-                      <ion-icon name="document-outline" color="primary"></ion-icon>
-                     <ion-label class="ion-margin-start ion-margin-end"><ion-text color="dark"> تصدير XLS </ion-text></ion-label> 
-                    </ion-button>
-                    <ion-button  fill="outline" color="primary"  shape="round"  (click)="openPDF()"  > 
-                     
-                      <ion-icon name="document-outline" color="primary"></ion-icon>
-                     <ion-label class="ion-margin-start ion-margin-end"><ion-text color="dark"> تصدير PDF </ion-text></ion-label> 
-                    </ion-button>
+                   
+                   
                   </ion-buttons>
                 </ion-item>
               </ion-col>
@@ -77,7 +69,7 @@
 
       <ion-col size="3" class="ion-text-start">
           <ion-label *ngIf = "filterMode == false"> 
-            <ion-text *ngIf = "loadingStockTotals == false">{{stockValuePayPrice.toFixed(2)}}</ion-text> 
+            <ion-text *ngIf = "loadingStockTotals == false">{{formatBalance(stockValuePayPrice)}}</ion-text> 
             <ion-text *ngIf = "loadingStockTotals == true">
               <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text>
             </ion-text>
@@ -92,7 +84,7 @@
 
       <ion-col size="3" class="ion-text-start">
           <ion-label *ngIf = "filterMode == false && searchTerm == ''"> 
-            <ion-text *ngIf = "loadingStockTotals == false">{{stockValuePerchPrice.toFixed(2)}}</ion-text> 
+            <ion-text *ngIf = "loadingStockTotals == false">{{formatBalance(stockValuePerchPrice)}}</ion-text> 
             <ion-text *ngIf = "loadingStockTotals == true">
               <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text>
             </ion-text>
@@ -431,57 +423,27 @@
     </ion-row>
   </ion-grid> -->
 
-  <ion-grid>
-    <ion-row dir="rtl" >
-      <ion-col size="12" class="ion-no-padding custCol">
-        <ion-grid>
-          <!-- <ion-row>
-            <ion-col size="12">
-              <ion-card>
-                <ion-grid>
-                  <ion-row>
-                    <ion-col size="4"> 
-                     <ion-label  class="ion-padding"><strong>الصنف</strong></ion-label> 
-                        <ion-item class="custInput">
-                          <input  list="browsers" id="browser" [(ngModel)]="selectedItem.item_name"  (change)="pickDetail($event)">
-                         
-                          <datalist style="border: none;" id="browsers" style="height: auto;max-height: 20px;">
-                            <option *ngFor="let item of items ; let i = index"   [value]="item.item_name"></option>
-                        </datalist>
-                        </ion-item>  
-                    </ion-col>
-                    <ion-col size="2"> 
-                      <ion-label class="ion-padding"><strong>الكمية</strong></ion-label>
-                      <ion-item class="custInput">
-                        <ion-input  [(ngModel)]="selectedItem.qty"  (ionChange)="qtyhange($event)" #qtyId  ></ion-input>
-                      </ion-item> 
-                    </ion-col>
-                    <ion-col size="2">
-                      <ion-label class="ion-padding"><strong>سعر الوحده</strong></ion-label>
-                      <ion-item class="custInput">
-                        <ion-input [(ngModel)]="selectedItem.pay_price"></ion-input>
-                      </ion-item>
-                    </ion-col>
-                    <ion-col size="2">
-                      <ion-label class="ion-padding"><strong>المجموع</strong></ion-label>
-                      <ion-item class="custInput">
-                        <ion-input [(ngModel)]="selectedItem.tot"></ion-input>
-                      </ion-item>
-                    </ion-col>
-                    <ion-col size="2" class="ion-padding"> 
-                      <ion-button expand="block" routerDirection="root" color="success"  (click)="addTolist()" >
-                        <ion-label class="ion-text-center"> +</ion-label>
-                      </ion-button> 
-                    </ion-col>
-                  </ion-row>
-                </ion-grid>
-              </ion-card>
-            </ion-col>
-          </ion-row> -->
-          <ion-row>
-            <ion-col size="12" >
+  <!-- Unified table card for all view modes -->
+  <ion-card>
+    <ion-card-header class="ion-no-padding">
+      <div class="card-header-with-export">
+        <ion-card-title>
+          <span *ngIf="!showSearchView && !hasActiveFilters()">قائمة الأصناف</span>
+          <span *ngIf="showSearchView">نتائج البحث</span>
+          <span *ngIf="hasActiveFilters() && !showSearchView">الأصناف المفلترة</span>
+        </ion-card-title>
+        <app-export-buttons 
+          [hasData]="getCurrentTableData().length > 0"
+          [isLoading]="loading || loadingTot || (showPaginatedView && paginationLoading) || (showAllItemsView && loadingAllItems) || (showSearchView && loadingSearch)"
+          (exportPDF)="exportToPDF()"
+          (exportExcel)="exportToExcel()">
+        </app-export-buttons>
+      </div>
+    </ion-card-header>
 
-               <table  class="table"  *ngIf="searchMode == false && hasActiveFilters() == false  && searchTerm == '' && !showAllItemsView && !showSearchView" >
+    <!-- Unified table container for all view modes -->
+    <div class="table-container">
+      <table class="table">
                
                  <tr *ngIf="colSetting">
                               <th>
@@ -584,8 +546,10 @@
                  <th [ngClass]="{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }"><strong>الإجراءات</strong></th>
                 </tr>
 
-
-                 <tr *ngFor="let item of paginatedItems ; let i = index"   (dblclick)="prClick(i , item)" [ngClass]="{'red': item.quantity < 0  , 'darko':item.quantity > 0}">
+        <!-- Unified data rows for all view modes -->
+        <tr *ngFor="let item of getCurrentTableData(); let i = index" 
+            (dblclick)="prClick(i, item)" 
+            [ngClass]="{'red': item.quantity < 0, 'darko': item.quantity > 0}">
                   <!-- <td>{{i+1}}</td> -->
                     <td>
                       <ion-checkbox [checked]="isItemSelected(item)" (ionChange)="toggleItemSelection(item, $event)">
@@ -641,13 +605,13 @@
                      </ion-item> 
                   </td> 
                   <td  [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">
-                    <ion-text *ngIf="showMe != i">{{item.perch_price}}</ion-text>
+                    <ion-text *ngIf="showMe != i">{{formatBalance(item.perch_price)}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.perch_price"  ></ion-input>
                      </ion-item> 
                   </td>
                   <td  [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">
-                    <ion-text *ngIf="showMe != i">{{item.pay_price}}</ion-text>
+                    <ion-text *ngIf="showMe != i">{{formatBalance(item.pay_price)}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.pay_price"  ></ion-input>
                      </ion-item> 
@@ -657,7 +621,7 @@
                   </td>
                 
                   <td  [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">{{item.quantity}}</td>
-                  <td  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">{{+item.quantity * +item.perch_price }}</td>
+                  <td  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">{{formatBalance(+item.quantity * +item.perch_price)}}</td>
                   <td  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">{{item.lastSoldDate }}</td>
                   <!-- new -->
                   <!-- <td   >{{item.sales28 }}</td>
@@ -735,11 +699,140 @@
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>  
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>  
-                 </tr>
-               </table>
+        </tr>
+      </table>
+    </div>
 
-              <!-- All Items Table -->
-              <table class="table" *ngIf="showAllItemsView">
+    <!-- Loading indicators for different modes -->
+    <div *ngIf="loading || (showPaginatedView && paginationLoading && paginationCurrentPage === 1) || loadingTot" class="loading-container">
+      <div class="loading-content">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p class="loading-text">
+          <span *ngIf="showSearchView">جاري البحث...</span>
+          <span *ngIf="hasActiveFilters() && !showSearchView">جاري تطبيق الفلاتر...</span>
+          <span *ngIf="showPaginatedView && (paginationLoading || loadingTot)">جاري تحميل البيانات...</span>
+          <span *ngIf="showAllItemsView && loadingAllItems">جاري تحميل جميع الأصناف...</span>
+          <span *ngIf="!showSearchView && !hasActiveFilters() && !showPaginatedView && !showAllItemsView">جاري التحميل...</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- No data message -->
+    <div *ngIf="!loading && !loadingTot && !(showPaginatedView && paginationLoading && paginationCurrentPage === 1) && getCurrentTableData().length === 0" class="no-data-container">
+      <p class="no-data-text">
+        <span *ngIf="showSearchView">لا توجد نتائج للبحث عن "{{currentSearchTerm}}"</span>
+        <span *ngIf="hasActiveFilters() && !showSearchView">لا توجد عناصر تطابق الفلاتر المحددة</span>
+        <span *ngIf="!showSearchView && !hasActiveFilters()">لا توجد أصناف</span>
+      </p>
+    </div>
+
+    <!-- Summary cards for search and all items views -->
+    <div *ngIf="showSearchView && !loadingSearch && searchData.length > 0" class="totals-summary ion-padding">
+      <ion-card>
+        <ion-card-content>
+          <ion-grid>
+            <ion-row>
+              <ion-col size="3" class="ion-text-center">
+                <h4>البحث عن: "{{currentSearchTerm}}"</h4>
+              </ion-col>
+              <ion-col size="3" class="ion-text-center">
+                <h3>عدد النتائج</h3>
+                <p class="total-value">{{searchStockTotals.items_count}}</p>
+              </ion-col>
+              <ion-col size="3" class="ion-text-center">
+                <h3>إجمالي قيمة المخزون</h3>
+                <p class="total-value">{{searchStockTotals.store_tot | number : '1.2-2'}}</p>
+              </ion-col>
+              <ion-col size="3" class="ion-text-center">
+                <h3>إجمالي تكلفة المخزون</h3>
+                <p class="total-value">{{searchStockTotals.perch_tot | number : '1.2-2'}}</p>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <div *ngIf="showAllItemsView && !loadingAllItems" class="totals-summary ion-padding">
+      <ion-card>
+        <ion-card-content>
+          <ion-grid>
+            <ion-row>
+              <ion-col size="3" class="ion-text-center">
+                <h3>إجمالي الأصناف</h3>
+                <p class="total-value">{{allItemsStockTotals.items_count}}</p>
+              </ion-col>
+              <ion-col size="3" class="ion-text-center">
+                <h3>إجمالي قيمة المخزون</h3>
+                <p class="total-value">{{allItemsStockTotals.store_tot | number : '1.2-2'}}</p>
+              </ion-col>
+              <ion-col size="3" class="ion-text-center">
+                <h3>إجمالي تكلفة المخزون</h3>
+                <p class="total-value">{{allItemsStockTotals.perch_tot | number : '1.2-2'}}</p>
+              </ion-col>
+              <ion-col size="3" class="ion-text-center">
+                <h3>إجمالي الكمية</h3>
+                <p class="total-value">{{allItemsStockTotals.quantity | number : '1.2-2'}}</p>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Load More Button for Pagination -->
+    <div class="load-more-container" 
+         *ngIf="(paginationHasMore && !filterMode && !showSearchView && !showAllItemsView) || 
+                (hasActiveFilters() && filterArray.length > 0 && !showAllItems && !showSearchView)">
+      <ion-button 
+        fill="outline" 
+        color="primary" 
+        (click)="loadMoreItems()" 
+        [disabled]="paginationLoading">
+        <ion-icon name="refresh-outline" *ngIf="!paginationLoading"></ion-icon>
+        <ion-spinner name="crescent" *ngIf="paginationLoading"></ion-spinner>
+        <ion-label class="ion-margin-start">
+          {{paginationLoading ? 'جاري التحميل...' : 'تحميل المزيد'}}
+        </ion-label>
+      </ion-button>
+    </div>
+
+    <!-- Action popover - placed at the end of the unified card -->
+    <ion-popover #actionPopover [isOpen]="isActionPopoverOpen" (didDismiss)="isActionPopoverOpen = false">
+      <ng-template>
+        <ion-content>
+          <ion-list>
+            <ion-item button (click)="editItem(selectedActionItem)">
+              <ion-icon name="create-outline" color="success" slot="start"></ion-icon>
+              <ion-label>تعديل</ion-label>
+            </ion-item>
+            <ion-item button (click)="viewItemReport(selectedActionItem)">
+              <ion-icon name="analytics-outline" color="primary" slot="start"></ion-icon>
+              <ion-label>تقرير الصنف</ion-label>
+            </ion-item>
+            <ion-item button (click)="deleteItem(selectedActionItem)">
+              <ion-icon name="trash" color="danger" slot="start"></ion-icon>
+              <ion-label>حذف</ion-label>
+            </ion-item>
+          </ion-list>
+        </ion-content>
+      </ng-template>
+    </ion-popover>
+
+  </ion-card>
+
+  <!-- Export mode content (separate from main unified card) -->
+           <!-- Loading indicator for excel filter mode -->
+           <div *ngIf="loading && filterMode" class="filter-loading-container">
+             <div class="loading-content">
+               <ion-spinner name="crescent" color="primary"></ion-spinner>
+               <p class="loading-text">جاري تطبيق الفلاتر...</p>
+             </div>
+           </div>
+
+           <!-- Filter mode table -->
+           <div class="table-container" *ngIf="filterMode == true && !loading">
+           <table id="exceltable" class="table">
                 <tr *ngIf="colSetting">
                   <th>
                     <ion-checkbox [checked]="isAllSelected()" [indeterminate]="isSomeSelected()" (ionChange)="toggleSelectAll($event)">
@@ -863,13 +956,13 @@
                      </ion-item>
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">
-                    <ion-text *ngIf="showMe != i">{{item.perch_price}}</ion-text>
+                    <ion-text *ngIf="showMe != i">{{formatBalance(item.perch_price)}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.perch_price"  ></ion-input>
                      </ion-item>
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">
-                    <ion-text *ngIf="showMe != i">{{item.pay_price}}</ion-text>
+                    <ion-text *ngIf="showMe != i">{{formatBalance(item.pay_price)}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.pay_price"  ></ion-input>
                      </ion-item>
@@ -878,7 +971,7 @@
                     <ion-text [ngClass]="{'negative': item.quantity < 0}">{{item.quantity}}</ion-text>
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">
-                    <ion-text>{{item.stockValuePayPrice | number : '1.2-2'}}</ion-text>
+                    <ion-text>{{formatBalance(item.stockValuePayPrice)}}</ion-text>
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">
                     <ion-text>{{item.lastSoldDate}}</ion-text>
@@ -911,9 +1004,23 @@
                   </td>
                 </tr>
               </table>
-
-              <!-- Search Results Table -->
-              <table class="table" *ngIf="showSearchView">
+              </div>
+             
+               
+              <!-- Search Results - now handled by unified table above -->
+                <ion-card-header class="ion-no-padding">
+                  <div class="card-header-with-export">
+                    <ion-card-title>نتائج البحث</ion-card-title>
+                    <app-export-buttons 
+                      [hasData]="getCurrentTableData().length > 0"
+                      [isLoading]="loading"
+                      (exportPDF)="exportToPDF()"
+                      (exportExcel)="exportToExcel()">
+                    </app-export-buttons>
+                  </div>
+                </ion-card-header>
+              <div class="table-container" *ngIf="showSearchView">
+                <table class="table">
                 <tr *ngIf="colSetting">
                   <th>
                     <ion-checkbox [checked]="isAllSelected()" [indeterminate]="isSomeSelected()" (ionChange)="toggleSelectAll($event)">
@@ -1025,13 +1132,13 @@
                     <ion-text>{{item.item_unit}}</ion-text>
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">
-                    <ion-text *ngIf="showMe != i">{{item.perch_price}}</ion-text>
+                    <ion-text *ngIf="showMe != i">{{formatBalance(item.perch_price)}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.perch_price"  ></ion-input>
                      </ion-item>
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">
-                    <ion-text *ngIf="showMe != i">{{item.pay_price}}</ion-text>
+                    <ion-text *ngIf="showMe != i">{{formatBalance(item.pay_price)}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.pay_price"  ></ion-input>
                      </ion-item>
@@ -1040,7 +1147,7 @@
                     <ion-text [ngClass]="{'negative': item.quantity < 0}">{{item.quantity}}</ion-text>
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">
-                    <ion-text>{{item.stockValuePayPrice | number : '1.2-2'}}</ion-text>
+                    <ion-text>{{formatBalance(item.stockValuePayPrice)}}</ion-text>
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">
                     <ion-text>{{item.lastSoldDate}}</ion-text>
@@ -1077,72 +1184,8 @@
                   </td>
                 </tr>
               </table>
-
-              <!-- Search Results Totals Summary -->
-              <div *ngIf="showSearchView && !loadingSearch && searchData.length > 0" class="totals-summary ion-padding">
-                <ion-card>
-                  <ion-card-content>
-                    <ion-grid>
-                      <ion-row>
-                        <ion-col size="3" class="ion-text-center">
-                          <h4>البحث عن: "{{currentSearchTerm}}"</h4>
-                        </ion-col>
-                        <ion-col size="3" class="ion-text-center">
-                          <h3>عدد النتائج</h3>
-                          <p class="total-value">{{searchStockTotals.items_count}}</p>
-                        </ion-col>
-                        <ion-col size="3" class="ion-text-center">
-                          <h3>إجمالي قيمة المخزون</h3>
-                          <p class="total-value">{{searchStockTotals.store_tot | number : '1.2-2'}}</p>
-                        </ion-col>
-                        <ion-col size="3" class="ion-text-center">
-                          <h3>إجمالي التكلفة</h3>
-                          <p class="total-value">{{searchStockTotals.cost_tot | number : '1.2-2'}}</p>
-                        </ion-col>
-                      </ion-row>
-                    </ion-grid>
-                  </ion-card-content>
-                </ion-card>
               </div>
 
-              <!-- All Items Totals Summary -->
-              <div *ngIf="showAllItemsView && !loadingAllItems" class="totals-summary ion-padding">
-                <ion-card>
-                  <ion-card-content>
-                    <ion-grid>
-                      <ion-row>
-                        <ion-col size="4" class="ion-text-center">
-                          <h3>عدد الأصناف</h3>
-                          <p class="total-value">{{allItemsStockTotals.items_count}}</p>
-                        </ion-col>
-                        <ion-col size="4" class="ion-text-center">
-                          <h3>إجمالي قيمة المخزون</h3>
-                          <p class="total-value">{{allItemsStockTotals.store_tot | number : '1.2-2'}}</p>
-                        </ion-col>
-                        <ion-col size="4" class="ion-text-center">
-                          <h3>إجمالي التكلفة</h3>
-                          <p class="total-value">{{allItemsStockTotals.cost_tot | number : '1.2-2'}}</p>
-                        </ion-col>
-                      </ion-row>
-                    </ion-grid>
-                  </ion-card-content>
-                </ion-card>
-              </div>
-              
-              <!-- Load More Button for Pagination -->
-              <div class="ion-text-center ion-margin" *ngIf="paginationHasMore && !filterMode">
-                <ion-button 
-                  fill="outline" 
-                  color="primary" 
-                  (click)="loadMoreItems()" 
-                  [disabled]="paginationLoading">
-                  <ion-icon name="refresh-outline" *ngIf="!paginationLoading"></ion-icon>
-                  <ion-spinner name="crescent" *ngIf="paginationLoading"></ion-spinner>
-                  <ion-label class="ion-margin-start">
-                    {{paginationLoading ? 'جاري التحميل...' : 'تحميل المزيد'}}
-                  </ion-label>
-                </ion-button>
-              </div>
               
                   <ion-popover #actionPopover [isOpen]="isActionPopoverOpen" (didDismiss)="isActionPopoverOpen = false">
                     <ng-template>
@@ -1164,7 +1207,78 @@
                       </ion-content>
                     </ng-template>
                   </ion-popover>
-                <!-- Loading indicator for filter mode -->
+
+              <!-- Search Results Totals Summary -->
+              <div *ngIf="showSearchView && !loadingSearch && searchData.length > 0" class="totals-summary ion-padding">
+                <ion-card>
+                  <ion-card-content>
+                    <ion-grid>
+                      <ion-row>
+                        <ion-col size="3" class="ion-text-center">
+                          <h4>البحث عن: "{{currentSearchTerm}}"</h4>
+                        </ion-col>
+                        <ion-col size="3" class="ion-text-center">
+                          <h3>عدد النتائج</h3>
+                          <p class="total-value">{{searchStockTotals.items_count}}</p>
+                        </ion-col>
+                        <ion-col size="3" class="ion-text-center">
+                          <h3>إجمالي قيمة المخزون</h3>
+                          <p class="total-value">{{searchStockTotals.store_tot | number : '1.2-2'}}</p>
+                        </ion-col>
+                        <ion-col size="3" class="ion-text-center">
+                          <h3>إجمالي تكلفة المخزون</h3>
+                          <p class="total-value">{{searchStockTotals.perch_tot | number : '1.2-2'}}</p>
+                        </ion-col>
+                      </ion-row>
+                    </ion-grid>
+                  </ion-card-content>
+                </ion-card>
+              </div>
+              
+              <!-- All Items Totals Summary -->
+              <div *ngIf="showAllItemsView && !loadingAllItems" class="totals-summary ion-padding">
+                <ion-card>
+                  <ion-card-content>
+                    <ion-grid>
+                      <ion-row>
+                        <ion-col size="3" class="ion-text-center">
+                          <h3>إجمالي الأصناف</h3>
+                          <p class="total-value">{{allItemsStockTotals.items_count}}</p>
+                        </ion-col>
+                        <ion-col size="3" class="ion-text-center">
+                          <h3>إجمالي قيمة المخزون</h3>
+                          <p class="total-value">{{allItemsStockTotals.store_tot | number : '1.2-2'}}</p>
+                        </ion-col>
+                        <ion-col size="3" class="ion-text-center">
+                          <h3>إجمالي تكلفة المخزون</h3>
+                          <p class="total-value">{{allItemsStockTotals.perch_tot | number : '1.2-2'}}</p>
+                        </ion-col>
+                        <ion-col size="3" class="ion-text-center">
+                          <h3>إجمالي الكمية</h3>
+                          <p class="total-value">{{allItemsStockTotals.quantity | number : '1.2-2'}}</p>
+                        </ion-col>
+                      </ion-row>
+                    </ion-grid>
+                  </ion-card-content>
+                </ion-card>
+              </div>
+              
+              <!-- Load More Button for Pagination -->
+              <div class="load-more-container" *ngIf="paginationHasMore && !filterMode">
+                <ion-button 
+                  fill="outline" 
+                  color="primary" 
+                  (click)="loadMoreItems()" 
+                  [disabled]="paginationLoading">
+                  <ion-icon name="refresh-outline" *ngIf="!paginationLoading"></ion-icon>
+                  <ion-spinner name="crescent" *ngIf="paginationLoading"></ion-spinner>
+                  <ion-label class="ion-margin-start">
+                    {{paginationLoading ? 'جاري التحميل...' : 'تحميل المزيد'}}
+                  </ion-label>
+                </ion-button>
+              </div>
+
+              <!-- Loading indicator for filter mode -->
                 <div *ngIf="loading && hasActiveFilters()" class="filter-loading-container">
                   <div class="loading-content">
                     <ion-spinner name="crescent" color="primary"></ion-spinner>
@@ -1173,9 +1287,21 @@
                 </div>
 
                 <!-- filte mode  -->
-                <table  class="table"  
-                *ngIf="(hasActiveFilters() == true) 
-                 && searchTerm == '' && !loading" >
+                <ion-card *ngIf="(hasActiveFilters() == true) && searchTerm == '' && !loading">
+                  <ion-card-header class="ion-no-padding">
+                    <div class="card-header-with-export">
+                      <ion-card-title>نتائج الفلتر</ion-card-title>
+                      <app-export-buttons 
+                        [hasData]="getCurrentTableData().length > 0"
+                        [isLoading]="loading"
+                        (exportPDF)="exportToPDF()"
+                        (exportExcel)="exportToExcel()">
+                      </app-export-buttons>
+                    </div>
+                  </ion-card-header>
+                <div class="table-container"  
+                *ngIf="(hasActiveFilters() == true) && searchTerm == '' && !loading">
+                  <table  class="table">
                      
                   <tr *ngIf="colSetting">
                    <th>
@@ -1325,13 +1451,13 @@
                       </ion-item> 
                    </td> 
                    <td  [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">
-                     <ion-text *ngIf="showMe != i">{{item.perch_price}}</ion-text>
+                     <ion-text *ngIf="showMe != i">{{formatBalance(item.perch_price)}}</ion-text>
                      <ion-item *ngIf="showMe == i">
                        <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.perch_price"  ></ion-input>
                       </ion-item> 
                    </td>
                    <td  [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">
-                     <ion-text *ngIf="showMe != i">{{item.pay_price}}</ion-text>
+                     <ion-text *ngIf="showMe != i">{{formatBalance(item.pay_price)}}</ion-text>
                      <ion-item *ngIf="showMe == i">
                        <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.pay_price"  ></ion-input>
                       </ion-item> 
@@ -1341,7 +1467,7 @@
                    </td>
                  
                    <td  [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">{{item.quantity}}</td>
-                   <td  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">{{+item.quantity * +item.perch_price }}</td>
+                   <td  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">{{formatBalance(+item.quantity * +item.perch_price)}}</td>
                    <td  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">{{item.lastSoldDate }}</td>
                    <td>
                      <ion-text *ngIf="showMe != i">{{item.firstQuantity}}</ion-text>
@@ -1400,7 +1526,9 @@
                    <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>  
                    <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>  
                   </tr>
-                </table>  
+                </table>
+                </div>  
+                </ion-card>
 
            <!-- ///search - OLD SEARCH TABLE (DISABLED) -->
                <table class="table" *ngIf="false && searchMode == true && searchTerm != ''">
@@ -1571,13 +1699,13 @@
                      </ion-item> 
                   </td> 
                   <td  [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">
-                    <ion-text *ngIf="showMe != i">{{item.perch_price}}</ion-text>
+                    <ion-text *ngIf="showMe != i">{{formatBalance(item.perch_price)}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.perch_price"  ></ion-input>
                      </ion-item> 
                   </td>
                   <td  [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">
-                    <ion-text *ngIf="showMe != i">{{item.pay_price}}</ion-text>
+                    <ion-text *ngIf="showMe != i">{{formatBalance(item.pay_price)}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                     <ion-input  (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.pay_price"></ion-input>
                      </ion-item> 
@@ -1587,7 +1715,7 @@
                   </td>
                 
                   <td  [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">{{item.quantity}}</td>
-                  <td  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">{{+item.quantity * +item.perch_price }}</td>
+                  <td  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">{{formatBalance(+item.quantity * +item.perch_price)}}</td>
                   <td  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">{{item.lastSoldDate }}</td>
                   <!-- new -->
                   <!-- <td   >{{item.sales28 }}</td>
@@ -1666,124 +1794,8 @@
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>  
                  </tr>
               </table>  
-           </ion-col>
 
-           <!-- exporting mode   -->
-
-
-          <ion-col  *ngIf="exportMode == true">
-
-         <!-- <div   #exceltable> -->
-           <table  id="exceltable" class="table" *ngIf="searchMode == false && filterMode == false"  >
-            <tr *ngIf="colSetting">
-             <th> 
-               التسلسل
-               
-             </th>
-             <th *ngIf="colSetting.item_name == true" >
-               الصنف
-               
-             </th>
-             <th *ngIf="colSetting.item_desc == true"  >اسم الصنف  (English)
-                
-             </th> 
-
-             <th *ngIf="colSetting.aliasEn true"  >اسم  مستعار  ( Alias)
-                
-            </th>
-             <th *ngIf="colSetting.model == true"  >الموديل (model)
-                
-             </th>
-            
-             <th *ngIf="colSetting.part_no == true" >الكود (part no)
-              
-             </th>
-             <th *ngIf="colSetting.brand == true"  >الماركة (brand) 
-                
-             </th> 
-             <th *ngIf="colSetting.min_qty == true"  >اقل كمية (MSQ)
-              
-             </th>
-             <th *ngIf="colSetting.item_unit == true"  >الوحده (unit)
-               
-             </th> 
-             <th *ngIf="colSetting.perch_price == true"  >سعر الشراء (purch price)
-                
-             </th>
-             <th *ngIf=" colSetting.pay_price == true"  >سعر الوحده (selling price)
-               
-             </th> 
-             <th *ngIf="colSetting.profit == true" >نسبة الفائدة (profit perc)
-               
-             </th>  
-             <th *ngIf="colSetting.instock == true"  >المخزون (in stock)
-              
-             </th>
-             <th *ngIf=" colSetting.total == true"  >المجموع
-              
-             </th>
-             <th *ngIf="colSetting.lastSold == true" >اخر عملية بيع
-                
-             </th>
-            
-            </tr>
-            <tr *ngFor="let item of items ; let i = index" >
-             <!-- <td>{{i+1}}</td> -->
-             <td>{{item.id}}</td>
-             <td *ngIf="colSetting.item_name == true" >
-               <ion-text *ngIf="showMe != i">{{item.item_name}}</ion-text> 
-             </td> 
-             <td *ngIf="colSetting.item_desc == true" >
-               <ion-text *ngIf="showMe != i">{{item.item_desc}}</ion-text>
-                
-             </td>
-             <td *ngIf="colSetting.aliasEn == true" >
-              <ion-text *ngIf="showMe != i">{{item.aliasEn}}</ion-text>
-               
-            </td>
-             <td *ngIf="colSetting.model == true" >
-               <ion-text *ngIf="showMe != i">{{item.model}}</ion-text>
-               
-             </td>
-             <td *ngIf="colSetting.part_no == true" >
-               <ion-text *ngIf="showMe != i">{{item.part_no}}</ion-text>
-                
-             </td>
-             <td *ngIf="colSetting.brand == true" >
-               <ion-text *ngIf="showMe != i">{{item.brand}}</ion-text>
-                
-             </td> 
-             <td *ngIf="colSetting.min_qty == true" >
-               <ion-text *ngIf="showMe != i">{{item.min_qty}}</ion-text>
-               
-             </td>
-             <td *ngIf="colSetting.item_unit == true" >
-               <ion-text *ngIf="showMe != i">{{item.item_unit}}</ion-text>
-                
-             </td> 
-             <td *ngIf="colSetting.perch_price == true" >
-               <ion-text *ngIf="showMe != i">{{item.perch_price}}</ion-text>
-                
-             </td>
-             <td *ngIf="colSetting.pay_price == true" >
-               <ion-text *ngIf="showMe != i">{{item.pay_price}}</ion-text>
-               
-             </td> 
-             <td *ngIf="colSetting.profit == true">
-               {{calculateProfit(item).toFixed(2)}}
-             </td>
-           
-             <td *ngIf="colSetting.profit == true" >{{item.quantity}}</td>
-             <td *ngIf="colSetting.total == true"  >{{+item.quantity * +item.perch_price }}</td>
-             <td *ngIf="colSetting.lastSold == true" >{{item.lastSoldDate }}</td>
-
-
-               
-            </tr> 
-         
-         
-          </table>
-         <!-- </div>   -->
+         <!-- Export mode content -->
            <!-- Loading indicator for excel filter mode -->
            <div *ngIf="loading && filterMode" class="filter-loading-container">
              <div class="loading-content">
@@ -1792,8 +1804,9 @@
              </div>
            </div>
 
-           <!-- filte mode  -->
-           <table id="exceltable" class="table"  *ngIf="filterMode == true && !loading" >
+           <!-- Filter mode table -->
+           <div class="table-container" *ngIf="filterMode == true && !loading">
+           <table id="exceltable" class="table">
             <tr *ngIf="colSetting">
               <th> 
                 التسلسل
@@ -1900,14 +1913,8 @@
  
                 
              </tr> 
-           </table>  
-         </ion-col>
-          </ion-row>
-        </ion-grid>
-      </ion-col> 
-    </ion-row>
-  </ion-grid>
-  
+           </table>
+           </div>
 
   <!-- Pagination Controls -->
 <!-- <ion-grid *ngIf="!loading && !searchMode && !filterMode">
@@ -1949,6 +1956,4 @@
 </ion-grid> -->
 
 </ion-content>
-<!-- <ion-footer>
-  <ion-item button (click)="createPdf()"></ion-item>
-</ion-footer> -->
+ 

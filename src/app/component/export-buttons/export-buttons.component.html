@@ -1,0 +1,23 @@
+<div class="export-buttons">
+  <ion-button 
+    fill="outline" 
+    color="danger" 
+    size="small"
+    [disabled]="!hasData || isLoading || disabled"
+    (click)="onExportPDF()"
+    class="export-btn">
+    <ion-icon name="document-text-outline" slot="start"></ion-icon>
+    <span class="export-text">PDF</span>
+  </ion-button>
+  
+  <ion-button 
+    fill="outline" 
+    color="success" 
+    size="small"
+    [disabled]="!hasData || isLoading || disabled"
+    (click)="onExportExcel()"
+    class="export-btn">
+    <ion-icon name="grid-outline" slot="start"></ion-icon>
+    <span class="export-text">Excel</span>
+  </ion-button>
+</div>

@@ -11,7 +11,7 @@ import { ShareModule } from "../shareModule/share-module/share-module.module";
 import { SalesPage } from './sales.page'; 
 import { SharedModule } from '../module/shared/shared.module';
 import { InsufficientStockDialogComponent } from '../component/insufficient-stock-dialog/insufficient-stock-dialog.component';
-
+ 
 @NgModule({
   imports: [
     CommonModule,

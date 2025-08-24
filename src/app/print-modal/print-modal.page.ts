@@ -21,8 +21,23 @@ export class PrintModalPage implements OnInit {
 
   async ngOnInit() {
     console.log(this.printArr[0]);
+    this.sortItemListAlphabetically()
     await this.loadImages();
   }
+
+  sortItemListAlphabetically() {
+    if (!this.printArr[0].itemList || this.printArr[0].itemList.length === 0) {
+      return;
+    }
+    
+    this.printArr[0].itemList= [...this.printArr[0].itemList].sort((a, b) => {
+      const nameA = a.item_name ? a.item_name.toString().toLowerCase() : '';
+      const nameB = b.item_name ? b.item_name.toString().toLowerCase() : '';
+      return nameA.localeCompare(nameB, 'ar', { numeric: true });
+    });
+  }
+
+
 
   async loadImages() {
     try {
@@ -156,6 +171,15 @@ export class PrintModalPage implements OnInit {
     mywindow.window.print();
     mywindow.window.close();
     this.modalController.dismiss()    
+}
+
+// Format balance display with number separators
+formatBalance(balance: number): string {
+  if (!balance && balance !== 0) return '0.00';
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Math.abs(balance));
 }
 
 }

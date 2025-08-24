@@ -281,26 +281,17 @@
                   <ion-input  class="custInp" [(ngModel)]="payInvo.discount"  tabindex="600"  (ionBlur)="discountChange($event)"></ion-input> 
                 </ion-item>
               </ion-col> -->
+              <!-- Total after discount for all sales invoices -->
               <ion-col size="11">
-                <ion-label class="ion-padding"><strong> المدفوع نقدا</strong></ion-label>
-                <ion-item class="custInput"> 
-                  <ion-input [(ngModel)]="payInvo.pay" (ionChange)="payChange($event)"></ion-input>
+                <ion-label class="ion-padding"><strong>المجموع بعد الخصم</strong></ion-label>
+                <ion-item class="custInput total-after-discount"> 
+                  <ion-input [value]="(+payInvo.tot_pr - +payInvo.discount).toFixed(2)" [readonly]="true"></ion-input>
                 </ion-item>
               </ion-col>
-              <ion-col size="11">
-                <ion-label class="ion-padding"><strong>المتبقي</strong></ion-label>
-                <ion-item class="custInput"> 
-                  <ion-input  [(ngModel)]="payInvo.changee" [readonly]="true"></ion-input>
-                </ion-item>
-              </ion-col>
-              <ion-col size="11">
-                <ion-label class="ion-padding"><strong>تاريخ السداد</strong></ion-label>
-                <ion-item class="custInput"> 
-                  <ion-item lines="none">
-                    <input style="width:100%"  type="date"  id="startingDate6" name="startingDate6" [(ngModel)]="payInvo.nextPay"  />
-                  </ion-item>
-                </ion-item>
-              </ion-col> 
+              
+              <!-- Keep hidden inputs to maintain values -->
+              <input type="hidden" [(ngModel)]="payInvo.pay">
+              <input type="hidden" [(ngModel)]="payInvo.nextPay"> 
             </ion-row>
             <ion-row class="ion-justify-content-center">
               <ion-col size="5" >

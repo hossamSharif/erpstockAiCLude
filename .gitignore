@@ -165,7 +165,8 @@ myapi/error_log
 *.swp
 *.swo
 *~
-
+#myapi file
+/myapi
 # OS generated files
 .DS_Store
 .DS_Store?

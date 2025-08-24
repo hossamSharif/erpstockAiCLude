@@ -93,18 +93,22 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "SalesRecordPage": () => (/* binding */ SalesRecordPage)
 /* harmony export */ });
-/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! tslib */ 48163);
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! tslib */ 48163);
 /* harmony import */ var _sales_record_page_html_ngResource__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./sales-record.page.html?ngResource */ 3771);
 /* harmony import */ var _sales_record_page_scss_ngResource__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./sales-record.page.scss?ngResource */ 13370);
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @angular/core */ 51109);
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @angular/core */ 51109);
 /* harmony import */ var _stockService_services_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../stockService/services.service */ 91472);
-/* harmony import */ var _ionic_angular__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @ionic/angular */ 95472);
-/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @angular/common */ 38143);
+/* harmony import */ var _ionic_angular__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @ionic/angular */ 95472);
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @angular/common */ 38143);
 /* harmony import */ var _ionic_storage__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @ionic/storage */ 52879);
-/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @angular/router */ 65485);
+/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @angular/router */ 65485);
 /* harmony import */ var _print_modal_print_modal_page__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../print-modal/print-modal.page */ 4441);
 /* harmony import */ var _component_action_popover_action_popover_component__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../component/action-popover/action-popover.component */ 10276);
 /* harmony import */ var _component_invoice_price_config_dialog_invoice_price_config_dialog_component__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../component/invoice-price-config-dialog/invoice-price-config-dialog.component */ 67705);
+/* harmony import */ var _services_sorting_service__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../services/sorting.service */ 52562);
+/* harmony import */ var _services_export_service__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../services/export.service */ 79002);
+
+
 
 
 
@@ -121,7 +125,7 @@ __webpack_require__.r(__webpack_exports__);
 // import pdfFonts from "pdfmake/build/vfs_fonts";
 // pdfMake.vfs = pdfFonts.pdfMake.vfs;
 let SalesRecordPage = class SalesRecordPage {
-    constructor(popoverController, platform, rout, storage, modalController, loadingController, datePipe, api, toast) {
+    constructor(popoverController, platform, rout, storage, modalController, loadingController, datePipe, api, toast, sortingService, exportService) {
         this.popoverController = popoverController;
         this.platform = platform;
         this.rout = rout;
@@ -131,14 +135,13 @@ let SalesRecordPage = class SalesRecordPage {
         this.datePipe = datePipe;
         this.api = api;
         this.toast = toast;
+        this.sortingService = sortingService;
+        this.exportService = exportService;
         this.payArray = [];
-        this.filteredPayArray = []; // Filtered invoices based on selected category
+        this.sortedPayArray = []; // Sorted invoices for display
+        this.currentSort = null;
         this.printArr = [];
         this.initialInvoices = [];
-        // Category properties
-        this.categories = [];
-        this.selectedCategoryId = null;
-        this.isCategoryVisibilityEnabled = true;
         this.loadinDet = false;
         this.sub_accountLocalSales = [];
         this.sub_accountSales = [];
@@ -390,7 +393,8 @@ let SalesRecordPage = class SalesRecordPage {
     }
     ngOnInit() {
         this.payArray = [];
-        this.filteredPayArray = [];
+        this.sortedPayArray = [];
+        this.currentSort = null;
         // Check category visibility setting
         //  this.isCategoryVisibilityEnabled = CategoriesPage.isCategoryVisibilityEnabled();
         //console.log('ngOnInit')
@@ -398,7 +402,7 @@ let SalesRecordPage = class SalesRecordPage {
         this.prepareOffline();
     }
     presentActionPopover(ev, pay, sub_name) {
-        return (0,tslib__WEBPACK_IMPORTED_MODULE_7__.__awaiter)(this, void 0, void 0, function* () {
+        return (0,tslib__WEBPACK_IMPORTED_MODULE_9__.__awaiter)(this, void 0, void 0, function* () {
             const popover = yield this.popoverController.create({
                 component: _component_action_popover_action_popover_component__WEBPACK_IMPORTED_MODULE_5__.ActionPopoverComponent,
                 event: ev,
@@ -487,7 +491,7 @@ let SalesRecordPage = class SalesRecordPage {
         }
     }
     showPriceConfigDialog(itemList, type) {
-        return (0,tslib__WEBPACK_IMPORTED_MODULE_7__.__awaiter)(this, void 0, void 0, function* () {
+        return (0,tslib__WEBPACK_IMPORTED_MODULE_9__.__awaiter)(this, void 0, void 0, function* () {
             // Dismiss loading controller first
             this.loadingController.dismiss();
             // For sales type, skip dialog and navigate directly
@@ -584,12 +588,14 @@ let SalesRecordPage = class SalesRecordPage {
     clear() {
         this.selectedAccount = { id: "", ac_id: "", sub_name: "", sub_type: "", sub_code: "", sub_balance: "", store_id: "", cat_name: "", cat_id: "", currentCustumerStatus: 0 };
         this.payArray = [];
+        this.sortedPayArray = [];
         this.salesLocal = [];
         this.showEmpty = false;
         this.loading = false;
     }
     ionViewDidEnter() {
         this.payArray = [];
+        this.sortedPayArray = [];
         this.salesLocal = [];
         this.sales = [];
         this.salesOffline = [];
@@ -631,8 +637,6 @@ let SalesRecordPage = class SalesRecordPage {
                 //console.log(response)
                 //console.log(this.store_info) 
                 this.getSalesAccount();
-                // Load categories for sales records
-                this.loadCategories();
                 //this.search() 
             }
         });
@@ -654,81 +658,6 @@ let SalesRecordPage = class SalesRecordPage {
                 //console.log('searchLang' ,this.searchLang) 
             }
         });
-    }
-    // Category management methods
-    loadCategories() {
-        if (this.store_info && this.store_info.id) {
-            this.api.getCategories(this.store_info.id).subscribe((data) => {
-                if (data && data.data) {
-                    this.categories = data.data;
-                    console.log('Categories loaded in sales-record:', this.categories);
-                    // Set initial category from localStorage or first category
-                    const savedCategoryId = localStorage.getItem('SELECTED_CATEGORY_ID');
-                    if (savedCategoryId && this.categories.some(cat => cat.id == savedCategoryId)) {
-                        this.selectedCategoryId = savedCategoryId;
-                    }
-                    else if (this.categories.length > 0) {
-                        this.selectedCategoryId = this.categories[0].id;
-                        localStorage.setItem('SELECTED_CATEGORY_ID', this.categories[0].id);
-                    }
-                }
-            }, (error) => {
-                console.error('Error loading categories in sales-record:', error);
-            });
-        }
-    }
-    onCategoryChange(event) {
-        this.selectedCategoryId = event.detail.value;
-        // Save selected category
-        if (this.selectedCategoryId) {
-            localStorage.setItem('SELECTED_CATEGORY_ID', this.selectedCategoryId);
-        }
-        console.log('Sales record category changed to:', this.selectedCategoryId);
-        // Apply category filtering when category selection changes
-        this.filterInvoicesByCategory();
-    }
-    // Filter invoices by selected category
-    filterInvoicesByCategory() {
-        console.log('🔍 FILTERING SALES INVOICES BY CATEGORY');
-        console.log('Selected category ID:', this.selectedCategoryId);
-        console.log('Total invoices to filter:', this.payArray.length);
-        if (!this.selectedCategoryId || this.selectedCategoryId === 'all') {
-            // Show all invoices if no category selected or "all" is selected
-            this.filteredPayArray = [...this.payArray];
-            console.log('No category filter applied, showing all invoices:', this.filteredPayArray.length);
-            return;
-        }
-        // Filter invoices that match the selected category
-        this.filteredPayArray = this.payArray.filter(invoice => {
-            // Check multiple possible category property names
-            const possibleCategoryIds = [
-                invoice.category_id,
-                invoice.categoryId,
-                invoice.category ? invoice.category.id : null,
-                invoice.cat_id
-            ];
-            let invoiceCategoryId = null;
-            // Find the first valid category ID from possible properties
-            for (const catId of possibleCategoryIds) {
-                if (catId !== null && catId !== undefined && catId !== '') {
-                    invoiceCategoryId = catId;
-                    break;
-                }
-            }
-            if (invoiceCategoryId === null || invoiceCategoryId === undefined) {
-                console.log(`Invoice "${invoice.pay_ref}" - NO VALID category_id found`);
-                return false;
-            }
-            // Compare with type coercion (== instead of ===) to handle string/number differences
-            const categoryMatches = (invoiceCategoryId == this.selectedCategoryId);
-            console.log(`Invoice "${invoice.pay_ref}":`, {
-                invoiceCategoryId: invoiceCategoryId,
-                selectedCategoryId: this.selectedCategoryId,
-                matches: categoryMatches
-            });
-            return categoryMatches;
-        });
-        console.log('Sales invoices after category filter:', this.filteredPayArray.length);
     }
     prepareOffline() {
         this.storage.get('sub_accountLocalSales').then((response) => {
@@ -893,7 +822,7 @@ let SalesRecordPage = class SalesRecordPage {
         }
     }
     presentModal(printArr, page) {
-        return (0,tslib__WEBPACK_IMPORTED_MODULE_7__.__awaiter)(this, void 0, void 0, function* () {
+        return (0,tslib__WEBPACK_IMPORTED_MODULE_9__.__awaiter)(this, void 0, void 0, function* () {
             const modal = yield this.modalController.create({
                 component: _print_modal_print_modal_page__WEBPACK_IMPORTED_MODULE_4__.PrintModalPage,
                 componentProps: {
@@ -1025,6 +954,8 @@ let SalesRecordPage = class SalesRecordPage {
                 }
             }
             this.getTotal();
+            // Apply category filtering after loading initial invoices from localStorage
+            this.applySorting();
             if (this.payArray.length == 0) {
                 this.showEmpty = true;
             }
@@ -1070,6 +1001,8 @@ let SalesRecordPage = class SalesRecordPage {
                 }
             }
             this.getTotal();
+            // Apply category filtering after loading initial invoices from API 
+            this.applySorting();
             // this.store_tot = this.items.reduce( (acc, obj)=> { return acc + +(obj.perch_price * obj.quantity ); }, 0);
         }, (err) => {
             //console.log(err);
@@ -1099,31 +1032,24 @@ let SalesRecordPage = class SalesRecordPage {
                     const element = this.salesLocal[i];
                     this.payArray.push(element.payInvo);
                 }
-                if (this.selectedAccount.sub_name != "") {
-                    if (this.payArray.length > 0) {
-                        this.payArray = this.payArray.filter(x => +x.cust_id == +this.selectedAccount.id);
-                    }
-                }
-                this.getTotal();
-                // Apply category filtering after loading sales data from localStorage in getTopSales  
-                this.filterInvoicesByCategory();
-                if (this.payArray.length == 0) {
-                    this.showEmpty = true;
-                }
-                else {
-                    this.showEmpty = false;
-                }
-                this.loading = false;
-                //console.log(this.payArray)
             }
+            // Apply account filter if selected
             if (this.selectedAccount.sub_name != "") {
                 if (this.payArray.length > 0) {
                     this.payArray = this.payArray.filter(x => +x.cust_id == +this.selectedAccount.id);
                 }
             }
             this.getTotal();
-            // Apply category filtering after loading sales data from API in getTopSales
-            this.filterInvoicesByCategory();
+            // Apply category filtering after loading all sales data in getTopSales  
+            this.applySorting();
+            if (this.payArray.length == 0) {
+                this.showEmpty = true;
+            }
+            else {
+                this.showEmpty = false;
+            }
+            this.loading = false;
+            //console.log(this.payArray)
             // this.store_tot = this.items.reduce( (acc, obj)=> { return acc + +(obj.perch_price * obj.quantity ); }, 0);
         }, (err) => {
             //console.log(err);
@@ -1167,7 +1093,7 @@ let SalesRecordPage = class SalesRecordPage {
                 }
                 this.getTotal();
                 // Apply category filtering after loading sales data from localStorage in getTopSalesOffline
-                this.filterInvoicesByCategory();
+                this.applySorting();
                 if (this.payArray.length == 0) {
                     this.showEmpty = true;
                 }
@@ -1184,7 +1110,7 @@ let SalesRecordPage = class SalesRecordPage {
             }
             this.getTotal();
             // Apply category filtering after account filter in getTopSalesOffline
-            this.filterInvoicesByCategory();
+            this.applySorting();
         });
     }
     getSalesByDate() {
@@ -1208,26 +1134,24 @@ let SalesRecordPage = class SalesRecordPage {
                     const element = this.salesLocal[i];
                     this.payArray.push(element.payInvo);
                 }
-                this.getTotal();
-                // Apply category filtering after loading sales data from localStorage in getSalesByDate
-                this.filterInvoicesByCategory();
-                if (this.payArray.length == 0) {
-                    this.showEmpty = true;
-                }
-                else {
-                    this.showEmpty = false;
-                }
-                this.loading = false;
-                //console.log(this.payArray)
             }
+            // Apply account filter if selected
             if (this.selectedAccount.sub_name != "") {
                 if (this.payArray.length > 0) {
                     this.payArray = this.payArray.filter(x => +x.cust_id == +this.selectedAccount.id);
                 }
             }
             this.getTotal();
-            // Apply category filtering after loading sales data from API in getSalesByDate
-            this.filterInvoicesByCategory();
+            // Apply category filtering after loading all sales data in getSalesByDate
+            this.applySorting();
+            if (this.payArray.length == 0) {
+                this.showEmpty = true;
+            }
+            else {
+                this.showEmpty = false;
+            }
+            this.loading = false;
+            //console.log(this.payArray)
             // this.store_tot = this.items.reduce( (acc, obj)=> { return acc + +(obj.perch_price * obj.quantity ); }, 0);
         }, (err) => {
             //console.log(err);
@@ -1270,7 +1194,7 @@ let SalesRecordPage = class SalesRecordPage {
                 }
                 this.getTotal();
                 // Apply category filtering after loading sales data from localStorage in getSalesByDateOffline
-                this.filterInvoicesByCategory();
+                this.applySorting();
                 if (this.payArray.length == 0) {
                     this.showEmpty = true;
                 }
@@ -1286,7 +1210,7 @@ let SalesRecordPage = class SalesRecordPage {
             }
             this.getTotal();
             // Apply category filtering after account filter in getSalesByDateOffline
-            this.filterInvoicesByCategory();
+            this.applySorting();
         });
     }
     getSales2Date() {
@@ -1311,25 +1235,23 @@ let SalesRecordPage = class SalesRecordPage {
                     this.payArray.push(element.payInvo);
                 }
                 //console.log(this.payArray)
-                this.getTotal();
-                // Apply category filtering after loading sales data from localStorage in getSales2Date
-                this.filterInvoicesByCategory();
-                if (this.payArray.length == 0) {
-                    this.showEmpty = true;
-                }
-                else {
-                    this.showEmpty = false;
-                }
-                this.loading = false;
             }
+            // Apply account filter if selected
             if (this.selectedAccount.sub_name != "") {
                 if (this.payArray.length > 0) {
                     this.payArray = this.payArray.filter(x => +x.cust_id == +this.selectedAccount.id);
                 }
             }
             this.getTotal();
-            // Apply category filtering after loading sales data from API in getSales2Date
-            this.filterInvoicesByCategory();
+            // Apply category filtering after loading all sales data in getSales2Date
+            this.applySorting();
+            if (this.payArray.length == 0) {
+                this.showEmpty = true;
+            }
+            else {
+                this.showEmpty = false;
+            }
+            this.loading = false;
         }, (err) => {
             //console.log(err);
         }, () => {
@@ -1371,7 +1293,7 @@ let SalesRecordPage = class SalesRecordPage {
                 }
                 this.getTotal();
                 // Apply category filtering after loading sales data from localStorage in getSales2DateOffline
-                this.filterInvoicesByCategory();
+                this.applySorting();
                 if (this.payArray.length == 0) {
                     this.showEmpty = true;
                 }
@@ -1387,7 +1309,7 @@ let SalesRecordPage = class SalesRecordPage {
             }
             this.getTotal();
             // Apply category filtering after account filter in getSales2DateOffline
-            this.filterInvoicesByCategory();
+            this.applySorting();
         });
     }
     showLoadingSk() {
@@ -1397,6 +1319,7 @@ let SalesRecordPage = class SalesRecordPage {
     radioChange(ev) {
         //console.log(ev.target.value) 
         this.payArray = [];
+        this.sortedPayArray = [];
         this.salesLocal = [];
         this.showEmpty = false;
         this.loading = false;
@@ -1445,7 +1368,7 @@ let SalesRecordPage = class SalesRecordPage {
         }
     }
     presentToast(msg, color) {
-        return (0,tslib__WEBPACK_IMPORTED_MODULE_7__.__awaiter)(this, void 0, void 0, function* () {
+        return (0,tslib__WEBPACK_IMPORTED_MODULE_9__.__awaiter)(this, void 0, void 0, function* () {
             const toast = yield this.toast.create({
                 message: msg,
                 duration: 2000,
@@ -1458,7 +1381,7 @@ let SalesRecordPage = class SalesRecordPage {
         });
     }
     presentLoadingWithOptions(msg) {
-        return (0,tslib__WEBPACK_IMPORTED_MODULE_7__.__awaiter)(this, void 0, void 0, function* () {
+        return (0,tslib__WEBPACK_IMPORTED_MODULE_9__.__awaiter)(this, void 0, void 0, function* () {
             const loading = yield this.loadingController.create({
                 spinner: 'bubbles',
                 mode: 'ios',
@@ -1490,6 +1413,7 @@ let SalesRecordPage = class SalesRecordPage {
             };
             // Clear existing data and reload records for selected account
             this.payArray = [];
+            this.sortedPayArray = [];
             this.salesLocal = [];
             this.showEmpty = false;
             this.loading = false;
@@ -1505,20 +1429,126 @@ let SalesRecordPage = class SalesRecordPage {
             console.log('Account balance loaded in sales-record:', balance);
         }
     }
+    // Format balance display with number separators
+    formatBalance(balance) {
+        if (!balance && balance !== 0)
+            return '0.00';
+        return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(Math.abs(balance));
+    }
+    // Apply sorting to data
+    applySorting() {
+        if (this.currentSort) {
+            this.sortedPayArray = this.sortingService.sortData(this.payArray, this.currentSort.column, this.currentSort.direction);
+        }
+        else {
+            this.sortedPayArray = [...this.payArray];
+        }
+    }
+    // Handle column sort
+    sortBy(column) {
+        const direction = this.sortingService.getNextSortDirection(column, this.currentSort);
+        this.currentSort = { column, direction };
+        this.applySorting();
+    }
+    // Get sort icon for column
+    getSortIcon(column) {
+        return this.sortingService.getSortIcon(column, this.currentSort);
+    }
+    // Export functionality
+    exportToPDF() {
+        var _a, _b;
+        return (0,tslib__WEBPACK_IMPORTED_MODULE_9__.__awaiter)(this, void 0, void 0, function* () {
+            if (!this.sortedPayArray || this.sortedPayArray.length === 0) {
+                yield this.presentToast('لا توجد بيانات للتصدير', 'warning');
+                return;
+            }
+            const config = {
+                title: this.exportService.generateDynamicTitle('sales-record'),
+                subtitle: this.generateSubtitle(),
+                fileName: `sales-record-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+                data: this.sortedPayArray,
+                columns: this.getExportColumns(),
+                userName: ((_a = this.user_info) === null || _a === void 0 ? void 0 : _a.full_name) || ((_b = this.user_info) === null || _b === void 0 ? void 0 : _b.user_name) || 'مستخدم غير معروف',
+                pageType: 'sales-record',
+                currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+            };
+            yield this.exportService.exportToPDF(config);
+        });
+    }
+    exportToExcel() {
+        var _a, _b;
+        return (0,tslib__WEBPACK_IMPORTED_MODULE_9__.__awaiter)(this, void 0, void 0, function* () {
+            if (!this.sortedPayArray || this.sortedPayArray.length === 0) {
+                yield this.presentToast('لا توجد بيانات للتصدير', 'warning');
+                return;
+            }
+            const config = {
+                title: this.exportService.generateDynamicTitle('sales-record'),
+                subtitle: this.generateSubtitle(),
+                fileName: `sales-record-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+                data: this.sortedPayArray,
+                columns: this.getExportColumns(),
+                userName: ((_a = this.user_info) === null || _a === void 0 ? void 0 : _a.full_name) || ((_b = this.user_info) === null || _b === void 0 ? void 0 : _b.user_name) || 'مستخدم غير معروف',
+                pageType: 'sales-record',
+                currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+            };
+            yield this.exportService.exportToExcel(config);
+        });
+    }
+    generateSubtitle() {
+        const filters = {
+            selectedAccount: this.selectedAccount.sub_name ? this.selectedAccount : null,
+            dateFilter: this.getDateFilter(),
+            searchTerm: null // Sales record doesn't have search term
+        };
+        return this.exportService.generateDynamicSubtitle('sales-record', filters);
+    }
+    getDateFilter() {
+        if (this.radioVal === 1 && this.startingDate) {
+            return {
+                type: 'single',
+                date: this.startingDate
+            };
+        }
+        else if (this.radioVal === 2 && this.startingDate && this.endDate) {
+            return {
+                type: 'range',
+                startDate: this.startingDate,
+                endDate: this.endDate
+            };
+        }
+        return null;
+    }
+    getExportColumns() {
+        return [
+            { key: 'sub_name', title: 'العميل', width: 20, type: 'text' },
+            { key: 'pay_date', title: 'التاريخ', width: 12, type: 'date' },
+            { key: 'tot_pr', title: 'إجمالي المبلغ', width: 15, type: 'currency' },
+            { key: 'discount', title: 'الخصم', width: 12, type: 'currency' },
+            { key: 'finalAmount', title: 'الإجمالي بعد الخصم', width: 18, type: 'currency' },
+            { key: 'payComment', title: 'تعليق', width: 20, type: 'text' },
+            { key: 'user_name', title: 'المستخدم', width: 15, type: 'text' }
+        ];
+    }
 };
 SalesRecordPage.ctorParameters = () => [
-    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_8__.PopoverController },
-    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_8__.Platform },
-    { type: _angular_router__WEBPACK_IMPORTED_MODULE_9__.Router },
+    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_10__.PopoverController },
+    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_10__.Platform },
+    { type: _angular_router__WEBPACK_IMPORTED_MODULE_11__.Router },
     { type: _ionic_storage__WEBPACK_IMPORTED_MODULE_3__.Storage },
-    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_8__.ModalController },
-    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_8__.LoadingController },
-    { type: _angular_common__WEBPACK_IMPORTED_MODULE_10__.DatePipe },
+    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_10__.ModalController },
+    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_10__.LoadingController },
+    { type: _angular_common__WEBPACK_IMPORTED_MODULE_12__.DatePipe },
     { type: _stockService_services_service__WEBPACK_IMPORTED_MODULE_2__.ServicesService },
-    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_8__.ToastController }
+    { type: _ionic_angular__WEBPACK_IMPORTED_MODULE_10__.ToastController },
+    { type: _services_sorting_service__WEBPACK_IMPORTED_MODULE_7__.SortingService },
+    { type: _services_export_service__WEBPACK_IMPORTED_MODULE_8__.ExportService }
 ];
-SalesRecordPage = (0,tslib__WEBPACK_IMPORTED_MODULE_7__.__decorate)([
-    (0,_angular_core__WEBPACK_IMPORTED_MODULE_11__.Component)({
+SalesRecordPage = (0,tslib__WEBPACK_IMPORTED_MODULE_9__.__decorate)([
+    (0,_angular_core__WEBPACK_IMPORTED_MODULE_13__.Component)({
         selector: 'app-sales-record',
         template: _sales_record_page_html_ngResource__WEBPACK_IMPORTED_MODULE_0__,
         styles: [_sales_record_page_scss_ngResource__WEBPACK_IMPORTED_MODULE_1__]
@@ -1535,7 +1565,7 @@ SalesRecordPage = (0,tslib__WEBPACK_IMPORTED_MODULE_7__.__decorate)([
   \****************************************************************/
 /***/ ((module) => {
 
-module.exports = ".custInput {\n  border-style: solid;\n  border-color: var(--ion-color-light);\n  border-radius: 5px;\n}\n\n.show {\n  visibility: visible;\n}\n\n.hide {\n  visibility: hidden;\n}\n\n.cust-card {\n  border-radius: 5px;\n}\n\n.custRow {\n  margin-top: 5rem;\n}\n\n.table {\n  text-align: center;\n  width: 100%;\n  margin: 12px;\n}\n\ntr:nth-child(even) {\n  background-color: #dddddd;\n}\n\ntd, th {\n  border: 1px solid #dddddd;\n  text-align: center;\n  padding: 8px;\n  font-size: 16px;\n  font-weight: bold;\n  color: black;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNhbGVzLXJlY29yZC5wYWdlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7RUFDSSxtQkFBQTtFQUNBLG9DQUFBO0VBQ0Esa0JBQUE7QUFDSjs7QUFFSTtFQUFPLG1CQUFBO0FBRVg7O0FBQUU7RUFBTSxrQkFBQTtBQUlSOztBQUZJO0VBQ0ksa0JBQUE7QUFLUjs7QUFGSTtFQUNJLGdCQUFBO0FBS1I7O0FBREU7RUFBTyxrQkFBQTtFQUFtQixXQUFBO0VBQWEsWUFBQTtBQU96Qzs7QUFMRTtFQUFvQix5QkFBQTtBQVN0Qjs7QUFQRTtFQUFRLHlCQUFBO0VBQTBCLGtCQUFBO0VBQW1CLFlBQUE7RUFBYyxlQUFBO0VBQWdCLGlCQUFBO0VBQWtCLFlBQUE7QUFnQnZHIiwiZmlsZSI6InNhbGVzLXJlY29yZC5wYWdlLnNjc3MiLCJzb3VyY2VzQ29udGVudCI6WyIuY3VzdElucHV0e1xuICAgIGJvcmRlci1zdHlsZTogc29saWQ7XG4gICAgYm9yZGVyLWNvbG9yOiB2YXIoLS1pb24tY29sb3ItbGlnaHQpO1xuICAgIGJvcmRlci1yYWRpdXM6IDVweDtcbiAgICB9XG5cbiAgICAuc2hvd3sgdmlzaWJpbGl0eTogdmlzaWJsZTsgfVxuXG4gIC5oaWRle3Zpc2liaWxpdHk6IGhpZGRlbjt9XG4gIFxuICAgIC5jdXN0LWNhcmR7XG4gICAgICAgIGJvcmRlci1yYWRpdXM6IDVweDtcbiAgICB9XG5cbiAgICAuY3VzdFJvd3tcbiAgICAgICAgbWFyZ2luLXRvcDogNXJlbTtcbiAgICAgICAgXG4gICAgICAgIH1cblxuICAudGFibGV7dGV4dC1hbGlnbjogY2VudGVyO3dpZHRoOiAxMDAlOyBtYXJnaW46IDEycHg7fVxuXG4gIHRyOm50aC1jaGlsZChldmVuKSB7YmFja2dyb3VuZC1jb2xvcjogI2RkZGRkZDt9XG4gIFxuICB0ZCwgdGgge2JvcmRlcjogMXB4IHNvbGlkICNkZGRkZGQ7dGV4dC1hbGlnbjogY2VudGVyO3BhZGRpbmc6IDhweDsgZm9udC1zaXplOiAxNnB4O2ZvbnQtd2VpZ2h0OiBib2xkO2NvbG9yOiBibGFjazt9Il19 */";
+module.exports = ".custInput {\n  border-style: solid;\n  border-color: var(--ion-color-light);\n  border-radius: 5px;\n}\n\n.show {\n  visibility: visible;\n}\n\n.hide {\n  visibility: hidden;\n}\n\n.cust-card {\n  border-radius: 5px;\n}\n\n.custRow {\n  margin-top: 5rem;\n}\n\n.table {\n  text-align: center;\n  width: 100%;\n  margin: 12px;\n}\n\ntr:nth-child(even) {\n  background-color: #dddddd;\n}\n\ntd, th {\n  border: 1px solid #dddddd;\n  text-align: center;\n  padding: 8px;\n  font-size: 16px;\n  font-weight: bold;\n  color: black;\n}\n\n.card-header-with-export {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 16px;\n  background: var(--ion-color-light);\n  border-bottom: 1px solid var(--ion-color-light-shade);\n}\n\n.card-header-with-export ion-card-title {\n  margin: 0;\n  font-size: 1.2rem;\n  font-weight: 600;\n  color: var(--ion-color-dark);\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNhbGVzLXJlY29yZC5wYWdlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7RUFDSSxtQkFBQTtFQUNBLG9DQUFBO0VBQ0Esa0JBQUE7QUFDSjs7QUFFSTtFQUFPLG1CQUFBO0FBRVg7O0FBQUU7RUFBTSxrQkFBQTtBQUlSOztBQUZJO0VBQ0ksa0JBQUE7QUFLUjs7QUFGSTtFQUNJLGdCQUFBO0FBS1I7O0FBREU7RUFBTyxrQkFBQTtFQUFtQixXQUFBO0VBQWEsWUFBQTtBQU96Qzs7QUFMRTtFQUFvQix5QkFBQTtBQVN0Qjs7QUFQRTtFQUFRLHlCQUFBO0VBQTBCLGtCQUFBO0VBQW1CLFlBQUE7RUFBYyxlQUFBO0VBQWdCLGlCQUFBO0VBQWtCLFlBQUE7QUFnQnZHOztBQWJBO0VBQ0UsYUFBQTtFQUNBLDhCQUFBO0VBQ0EsbUJBQUE7RUFDQSxhQUFBO0VBQ0Esa0NBQUE7RUFDQSxxREFBQTtBQWdCRjs7QUFkRTtFQUNFLFNBQUE7RUFDQSxpQkFBQTtFQUNBLGdCQUFBO0VBQ0EsNEJBQUE7QUFnQkoiLCJmaWxlIjoic2FsZXMtcmVjb3JkLnBhZ2Uuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbIi5jdXN0SW5wdXR7XG4gICAgYm9yZGVyLXN0eWxlOiBzb2xpZDtcbiAgICBib3JkZXItY29sb3I6IHZhcigtLWlvbi1jb2xvci1saWdodCk7XG4gICAgYm9yZGVyLXJhZGl1czogNXB4O1xuICAgIH1cblxuICAgIC5zaG93eyB2aXNpYmlsaXR5OiB2aXNpYmxlOyB9XG5cbiAgLmhpZGV7dmlzaWJpbGl0eTogaGlkZGVuO31cbiAgXG4gICAgLmN1c3QtY2FyZHtcbiAgICAgICAgYm9yZGVyLXJhZGl1czogNXB4O1xuICAgIH1cblxuICAgIC5jdXN0Um93e1xuICAgICAgICBtYXJnaW4tdG9wOiA1cmVtO1xuICAgICAgICBcbiAgICAgICAgfVxuXG4gIC50YWJsZXt0ZXh0LWFsaWduOiBjZW50ZXI7d2lkdGg6IDEwMCU7IG1hcmdpbjogMTJweDt9XG5cbiAgdHI6bnRoLWNoaWxkKGV2ZW4pIHtiYWNrZ3JvdW5kLWNvbG9yOiAjZGRkZGRkO31cbiAgXG4gIHRkLCB0aCB7Ym9yZGVyOiAxcHggc29saWQgI2RkZGRkZDt0ZXh0LWFsaWduOiBjZW50ZXI7cGFkZGluZzogOHB4OyBmb250LXNpemU6IDE2cHg7Zm9udC13ZWlnaHQ6IGJvbGQ7Y29sb3I6IGJsYWNrO31cblxuLy8gRXhwb3J0IGJ1dHRvbnMgc3R5bGluZ1xuLmNhcmQtaGVhZGVyLXdpdGgtZXhwb3J0IHtcbiAgZGlzcGxheTogZmxleDtcbiAganVzdGlmeS1jb250ZW50OiBzcGFjZS1iZXR3ZWVuO1xuICBhbGlnbi1pdGVtczogY2VudGVyO1xuICBwYWRkaW5nOiAxNnB4O1xuICBiYWNrZ3JvdW5kOiB2YXIoLS1pb24tY29sb3ItbGlnaHQpO1xuICBib3JkZXItYm90dG9tOiAxcHggc29saWQgdmFyKC0taW9uLWNvbG9yLWxpZ2h0LXNoYWRlKTtcblxuICBpb24tY2FyZC10aXRsZSB7XG4gICAgbWFyZ2luOiAwO1xuICAgIGZvbnQtc2l6ZTogMS4ycmVtO1xuICAgIGZvbnQtd2VpZ2h0OiA2MDA7XG4gICAgY29sb3I6IHZhcigtLWlvbi1jb2xvci1kYXJrKTtcbiAgfVxufSJdfQ== */";
 
 /***/ }),
 
@@ -1545,7 +1575,7 @@ module.exports = ".custInput {\n  border-style: solid;\n  border-color: var(--io
   \****************************************************************/
 /***/ ((module) => {
 
-module.exports = "<ion-header>\n  <ion-toolbar>\n    <ion-buttons slot=\"start\">\n      <ion-menu-button></ion-menu-button>\n    </ion-buttons>\n    <!-- sh605579887 -->\n   \n    <ion-title>سجل المبيعات</ion-title>\n   \n  </ion-toolbar>\n</ion-header>\n\n<ion-content *ngIf=\"device == 'desktop'\">\n  <ion-grid *ngIf=\"user_info && store_info\">\n    <ion-row dir=\"rtl\">\n      <ion-col size=\"12\">\n        <ion-card class=\"ion-no-padding ion-no-margin\">\n          <ion-grid class=\"ion-no-padding ion-no-margin\">\n            <ion-row>\n              <ion-col size=\"12\">  \n                  <ion-grid class=\"ion-no-padding ion-no-margin\">\n                    <ion-row dir=\"rtl\">\n                      <ion-radio-group [(ngModel)]=\"radioVal\"  (ionChange)=\"radioChange($event)\" >\n                        <ion-grid class=\"ion-no-padding ion-no-margin\">\n                          <ion-row>\n                            <ion-col size=\"4\" dir=\"rtl\"> \n                              <app-account-selector\n                                accountType=\"customer\"\n                                placeholder=\"اختر حساب العميل\"\n                                label=\"حساب العميل\"\n                                [store_info]=\"store_info\"\n                                [year]=\"year\"\n                                [showAddButton]=\"false\"\n                                [(ngModel)]=\"selectedAccount\"\n                                (accountSelected)=\"onAccountSelected($event)\"\n                                (balanceLoaded)=\"onAccountBalanceLoaded($event)\">\n                              </app-account-selector>\n                            </ion-col>\n                            <ion-col class=\"ion-no-padding ion-no-margin\">\n                              <ion-item lines=\"none\" >\n                                <ion-radio [value]=\"0\" class=\"ion-margin-end\"></ion-radio>\n                                <ion-label>مبيعات حديثة</ion-label> \n                              </ion-item>\n                            </ion-col>\n                            <ion-col class=\"ion-no-padding ion-no-margin\">\n                              <ion-item lines=\"none\" >\n                                <ion-radio [value]=\"1\" class=\"ion-margin-end\"></ion-radio>\n                                <ion-label>بحث  في تاريخ</ion-label> \n                              </ion-item>\n                            </ion-col>\n                            <ion-col class=\"ion-no-padding ion-no-margin\">\n                              <ion-item lines=\"none\">\n                                <ion-radio [value]=\"2\" class=\"ion-margin-end\"></ion-radio>\n                                <ion-label>بحث في فترة</ion-label> \n                              </ion-item>\n                            </ion-col>\n                            <ion-col class=\"ion-no-padding ion-no-margin\">\n                              <ion-item lines=\"none\">\n                                <ion-radio [value]=\"3\" class=\"ion-margin-end\"></ion-radio>\n                                <ion-label> فواتير  مبدئية </ion-label> \n                              </ion-item>\n                            </ion-col> \n                          </ion-row>\n                        </ion-grid> \n                      </ion-radio-group>\n\n                    </ion-row>\n                    <ion-row dir=\"rtl\">\n                      <ion-col size=\"4\">\n                        <ion-item class=\"custInput\" *ngIf=\"radioVal != 0 && radioVal != 3\">\n                          <input style=\"width:100%\"  [(ngModel)]=\"startingDate\" type=\"date\"  id=\"startingDate\" name=\"startingDate\" />\n                          <!-- <ion-input type=\"date\"  [(ngModel)]=\"payInvo.pay_date\"  placeholder=\"التاريخ\"></ion-input> -->\n                        </ion-item>  \n                      </ion-col>\n                      <ion-col size=\"4\" *ngIf=\"radioVal == 2 \">\n                        <ion-item class=\"custInput\"> \n                          <input style=\"width:100%\" [(ngModel)]=\"endDate\"  type=\"date\"  id=\"endDate\" name=\"endDate\" />\n                          <!-- <ion-input type=\"date\"  [(ngModel)]=\"payInvo.pay_date\"  placeholder=\"التاريخ\"></ion-input> -->\n                        </ion-item>  \n                      </ion-col>\n                      <ion-col size=\"4\" class=\"ion-text-end\">\n                        <ion-item lines=\"none\">\n                          <ion-buttons slot=\"end\"> \n                            <ion-button  fill=\"outline\" color=\"success\"  (click)=\"search()\"  > \n                              <ion-icon name=\"search-outline\" color=\"success\"></ion-icon>\n                              <ion-label><ion-text color=\"dark\">بحــث</ion-text></ion-label> \n                            </ion-button>\n                          </ion-buttons>\n                        </ion-item>\n                      </ion-col> \n                    </ion-row>\n                  </ion-grid> \n              </ion-col> \n            </ion-row>\n           </ion-grid> \n        </ion-card>\n      </ion-col>\n    </ion-row>\n  </ion-grid>\n \n  <ion-grid class=\"ion-margin-top\" *ngIf=\"user_info && store_info\">\n\n    <ion-row>\n      <ion-card class=\"custCard\">\n      </ion-card>\n    </ion-row>\n\n    <ion-row dir=\"rtl\">\n      <ion-col size=\"12\" class=\"ion-no-padding\">\n        <ion-grid> \n          <ion-row>\n            <ion-col size=\"12\">\n            <ion-card>\n               <table class=\"table\">\n                 <tr>\n                  <th>التسلسل</th>\n                  <!-- <th>رقم الفاتورة</th> -->\n                  <th>العميل</th>\n                  <th>التاريخ</th>\n                  <th>اجمالي المبلغ</th>\n                  <th>الخصــم</th>  \n                  <th>الإجمالي بعد الخصم</th>  \n                  <th>نقدا</th>  \n                  <th>المتبقي</th>   \n                  <th>تعليق</th>\n                  <th>المستخدم</th> \n                  <th>إجراء</th> \n                  <!-- <th ><strong>تعديل</strong></th> \n                  <th ><strong>طياعة</strong></th>  -->\n                  \n                 </tr>\n                 <tr *ngFor=\"let pay of payArray ; let i = index\">\n                  <td>{{i+1}}</td>\n                  <!-- <td>{{pay.pay_id}}</td> -->\n                  <td>{{pay.sub_name}}</td>\n                  <td> {{pay.pay_date}}</td>\n                  <td>{{pay.tot_pr}}</td>\n                  <td>{{pay.discount}}</td>\n                  <td>{{+pay.tot_pr - +pay.discount}}</td>\n                  <td>{{pay.pay}}</td>\n                  <td>{{pay.changee}}</td> \n                  <td>{{pay.payComment}}</td>\n                  <td>{{pay.user_name}}</td>\n                  <!-- <td>\n                    <ion-button fill=\"clear\" size=\"small\" (click)=\"getPayInvoDetail(pay , pay.sub_name,'edit')\">\n                      <ion-icon name=\"create-outline\" color=\"success\" ></ion-icon>  \n                    </ion-button>\n                  </td>\n                  <td>\n                    <ion-button fill=\"clear\" size=\"small\" (click)=\"printInvo('printarea',pay)\">\n                      <ion-icon name=\"print\" color=\"brimary\" ></ion-icon> \n                    </ion-button>\n                  </td> -->\n                   <td>\n                    <!-- Replace the existing action buttons in your ion-item with this: -->\n                    <ion-button \n                      fill=\"clear\" \n                      size=\"small\" \n                      (click)=\"presentActionPopover($event, pay, pay.sub_name)\"\n                      slot=\"end\">\n                      <ion-icon name=\"ellipsis-vertical\" slot=\"icon-only\"></ion-icon>\n                    </ion-button> \n                  </td>\n                 </tr>\n\n              <!--    <ion-icon name=\"cloud-offline-outline\"></ion-icon> -->\n\n                 <!-- skeleton -->\n                 \n                 <tr  *ngIf=\"loading == true\">\n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td>  <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                 </tr>\n                 <tr *ngIf=\"loading == true\" >\n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td>  <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                 </tr>\n                 <tr  *ngIf=\"loading == true\">\n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td>  <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                 </tr> \n               </table> \n               <ion-row class=\"ion-justify-content-center ion-margin-top\" *ngIf=\"showEmpty == true\"> \n                 <ion-col size=\"4\" class=\"ion-text-center\">  \n                   <ion-label> \n                     <ion-icon style=\"font-size: 30px;\"  name=\"archive-outline\"></ion-icon>\n                  </ion-label>\n                  <h4> لا توجد سجلات </h4> \n                 </ion-col>\n               </ion-row>\n            </ion-card>\n          </ion-col>\n          </ion-row>\n        </ion-grid>\n      </ion-col>\n  \n  \n    <!-- <ion-row>\n            <ion-col size=\"12\">\n              <ion-card>\n                <ion-grid>\n                  <ion-row>\n                    <ion-col size=\"4\"> \n                     <ion-label  class=\"ion-padding\"><strong>الصنف</strong></ion-label> \n                        <ion-item class=\"custInput\">\n                          <input  list=\"browsers\" id=\"browser\" [(ngModel)]=\"selectedItem.item_name\"  (change)=\"pickDetail($event)\">\n                         \n                          <datalist style=\"border: none;\" id=\"browsers\" style=\"height: auto;max-height: 20px;\">\n                            <option *ngFor=\"let item of items ; let i = index\"   [value]=\"item.item_name\"></option>\n                        </datalist>\n                        </ion-item>  \n                    </ion-col>\n                    <ion-col size=\"2\"> \n                      <ion-label class=\"ion-padding\"><strong>الكمية</strong></ion-label>\n                      <ion-item class=\"custInput\">\n                        <ion-input  [(ngModel)]=\"selectedItem.qty\"  (ionChange)=\"qtyhange($event.target.val)\" #qtyId  ></ion-input>\n                      </ion-item> \n                    </ion-col>\n                    <ion-col size=\"2\">\n                      <ion-label class=\"ion-padding\"><strong>سعر الوحده</strong></ion-label>\n                      <ion-item class=\"custInput\">\n                        <ion-input [(ngModel)]=\"selectedItem.pay_price\"></ion-input>\n                      </ion-item>\n                    </ion-col>\n                    <ion-col size=\"2\">\n                      <ion-label class=\"ion-padding\"><strong>المجموع</strong></ion-label>\n                      <ion-item class=\"custInput\">\n                        <ion-input [(ngModel)]=\"selectedItem.tot\"></ion-input>\n                      </ion-item>\n                    </ion-col>\n                    <ion-col size=\"2\" class=\"ion-padding\"> \n                      <ion-button expand=\"block\" routerDirection=\"root\" color=\"success\"  (click)=\"addTolist()\" >\n                        <ion-label class=\"ion-text-center\"> +</ion-label>\n                      </ion-button> \n                    </ion-col>\n                  </ion-row>\n                </ion-grid>\n              </ion-card>\n            </ion-col>\n          </ion-row> -->\n      \n    </ion-row>\n  </ion-grid>\n \n</ion-content>\n\n<ion-content *ngIf=\"device == 'mobile'\"> \n  <ion-grid *ngIf=\"user_info && store_info\">\n    <ion-row dir=\"rtl\">\n      <ion-col size=\"12\">\n        <ion-card class=\"ion-no-padding ion-no-margin\">\n          <ion-grid class=\"ion-no-padding ion-no-margin\">\n            <ion-row>\n              <ion-col size=\"12\">  \n                  <ion-grid class=\"ion-no-padding ion-no-margin\">\n                    <ion-row dir=\"rtl\"> \n                      <ion-radio-group [(ngModel)]=\"radioVal\"  (ionChange)=\"radioChange($event)\" >\n                        <ion-grid class=\"ion-no-padding ion-no-margin\">\n                          <ion-row>\n                            <ion-col size=\"12\"> \n                              <app-account-selector\n                                accountType=\"customer\"\n                                placeholder=\"اختر حساب العميل\"\n                                label=\"حساب العميل\"\n                                [store_info]=\"store_info\"\n                                [year]=\"year\"\n                                [showAddButton]=\"false\"\n                                [(ngModel)]=\"selectedAccount\"\n                                (accountSelected)=\"onAccountSelected($event)\"\n                                (balanceLoaded)=\"onAccountBalanceLoaded($event)\">\n                              </app-account-selector>\n                            </ion-col>\n                            \n                              <ion-col>\n                                <ion-item lines=\"none\" >\n                                  <ion-radio [value]=\"0\" class=\"ion-margin-end\"></ion-radio>\n                                  <ion-label>مبيعات حديثة</ion-label> \n                                </ion-item>\n                              </ion-col>\n                              \n                              <ion-col>\n                                <ion-item lines=\"none\" >\n                                  <ion-radio [value]=\"1\" class=\"ion-margin-end\"></ion-radio>\n                                  <ion-label>بحث  في تاريخ</ion-label> \n                                </ion-item>\n                              </ion-col>\n                              <ion-col>\n                                <ion-item lines=\"none\">\n                                  <ion-radio [value]=\"2\" class=\"ion-margin-end\"></ion-radio>\n                                  <ion-label>بحث في فترة</ion-label> \n                                </ion-item>\n                              </ion-col>\n                              <ion-col>\n                                <ion-item lines=\"none\">\n                                  <ion-radio [value]=\"3\" class=\"ion-margin-end\"></ion-radio>\n                                  <ion-label> فواتير  مبدئية </ion-label> \n                                </ion-item>\n                              </ion-col>\n                             \n                          </ion-row>\n                        </ion-grid> \n                      </ion-radio-group> \n                    </ion-row>\n                    <ion-row dir=\"rtl\">\n                      <ion-col size=\"6\">\n                        <ion-item class=\"custInput\" *ngIf=\"radioVal != 0 && radioVal != 3\">\n                          <input style=\"width:100%\"  [(ngModel)]=\"startingDate\" type=\"date\"  id=\"startingDate\" name=\"startingDate\" />\n                          <!-- <ion-input type=\"date\"  [(ngModel)]=\"payInvo.pay_date\"  placeholder=\"التاريخ\"></ion-input> -->\n                        </ion-item>  \n                      </ion-col>\n                      <ion-col size=\"6\" *ngIf=\"radioVal == 2 \">\n                        <ion-item class=\"custInput\"> \n                          <input style=\"width:100%\" [(ngModel)]=\"endDate\"  type=\"date\"  id=\"endDate\" name=\"endDate\" />\n                          <!-- <ion-input type=\"date\"  [(ngModel)]=\"payInvo.pay_date\"  placeholder=\"التاريخ\"></ion-input> -->\n                        </ion-item>  \n                      </ion-col>\n                      <ion-col size=\"8\" class=\"ion-text-end\">\n                        <ion-item lines=\"none\">\n                          <ion-buttons slot=\"end\"> \n                            <ion-button  fill=\"outline\" color=\"success\"  (click)=\"search()\"  > \n                              <ion-icon name=\"search-outline\" color=\"success\"></ion-icon>\n                              <ion-label><ion-text color=\"dark\">بحــث</ion-text></ion-label> \n                            </ion-button>\n                          </ion-buttons>\n                        </ion-item>\n                      </ion-col> \n                    </ion-row>\n                  </ion-grid> \n              </ion-col> \n            </ion-row>\n           </ion-grid> \n        </ion-card>\n      </ion-col>\n    </ion-row>\n  </ion-grid>\n \n  <ion-grid class=\"ion-margin-top\" dir=\"rtl\" *ngIf=\"user_info && store_info\">\n    <ion-list *ngIf=\"loading == true\">\n      <ion-item>\n        <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text>  \n      </ion-item>\n      <ion-item>\n        <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text>  \n      </ion-item>\n      <ion-item>\n        <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text>  \n      </ion-item>\n      </ion-list>\n    <ion-accordion-group *ngIf=\"payArray\">\n      <ion-accordion *ngFor=\"let pay of payArray ; let i = index\"  (click)=\"getPayDetailsForMob(pay)\" [value]=\"i\"   toggleIcon=\"caret-down-circle\" toggleIconSlot=\"end\" >\n        <ion-item slot=\"header\" color=\"light\" > \n          <ion-icon name=\"newspaper-outline\" color=\"primary\" slot=\"start\"></ion-icon>\n          <ion-grid>\n            <ion-row>\n              <ion-col size=\"12\">\n                <ion-label>{{pay.sub_name}}</ion-label>\n              </ion-col>\n              <ion-col size=\"4\">\n                <ion-label><ion-note>{{pay.pay_date | date:'dd-MM'}}</ion-note>    </ion-label>\n              </ion-col>\n              <ion-col size=\"8\" class=\"ion-text-end\">\n                <ion-label>{{+pay.tot_pr - +pay.discount}}</ion-label>\n              </ion-col>\n            </ion-row>\n          </ion-grid>\n          \n        </ion-item>\n\n        <ion-item slot=\"header\" color=\"light\"  *ngIf=\"loadingDetails == true\"><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></ion-item>\n        <ion-item slot=\"header\" color=\"light\"  *ngIf=\"loadingDetails == true\"><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></ion-item>\n        <ion-item slot=\"header\" color=\"light\"  *ngIf=\"loadingDetails == true\"><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></ion-item>\n       \n        <div class=\"ion-padding\" slot=\"content\">\n          <ion-item color=\"light\"  *ngIf=\"loadingDetails == true\"><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></ion-item>\n            <ion-list *ngIf=\"pay.item_details\">\n              <ion-item color=\"light\" *ngFor=\"let item of pay.item_details\" > \n                <ion-grid>\n                  <ion-row>\n                    <ion-col size=\"12\">\n                      <ion-label>{{item.item_name}}</ion-label>\n                    </ion-col>\n                    <ion-col size=\"12\">\n                      <ion-label><ion-note>الكمية :</ion-note>{{item.quantity}}</ion-label>\n                    </ion-col>\n                    <ion-col size=\"12\" class=\"ion-text-end\">\n                      <ion-label><ion-note>السعر :</ion-note>{{item.pay_price}}</ion-label>\n                    </ion-col>\n                  </ion-row>\n                </ion-grid> \n              </ion-item>\n              <ion-grid>\n              </ion-grid>\n            </ion-list> \n            <ion-list *ngIf=\" !pay.item_details || pay.item_details.length == 0\">\n              <ion-label>حدث خطأ في الفاتورة</ion-label>\n            </ion-list>\n          <ion-item-divider></ion-item-divider>\n          <ion-list>\n            <ion-item lines=\"none\">\n              <ion-label><ion-note>المجموع  : </ion-note><strong>{{pay.tot_pr}}</strong></ion-label>\n            </ion-item>\n            <ion-item lines=\"none\" *ngIf=\"pay.discount > 0\">\n              <ion-label><ion-note>تخفيض  : </ion-note><strong>{{pay.discount}}</strong></ion-label>\n            </ion-item>\n            <ion-item lines=\"none\" *ngIf=\"pay.discount > 0\">\n              <ion-label><ion-note> صافي المبلغ    : \n              </ion-note><strong> {{+pay.tot_pr - +pay.discount}} </strong></ion-label>\n            </ion-item>\n          </ion-list>\n          <ion-row class=\"ion-justify-content-center\">\n            <ion-col size=\"6\">\n              <ion-button  fill=\"outline\" color=\"success\"  (click)=\"getPayInvoDetail(pay , pay.sub_name,'edit')\"  > \n                <ion-icon name=\"search-outline\" color=\"success\"></ion-icon>\n                <ion-label><ion-text color=\"dark\">تعديل</ion-text></ion-label> \n              </ion-button>\n            </ion-col>\n            <ion-col size=\"6\">\n              <ion-button  fill=\"outline\" color=\"success\"  (click)=\"createPdf(pay)\"  > \n                <ion-icon name=\"search-outline\" color=\"success\"></ion-icon>\n                <ion-label><ion-text color=\"dark\">طباعة</ion-text></ion-label> \n              </ion-button>\n            </ion-col>  \n          </ion-row>\n       \n        </div>\n      </ion-accordion> \n    </ion-accordion-group>\n\n    \n  </ion-grid>\n \n</ion-content>\n\n<ion-footer *ngIf=\"payArray\">\n  <ion-grid dir=\"rtl\" *ngIf=\"device == 'desktop'\" >\n    <ion-row>\n      <ion-col>\n        <ion-label><ion-text>إجمالي المبيعات : </ion-text><br>  <strong>{{sums.tot.toFixed(2)}}</strong></ion-label>\n      </ion-col>\n      <ion-col>\n        <ion-label><ion-text>اجمالي الخصم  : </ion-text><br>  <strong>{{sums.discount.toFixed(2)}}</strong></ion-label>\n      </ion-col>\n      <ion-col>\n        <ion-label><ion-text>المبيعات بعد الخصم : </ion-text><br>  <strong>{{sums.totAfterDiscout.toFixed(2)}}</strong></ion-label>\n      </ion-col>\n      <ion-col>\n        <ion-label><ion-text>اجمالي النقد : </ion-text><br>  <strong>{{sums.pay.toFixed(2)}}</strong></ion-label>\n      </ion-col>\n      <ion-col>\n        <ion-label><ion-text>اجمالي الاجل : </ion-text><br>  <strong>{{sums.change.toFixed(2)}}</strong></ion-label>\n      </ion-col>\n    </ion-row>\n  </ion-grid>\n  <ion-grid dir=\"rtl\" *ngIf=\"device == 'mobile'\" >\n    <ion-row>\n      <ion-col size=\"6\">\n        <ion-label><ion-text>إجمالي المبيعات : </ion-text><br>  <strong>{{sums.tot.toFixed(2)}}</strong></ion-label>\n      </ion-col>\n      <ion-col size=\"6\">\n        <ion-label><ion-text>اجمالي الخصم  : </ion-text><br>  <strong>{{sums.discount.toFixed(2)}}</strong></ion-label>\n      </ion-col>\n      <ion-col size=\"12\">\n        <ion-label><ion-text>المبيعات بعد الخصم : </ion-text><br>  <strong>{{sums.totAfterDiscout.toFixed(2)}}</strong></ion-label>\n      </ion-col>\n      <ion-col size=\"6\">\n        <ion-label><ion-text>اجمالي النقد : </ion-text><br>  <strong>{{sums.pay.toFixed(2)}}</strong></ion-label>\n      </ion-col>\n      <ion-col size=\"6\">\n        <ion-label><ion-text>اجمالي الاجل : </ion-text><br>  <strong>{{sums.change.toFixed(2)}}</strong></ion-label>\n      </ion-col>\n    </ion-row>\n  </ion-grid>\n</ion-footer>";
+module.exports = "<ion-header>\n  <ion-toolbar>\n    <ion-buttons slot=\"start\">\n      <ion-menu-button></ion-menu-button>\n    </ion-buttons>\n    <!-- sh605579887 -->\n   \n    <ion-title>سجل المبيعات</ion-title>\n   \n  </ion-toolbar>\n</ion-header>\n\n<ion-content *ngIf=\"device == 'desktop'\">\n  <ion-grid *ngIf=\"user_info && store_info\">\n    <ion-row dir=\"rtl\">\n      <ion-col size=\"12\">\n        <ion-card class=\"ion-no-padding ion-no-margin\">\n          <ion-grid class=\"ion-no-padding ion-no-margin\">\n            <ion-row>\n              <ion-col size=\"12\">  \n                  <ion-grid class=\"ion-no-padding ion-no-margin\">\n                    <ion-row dir=\"rtl\">\n                      <ion-radio-group [(ngModel)]=\"radioVal\"  (ionChange)=\"radioChange($event)\" >\n                        <ion-grid class=\"ion-no-padding ion-no-margin\">\n                          <ion-row>\n                            <ion-col size=\"4\" dir=\"rtl\"> \n                              <app-account-selector\n                                accountType=\"customer\"\n                                placeholder=\"اختر حساب العميل\"\n                                label=\"حساب العميل\"\n                                [store_info]=\"store_info\"\n                                [year]=\"year\"\n                                [showAddButton]=\"false\"\n                                [(ngModel)]=\"selectedAccount\"\n                                (accountSelected)=\"onAccountSelected($event)\"\n                                (balanceLoaded)=\"onAccountBalanceLoaded($event)\">\n                              </app-account-selector>\n                            </ion-col>\n                            <ion-col class=\"ion-no-padding ion-no-margin\">\n                              <ion-item lines=\"none\" >\n                                <ion-radio [value]=\"0\" class=\"ion-margin-end\"></ion-radio>\n                                <ion-label>مبيعات حديثة</ion-label> \n                              </ion-item>\n                            </ion-col>\n                            <ion-col class=\"ion-no-padding ion-no-margin\">\n                              <ion-item lines=\"none\" >\n                                <ion-radio [value]=\"1\" class=\"ion-margin-end\"></ion-radio>\n                                <ion-label>بحث  في تاريخ</ion-label> \n                              </ion-item>\n                            </ion-col>\n                            <ion-col class=\"ion-no-padding ion-no-margin\">\n                              <ion-item lines=\"none\">\n                                <ion-radio [value]=\"2\" class=\"ion-margin-end\"></ion-radio>\n                                <ion-label>بحث في فترة</ion-label> \n                              </ion-item>\n                            </ion-col>\n                            <ion-col class=\"ion-no-padding ion-no-margin\">\n                              <ion-item lines=\"none\">\n                                <ion-radio [value]=\"3\" class=\"ion-margin-end\"></ion-radio>\n                                <ion-label> فواتير  مبدئية </ion-label> \n                              </ion-item>\n                            </ion-col> \n                          </ion-row>\n                        </ion-grid> \n                      </ion-radio-group>\n\n                    </ion-row>\n                    <ion-row dir=\"rtl\">\n                      <ion-col size=\"4\">\n                        <ion-item class=\"custInput\" *ngIf=\"radioVal != 0 && radioVal != 3\">\n                          <input style=\"width:100%\"  [(ngModel)]=\"startingDate\" type=\"date\"  id=\"startingDate\" name=\"startingDate\" />\n                          <!-- <ion-input type=\"date\"  [(ngModel)]=\"payInvo.pay_date\"  placeholder=\"التاريخ\"></ion-input> -->\n                        </ion-item>  \n                      </ion-col>\n                      <ion-col size=\"4\" *ngIf=\"radioVal == 2 \">\n                        <ion-item class=\"custInput\"> \n                          <input style=\"width:100%\" [(ngModel)]=\"endDate\"  type=\"date\"  id=\"endDate\" name=\"endDate\" />\n                          <!-- <ion-input type=\"date\"  [(ngModel)]=\"payInvo.pay_date\"  placeholder=\"التاريخ\"></ion-input> -->\n                        </ion-item>  \n                      </ion-col>\n                      <ion-col size=\"4\" class=\"ion-text-end\">\n                        <ion-item lines=\"none\">\n                          <ion-buttons slot=\"end\"> \n                            <ion-button  fill=\"outline\" color=\"success\"  (click)=\"search()\"  > \n                              <ion-icon name=\"search-outline\" color=\"success\"></ion-icon>\n                              <ion-label><ion-text color=\"dark\">بحــث</ion-text></ion-label> \n                            </ion-button>\n                          </ion-buttons>\n                        </ion-item>\n                      </ion-col> \n                    </ion-row>\n                  </ion-grid> \n              </ion-col> \n            </ion-row>\n           </ion-grid> \n        </ion-card>\n      </ion-col>\n    </ion-row>\n  </ion-grid>\n \n  <ion-grid class=\"ion-margin-top\" *ngIf=\"user_info && store_info\">\n\n    <ion-row>\n      <ion-card class=\"custCard\">\n      </ion-card>\n    </ion-row>\n\n    <ion-row dir=\"rtl\">\n      <ion-col size=\"12\" class=\"ion-no-padding\">\n        <ion-grid> \n          <ion-row>\n            <ion-col size=\"12\">\n            <ion-card>\n              <ion-card-header class=\"ion-no-padding\">\n                <div class=\"card-header-with-export\">\n                  <ion-card-title>سجل المبيعات</ion-card-title>\n                  <app-export-buttons \n                    [hasData]=\"sortedPayArray && sortedPayArray.length > 0\"\n                    [isLoading]=\"loading\"\n                    (exportPDF)=\"exportToPDF()\"\n                    (exportExcel)=\"exportToExcel()\">\n                  </app-export-buttons>\n                </div>\n              </ion-card-header>\n               <table class=\"table\">\n                 <tr>\n                  <th>التسلسل</th>\n                  <!-- <th>رقم الفاتورة</th> -->\n                  <th class=\"sortable-header\" (click)=\"sortBy('sub_name')\">\n                    <ion-icon [name]=\"getSortIcon('sub_name')\" class=\"sort-icon\"></ion-icon>\n                    العميل\n                  </th>\n                  <th class=\"sortable-header\" (click)=\"sortBy('pay_date')\">\n                    <ion-icon [name]=\"getSortIcon('pay_date')\" class=\"sort-icon\"></ion-icon>\n                    التاريخ\n                  </th>\n                  <th class=\"sortable-header\" (click)=\"sortBy('tot_pr')\">\n                    <ion-icon [name]=\"getSortIcon('tot_pr')\" class=\"sort-icon\"></ion-icon>\n                    اجمالي المبلغ\n                  </th>\n                  <th class=\"sortable-header\" (click)=\"sortBy('discount')\">\n                    <ion-icon [name]=\"getSortIcon('discount')\" class=\"sort-icon\"></ion-icon>\n                    الخصــم\n                  </th>  \n                  <th>الإجمالي بعد الخصم</th>  \n                  <!-- Hidden pay and change columns -->   \n                  <th class=\"sortable-header\" (click)=\"sortBy('payComment')\">\n                    <ion-icon [name]=\"getSortIcon('payComment')\" class=\"sort-icon\"></ion-icon>\n                    تعليق\n                  </th>\n                  <th class=\"sortable-header\" (click)=\"sortBy('user_name')\">\n                    <ion-icon [name]=\"getSortIcon('user_name')\" class=\"sort-icon\"></ion-icon>\n                    المستخدم\n                  </th> \n                  <th>إجراء</th> \n                  <!-- <th ><strong>تعديل</strong></th> \n                  <th ><strong>طياعة</strong></th>  -->\n                  \n                 </tr>\n                 <tr *ngFor=\"let pay of sortedPayArray ; let i = index\">\n                  <td>{{i+1}}</td>\n                  <!-- <td>{{pay.pay_id}}</td> -->\n                  <td>{{pay.sub_name}}</td>\n                  <td> {{pay.pay_date}}</td>\n                  <td>{{formatBalance(pay.tot_pr)}}</td>\n                  <td>{{formatBalance(pay.discount)}}</td>\n                  <td>{{formatBalance(+pay.tot_pr - +pay.discount)}}</td>\n                  <!-- Hidden pay and change data --> \n                  <td>{{pay.payComment}}</td>\n                  <td>{{pay.user_name}}</td>\n                  <!-- <td>\n                    <ion-button fill=\"clear\" size=\"small\" (click)=\"getPayInvoDetail(pay , pay.sub_name,'edit')\">\n                      <ion-icon name=\"create-outline\" color=\"success\" ></ion-icon>  \n                    </ion-button>\n                  </td>\n                  <td>\n                    <ion-button fill=\"clear\" size=\"small\" (click)=\"printInvo('printarea',pay)\">\n                      <ion-icon name=\"print\" color=\"brimary\" ></ion-icon> \n                    </ion-button>\n                  </td> -->\n                   <td>\n                    <!-- Replace the existing action buttons in your ion-item with this: -->\n                    <ion-button \n                      fill=\"clear\" \n                      size=\"small\" \n                      (click)=\"presentActionPopover($event, pay, pay.sub_name)\"\n                      slot=\"end\">\n                      <ion-icon name=\"ellipsis-vertical\" slot=\"icon-only\"></ion-icon>\n                    </ion-button> \n                  </td>\n                 </tr>\n\n              <!--    <ion-icon name=\"cloud-offline-outline\"></ion-icon> -->\n\n                 <!-- skeleton -->\n                 \n                 <tr  *ngIf=\"loading == true\">\n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td>  <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                 </tr>\n                 <tr *ngIf=\"loading == true\" >\n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td>  <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <!-- Hidden skeleton for pay and change columns -->\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                 </tr>\n                 <tr  *ngIf=\"loading == true\">\n                  <td> <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td>  <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td>\n                  <!-- Hidden skeleton for pay and change columns -->\n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                  <td><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></td> \n                 </tr> \n               </table> \n               <ion-row class=\"ion-justify-content-center ion-margin-top\" *ngIf=\"showEmpty == true\"> \n                 <ion-col size=\"4\" class=\"ion-text-center\">  \n                   <ion-label> \n                     <ion-icon style=\"font-size: 30px;\"  name=\"archive-outline\"></ion-icon>\n                  </ion-label>\n                  <h4> لا توجد سجلات </h4> \n                 </ion-col>\n               </ion-row>\n            </ion-card>\n          </ion-col>\n          </ion-row>\n        </ion-grid>\n      </ion-col>\n  \n  \n    <!-- <ion-row>\n            <ion-col size=\"12\">\n              <ion-card>\n                <ion-grid>\n                  <ion-row>\n                    <ion-col size=\"4\"> \n                     <ion-label  class=\"ion-padding\"><strong>الصنف</strong></ion-label> \n                        <ion-item class=\"custInput\">\n                          <input  list=\"browsers\" id=\"browser\" [(ngModel)]=\"selectedItem.item_name\"  (change)=\"pickDetail($event)\">\n                         \n                          <datalist style=\"border: none;\" id=\"browsers\" style=\"height: auto;max-height: 20px;\">\n                            <option *ngFor=\"let item of items ; let i = index\"   [value]=\"item.item_name\"></option>\n                        </datalist>\n                        </ion-item>  \n                    </ion-col>\n                    <ion-col size=\"2\"> \n                      <ion-label class=\"ion-padding\"><strong>الكمية</strong></ion-label>\n                      <ion-item class=\"custInput\">\n                        <ion-input  [(ngModel)]=\"selectedItem.qty\"  (ionChange)=\"qtyhange($event.target.val)\" #qtyId  ></ion-input>\n                      </ion-item> \n                    </ion-col>\n                    <ion-col size=\"2\">\n                      <ion-label class=\"ion-padding\"><strong>سعر الوحده</strong></ion-label>\n                      <ion-item class=\"custInput\">\n                        <ion-input [(ngModel)]=\"selectedItem.pay_price\"></ion-input>\n                      </ion-item>\n                    </ion-col>\n                    <ion-col size=\"2\">\n                      <ion-label class=\"ion-padding\"><strong>المجموع</strong></ion-label>\n                      <ion-item class=\"custInput\">\n                        <ion-input [(ngModel)]=\"selectedItem.tot\"></ion-input>\n                      </ion-item>\n                    </ion-col>\n                    <ion-col size=\"2\" class=\"ion-padding\"> \n                      <ion-button expand=\"block\" routerDirection=\"root\" color=\"success\"  (click)=\"addTolist()\" >\n                        <ion-label class=\"ion-text-center\"> +</ion-label>\n                      </ion-button> \n                    </ion-col>\n                  </ion-row>\n                </ion-grid>\n              </ion-card>\n            </ion-col>\n          </ion-row> -->\n      \n    </ion-row>\n  </ion-grid>\n \n</ion-content>\n\n<ion-content *ngIf=\"device == 'mobile'\"> \n  <ion-grid *ngIf=\"user_info && store_info\">\n    <ion-row dir=\"rtl\">\n      <ion-col size=\"12\">\n        <ion-card class=\"ion-no-padding ion-no-margin\">\n          <ion-grid class=\"ion-no-padding ion-no-margin\">\n            <ion-row>\n              <ion-col size=\"12\">  \n                  <ion-grid class=\"ion-no-padding ion-no-margin\">\n                    <ion-row dir=\"rtl\"> \n                      <ion-radio-group [(ngModel)]=\"radioVal\"  (ionChange)=\"radioChange($event)\" >\n                        <ion-grid class=\"ion-no-padding ion-no-margin\">\n                          <ion-row>\n                            <ion-col size=\"12\"> \n                              <app-account-selector\n                                accountType=\"customer\"\n                                placeholder=\"اختر حساب العميل\"\n                                label=\"حساب العميل\"\n                                [store_info]=\"store_info\"\n                                [year]=\"year\"\n                                [showAddButton]=\"false\"\n                                [(ngModel)]=\"selectedAccount\"\n                                (accountSelected)=\"onAccountSelected($event)\"\n                                (balanceLoaded)=\"onAccountBalanceLoaded($event)\">\n                              </app-account-selector>\n                            </ion-col>\n                            \n                              <ion-col>\n                                <ion-item lines=\"none\" >\n                                  <ion-radio [value]=\"0\" class=\"ion-margin-end\"></ion-radio>\n                                  <ion-label>مبيعات حديثة</ion-label> \n                                </ion-item>\n                              </ion-col>\n                              \n                              <ion-col>\n                                <ion-item lines=\"none\" >\n                                  <ion-radio [value]=\"1\" class=\"ion-margin-end\"></ion-radio>\n                                  <ion-label>بحث  في تاريخ</ion-label> \n                                </ion-item>\n                              </ion-col>\n                              <ion-col>\n                                <ion-item lines=\"none\">\n                                  <ion-radio [value]=\"2\" class=\"ion-margin-end\"></ion-radio>\n                                  <ion-label>بحث في فترة</ion-label> \n                                </ion-item>\n                              </ion-col>\n                              <ion-col>\n                                <ion-item lines=\"none\">\n                                  <ion-radio [value]=\"3\" class=\"ion-margin-end\"></ion-radio>\n                                  <ion-label> فواتير  مبدئية </ion-label> \n                                </ion-item>\n                              </ion-col>\n                             \n                          </ion-row>\n                        </ion-grid> \n                      </ion-radio-group> \n                    </ion-row>\n                    <ion-row dir=\"rtl\">\n                      <ion-col size=\"6\">\n                        <ion-item class=\"custInput\" *ngIf=\"radioVal != 0 && radioVal != 3\">\n                          <input style=\"width:100%\"  [(ngModel)]=\"startingDate\" type=\"date\"  id=\"startingDate\" name=\"startingDate\" />\n                          <!-- <ion-input type=\"date\"  [(ngModel)]=\"payInvo.pay_date\"  placeholder=\"التاريخ\"></ion-input> -->\n                        </ion-item>  \n                      </ion-col>\n                      <ion-col size=\"6\" *ngIf=\"radioVal == 2 \">\n                        <ion-item class=\"custInput\"> \n                          <input style=\"width:100%\" [(ngModel)]=\"endDate\"  type=\"date\"  id=\"endDate\" name=\"endDate\" />\n                          <!-- <ion-input type=\"date\"  [(ngModel)]=\"payInvo.pay_date\"  placeholder=\"التاريخ\"></ion-input> -->\n                        </ion-item>  \n                      </ion-col>\n                      <ion-col size=\"8\" class=\"ion-text-end\">\n                        <ion-item lines=\"none\">\n                          <ion-buttons slot=\"end\"> \n                            <ion-button  fill=\"outline\" color=\"success\"  (click)=\"search()\"  > \n                              <ion-icon name=\"search-outline\" color=\"success\"></ion-icon>\n                              <ion-label><ion-text color=\"dark\">بحــث</ion-text></ion-label> \n                            </ion-button>\n                          </ion-buttons>\n                        </ion-item>\n                      </ion-col> \n                    </ion-row>\n                  </ion-grid> \n              </ion-col> \n            </ion-row>\n           </ion-grid> \n        </ion-card>\n      </ion-col>\n    </ion-row>\n  </ion-grid>\n \n  <ion-grid class=\"ion-margin-top\" dir=\"rtl\" *ngIf=\"user_info && store_info\">\n    <ion-list *ngIf=\"loading == true\">\n      <ion-item>\n        <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text>  \n      </ion-item>\n      <ion-item>\n        <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text>  \n      </ion-item>\n      <ion-item>\n        <ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text>  \n      </ion-item>\n      </ion-list>\n    <ion-accordion-group *ngIf=\"payArray\">\n      <ion-accordion *ngFor=\"let pay of payArray ; let i = index\"  (click)=\"getPayDetailsForMob(pay)\" [value]=\"i\"   toggleIcon=\"caret-down-circle\" toggleIconSlot=\"end\" >\n        <ion-item slot=\"header\" color=\"light\" > \n          <ion-icon name=\"newspaper-outline\" color=\"primary\" slot=\"start\"></ion-icon>\n          <ion-grid>\n            <ion-row>\n              <ion-col size=\"12\">\n                <ion-label>{{pay.sub_name}}</ion-label>\n              </ion-col>\n              <ion-col size=\"4\">\n                <ion-label><ion-note>{{pay.pay_date | date:'dd-MM'}}</ion-note>    </ion-label>\n              </ion-col>\n              <ion-col size=\"8\" class=\"ion-text-end\">\n                <ion-label>{{formatBalance(+pay.tot_pr - +pay.discount)}}</ion-label>\n              </ion-col>\n            </ion-row>\n          </ion-grid>\n          \n        </ion-item>\n\n        <ion-item slot=\"header\" color=\"light\"  *ngIf=\"loadingDetails == true\"><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></ion-item>\n        <ion-item slot=\"header\" color=\"light\"  *ngIf=\"loadingDetails == true\"><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></ion-item>\n        <ion-item slot=\"header\" color=\"light\"  *ngIf=\"loadingDetails == true\"><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></ion-item>\n       \n        <div class=\"ion-padding\" slot=\"content\">\n          <ion-item color=\"light\"  *ngIf=\"loadingDetails == true\"><ion-skeleton-text animated style=\"width: 100%\"></ion-skeleton-text></ion-item>\n            <ion-list *ngIf=\"pay.item_details\">\n              <ion-item color=\"light\" *ngFor=\"let item of pay.item_details\" > \n                <ion-grid>\n                  <ion-row>\n                    <ion-col size=\"12\">\n                      <ion-label>{{item.item_name}}</ion-label>\n                    </ion-col>\n                    <ion-col size=\"12\">\n                      <ion-label><ion-note>الكمية :</ion-note>{{item.quantity}}</ion-label>\n                    </ion-col>\n                    <ion-col size=\"12\" class=\"ion-text-end\">\n                      <ion-label><ion-note>السعر :</ion-note>{{item.pay_price}}</ion-label>\n                    </ion-col>\n                  </ion-row>\n                </ion-grid> \n              </ion-item>\n              <ion-grid>\n              </ion-grid>\n            </ion-list> \n            <ion-list *ngIf=\" !pay.item_details || pay.item_details.length == 0\">\n              <ion-label>حدث خطأ في الفاتورة</ion-label>\n            </ion-list>\n          <ion-item-divider></ion-item-divider>\n          <ion-list>\n            <ion-item lines=\"none\">\n              <ion-label><ion-note>المجموع  : </ion-note><strong>{{formatBalance(pay.tot_pr)}}</strong></ion-label>\n            </ion-item>\n            <ion-item lines=\"none\" *ngIf=\"pay.discount > 0\">\n              <ion-label><ion-note>تخفيض  : </ion-note><strong>{{formatBalance(pay.discount)}}</strong></ion-label>\n            </ion-item>\n            <ion-item lines=\"none\" *ngIf=\"pay.discount > 0\">\n              <ion-label><ion-note> صافي المبلغ    : \n              </ion-note><strong> {{formatBalance(+pay.tot_pr - +pay.discount)}} </strong></ion-label>\n            </ion-item>\n          </ion-list>\n          <ion-row class=\"ion-justify-content-center\">\n            <ion-col size=\"6\">\n              <ion-button  fill=\"outline\" color=\"success\"  (click)=\"getPayInvoDetail(pay , pay.sub_name,'edit')\"  > \n                <ion-icon name=\"search-outline\" color=\"success\"></ion-icon>\n                <ion-label><ion-text color=\"dark\">تعديل</ion-text></ion-label> \n              </ion-button>\n            </ion-col>\n            <ion-col size=\"6\">\n              <ion-button  fill=\"outline\" color=\"success\"  (click)=\"createPdf(pay)\"  > \n                <ion-icon name=\"search-outline\" color=\"success\"></ion-icon>\n                <ion-label><ion-text color=\"dark\">طباعة</ion-text></ion-label> \n              </ion-button>\n            </ion-col>  \n          </ion-row>\n       \n        </div>\n      </ion-accordion> \n    </ion-accordion-group>\n\n    \n  </ion-grid>\n \n</ion-content>\n\n<ion-footer *ngIf=\"payArray\">\n  <ion-grid dir=\"rtl\" *ngIf=\"device == 'desktop'\" >\n    <ion-row>\n      <ion-col>\n        <ion-label><ion-text>إجمالي المبيعات : </ion-text><br>  <strong>{{formatBalance(sums.tot)}}</strong></ion-label>\n      </ion-col>\n      <ion-col>\n        <ion-label><ion-text>اجمالي الخصم  : </ion-text><br>  <strong>{{formatBalance(sums.discount)}}</strong></ion-label>\n      </ion-col>\n      <ion-col>\n        <ion-label><ion-text>المبيعات بعد الخصم : </ion-text><br>  <strong>{{formatBalance(sums.totAfterDiscout)}}</strong></ion-label>\n      </ion-col>\n      <!-- Hidden pay and change summary columns -->\n    </ion-row>\n  </ion-grid>\n  <ion-grid dir=\"rtl\" *ngIf=\"device == 'mobile'\" >\n    <ion-row>\n      <ion-col size=\"6\">\n        <ion-label><ion-text>إجمالي المبيعات : </ion-text><br>  <strong>{{formatBalance(sums.tot)}}</strong></ion-label>\n      </ion-col>\n      <ion-col size=\"6\">\n        <ion-label><ion-text>اجمالي الخصم  : </ion-text><br>  <strong>{{formatBalance(sums.discount)}}</strong></ion-label>\n      </ion-col>\n      <ion-col size=\"12\">\n        <ion-label><ion-text>المبيعات بعد الخصم : </ion-text><br>  <strong>{{formatBalance(sums.totAfterDiscout)}}</strong></ion-label>\n      </ion-col>\n      <!-- Hidden pay and change summary columns for mobile -->\n    </ion-row>\n  </ion-grid>\n</ion-footer>";
 
 /***/ })
 

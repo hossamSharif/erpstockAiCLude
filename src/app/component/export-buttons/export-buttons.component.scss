@@ -1,0 +1,42 @@
+.export-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.export-btn {
+  --border-width: 1px;
+  --border-radius: 6px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  height: 32px;
+  font-size: 12px;
+  
+  &[disabled] {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+}
+
+.export-text {
+  margin-left: 4px;
+  font-weight: 500;
+}
+
+// Responsive design for mobile
+@media (max-width: 768px) {
+  .export-buttons {
+    gap: 6px;
+  }
+  
+  .export-btn {
+    --padding-start: 8px;
+    --padding-end: 8px;
+    height: 28px;
+    font-size: 11px;
+  }
+  
+  .export-text {
+    display: none; // Hide text on mobile, show only icons
+  }
+}

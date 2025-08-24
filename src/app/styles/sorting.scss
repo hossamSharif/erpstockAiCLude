@@ -1,0 +1,93 @@
+// Sorting functionality styles
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 8px 12px;
+  
+  &:hover {
+    background-color: rgba(var(--ion-color-primary-rgb), 0.1);
+  }
+  
+  .sort-icon {
+    font-size: 14px;
+    margin-left: 4px;
+    margin-right: 4px;
+    opacity: 0.6;
+    transition: all 0.2s ease;
+  }
+  
+  &:hover .sort-icon {
+    opacity: 1;
+  }
+}
+
+// Table styles for modern tables with sorting
+.modern-table {
+  .sortable-header {
+    background: rgba(var(--ion-color-primary-rgb), 0.05);
+    
+    &:hover {
+      background: rgba(var(--ion-color-primary-rgb), 0.15);
+    }
+  }
+}
+
+// Glass table styles for sorting
+.glass-table {
+  .sortable-header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .sort-icon {
+      color: var(--ion-color-primary);
+    }
+  }
+}
+
+// Regular table styles for sorting
+.table {
+  .sortable-header {
+    background: rgba(var(--ion-color-primary-rgb), 0.05);
+    
+    &:hover {
+      background: rgba(var(--ion-color-primary-rgb), 0.15);
+    }
+    
+    .sort-icon {
+      color: var(--ion-color-primary);
+    }
+  }
+}
+
+// Sort direction indicators
+.sort-icon {
+  &[name="chevron-up-outline"] {
+    color: var(--ion-color-success) !important;
+    opacity: 1 !important;
+  }
+  
+  &[name="chevron-down-outline"] {
+    color: var(--ion-color-warning) !important;
+    opacity: 1 !important;
+  }
+  
+  &[name="swap-vertical-outline"] {
+    color: var(--ion-color-medium);
+  }
+}
+
+// RTL support for Arabic sorting
+[dir="rtl"] {
+  .sortable-header {
+    .sort-icon {
+      margin-left: 4px;
+      margin-right: 4px;
+    }
+  }
+}

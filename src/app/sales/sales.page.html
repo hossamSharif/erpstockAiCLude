@@ -9,7 +9,8 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content> 
+<ion-content>
+
 <ion-card class="ion-no-padding ion-no-margin"> 
   <ion-grid *ngIf="user_info && store_info">
     <ion-row dir="rtl" class="top-card-row">
@@ -173,13 +174,13 @@
                    </ion-item>
                 </td>
                 <td>
-                  <ion-text *ngIf="showMe != i">{{item.pay_price}}</ion-text> 
+                  <ion-text *ngIf="showMe != i">{{formatBalance(item.pay_price)}}</ion-text> 
                    <ion-item *ngIf="showMe == i">
                     <ion-input (keyup.enter)="editCell(i)" [(ngModel)] ="item.pay_price" (ionBlur)="editCell(i)" ></ion-input>
                    </ion-item>
                 </td>
 
-                <td>{{+item.tot}}</td>
+                <td>{{formatBalance(+item.tot)}}</td>
                 <td>
                   <ion-button fill="clear" size="small" (click)="deleteItem(i)">
                     <ion-icon name="trash" color="danger" ></ion-icon>
@@ -208,7 +209,7 @@
             <ion-col size="11">
               <ion-label class="ion-padding"><strong>اجمالي المبلغ</strong></ion-label>
               <ion-item class="custInput"> 
-                <ion-input [(ngModel)]="payInvo.tot_pr" [readonly]="true" ></ion-input>
+                <ion-input [value]="formatBalance(payInvo.tot_pr)" [readonly]="true" ></ion-input>
               </ion-item>
             </ion-col>
             <ion-col size="11">
@@ -234,7 +235,7 @@
                   placeholder="نسبة الخصم %">
                 </ion-input>
                 <ion-note slot="end" *ngIf="calculatedDiscountAmount > 0">
-                  {{ calculatedDiscountAmount.toFixed(2) }} 
+                  {{ formatBalance(calculatedDiscountAmount) }} 
                 </ion-note>
               </ion-item>
 
@@ -252,26 +253,17 @@
                 </ion-note>
               </ion-item>
             </ion-col>
+            <!-- Total after discount for all sales invoices -->
             <ion-col size="11">
-              <ion-label class="ion-padding"><strong> المدفوع نقدا</strong></ion-label>
-              <ion-item class="custInput"> 
-                <ion-input [(ngModel)]="payInvo.pay" (ionChange)="payChange($event)"></ion-input>
+              <ion-label class="ion-padding"><strong>المجموع بعد الخصم</strong></ion-label>
+              <ion-item class="custInput total-after-discount"> 
+                <ion-input [value]="formatBalance(+payInvo.tot_pr - +payInvo.discount)" [readonly]="true"></ion-input>
               </ion-item>
             </ion-col>
-            <ion-col size="11">
-              <ion-label class="ion-padding"><strong>المتبقي</strong></ion-label>
-              <ion-item class="custInput"> 
-                <ion-input  [(ngModel)]="payInvo.changee" [readonly]="true"></ion-input>
-              </ion-item>
-            </ion-col> 
-            <ion-col size="11">
-              <ion-label class="ion-padding"><strong>تاريخ السداد</strong></ion-label>
-              <ion-item class="custInput"> 
-                <ion-item lines="none">
-                  <input style="width:100%"  type="date"  id="startingDate5" name="startingDate5" [(ngModel)]="payInvo.nextPay"  />
-                </ion-item>
-              </ion-item>
-            </ion-col>
+            
+            <!-- Keep hidden inputs to maintain values -->
+            <input type="hidden" [(ngModel)]="payInvo.pay">
+            <input type="hidden" [(ngModel)]="payInvo.nextPay">
           </ion-row>
           <ion-row class="ion-justify-content-center">
             <ion-col size="5" >
@@ -295,3 +287,35 @@
 </ion-grid>
 
 </ion-content>
+
+<!-- Journal Entry Modal -->
+<ion-modal [isOpen]="showJournalEntryModal" (willDismiss)="onJournalCancelled()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; direction: rtl;">
+            <ion-icon name="arrow-down-outline" *ngIf="invoiceJournalData?.invoiceType === 'sales'" color="success" style="font-size: 1.2em;"></ion-icon>
+            <ion-icon name="arrow-up-outline" *ngIf="invoiceJournalData?.invoiceType === 'purchase'" color="danger" style="font-size: 1.2em;"></ion-icon>
+            <span *ngIf="invoiceJournalData">
+              {{ invoiceJournalData.invoiceType === 'sales' ? 'سند قبض' : 'سند دفع' }} - {{ invoiceJournalData.customerAccount?.sub_name || 'غير محدد' }}
+            </span>
+          </div>
+        </ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="onJournalCancelled()">
+            <ion-icon name="close"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <app-invoice-journal-entry
+        *ngIf="invoiceJournalData"
+        [invoiceData]="invoiceJournalData"
+        (journalSaved)="onJournalSaved($event)"
+        (journalCancelled)="onJournalCancelled()">
+      </app-invoice-journal-entry>
+    </ion-content>
+  </ng-template>
+</ion-modal>

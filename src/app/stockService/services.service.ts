@@ -1608,4 +1608,23 @@ getTswiaByDate(store_id,from ,yearId){
     return this.http.post(this.api+'items/validateStockQuantity.php', requestData)
   }
 
+  // Single API endpoint for complete item report data
+  getCompleteItemReport(store_id: any, item_id: any, yearId: any, reportType: number = 0, startDate: string = null, endDate: string = null): Observable<any> {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('item_id', item_id)
+    params = params.append('yearId', yearId)
+    params = params.append('report_type', reportType.toString())
+    
+    if (startDate && startDate.trim() !== '') {
+      params = params.append('start_date', startDate.trim())
+    }
+    
+    if (endDate && endDate.trim() !== '') {
+      params = params.append('end_date', endDate.trim())
+    }
+    
+    return this.http.get(this.api + 'items/getCompleteItemReport.php', {params: params})
+  }
+
 }

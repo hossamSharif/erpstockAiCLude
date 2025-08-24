@@ -4,6 +4,8 @@ import { AlertController, LoadingController, ModalController, Platform, ToastCon
 import { DatePipe } from '@angular/common'; 
 import { Storage } from '@ionic/storage';
 import { NavigationExtras, Router } from '@angular/router';
+import { SortingService, SortConfig } from '../services/sorting.service';
+import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
 
 @Component({
   selector: 'app-statement2',
@@ -18,6 +20,8 @@ export class Statement2Page implements OnInit, OnDestroy {
   searchedAccounts: Array<any> = [];
   transactions: Array<any> = [];
   displayedTransactions: Array<any> = [];
+  sortedTransactions: Array<any> = [];
+  currentSort: SortConfig | null = null;
   
   // Account selection
   isAccountPopoverOpen: boolean = false;
@@ -96,7 +100,9 @@ export class Statement2Page implements OnInit, OnDestroy {
     private loadingController: LoadingController,
     private datePipe: DatePipe,
     private api: ServicesService,
-    private toast: ToastController
+    private toast: ToastController,
+    private sortingService: SortingService,
+    private exportService: ExportService
   ) {
     this.initializeData();
     this.checkPlatform();
@@ -139,6 +145,7 @@ export class Statement2Page implements OnInit, OnDestroy {
     
     this.transactions = [];
     this.displayedTransactions = [];
+    this.sortedTransactions = [];
     this.currentPage = 1;
     this.hasMoreTransactions = false;
     this.currentBalance = 0;
@@ -297,6 +304,9 @@ export class Statement2Page implements OnInit, OnDestroy {
           // Calculate totals for displayed transactions
           this.calculateTotals();
           
+          // Apply sorting to transactions
+          this.applySorting();
+          
           this.showEmpty = this.displayedTransactions.length === 0;
         }
         
@@ -338,6 +348,7 @@ export class Statement2Page implements OnInit, OnDestroy {
     this.currentPage = 1;
     this.hasMoreTransactions = true;
     this.displayedTransactions = [];
+    this.sortedTransactions = [];
     this.showEmpty = false;
   }
 
@@ -404,4 +415,120 @@ export class Statement2Page implements OnInit, OnDestroy {
       this.loadTransactions();
     }
   }
+
+  // Apply sorting to transactions
+  applySorting() {
+    if (this.currentSort) {
+      this.sortedTransactions = this.sortingService.sortData(
+        this.displayedTransactions, 
+        this.currentSort.column, 
+        this.currentSort.direction
+      );
+    } else {
+      this.sortedTransactions = [...this.displayedTransactions];
+    }
+  }
+
+  // Handle column sort
+  sortBy(column: string) {
+    const direction = this.sortingService.getNextSortDirection(column, this.currentSort);
+    this.currentSort = { column, direction };
+    this.applySorting();
+  }
+
+  // Get sort icon for column
+  getSortIcon(column: string): string {
+    return this.sortingService.getSortIcon(column, this.currentSort);
+  }
+
+  // Export functionality
+  async exportToPDF(): Promise<void> {
+    if (!this.displayedTransactions || this.displayedTransactions.length === 0) {
+      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      return;
+    }
+
+    const config: ExportConfig = {
+      title: this.exportService.generateDynamicTitle('statement2'),
+      subtitle: this.generateSubtitle(),
+      fileName: `statement-${this.selectedAccount.sub_name || 'account'}-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+      data: this.displayedTransactions,
+      columns: this.getExportColumns(),
+      userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف',
+      pageType: 'statement2',
+      currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+    };
+
+    await this.exportService.exportToPDF(config);
+  }
+
+  async exportToExcel(): Promise<void> {
+    if (!this.displayedTransactions || this.displayedTransactions.length === 0) {
+      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      return;
+    }
+
+    const config: ExportConfig = {
+      title: this.exportService.generateDynamicTitle('statement2'),
+      subtitle: this.generateSubtitle(),
+      fileName: `statement-${this.selectedAccount.sub_name || 'account'}-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+      data: this.displayedTransactions,
+      columns: this.getExportColumns(),
+      userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف',
+      pageType: 'statement2',
+      currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+    };
+
+    await this.exportService.exportToExcel(config);
+  }
+
+  private generateSubtitle(): string {
+    let subtitle = '';
+    
+    if (this.selectedAccount.sub_name && this.selectedAccount.sub_name !== 'لم يتم اختيار حساب') {
+      subtitle = `الحساب: ${this.selectedAccount.sub_name}`;
+    }
+
+    const dateFilter = this.getDateFilter();
+    if (dateFilter) {
+      if (subtitle) subtitle += ' - ';
+      
+      if (dateFilter.type === 'single') {
+        subtitle += `في تاريخ ${this.exportService['formatDateArabic'](dateFilter.date)}`;
+      } else if (dateFilter.type === 'range') {
+        subtitle += `في الفترة من ${this.exportService['formatDateArabic'](dateFilter.startDate)} إلى ${this.exportService['formatDateArabic'](dateFilter.endDate)}`;
+      }
+    }
+
+    return subtitle;
+  }
+
+  private getDateFilter(): any {
+    if (this.radioVal === 1 && this.startingDate) {
+      return {
+        type: 'single',
+        date: this.startingDate
+      };
+    } else if (this.radioVal === 2 && this.startingDate && this.endDate) {
+      return {
+        type: 'range',
+        startDate: this.startingDate,
+        endDate: this.endDate
+      };
+    }
+    return null;
+  }
+
+  private getExportColumns(): ExportColumn[] {
+    return [
+      { key: 'j_date', title: 'التاريخ', width: 12, type: 'date' },
+      { key: 'source_type', title: 'نوع القيد', width: 15, type: 'text' },
+      { key: 'j_description', title: 'البيان', width: 25, type: 'text' },
+      { key: 'debit_amount', title: 'مدين', width: 12, type: 'currency' },
+      { key: 'credit_amount', title: 'دائن', width: 12, type: 'currency' },
+      { key: 'running_balance', title: 'الرصيد الجاري', width: 15, type: 'currency' },
+      { key: 'user_name', title: 'المستخدم', width: 15, type: 'text' }
+    ];
+  }
+
 }

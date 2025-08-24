@@ -7,6 +7,8 @@ import { Storage } from '@ionic/storage';
 import { NavigationExtras, Router } from '@angular/router'
 import { PrintModalPage } from '../print-modal/print-modal.page';
 import { FilterPipe } from './pipe';
+import { SortingService, SortConfig } from '../services/sorting.service';
+import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
 
 @Component({
   selector: 'app-spend-record2',
@@ -18,6 +20,8 @@ export class SpendRecord2Page implements OnInit {
     jdetailsFrom:Array<any> =[]
     jdetailsTo:Array<any> =[]
     payArray:Array<any> =[]
+    sortedPayArray:Array<any> =[]
+    currentSort: SortConfig | null = null
     purchase:Array<any> =[]
     sales:Array<any> =[]
     printArr:Array<any> =[]
@@ -38,7 +42,7 @@ export class SpendRecord2Page implements OnInit {
     endDate :any
     loading:boolean = false
     year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
-    constructor(private platform :Platform  ,private alertController: AlertController,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) { 
+    constructor(private platform :Platform  ,private alertController: AlertController,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private exportService: ExportService) { 
      this.searchTerm =""
      this.checkPlatform()
      this.getAppInfo()
@@ -349,6 +353,9 @@ export class SpendRecord2Page implements OnInit {
         }  
   
       })
+      
+      // Apply sorting after preparing data
+      this.applySorting();
      }
   
      getSalesByDate(){
@@ -771,5 +778,109 @@ export class SpendRecord2Page implements OnInit {
      this.loadingController.dismiss()
    }) 
   }
+
+  // Apply sorting to payArray
+  applySorting() {
+    if (this.currentSort) {
+      this.sortedPayArray = this.sortingService.sortData(
+        this.payArray, 
+        this.currentSort.column, 
+        this.currentSort.direction
+      );
+    } else {
+      this.sortedPayArray = [...this.payArray];
+    }
+  }
+
+  // Handle column sort
+  sortBy(column: string) {
+    const direction = this.sortingService.getNextSortDirection(column, this.currentSort);
+    this.currentSort = { column, direction };
+    this.applySorting();
+  }
+
+  // Get sort icon for column
+  getSortIcon(column: string): string {
+    return this.sortingService.getSortIcon(column, this.currentSort);
+  }
+
+  // Export functionality
+  async exportToPDF(): Promise<void> {
+    if (!this.payArray || this.payArray.length === 0) {
+      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      return;
+    }
+
+    const config: ExportConfig = {
+      title: this.exportService.generateDynamicTitle('spend-record2'),
+      subtitle: this.generateSubtitle(),
+      fileName: `spend-record-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+      data: this.payArray,
+      columns: this.getExportColumns(),
+      userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف',
+      pageType: 'spend-record2',
+      currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+    };
+
+    await this.exportService.exportToPDF(config);
+  }
+
+  async exportToExcel(): Promise<void> {
+    if (!this.payArray || this.payArray.length === 0) {
+      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      return;
+    }
+
+    const config: ExportConfig = {
+      title: this.exportService.generateDynamicTitle('spend-record2'),
+      subtitle: this.generateSubtitle(),
+      fileName: `spend-record-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
+      data: this.payArray,
+      columns: this.getExportColumns(),
+      userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف',
+      pageType: 'spend-record2',
+      currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+    };
+
+    await this.exportService.exportToExcel(config);
+  }
+
+  private generateSubtitle(): string {
+    const filters: any = {
+      selectedAccount: null, // Spend record doesn't have account selection
+      dateFilter: this.getDateFilter(),
+      searchTerm: this.searchTerm || null
+    };
+
+    return this.exportService.generateDynamicSubtitle('spend-record2', filters);
+  }
+
+  private getDateFilter(): any {
+    if (this.radioVal === 1 && this.startingDate) {
+      return {
+        type: 'single',
+        date: this.startingDate
+      };
+    } else if (this.radioVal === 2 && this.startingDate && this.endDate) {
+      return {
+        type: 'range',
+        startDate: this.startingDate,
+        endDate: this.endDate
+      };
+    }
+    return null;
+  }
+
+  private getExportColumns(): ExportColumn[] {
+    return [
+      { key: 'j_date', title: 'التاريخ', width: 12, type: 'date' },
+      { key: 'j_type', title: 'النوع', width: 12, type: 'text' },
+      { key: 'j_description', title: 'البيان', width: 25, type: 'text' },
+      { key: 'debit', title: 'مدين', width: 12, type: 'currency' },
+      { key: 'credit', title: 'دائن', width: 12, type: 'currency' },
+      { key: 'user_name', title: 'المستخدم', width: 15, type: 'text' }
+    ];
+  }
+
   
   }
