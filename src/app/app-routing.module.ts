@@ -4,7 +4,7 @@ import { AuthGaurdService } from './auth/auth-gaurd.service';
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'folder/sales',
+    redirectTo: 'analytics-dashboard',
     pathMatch: 'full'
   },
   {
@@ -218,6 +218,11 @@ const routes: Routes = [
   {
     path: 'folder/categories',
     loadChildren: () => import('./categories/categories.module').then( m => m.CategoriesPageModule)
+  },
+  {
+    path: 'analytics-dashboard',
+    loadChildren: () => import('./analytics-dashboard/analytics-dashboard.module').then( m => m.AnalyticsDashboardPageModule),
+    canActivate: [AuthGaurdService]
   }
   
 ];

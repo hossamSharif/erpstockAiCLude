@@ -2057,8 +2057,7 @@ incresePrice(data){
   loadItemsWithPagination() {
     console.log('loadItemsWithPagination')
     if (this.paginationLoading) return; 
-    this.paginationLoading = true;
-    this.loadingTot = true; 
+    this.paginationLoading = true; 
     
     console.log('loadItemsWithPagination - no filters applied');
     
@@ -2093,13 +2092,11 @@ incresePrice(data){
         }
         
         this.paginationLoading = false;
-        this.loadingTot = false;
       },
       error => {
         console.error('Error loading paginated items:', error);
         this.presentToast('خطأ في تحميل البيانات', 'danger');
         this.paginationLoading = false;
-        this.loadingTot = false;
       }
     );
   }
@@ -2573,11 +2570,27 @@ incresePrice(data){
     }).format(Math.abs(balance));
   }
 
+  // Check if data is available for export (more lenient than getCurrentTableData)
+  hasDataForExport(): boolean {
+    if (this.showAllItemsView) {
+      return (this.allItemsData && this.allItemsData.length > 0) || false;
+    } else if (this.showSearchView && this.currentSearchTerm && this.currentSearchTerm.trim().length > 0) {
+      return (this.searchData && this.searchData.length > 0) || false;
+    } else if (this.hasActiveFilters()) {
+      return (this.filterArray && this.filterArray.length > 0) || false;
+    } else if (this.showPaginatedView) {
+      // In pagination mode, check both paginatedItems and fallback to items
+      return (this.paginatedItems && this.paginatedItems.length > 0) || (this.items && this.items.length > 0) || false;
+    } else {
+      return (this.items && this.items.length > 0) || false;
+    }
+  }
+
   // Get current active table data based on view state
   getCurrentTableData(): any[] {
     if (this.showAllItemsView) {
       return this.allItemsData || [];
-    } else if (this.showSearchView) {
+    } else if (this.showSearchView && this.currentSearchTerm && this.currentSearchTerm.trim().length > 0) {
       return this.searchData || [];
     } else if (this.hasActiveFilters()) {
       return this.filterArray || [];
@@ -2588,9 +2601,25 @@ incresePrice(data){
     }
   }
 
+  // Get data for export - with fallback logic for pagination mode
+  getDataForExport(): any[] {
+    if (this.showAllItemsView) {
+      return this.allItemsData || [];
+    } else if (this.showSearchView && this.currentSearchTerm && this.currentSearchTerm.trim().length > 0) {
+      return this.searchData || [];
+    } else if (this.hasActiveFilters()) {
+      return this.filterArray || [];
+    } else if (this.showPaginatedView) {
+      // In pagination mode, prefer paginatedItems but fallback to items if needed
+      return (this.paginatedItems && this.paginatedItems.length > 0) ? this.paginatedItems : (this.items || []);
+    } else {
+      return this.items || [];
+    }
+  }
+
   // Export functionality
   async exportToPDF(): Promise<void> {
-    const currentData = this.getCurrentTableData();
+    const currentData = this.getDataForExport();
     if (!currentData || currentData.length === 0) {
       await this.presentToast('لا توجد بيانات للتصدير', 'warning');
       return;
@@ -2611,7 +2640,7 @@ incresePrice(data){
   }
 
   async exportToExcel(): Promise<void> {
-    const currentData = this.getCurrentTableData();
+    const currentData = this.getDataForExport();
     if (!currentData || currentData.length === 0) {
       await this.presentToast('لا توجد بيانات للتصدير', 'warning');
       return;
@@ -2676,16 +2705,30 @@ incresePrice(data){
   private getExportColumns(): ExportColumn[] {
     const columns: ExportColumn[] = [];
     
+    // Always add serial number as first column (replacing checkbox)
+    columns.push({ key: 'serialNumber', title: 'التسلسل', width: 8, type: 'number' });
+    
+    // Add ID column if visible (but not as first since we have serial number)
+    // if (this.colSetting.id) columns.push({ key: 'id', title: 'معرف الصنف', width: 10, type: 'number' });
+    
+    // Add all other columns based on visibility settings
     if (this.colSetting.item_name) columns.push({ key: 'item_name', title: 'اسم الصنف', width: 25, type: 'text' });
-    if (this.colSetting.brand) columns.push({ key: 'brand', title: 'الماركة', width: 15, type: 'text' });
+    if (this.colSetting.item_desc) columns.push({ key: 'item_desc', title: 'اسم الصنف (English)', width: 25, type: 'text' });
+    if (this.colSetting.aliasEn) columns.push({ key: 'aliasEn', title: 'اسم مستعار (Alias)', width: 20, type: 'text' });
     if (this.colSetting.model) columns.push({ key: 'model', title: 'الموديل', width: 15, type: 'text' });
-    if (this.colSetting.part_no) columns.push({ key: 'part_no', title: 'رقم القطعة', width: 15, type: 'text' });
-    if (this.colSetting.item_unit) columns.push({ key: 'item_unit', title: 'الوحدة', width: 10, type: 'text' });
+    if (this.colSetting.part_no) columns.push({ key: 'part_no', title: 'الكود (part no)', width: 15, type: 'text' });
+    if (this.colSetting.brand) columns.push({ key: 'brand', title: 'الماركة', width: 15, type: 'text' });
+    if (this.colSetting.min_qty) columns.push({ key: 'min_qty', title: 'اقل كمية (MSQ)', width: 12, type: 'number' });
+    if (this.colSetting.item_unit) columns.push({ key: 'item_unit', title: 'الوحده', width: 10, type: 'text' });
     if (this.colSetting.perch_price) columns.push({ key: 'perch_price', title: 'سعر الشراء', width: 12, type: 'currency' });
-    if (this.colSetting.pay_price) columns.push({ key: 'pay_price', title: 'سعر البيع', width: 12, type: 'currency' });
-    if (this.colSetting.min_qty) columns.push({ key: 'min_qty', title: 'الحد الأدنى', width: 10, type: 'number' });
-    if (this.colSetting.instock) columns.push({ key: 'quantity', title: 'الكمية المتاحة', width: 12, type: 'number' });
-    if (this.colSetting.total) columns.push({ key: 'stockValue', title: 'قيمة المخزون', width: 15, type: 'currency' });
+    if (this.colSetting.pay_price) columns.push({ key: 'pay_price', title: 'سعر الوحده', width: 12, type: 'currency' });
+    if (this.colSetting.profit) columns.push({ key: 'profitPercentage', title: 'نسبة الفائدة', width: 12, type: 'number' });
+    if (this.colSetting.instock) columns.push({ key: 'quantity', title: 'المخزون', width: 12, type: 'number' });
+    if (this.colSetting.total) columns.push({ key: 'stockValue', title: 'المجموع', width: 15, type: 'currency' });
+    if (this.colSetting.lastSold) columns.push({ key: 'lastSoldDate', title: 'اخر عملية بيع', width: 15, type: 'text' });
+    
+    // Always add opening stock (firstQuantity) if it exists
+    columns.push({ key: 'firstQuantity', title: 'المخزون الإفتتاحي', width: 15, type: 'number' });
     
     return columns;
   }

@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1756063121366,
+  "timestamp": 1756146148062,
   "index": "/index.html",
   "assetGroups": [
     {
@@ -88,6 +88,7 @@
         "/runtime.js",
         "/src_app_account-modal_account-modal_module_ts.js",
         "/src_app_account-tree_account-tree_module_ts.js",
+        "/src_app_analytics-dashboard_analytics-dashboard_module_ts.js",
         "/src_app_balance-sheet2_balance-sheet2_module_ts.js",
         "/src_app_balance-sheet_balance-sheet_module_ts.js",
         "/src_app_cash2_cash2_module_ts.js",
@@ -194,7 +195,7 @@
     "/default-src_app_services_export_service_ts.js": "36a32037105e65a42c3e998ca9eb1e341e034a8a",
     "/default-src_app_syncService_stock-service_service_ts.js": "903946dd079def8ca46a1d13732fe8590523a1e7",
     "/index.html": "cd9a6235a25191843bb7e5ffe8b98ea54e297a39",
-    "/main.js": "7ca17071425bc7f6c8dc1f864c772582010cd006",
+    "/main.js": "bb40a18cbeab0fbbcec280677c79fa699ebfcf45",
     "/manifest.webmanifest": "9a088b7c4339228d1082e666ce105dc889bc180c",
     "/node_modules_canvg_lib_index_es_js.js": "fafb3704e501e89cff726251aba13375bacc6581",
     "/node_modules_dompurify_dist_purify_js.js": "046eccbd904c6dfc20e4ae357e46d0693caf6a42",
@@ -261,6 +262,7 @@
     "/runtime.js": "c06a1a4f0446b22b0d92362bbc453cea2d7da644",
     "/src_app_account-modal_account-modal_module_ts.js": "bf8d69a679d7801025284ad82b3720dffc6efe87",
     "/src_app_account-tree_account-tree_module_ts.js": "c316595aa2619cebdb7441ad2991131ffdce382a",
+    "/src_app_analytics-dashboard_analytics-dashboard_module_ts.js": "8d3be674eef32751c468765e31010e7e4ef1bded",
     "/src_app_balance-sheet2_balance-sheet2_module_ts.js": "f8a2807013904721ed51b36bfc58cc028c20c370",
     "/src_app_balance-sheet_balance-sheet_module_ts.js": "77302f4638f721702669885cf65bed9b41e5861d",
     "/src_app_cash2_cash2_module_ts.js": "5b378e0635a9d551a3679a930de5535157c750c2",
@@ -280,7 +282,7 @@
     "/src_app_folder_folder_module_ts.js": "785b297ff83039eeb0126f0a9884dc83cc7dc956",
     "/src_app_fristq_fristq_module_ts.js": "5e306093837bf1a11948393f2584c177e3094233",
     "/src_app_item-modal_item-modal_module_ts.js": "cb3297c4ea75019c87777cd055f792458dacf898",
-    "/src_app_item-stock_item-stock_module_ts.js": "45e22887f96a7e7fab41730d50b56f40bc00ff85",
+    "/src_app_item-stock_item-stock_module_ts.js": "59934d001129cb6f8f951f26b18564559a85bbf9",
     "/src_app_items-report_items-report_module_ts.js": "c5158c9089725a0ccb91729a4bf77c0b0ede65ab",
     "/src_app_items-serarch_items-serarch_module_ts.js": "83000d85579dd16686310ed08cb6aa6885ae25a2",
     "/src_app_items_items_module_ts.js": "a96bdf4528dee8cd85ec9d8b0e712fabb6d715e2",

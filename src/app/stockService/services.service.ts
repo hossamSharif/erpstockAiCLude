@@ -639,6 +639,39 @@ getTswiaByDate(store_id,from ,yearId){
     return this.http.get(this.api + 'sub_accounts/getComprehensiveBalanceSheet.php', {params: params})
   }
 
+  // Dashboard API Methods
+  getDashboardSalesPurchase(store_id: any, start_date: string, end_date: string, year_id: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('start_date', start_date)
+    params = params.append('end_date', end_date)
+    params = params.append('year_id', year_id)
+    return this.http.get(this.api + 'dashboard/getSalesPurchase.php', {params: params})
+  }
+
+  getDashboardDebtorCreditor(store_id: any, year_id: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('year_id', year_id)
+    return this.http.get(this.api + 'dashboard/getDebtorCreditor.php', {params: params})
+  }
+
+  getDashboardCashFlow(store_id: any, start_date: string, end_date: string, year_id: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('start_date', start_date)
+    params = params.append('end_date', end_date)
+    params = params.append('year_id', year_id)
+    return this.http.get(this.api + 'dashboard/getCashFlow.php', {params: params})
+  }
+
+  getDashboardStockValue(store_id: any, year_id: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('year_id', year_id)
+    return this.http.get(this.api + 'dashboard/getStockValue.php', {params: params})
+  }
+
 
   getPerchByDate(store_id,from ,yearId){ 
     let params = new HttpParams() 

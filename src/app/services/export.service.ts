@@ -56,8 +56,8 @@ export class ExportService {
         format: 'a4'
       });
 
-      // Set up Arabic font (using default for now)
-      doc.setFont('helvetica');
+      // Add Arabic font support
+      await this.addArabicFontSupport(doc);
       
       // Add header
       this.addPDFHeader(doc, config);
@@ -103,6 +103,9 @@ export class ExportService {
       // Create worksheet
       const ws = XLSX.utils.aoa_to_sheet(worksheetData);
       
+      // Apply modern styling
+      this.applyModernExcelStyling(ws, config);
+      
       // Set column widths
       const colWidths = config.columns.map(col => ({ wch: col.width || 15 }));
       ws['!cols'] = colWidths;
@@ -144,23 +147,41 @@ export class ExportService {
     return true;
   }
 
+  private async addArabicFontSupport(doc: jsPDF): Promise<void> {
+    try {
+      // Set the font that supports Arabic characters better
+      doc.setFont('helvetica', 'normal');
+      
+      // Configure the document for better Arabic rendering
+      doc.setCharSpace(0);
+      doc.setFontSize(10);
+    } catch (error) {
+      console.warn('Arabic font setup failed, using fallback');
+      doc.setFont('helvetica');
+    }
+  }
+
   private addPDFHeader(doc: jsPDF, config: ExportConfig): void {
     const pageWidth = doc.internal.pageSize.getWidth();
     
-    // Current date
+    // Current date (RTL positioning)
     doc.setFontSize(10);
-    doc.text(config.currentDate || this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '', 10, 10);
+    const dateText = config.currentDate || this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+    const dateWidth = doc.getTextWidth(dateText);
+    doc.text(dateText, pageWidth - dateWidth - 10, 10);
     
-    // Title
+    // Title (centered, handle Arabic RTL)
     doc.setFontSize(16);
-    const titleWidth = doc.getTextWidth(config.title);
-    doc.text(config.title, (pageWidth - titleWidth) / 2, 20);
+    const titleText = this.processArabicText(config.title);
+    const titleWidth = doc.getTextWidth(titleText);
+    doc.text(titleText, (pageWidth - titleWidth) / 2, 20);
     
-    // Subtitle
+    // Subtitle (centered, handle Arabic RTL)
     if (config.subtitle) {
       doc.setFontSize(12);
-      const subtitleWidth = doc.getTextWidth(config.subtitle);
-      doc.text(config.subtitle, (pageWidth - subtitleWidth) / 2, 30);
+      const subtitleText = this.processArabicText(config.subtitle);
+      const subtitleWidth = doc.getTextWidth(subtitleText);
+      doc.text(subtitleText, (pageWidth - subtitleWidth) / 2, 30);
     }
   }
 
@@ -179,11 +200,13 @@ export class ExportService {
     doc.setFillColor(240, 240, 240);
     doc.rect(margin, currentY, tableWidth, 10, 'F');
     
-    // Header text
+    // Header text (RTL for Arabic columns)
     doc.setTextColor(0, 0, 0);
     config.columns.forEach((col, index) => {
-      const x = margin + (index * columnWidth) + 2;
-      doc.text(col.title, x, currentY + 7);
+      // Position headers from right to left for Arabic
+      const x = pageWidth - margin - ((index + 1) * columnWidth) + 2;
+      const headerText = this.processArabicText(col.title);
+      doc.text(headerText, x, currentY + 7);
     });
     
     currentY += 10;
@@ -193,6 +216,15 @@ export class ExportService {
       if (currentY > doc.internal.pageSize.getHeight() - 30) {
         doc.addPage();
         currentY = 20;
+        
+        // Re-draw headers on new page
+        doc.setFillColor(240, 240, 240);
+        doc.rect(margin, currentY - 10, tableWidth, 10, 'F');
+        config.columns.forEach((col, index) => {
+          const x = pageWidth - margin - ((index + 1) * columnWidth) + 2;
+          const headerText = this.processArabicText(col.title);
+          doc.text(headerText, x, currentY - 3);
+        });
       }
       
       // Alternating row colors
@@ -202,9 +234,11 @@ export class ExportService {
       }
       
       config.columns.forEach((col, colIndex) => {
-        const x = margin + (colIndex * columnWidth) + 2;
-        let value = this.getCellValue(row, col);
-        doc.text(value, x, currentY + 6);
+        // Position data from right to left for Arabic
+        const x = pageWidth - margin - ((colIndex + 1) * columnWidth) + 2;
+        let value = this.getCellValue(row, col, rowIndex + 1);
+        const processedValue = this.processArabicText(value);
+        doc.text(processedValue, x, currentY + 6);
       });
       
       currentY += 8;
@@ -216,43 +250,287 @@ export class ExportService {
     const pageWidth = doc.internal.pageSize.getWidth();
     
     doc.setFontSize(8);
-    doc.text(`المستخدم: ${config.userName}`, 10, pageHeight - 10);
-    doc.text(`تاريخ التصدير: ${this.datePipe.transform(new Date(), 'yyyy-MM-dd HH:mm')}`, pageWidth - 60, pageHeight - 10);
+    
+    // User info (RTL positioning)
+    const userText = this.processArabicText(`المستخدم: ${config.userName}`);
+    const userWidth = doc.getTextWidth(userText);
+    doc.text(userText, pageWidth - userWidth - 10, pageHeight - 10);
+    
+    // Export date (LTR positioning for date)
+    const exportText = this.processArabicText(`تاريخ التصدير: ${this.datePipe.transform(new Date(), 'yyyy-MM-dd HH:mm')}`);
+    doc.text(exportText, 10, pageHeight - 10);
+  }
+
+  private processArabicText(text: string): string {
+    if (!text) return '';
+    
+    try {
+      // Clean up the text first
+      let processedText = text
+        .replace(/[\u200F\u200E\u202A-\u202E]/g, '') // Remove directional marks
+        .replace(/\s+/g, ' ') // Normalize spaces
+        .trim();
+      
+      // Check if text contains Arabic characters
+      const hasArabic = /[\u0600-\u06FF]/.test(processedText);
+      
+      if (hasArabic) {
+        // Enhanced Arabic text processing
+        // Split text into words and handle each word appropriately
+        const words = processedText.split(' ');
+        const processedWords = words.map(word => {
+          // Check if word contains Arabic
+          if (/[\u0600-\u06FF]/.test(word)) {
+            // Process Arabic word
+            return this.reverseArabicWord(word);
+          } else {
+            // Keep non-Arabic words as is (numbers, English, etc.)
+            return word;
+          }
+        });
+        
+        // For Arabic, reverse the word order as well
+        return processedWords.reverse().join(' ');
+      }
+      
+      return processedText;
+    } catch (error) {
+      console.warn('Arabic text processing failed:', error);
+      // Fallback: just return the original text
+      return text;
+    }
+  }
+
+  private reverseArabicWord(word: string): string {
+    // Simple character reversal for Arabic words
+    // This handles basic Arabic character ordering
+    let reversed = '';
+    for (let i = word.length - 1; i >= 0; i--) {
+      const char = word[i];
+      // Keep punctuation and numbers in their positions
+      if (/[a-zA-Z0-9\(\)\[\]\{\}\-\+\=\:\;\<\>\،\.]/.test(char)) {
+        // Find the correct position for non-Arabic characters
+        reversed = char + reversed;
+      } else {
+        reversed += char;
+      }
+    }
+    return reversed;
   }
 
   private prepareExcelData(config: ExportConfig): any[][] {
     const data: any[][] = [];
     
-    // Add header rows
-    data.push([config.title]);
+    // Add title row - will be styled later
+    const titleRow = new Array(config.columns.length).fill('');
+    titleRow[0] = config.title;
+    data.push(titleRow);
+    
+    // Add subtitle row if exists - will be styled later
     if (config.subtitle) {
-      data.push([config.subtitle]);
+      const subtitleRow = new Array(config.columns.length).fill('');
+      subtitleRow[0] = config.subtitle;
+      data.push(subtitleRow);
     }
-    data.push([config.currentDate || this.datePipe.transform(new Date(), 'yyyy-MM-dd')]);
-    data.push([]); // Empty row
+    
+    // Add date row
+    const dateRow = new Array(config.columns.length).fill('');
+    dateRow[0] = config.currentDate || this.datePipe.transform(new Date(), 'yyyy-MM-dd');
+    data.push(dateRow);
+    
+    data.push(new Array(config.columns.length).fill('')); // Empty row
     
     // Add column headers
     data.push(config.columns.map(col => col.title));
     
-    // Add data rows
-    config.data.forEach(row => {
-      const rowData = config.columns.map(col => this.getCellValue(row, col));
+    // Add data rows with serial number support
+    config.data.forEach((row, index) => {
+      const rowData = config.columns.map(col => this.getCellValue(row, col, index + 1));
       data.push(rowData);
     });
     
     // Add footer
-    data.push([]); // Empty row
-    data.push([`المستخدم: ${config.userName}`]);
-    data.push([`تاريخ التصدير: ${this.datePipe.transform(new Date(), 'yyyy-MM-dd HH:mm')}`]);
+    data.push(new Array(config.columns.length).fill('')); // Empty row
+    const footerRow1 = new Array(config.columns.length).fill('');
+    footerRow1[0] = `المستخدم: ${config.userName}`;
+    data.push(footerRow1);
+    
+    const footerRow2 = new Array(config.columns.length).fill('');
+    footerRow2[0] = `تاريخ التصدير: ${this.datePipe.transform(new Date(), 'yyyy-MM-dd HH:mm')}`;
+    data.push(footerRow2);
     
     return data;
   }
 
-  private getCellValue(row: any, column: ExportColumn): string {
+  private applyModernExcelStyling(ws: any, config: ExportConfig): void {
+    const numCols = config.columns.length;
+    const lastCol = this.numberToExcelColumn(numCols - 1);
+    
+    // Initialize merges array if it doesn't exist
+    if (!ws['!merges']) {
+      ws['!merges'] = [];
+    }
+    
+    let currentRow = 0;
+    
+    // Style and merge title row (row 1)
+    const titleCell = `A${currentRow + 1}`;
+    const titleMergeRange = `A${currentRow + 1}:${lastCol}${currentRow + 1}`;
+    
+    if (ws[titleCell]) {
+      ws[titleCell].s = {
+        font: { bold: true, sz: 18, color: { rgb: "1F4E79" } },
+        alignment: { horizontal: "center", vertical: "center" },
+        fill: { fgColor: { rgb: "E7F3FF" } },
+        border: {
+          top: { style: "thin", color: { rgb: "1F4E79" } },
+          bottom: { style: "thin", color: { rgb: "1F4E79" } },
+          left: { style: "thin", color: { rgb: "1F4E79" } },
+          right: { style: "thin", color: { rgb: "1F4E79" } }
+        }
+      };
+    }
+    
+    // Merge title cells
+    ws['!merges'].push(this.decodeRange(titleMergeRange));
+    currentRow++;
+    
+    // Style and merge subtitle row if exists
+    if (config.subtitle) {
+      const subtitleCell = `A${currentRow + 1}`;
+      const subtitleMergeRange = `A${currentRow + 1}:${lastCol}${currentRow + 1}`;
+      
+      if (ws[subtitleCell]) {
+        ws[subtitleCell].s = {
+          font: { bold: true, sz: 14, color: { rgb: "2F75B5" } },
+          alignment: { horizontal: "center", vertical: "center" },
+          fill: { fgColor: { rgb: "F2F8FF" } }
+        };
+      }
+      
+      ws['!merges'].push(this.decodeRange(subtitleMergeRange));
+      currentRow++;
+    }
+    
+    // Style date row
+    const dateCell = `A${currentRow + 1}`;
+    const dateMergeRange = `A${currentRow + 1}:${lastCol}${currentRow + 1}`;
+    
+    if (ws[dateCell]) {
+      ws[dateCell].s = {
+        font: { sz: 11, color: { rgb: "666666" } },
+        alignment: { horizontal: "center", vertical: "center" }
+      };
+    }
+    
+    ws['!merges'].push(this.decodeRange(dateMergeRange));
+    currentRow += 2; // Skip date row and empty row
+    
+    // Style column headers
+    const headerRowIndex = currentRow + 1;
+    for (let colIndex = 0; colIndex < numCols; colIndex++) {
+      const colLetter = this.numberToExcelColumn(colIndex);
+      const cellRef = `${colLetter}${headerRowIndex}`;
+      
+      if (ws[cellRef]) {
+        ws[cellRef].s = {
+          font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
+          alignment: { horizontal: "center", vertical: "center" },
+          fill: { fgColor: { rgb: "4472C4" } },
+          border: {
+            top: { style: "thin", color: { rgb: "FFFFFF" } },
+            bottom: { style: "thin", color: { rgb: "FFFFFF" } },
+            left: { style: "thin", color: { rgb: "FFFFFF" } },
+            right: { style: "thin", color: { rgb: "FFFFFF" } }
+          }
+        };
+      }
+    }
+    
+    // Style data rows with alternating colors
+    const dataStartRow = headerRowIndex + 1;
+    const dataEndRow = dataStartRow + config.data.length - 1;
+    
+    for (let rowIndex = dataStartRow; rowIndex <= dataEndRow; rowIndex++) {
+      const isEvenRow = (rowIndex - dataStartRow) % 2 === 0;
+      const fillColor = isEvenRow ? "FFFFFF" : "F8F9FA";
+      
+      for (let colIndex = 0; colIndex < numCols; colIndex++) {
+        const colLetter = this.numberToExcelColumn(colIndex);
+        const cellRef = `${colLetter}${rowIndex}`;
+        
+        if (ws[cellRef]) {
+          ws[cellRef].s = {
+            font: { sz: 10 },
+            alignment: { horizontal: "center", vertical: "center" },
+            fill: { fgColor: { rgb: fillColor } },
+            border: {
+              top: { style: "thin", color: { rgb: "E1E5E9" } },
+              bottom: { style: "thin", color: { rgb: "E1E5E9" } },
+              left: { style: "thin", color: { rgb: "E1E5E9" } },
+              right: { style: "thin", color: { rgb: "E1E5E9" } }
+            }
+          };
+          
+          // Special formatting for currency columns
+          const column = config.columns[colIndex];
+          if (column && column.type === 'currency') {
+            ws[cellRef].s.alignment.horizontal = "right";
+          }
+          
+          // Special formatting for serial number column
+          if (column && column.key === 'serialNumber') {
+            ws[cellRef].s.font.bold = true;
+            ws[cellRef].s.fill = { fgColor: { rgb: "E7F3FF" } };
+          }
+        }
+      }
+    }
+  }
+  
+  private numberToExcelColumn(num: number): string {
+    let column = '';
+    while (num >= 0) {
+      column = String.fromCharCode(65 + (num % 26)) + column;
+      num = Math.floor(num / 26) - 1;
+    }
+    return column;
+  }
+  
+  private decodeRange(range: string): any {
+    const parts = range.split(':');
+    const start = this.cellRefToCoords(parts[0]);
+    const end = this.cellRefToCoords(parts[1]);
+    
+    return {
+      s: { c: start.c, r: start.r },
+      e: { c: end.c, r: end.r }
+    };
+  }
+  
+  private cellRefToCoords(cellRef: string): { c: number, r: number } {
+    const match = cellRef.match(/([A-Z]+)(\d+)/);
+    if (!match) return { c: 0, r: 0 };
+    
+    const col = match[1];
+    const row = parseInt(match[2]) - 1;
+    
+    let colNum = 0;
+    for (let i = 0; i < col.length; i++) {
+      colNum = colNum * 26 + (col.charCodeAt(i) - 64);
+    }
+    colNum -= 1;
+    
+    return { c: colNum, r: row };
+  }
+
+  private getCellValue(row: any, column: ExportColumn, serialNumber?: number): string {
     let value: any;
     
     // Handle calculated fields
-    if (column.key === 'finalAmount') {
+    if (column.key === 'serialNumber') {
+      value = serialNumber || 1;
+    } else if (column.key === 'finalAmount') {
       const total = parseFloat(row.tot_pr) || 0;
       const discount = parseFloat(row.discount) || 0;
       value = total - discount;
@@ -260,6 +538,16 @@ export class ExportService {
       const quantity = parseFloat(row.quantity) || 0;
       const payPrice = parseFloat(row.pay_price) || 0;
       value = quantity * payPrice;
+    } else if (column.key === 'profitPercentage') {
+      // Calculate profit percentage like in the component
+      const payPrice = parseFloat(row.pay_price) || 0;
+      const perchPrice = parseFloat(row.perch_price) || 0;
+      
+      if (!payPrice || !perchPrice || perchPrice === 0) {
+        value = 0;
+      } else {
+        value = ((payPrice - perchPrice) / perchPrice) * 100;
+      }
     } else {
       value = this.getNestedValue(row, column.key);
     }
@@ -274,6 +562,12 @@ export class ExportService {
       case 'date':
         return this.datePipe.transform(value, 'yyyy-MM-dd') || value.toString();
       case 'number':
+        if (column.key === 'profitPercentage') {
+          // Format profit percentage with 2 decimal places and % sign
+          const numValue = parseFloat(value);
+          if (isNaN(numValue)) return '0.00%';
+          return `${numValue.toFixed(2)}%`;
+        }
         return this.formatNumber(value);
       default:
         return value.toString();

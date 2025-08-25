@@ -1,81 +1,56 @@
 
 
 
+  
+  
+
+   
 
 
 
+
+ - مشكلة حفظ الفاتورة عند التحويب من نهائية الي مبديئة 
  - afte update the item using item-modal and dissmess the updated item must be selected and ready to add to ist 
  - lable دائن و مدين في sales a purchase account_selector
  
  -  اضافة الصنف والتعديل مراجعىة الالة الحاسبة في 
-
+ 
  - مراحعة قائمة الأصناف وتغيير التصميم للفلتر 
+
 
 - in the @item-report i wanna add new view for item movmment that preview the all item move of spicific date 
 
 
 
-- @item-stock @cash2  @sales-records @purchase-record @statment2 @spend-record2  @balance-sheet2
-  i wanna enhance the ux by the add options to export search/filter result data that preview in the table as  pdf and excel file  : 
+ 
 
-  - install required dependencies and lib for the export excel and pdf ; search for modern dependindences that light and not confilict with angular version 
-  - header include a title and subtitle  generated depend on the section and  current search key and filter 
-  for example in @sales-record the title will be ( تقرير مبيعات )
-  and the subtitle will be   العميل احمد في الفترة من 23- يناير 26-يناير if the search by customer and select period of time (between tow date)
-  - you onl
-  - the buttons of pdf export and excel export must be in the header of card the include the table (primary card header) in the end of  left side
-  - the buttons of export data (pdf ,excel) will only enabeld if there a data in the table view 
-  - note @item-stock there are many table view (search , filter , all ..etc), so you have only export the data of the current active view 
-  - check the size of data befor export it and preview a warrning if it too large 
-  - add a footer that preview the user_name 
-  - add a date to the header 
 
-    ALTRATHINK and anlyze all the pages to understand the searching and filtering and then add export pdf and export excel functionality
-    
 
-مرتجعات  والتسوية 
-
- - dashboard for anlatic data 
- i wanna develope an modern dashboard that preview analatic  data ans set it as a first page after authintication done 
   
-  overview :
-  the dashboard  preview data based on selected date or in range  , the default is current month and other options (date and in range dates)
-    it preview a data for sales purchase and cash in and cashout and most item has sold 
-
- design : 
-  the design must be modern with animated colored graphs and lines and cearves : 
- - in the top to rigth the the filter of date with preset options (اسبوع ,  الشهر الحالي , اخر 3 شهور) after preset buttons aplce a modern datepicker to select a range of date @filter preset.png as a refrence
- - under the filter add a section to preview data  in cards in one row slidable  , will include totals with animated effect when data loaded .
-   so there will be 5 cards (total sales , total purchase , cash in , cash out , most item sold )  use @totalcards as a refrence
- - 
-
- backend : 
-    the data will preview in cards will include totals with animated line in the background of card when data loaded 
-    the data must fetch from the back-end with a single api call :
-    you have to create new end point and fetch data as following :
-    - total sales : get the total of  from the pay table filter by spicific date based on user selecttion
-    - totla purchase : from the perch table filter by date based on the user selection  
-    - cash in and cash out , all entry in and entry out  that stored in journal and jdetails_from and jdetail_to  for accounts in table sub_account that have ac_id 7 and ac_id 6 ;
-       so you get the totals of cash in  from jdetails_from the amounts in feild debit  for all accounts that have sub_account.ac_id = 6 or 7 
-       and for cash out you will get from jdetails_to the total of in credit column where sub_account.ac_id = 6 or 7 
-       ac_id and for  review the @cash2 page and it related end point i /myapi folder to understand clear when
-    - most item sold : you can get the most item sold by  from pay_details joining with pay to get pay_date for filter bay pay_date
-    
- 
- 
- 
  
  - login and mange profile and admin manage users 
  
  - sidemenue inhancement 
 
-
+  مرتجعات  والتسوية 
  -- الصلاحيات
- - - الحفظ لمواصلة العمل 
+
+ save to wrk later
+ - - @sales and @purchase and @edit-sales @edit-perch , i wanna add a functionality to auto save changes in itemList to local storage 
+     so user can later open it to continue working :
+     the pay invoice in @sales and @edit-sales @edit-perch @purchase will save to local storage auto every time the user add or remove item to list or editCell perform 
+     the saved invoice and categories it by section for example edit-sales invoice  
+     
+     - create a notification functionality for user in  @dashboard : when user landing to the dashboard set a timeout and then notify him by preview a list of invoice that 
+    
 
 
  --  العملة 
+
+
  - update page that with summary :
+
+
  - الجرد عن طريق drag الأكسل 
 
  - الأوفلاين مود 

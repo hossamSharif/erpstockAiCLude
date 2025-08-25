@@ -1,0 +1,287 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title> الرئيسية    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="refresh()" [disabled]="loading">
+        <ion-icon name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="dashboard-content"> 
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <ion-spinner name="bubbles"></ion-spinner>
+    <p>جاري تحميل البيانات...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading" class="dashboard-wrapper">
+    
+    <!-- Filters Section -->
+    <ion-card class="filter-card modern-filter">
+      <ion-card-content class="filter-content">
+        <div class="filter-row">
+          <!-- Date Preset Buttons -->
+          <div class="preset-buttons-group">
+            <ion-button 
+              *ngFor="let preset of datePresets" 
+              [fill]="selectedDateFilter === preset.value ? 'solid' : 'outline'" 
+              [color]="selectedDateFilter === preset.value ? 'primary' : 'medium'"
+              size="small"
+              (click)="onDatePresetChange(preset.value)"
+              class="preset-btn">
+              {{preset.label}}
+            </ion-button>
+          </div>
+          
+          <!-- Modern Date Range Picker -->
+          <div class="date-range-container">
+            <div class="modern-date-inputs">
+              <input 
+                type="date" 
+                [(ngModel)]="startDate"
+                (ngModelChange)="onStartDateChange($event)"
+                placeholder="من تاريخ">
+              <span class="date-separator">إلى</span>
+              <input 
+                type="date" 
+                [(ngModel)]="endDate"
+                (ngModelChange)="onEndDateChange($event)"
+                placeholder="إلى تاريخ">
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Totals Cards Section -->
+    <ion-card class="totals-section">
+     
+      <ion-card-content>
+        <div class="totals-grid">
+          <!-- Total Sales Card -->
+          <div class="total-card sales-card" [class.loading]="cardsLoading">
+            <div class="skeleton-overlay" *ngIf="cardsLoading">
+              <div class="skeleton-icon"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-amount"></div>
+              </div>
+            </div>
+            <div class="card-content-wrapper" [class.hidden]="cardsLoading">
+              <div class="card-icon">
+                <ion-icon name="trending-up"></ion-icon>
+              </div>
+              <div class="card-content">
+                <h3>إجمالي المبيعات</h3>
+                <p class="amount">{{formatCurrency(dashboardTotals.totalSales)}}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Purchase Card -->
+          <div class="total-card purchase-card" [class.loading]="cardsLoading">
+            <div class="skeleton-overlay" *ngIf="cardsLoading">
+              <div class="skeleton-icon"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-amount"></div>
+              </div>
+            </div>
+            <div class="card-content-wrapper" [class.hidden]="cardsLoading">
+              <div class="card-icon">
+                <ion-icon name="trending-down"></ion-icon>
+              </div>
+              <div class="card-content">
+                <h3>إجمالي المشتريات</h3>
+                <p class="amount">{{formatCurrency(dashboardTotals.totalPurchase)}}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cash In Card -->
+          <div class="total-card cash-in-card" [class.loading]="cardsLoading">
+            <div class="skeleton-overlay" *ngIf="cardsLoading">
+              <div class="skeleton-icon"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-amount"></div>
+              </div>
+            </div>
+            <div class="card-content-wrapper" [class.hidden]="cardsLoading">
+              <div class="card-icon">
+                <ion-icon name="arrow-down-circle"></ion-icon>
+              </div>
+              <div class="card-content">
+                <h3>الوارد النقدي</h3>
+                <p class="amount">{{formatCurrency(dashboardTotals.cashIn)}}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cash Out Card -->
+          <div class="total-card cash-out-card" [class.loading]="cardsLoading">
+            <div class="skeleton-overlay" *ngIf="cardsLoading">
+              <div class="skeleton-icon"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-amount"></div>
+              </div>
+            </div>
+            <div class="card-content-wrapper" [class.hidden]="cardsLoading">
+              <div class="card-icon">
+                <ion-icon name="arrow-up-circle"></ion-icon>
+              </div>
+              <div class="card-content">
+                <h3>الصادر النقدي</h3>
+                <p class="amount">{{formatCurrency(dashboardTotals.cashOut)}}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Debtors Card -->
+          <div class="total-card debtors-card" [class.loading]="cardsLoading">
+            <div class="skeleton-overlay" *ngIf="cardsLoading">
+              <div class="skeleton-icon"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-amount"></div>
+              </div>
+            </div>
+            <div class="card-content-wrapper" [class.hidden]="cardsLoading">
+              <div class="card-icon">
+                <ion-icon name="people"></ion-icon>
+              </div>
+              <div class="card-content">
+                <h3>المدينون</h3>
+                <p class="amount">{{formatCurrency(dashboardTotals.debtors)}}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Creditors Card -->
+          <div class="total-card creditors-card" [class.loading]="cardsLoading">
+            <div class="skeleton-overlay" *ngIf="cardsLoading">
+              <div class="skeleton-icon"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-amount"></div>
+              </div>
+            </div>
+            <div class="card-content-wrapper" [class.hidden]="cardsLoading">
+              <div class="card-icon">
+                <ion-icon name="business"></ion-icon>
+              </div>
+              <div class="card-content">
+                <h3>الدائنون</h3>
+                <p class="amount">{{formatCurrency(dashboardTotals.creditors)}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Sales and Purchase Chart Section -->
+    <ion-card class="chart-section full-width">
+      <ion-card-header>
+        <ion-card-title>المبيعات والمشتريات</ion-card-title>
+        <ion-card-subtitle>عرض بياني للمبيعات والمشتريات خلال الفترة المحددة</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="chart-container">
+          <canvas #salesPurchaseChart></canvas>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Bottom Charts Row -->
+    <div class="bottom-charts-row">
+      
+      <!-- Cash Flow Pie Chart -->
+      <ion-card class="chart-section half-width">
+        <ion-card-header>
+          <ion-card-title>الحركة النقدية</ion-card-title>
+          <ion-card-subtitle>الوارد والصادر النقدي</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="chart-container pie-chart" [class.loading]="chartsLoading">
+            <div class="chart-skeleton pie-skeleton" *ngIf="chartsLoading">
+              <div class="skeleton-pie-chart">
+                <div class="skeleton-pie-slice slice-1"></div>
+                <div class="skeleton-pie-slice slice-2"></div>
+                <div class="skeleton-pie-center"></div>
+              </div>
+              <div class="skeleton-legend">
+                <div class="skeleton-legend-item">
+                  <div class="skeleton-legend-color"></div>
+                  <div class="skeleton-legend-text"></div>
+                </div>
+                <div class="skeleton-legend-item">
+                  <div class="skeleton-legend-color"></div>
+                  <div class="skeleton-legend-text"></div>
+                </div>
+              </div>
+            </div>
+            <canvas #cashFlowChart [class.hidden]="chartsLoading"></canvas>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Stock Value Bar Chart -->
+      <ion-card class="chart-section half-width">
+        <ion-card-header>
+          <ion-card-title>قيمة المخزون</ion-card-title>
+          <ion-card-subtitle>قيمة البيع وقيمة الشراء</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="chart-container bar-chart" [class.loading]="chartsLoading">
+            <div class="chart-skeleton bar-skeleton" *ngIf="chartsLoading">
+              <div class="skeleton-bars">
+                <div class="skeleton-bar bar-1"></div>
+                <div class="skeleton-bar bar-2"></div>
+              </div>
+              <div class="skeleton-chart-axes">
+                <div class="skeleton-y-axis"></div>
+                <div class="skeleton-x-axis"></div>
+              </div>
+            </div>
+            <canvas #stockValueChart [class.hidden]="chartsLoading"></canvas>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+    </div>
+
+    <!-- Summary Section -->
+    <ion-card class="summary-section">
+    
+      <ion-card-content>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="label">صافي المبيعات:</span>
+            <span class="value positive">{{formatCurrency(dashboardTotals.totalSales - dashboardTotals.totalPurchase)}}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">صافي النقدية:</span>
+            <span class="value" [class.positive]="(dashboardTotals.cashIn - dashboardTotals.cashOut) >= 0" 
+                  [class.negative]="(dashboardTotals.cashIn - dashboardTotals.cashOut) < 0">
+              {{formatCurrency(dashboardTotals.cashIn - dashboardTotals.cashOut)}}
+            </span>
+          </div>
+          <div class="summary-item">
+            <span class="label">إجمالي الذمم:</span>
+            <span class="value">{{formatCurrency(dashboardTotals.debtors + dashboardTotals.creditors)}}</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+
+</ion-content>
