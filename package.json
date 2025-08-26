@@ -48,6 +48,7 @@
     "moment-timezone": "^0.5.40",
     "ng2-search-filter": "^0.5.1",
     "path-browserify": "^1.0.1",
+    "pdfmake": "^0.2.20",
     "rxjs": "~6.6.0",
     "save-dev": "^0.0.1-security",
     "tslib": "^2.2.0",

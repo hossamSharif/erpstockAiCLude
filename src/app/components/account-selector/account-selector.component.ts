@@ -17,6 +17,8 @@ export interface AccountSelectorData {
   cat_id: any;
   phone: string;
   address: string;
+  current_balance?: any;
+  balance_status?: string;
 }
 
 export interface AccountBalance {
@@ -476,10 +478,25 @@ export class AccountSelectorComponent implements OnInit, OnChanges, OnDestroy, C
     return `${amount} (${status})`;
   }
 
+  // Format account balance from backend data for display
+  formatAccountBalance(account: AccountSelectorData): string {
+    if (!account || !account.current_balance) return '';
+    
+    const amount = Math.abs(account.current_balance).toFixed(2);
+    const status = account.balance_status === 'debit' ? 'مدين' : 'دائن';
+    return `${amount} (${status})`;
+  }
+
   // Get balance color
   getBalanceColor(balance: AccountBalance): string {
     if (!balance) return 'medium';
     return balance.status === 'debit' ? 'danger' : 'success';
+  }
+
+  // Get account balance color from backend data
+  getAccountBalanceColor(account: AccountSelectorData): string {
+    if (!account || !account.balance_status) return 'medium';
+    return account.balance_status === 'debit' ? 'danger' : 'success';
   }
 
   // Refresh accounts (manual refresh with user feedback)

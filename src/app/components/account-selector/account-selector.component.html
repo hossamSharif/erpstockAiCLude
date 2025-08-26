@@ -84,6 +84,11 @@
         <ion-label>
           <h3>{{ account.sub_name }}</h3>
           <p *ngIf="account.sub_code" class="account-code">كود: {{ account.sub_code }}</p>
+          <p *ngIf="account.current_balance && account.balance_status" 
+             class="account-balance" 
+             [style.color]="getAccountBalanceColor(account) === 'success' ? '#10dc60' : '#f04141'">
+            الرصيد: {{ formatAccountBalance(account) }}
+          </p>
         </ion-label>
       </ion-item>
     </ion-list>
@@ -114,16 +119,23 @@
       <span>جاري التحميل...</span>
     </div>
     
-    <!-- Balance Amount -->
+    <!-- Balance from Account Data (Primary) -->
     <div class="balance-amount" 
-         *ngIf="!loadingBalance && accountBalance && selectedAccount"
+         *ngIf="!loadingBalance && selectedAccount.current_balance && selectedAccount.balance_status"
+         [style.color]="getAccountBalanceColor(selectedAccount) === 'success' ? '#10dc60' : '#f04141'">
+      {{ formatAccountBalance(selectedAccount) }}
+    </div>
+    
+    <!-- Balance from Separate API Call (Fallback) -->
+    <div class="balance-amount" 
+         *ngIf="!loadingBalance && accountBalance && selectedAccount && (!selectedAccount.current_balance || !selectedAccount.balance_status)"
          [style.color]="getBalanceColor(accountBalance) === 'success' ? '#10dc60' : '#f04141'">
       {{ formatBalance(accountBalance) }}
     </div>
     
     <!-- Balance Error -->
     <div class="balance-error" 
-         *ngIf="!loadingBalance && !accountBalance && selectedAccount && selectedAccount.id">
+         *ngIf="!loadingBalance && !accountBalance && selectedAccount && selectedAccount.id && (!selectedAccount.current_balance || !selectedAccount.balance_status)">
       لا يمكن تحميل الرصيد
     </div>
   </div>
