@@ -1,17 +1,10 @@
-
-
-
-  
-  
-
-   
-
+ 
 
 
 
  - مشكلة حفظ الفاتورة عند التحويب من نهائية الي مبديئة 
  - afte update the item using item-modal and dissmess the updated item must be selected and ready to add to ist 
- - lable دائن و مدين في sales a purchase account_selector
+ 
  
  -  اضافة الصنف والتعديل مراجعىة الالة الحاسبة في 
  
@@ -25,14 +18,28 @@
  
 
 
-
-  
+ 
  
  - login and mange profile and admin manage users 
  
- - sidemenue inhancement 
+ 
+ i wanna add   salse return section to the app   will have pages fo add new salse return invoice  and page 
+ sales return reocrds page to preview the saved records and edit sales return page  to edit the saved record 
+ 
+ ths sales-return invoice is for saved the returned items form perviouse sales invoice 
+  so the it will affect the stock same as the purchase do 
 
-  مرتجعات  والتسوية 
+ describtions:
+ -sales return 
+
+ you have 
+
+
+
+  مرتجعات 
+  والتسوية 
+ 
+ 
  -- الصلاحيات
 
  save to wrk later

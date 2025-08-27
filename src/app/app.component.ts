@@ -1,26 +1,23 @@
-import { Component ,OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
 import { AuthServiceService } from "../app/auth/auth-service.service";
 import { Storage } from '@ionic/storage';
 import { HttpClient, HttpHeaders , HttpParams } from '@angular/common/http';
 import { ServicesService } from './stockService/services.service';
 import { Observable, Observer, timer } from 'rxjs'; 
-import { Platform } from '@ionic/angular';
+import { Platform, PopoverController } from '@ionic/angular';
+import { filter } from 'rxjs/operators';
+import { ActionPopoverComponent } from './component/action-popover/action-popover.component';
+import { UserActionsPopoverComponent } from './component/user-actions-popover/user-actions-popover.component';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
 })
-export class AppComponent  {
-  public appPages = [
-    { title: 'Inbox', url: '/folder/Inbox', icon: 'mail' },
-    { title: 'Outbox', url: '/folder/sales', icon: 'paper-plane' },
-    { title: 'Favorites', url: '/folder/Favorites', icon: 'heart' },
-    { title: 'Archived', url: '/folder/Archived', icon: 'archive' },
-    { title: 'Trash', url: '/folder/Trash', icon: 'trash' },
-    { title: 'Spam', url: '/folder/Spam', icon: 'warning' },
-  ];
+export class AppComponent implements AfterViewInit {
+  // Navigation structure is now defined in the template for better control
+  public appPages = [];
 
    store_info : {id:any ,store_ref:any , store_name:any , location :any } 
    USER_INFO : { id: any , user_name: any, store_id :any, full_name:any, password:any}
@@ -38,8 +35,21 @@ export class AppComponent  {
   device:any =''
   api = 'http://localhost/myaperpi/myapi/api/'
   selectedEndpointName: string = '' // Selected endpoint category name
+  currentUrl: string = '';
   public labels = ['Family', 'Friends', 'Notes', 'Work', 'Travel', 'Reminders'];
-  constructor(private platform:Platform,public http: HttpClient,private api2:ServicesService ,private storage: Storage,private authenticationService: AuthServiceService,private router: Router) {
+  
+  // Collapsible sidebar properties
+  isSidebarCollapsed = true;
+  isSidebarHovered = false;
+  constructor(
+    private platform:Platform,
+    public http: HttpClient,
+    private api2:ServicesService,
+    private storage: Storage,
+    private authenticationService: AuthServiceService,
+    private router: Router,
+    private popoverController: PopoverController
+  ) {
    
       // Use matchMedia to check the user preference
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
@@ -339,6 +349,14 @@ checkPlatform(){
     return this.selectedEndpointName;
   }
 
+  // Toggle menu visibility
+  toggleMenu() {
+    const menu = document.querySelector('ion-menu');
+    if (menu) {
+      menu.toggle();
+    }
+  }
+
   redirectToExternal(url: string) {
   window.open(url, '_blank');
   }
@@ -399,5 +417,92 @@ logOut(){
 goToCategories() {
   this.router.navigate(['/folder/categories']);
 }
+
+  ngAfterViewInit() {
+    // Initialize active menu item based on current route
+    this.currentUrl = this.router.url;
+    this.updateActiveMenuItems();
+  }
+
+  updateActiveMenuItems() {
+    // Remove active class from all menu items
+    const menuItems = document.querySelectorAll('.menu-item');
+    menuItems.forEach(item => {
+      item.classList.remove('selected');
+    });
+
+    // Add active class to matching menu item
+    const activeItem = this.getActiveMenuItem();
+    if (activeItem) {
+      activeItem.classList.add('selected');
+    }
+  }
+
+  getActiveMenuItem(): HTMLElement | null {
+    const menuItems = document.querySelectorAll('.menu-item');
+    let activeItem: HTMLElement | null = null;
+
+    menuItems.forEach(item => {
+      const linkElement = item as HTMLElement;
+      const routerLink = this.getRouterLinkFromElement(linkElement);
+      
+      if (routerLink && this.currentUrl.includes(routerLink)) {
+        // Check for more specific match
+        if (!activeItem || routerLink.length > this.getRouterLinkFromElement(activeItem as HTMLElement)?.length) {
+          activeItem = linkElement;
+        }
+      }
+    });
+
+    return activeItem;
+  }
+
+  getRouterLinkFromElement(element: HTMLElement): string | null {
+    // Extract routerLink from element attributes or data attributes
+    const routerLinkAttr = element.getAttribute('data-router-link');
+    if (routerLinkAttr) {
+      return routerLinkAttr;
+    }
+    
+    return null;
+  }
+
+  // Handle menu item click
+  onMenuItemClick(routerLink: string) {
+    this.router.navigate([routerLink]);
+    this.currentUrl = routerLink;
+    this.updateActiveMenuItems();
+  }
+
+  // Toggle sidebar collapsed state
+  toggleSidebar() {
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
+  }
+
+  // Handle sidebar hover events
+  onSidebarMouseEnter() {
+    this.isSidebarHovered = true;
+  }
+
+  onSidebarMouseLeave() {
+    this.isSidebarHovered = false;
+  }
+
+  // Check if sidebar should be expanded (either not collapsed or hovered)
+  isSidebarExpanded(): boolean {
+    return !this.isSidebarCollapsed || this.isSidebarHovered;
+  }
+
+  // Present user action popover
+  async presentUserPopover(ev: any) {
+    const popover = await this.popoverController.create({
+      component: UserActionsPopoverComponent,
+      event: ev,
+      translucent: true,
+      cssClass: 'user-action-popover'
+    });
+    
+    return await popover.present();
+  }
 
 }

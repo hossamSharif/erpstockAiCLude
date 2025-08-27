@@ -1,294 +1,251 @@
-<ion-app> 
-  <ion-split-pane  contentId="side" dir="rtl" *ngIf="isAuth == true">
-     <ion-menu contentId="side" type="overlay" >
+<ion-app>
+  <ion-split-pane contentId="main-content" when="lg" *ngIf="isAuth == true">
+    <!-- Main Content Area -->
+    <ion-content id="main-content">
+      <div class="main-content-wrapper" dir="rtl">
+        <ion-router-outlet></ion-router-outlet>
+      </div>
+    </ion-content>
+
+    <!-- Main Menu - Positioned on the right side -->
+    <ion-menu 
+      contentId="main-content" 
+      type="overlay" 
+      side="start" 
+      swipeGesture="true"
+      [class.collapsed]="isSidebarCollapsed"
+      [class.expanded]="isSidebarExpanded()"
+      (mouseenter)="onSidebarMouseEnter()"
+      (mouseleave)="onSidebarMouseLeave()">
+      
       <ion-content>
-        <ion-list id="inbox-list">
-          <ion-list-header><ion-label>نظام ادارة المخازن </ion-label></ion-list-header>
-          <!-- <ion-label class="ion-margin"><strong>فرع : </strong> <ion-text>{{store_info.store_name}}</ion-text></ion-label> -->
-          <ion-grid>
-            <!-- User Info Row -->
-            <ion-row class="user-info-row" dir="ltr">
-              <ion-col size="4" class="ion-text-start">
-                <ion-button fill="clear" color="danger" (click)="logOut()">
-                  <ion-icon name="lock-closed-outline" color="danger" slot="start"></ion-icon>
-                  خروج
-                </ion-button>
-              </ion-col>
-              <ion-col size="8" class="ion-text-end ion-padding-top">
-                <ion-label><strong>{{USER_INFO.full_name}}</strong></ion-label>
-              </ion-col>
-            </ion-row>
-            
-            <!-- Category Info Row -->
-            <ion-row class="category-info-row" dir="ltr" *ngIf="getSelectedEndpointName()">
-              <ion-col size="4" class="ion-text-start">
-                <ion-button fill="clear" color="primary" (click)="goToCategories()">
-                  <ion-icon name="settings-outline" slot="icon-only"></ion-icon>
-                </ion-button>
-              </ion-col>
-              <ion-col size="8" class="ion-text-end ion-padding-top">
-                <ion-label><strong>{{getSelectedEndpointName()}}</strong></ion-label>
-              </ion-col>
-            </ion-row>
-            
-            <!-- Default Endpoint Warning Row -->
-            <ion-row class="default-endpoint-row" *ngIf="!getSelectedEndpointName()">
-              <ion-col size="4" class="ion-text-start">
-                <ion-button fill="clear" color="primary" (click)="goToCategories()">
-                  <ion-icon name="settings-outline" slot="icon-only"></ion-icon>
-                </ion-button>
-              </ion-col>
-              <ion-col size="8" class="ion-text-end ion-padding-top">
-                <ion-text color="warning">
-                  <ion-label><strong>القسم      </strong></ion-label>
-                </ion-text>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
+        <div class="menu-container">
+          <!-- Logo Section -->
+          <div class="logo-section" [class.collapsed]="isSidebarCollapsed" [class.expanded]="isSidebarExpanded()">
+            <div class="logo-container">
+              <img src="assets/imgs/logo.png" alt="Logo" class="sidebar-logo">
+            </div>
+            <h1 class="app-title">نظام إدارة المخازن</h1>
+          </div>
           
-          <ion-item-divider></ion-item-divider>
-          <!-- <ion-menu-toggle auto-hide="false">
-            <ion-row>
-              <ion-col size="12">
-                <ion-icon class="ico" color="primary" name=" notifications-outline"></ion-icon>
-                <ion-label><strong>الأقسـام </strong></ion-label>
-              </ion-col>
-            </ion-row> 
-            <ion-item (click)="redirectToExternal('https://erpagric.gvstech.net')" lines="none" detail="false"
-              [class.selected]="isCurrentUrl('erpagric.gvstech.net')" style="cursor: pointer;">
-              <ion-label class="ion-margin-start">الأليات الزراعية </ion-label>
-            </ion-item> 
-            <ion-item (click)="redirectToExternal('https://erp.gvstech.net')" lines="none" detail="false"
-              [class.selected]="isCurrentUrl('erp.gvstech.net')" style="cursor: pointer;">
-              <ion-label class="ion-margin-start">اسبيرات ركشة</ion-label>
-            </ion-item> 
-          </ion-menu-toggle>  -->
-          <ion-menu-toggle auto-hide="false" class="ion-margin-top"> 
-           
-            <ion-row>
-              <ion-col size="12">
-                 
-                 <ion-item *ngIf=" device == 'desktop'" routerDirection="root"  routerLink="analytics-dashboard" lines="none"  routerLinkActive="selected">
-                  <ion-icon class="ico" color="primary"  name="home-outline"></ion-icon>
-                  <ion-label>  الرئيسية </ion-label>
-                </ion-item>
-              </ion-col> 
-            </ion-row>
-            <ion-row>
-              <ion-col size="12">
-                 <ion-icon class="ico" color="primary"  name="basket-outline"></ion-icon> 
-                 <ion-label ><strong> المبيعات</strong></ion-label>
-              </ion-col> 
-            </ion-row>
+          <!-- Toggle Button -->
+          <div class="sidebar-toggle" (click)="toggleSidebar()">
+            <ion-icon 
+              [name]="isSidebarCollapsed ? 'chevron-forward-outline' : 'chevron-back-outline'"
+              class="toggle-icon">
+            </ion-icon>
+          </div>
+          
+          <!-- Header Section -->
+          <div class="menu-header" [class.collapsed]="isSidebarCollapsed" [class.expanded]="isSidebarExpanded()">
+            <ion-label>{{getSelectedEndpointName()}}</ion-label>
+          </div>
+          
+          <!-- User Profile Section -->
+          <div class="user-profile" [class.collapsed]="isSidebarCollapsed" [class.expanded]="isSidebarExpanded()">
+            <div class="user-info-container">
+              <div class="user-avatar">
+                <ion-icon name="person-circle"></ion-icon>
+              </div>
+              <div class="user-details">
+                <h2>{{USER_INFO.full_name}}</h2> 
+              </div>
+
+              <!-- Three dots button for popover -->
+              <ion-button (click)="presentUserPopover($event)" fill="clear" class="user-actions-button">
+                <ion-icon name="ellipsis-vertical"></ion-icon>
+              </ion-button>
+            </div> 
+          </div>
+          
+          <!-- Navigation Menu -->
+          <div class="navigation-menu">
+            <!-- Dashboard -->
+            <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('analytics-dashboard')" data-router-link="analytics-dashboard">
+              <div class="menu-item-content">
+                <ion-icon name="home"></ion-icon>
+                <span>الرئيسية</span>
+              </div>
+            </div>
             
-            <ion-item *ngIf=" device == 'desktop'" routerDirection="root"  routerLink="folder/sales" lines="none"  routerLinkActive="selected">
-              <ion-label class="ion-margin-start">فاتورة مبيعات</ion-label>
-            </ion-item>
-            <ion-item *ngIf="device == 'mobile'" routerDirection="root"  routerLink="folder/sales-mob" lines="none"  routerLinkActive="selected">
-              <ion-label class="ion-margin-start">فاتورة مبيعات</ion-label>
-            </ion-item>
-            <ion-item routerDirection="root" routerLink="folder/sales-record" lines="none"  routerLinkActive="selected">
-              <ion-label class="ion-margin-start">سجل مبيعات</ion-label>
-            </ion-item>
-          </ion-menu-toggle> 
-          <ion-menu-toggle auto-hide="false" > 
-            <ion-row>
-               <ion-col size="12">
-                 <ion-icon class="ico"   color="primary"    name="bag-remove-outline"></ion-icon> 
-                 <ion-label ><strong>المشتريات </strong></ion-label>
-                </ion-col> 
-              </ion-row>
-              <ion-item routerDirection="root" *ngIf=" device == 'mobile'" routerLink="folder/purchase-mob" lines="none" detail="false" routerLinkActive="selected">
-                <ion-label class="ion-margin-start">فاتورة مشتريات</ion-label>
-              </ion-item>
-            <ion-item routerDirection="root" *ngIf=" device == 'desktop'" routerLink="folder/purchase" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start">فاتورة مشتريات</ion-label>
-            </ion-item>
-             
- 
-            <ion-item routerDirection="root" routerLink="folder/purchase-record" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start">سجل المشتريات</ion-label>
-            </ion-item> 
-            <ion-item routerDirection="root"  *ngIf=" device == 'desktop'" routerLink="folder/prch-order" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start">طلبات الشراء  </ion-label>
-            </ion-item>
-            <ion-item routerDirection="root"  *ngIf=" device == 'desktop'" routerLink="folder/prch-order-record" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start"> سجل طلبات الشراء  </ion-label>
-            </ion-item>
-          </ion-menu-toggle>  
-          <ion-menu-toggle auto-hide="false" >
-            <ion-row>
-              <ion-col size="12">
-                 <ion-icon class="ico" color="primary"   name="file-tray-full-outline"></ion-icon> 
-              <ion-label><strong>المخزن</strong></ion-label>
-            </ion-col> 
-           </ion-row>
-             
+            <!-- Sales Section -->
+            <div class="menu-section">
+              <div class="section-header">
+                <ion-icon name="basket"></ion-icon>
+                <span>المبيعات</span>
+              </div>
+              
+              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/sales')" data-router-link="folder/sales">
+                <div class="menu-item-content">
+                  <ion-icon name="receipt"></ion-icon>
+                  <span>فاتورة مبيعات</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" *ngIf="device == 'mobile'" (click)="onMenuItemClick('folder/sales-mob')" data-router-link="folder/sales-mob">
+                <div class="menu-item-content">
+                  <ion-icon name="receipt"></ion-icon>
+                  <span>فاتورة مبيعات</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" (click)="onMenuItemClick('folder/sales-record')" data-router-link="folder/sales-record">
+                <div class="menu-item-content">
+                  <ion-icon name="document-text"></ion-icon>
+                  <span>سجل المبيعات</span>
+                </div>
+              </div>
+            </div>
             
-             <ion-item routerDirection="root" routerLink="item-stock" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start">   المخزن</ion-label>
-            </ion-item>
-           
-            <ion-item routerDirection="root"  *ngIf=" device == 'desktop'" routerLink="folder/items-report"  lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start">حركة الأصناف </ion-label>
-            </ion-item>
-            <ion-item routerDirection="root"  *ngIf=" device == 'desktop'" routerLink="folder/tswia"  lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start">  التسوية الجردية </ion-label>
-            </ion-item>
-            <ion-item routerDirection="root"  *ngIf=" device == 'desktop'" routerLink="folder/tswia-record"  lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start">  سجل التسويات الجردية </ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-  
-  
-          <ion-menu-toggle auto-hide="false" >
-            <ion-row >
-              <ion-col size="12">
-                 <ion-icon class="ico" color="primary"   name="cash-outline"></ion-icon> 
-              <ion-label><strong>الحسابات</strong></ion-label>
-            </ion-col> 
-           </ion-row>
-             
-            <ion-item routerDirection="root"  *ngIf=" device == 'desktop'" lines="none" routerLink="folder/sub-account2" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start"> ادارة الحسابات</ion-label>
-            </ion-item>
-            <ion-item routerDirection="root"  routerLink="folder/cash2" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start"> السندات  </ion-label>
-            </ion-item>
-            <ion-item routerDirection="root"  routerLink="folder/spend-record2" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start">سجل السندات    </ion-label>
-            </ion-item>
-            <ion-item routerDirection="root"  routerLink="folder/statement2" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start">كشف حساب    </ion-label>
-            </ion-item>
-            <ion-item routerDirection="root" routerLink="folder/balance-sheet2"  lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start"> الأرصدة  </ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false" > 
-            <ion-row >
-              <ion-col size="12"> 
-                 <ion-icon class="ico" color="primary"   name="cog-outline"></ion-icon> 
-              <ion-label><strong>الإعدادات والضبط</strong></ion-label>
-            </ion-col> 
-           </ion-row>
-           <ion-item routerDirection="root" routerLink="folder/categories" lines="none" detail="false" routerLinkActive="selected">
-            <ion-label class="ion-margin-start">  التصنيفات  </ion-label>
-           </ion-item>
-            <ion-item routerDirection="root" routerLink="folder/settings" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start"> المزامنة والإتصال</ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-        </ion-list> 
-      </ion-content> 
-    </ion-menu> 
-
-
-    <!-- menue 2  -->
-
-    <!-- <ion-menu contentId="side" type="overlay" >
-      <ion-content>
-        <ion-list id="inbox-list">
-          <ion-list-header><ion-label>نظام ادارة المبيعات   V2</ion-label></ion-list-header>
-          <ion-label class="ion-margin"><strong>  </strong> <ion-text>القطاعي </ion-text></ion-label>
-          <ion-grid >
-            <ion-row>
-              <ion-col size="8" class="ion-padding-top"> 
-                <ion-label><strong>{{USER_INFO.full_name}}</strong> </ion-label> 
-              </ion-col>
-              <ion-col size="4">
-                <ion-button fill="clear" color="danger" (click)="logOut()">
-                  <ion-icon name="lock-closed-outline" color="danger"  slot="end"></ion-icon>
-                   خروج
-                </ion-button>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
-          
-          <ion-item-divider></ion-item-divider>
-        
-          <ion-menu-toggle auto-hide="false" class="ion-margin-top"> 
-            <ion-row>
-              <ion-col size="12">
-                 <ion-icon class="ico" color="primary"  name="basket-outline"></ion-icon> 
-                 <ion-label ><strong> المبيعات</strong></ion-label>
-              </ion-col> 
-            </ion-row>
-            <ion-item *ngIf=" device == 'desktop'" routerDirection="root"  routerLink="folder/salessnd" lines="none"  routerLinkActive="selected">
-              <ion-label class="ion-margin-start">فاتورة مبيعات</ion-label>
-            </ion-item>
-            <ion-item *ngIf=" device == 'desktop'" routerDirection="root"  routerLink="folder/salessndrecord" lines="none"  routerLinkActive="selected">
-              <ion-label class="ion-margin-start">  سجل مبيعات</ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-          <ion-menu-toggle auto-hide="false"> 
-            <ion-row>
-               <ion-col size="12">
-                 <ion-icon class="ico"   color="primary"    name="bag-remove-outline"></ion-icon> 
-                 <ion-label ><strong>المشتريات </strong></ion-label>
-                </ion-col> 
-            </ion-row>
-
-            <ion-item routerDirection="root" *ngIf=" device == 'desktop'" routerLink="folder/purchsnd" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start">فاتورة مشتريات</ion-label>
-            </ion-item>
-           
-            <ion-item routerDirection="root" routerLink="folder/purchsndrecord" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start">سجل المشتريات</ion-label>
-            </ion-item> 
-          
-          </ion-menu-toggle>
-  
-          <ion-menu-toggle auto-hide="false" >
-            <ion-row >
-              <ion-col size="12">
-                 <ion-icon class="ico" color="primary"   name="cash-outline"></ion-icon> 
-              <ion-label><strong>الحسابات</strong></ion-label>
-            </ion-col> 
-           </ion-row>
-             
-            <ion-item routerDirection="root"  *ngIf=" device == 'desktop'" lines="none" routerLink="folder/sub-account2" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start"> ادارة الحسابات</ion-label>
-            </ion-item>
-            <ion-item routerDirection="root"  routerLink="folder/cash2" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start"> السندات  </ion-label>
-            </ion-item>
-            <ion-item routerDirection="root"  routerLink="folder/cash3" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start"> المصروفات </ion-label>
-            </ion-item>
-           
-            <ion-item routerDirection="root"  routerLink="folder/spend-record2" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start">سجل السندات    </ion-label>
-            </ion-item>
-            <ion-item routerDirection="root"  routerLink="folder/statement2" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start">كشف حساب    </ion-label>
-            </ion-item>
-            <ion-item routerDirection="root" routerLink="folder/balance-sheet2"  lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start"> الأرصدة  </ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-
-          <ion-menu-toggle auto-hide="false" > 
-            <ion-row >
-              <ion-col size="12"> 
-                 <ion-icon class="ico" color="primary"   name="cog-outline"></ion-icon> 
-              <ion-label><strong>الإعدادات والضبط</strong></ion-label>
-            </ion-col> 
-           </ion-row>
-          
-            <ion-item routerDirection="root" routerLink="folder/settings" lines="none" detail="false" routerLinkActive="selected">
-              <ion-label class="ion-margin-start"> الإعدادات  </ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-
-        </ion-list> 
-      </ion-content> 
-    </ion-menu> -->
-
-     <ion-router-outlet id="side" *ngIf="isAuth == true"></ion-router-outlet>
+            <!-- Purchases Section -->
+            <div class="menu-section">
+              <div class="section-header">
+                <ion-icon name="bag-remove"></ion-icon>
+                <span>المشتريات</span>
+              </div>
+              
+              <div class="menu-item" *ngIf="device == 'mobile'" (click)="onMenuItemClick('folder/purchase-mob')" data-router-link="folder/purchase-mob">
+                <div class="menu-item-content">
+                  <ion-icon name="cart"></ion-icon>
+                  <span>فاتورة مشتريات</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/purchase')" data-router-link="folder/purchase">
+                <div class="menu-item-content">
+                  <ion-icon name="cart"></ion-icon>
+                  <span>فاتورة مشتريات</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" (click)="onMenuItemClick('folder/purchase-record')" data-router-link="folder/purchase-record">
+                <div class="menu-item-content">
+                  <ion-icon name="document-text"></ion-icon>
+                  <span>سجل المشتريات</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/prch-order')" data-router-link="folder/prch-order">
+                <div class="menu-item-content">
+                  <ion-icon name="clipboard"></ion-icon>
+                  <span>طلبات الشراء</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/prch-order-record')" data-router-link="folder/prch-order-record">
+                <div class="menu-item-content">
+                  <ion-icon name="document-text"></ion-icon>
+                  <span>سجل طلبات الشراء</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Inventory Section -->
+            <div class="menu-section">
+              <div class="section-header">
+                <ion-icon name="file-tray-full"></ion-icon>
+                <span>المخزن</span>
+              </div>
+              
+              <div class="menu-item" (click)="onMenuItemClick('item-stock')" data-router-link="item-stock">
+                <div class="menu-item-content">
+                  <ion-icon name="cube"></ion-icon>
+                  <span>المخزن</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/items-report')" data-router-link="folder/items-report">
+                <div class="menu-item-content">
+                  <ion-icon name="swap-vertical"></ion-icon>
+                  <span>حركة الأصناف</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/tswia')" data-router-link="folder/tswia">
+                <div class="menu-item-content">
+                  <ion-icon name="sync"></ion-icon>
+                  <span>التسوية الجردية</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/tswia-record')" data-router-link="folder/tswia-record">
+                <div class="menu-item-content">
+                  <ion-icon name="document-text"></ion-icon>
+                  <span>سجل التسويات الجردية</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Accounts Section -->
+            <div class="menu-section">
+              <div class="section-header">
+                <ion-icon name="cash"></ion-icon>
+                <span>الحسابات</span>
+              </div>
+              
+              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/sub-account2')" data-router-link="folder/sub-account2">
+                <div class="menu-item-content">
+                  <ion-icon name="people"></ion-icon>
+                  <span>إدارة الحسابات</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" (click)="onMenuItemClick('folder/cash2')" data-router-link="folder/cash2">
+                <div class="menu-item-content">
+                  <ion-icon name="card"></ion-icon>
+                  <span>السندات</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" (click)="onMenuItemClick('folder/spend-record2')" data-router-link="folder/spend-record2">
+                <div class="menu-item-content">
+                  <ion-icon name="document-text"></ion-icon>
+                  <span>سجل السندات</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" (click)="onMenuItemClick('folder/statement2')" data-router-link="folder/statement2">
+                <div class="menu-item-content">
+                  <ion-icon name="reader"></ion-icon>
+                  <span>كشف حساب</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" (click)="onMenuItemClick('folder/balance-sheet2')" data-router-link="folder/balance-sheet2">
+                <div class="menu-item-content">
+                  <ion-icon name="bar-chart"></ion-icon>
+                  <span>الأرصدة</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Settings Section -->
+            <div class="menu-section">
+              <div class="section-header">
+                <ion-icon name="cog"></ion-icon>
+                <span>الإعدادات والضبط</span>
+              </div>
+              
+              <div class="menu-item" (click)="onMenuItemClick('folder/categories')" data-router-link="folder/categories">
+                <div class="menu-item-content">
+                  <ion-icon name="grid"></ion-icon>
+                  <span>التصنيفات</span>
+                </div>
+              </div>
+              
+              <div class="menu-item" (click)="onMenuItemClick('folder/settings')" data-router-link="folder/settings">
+                <div class="menu-item-content">
+                  <ion-icon name="sync"></ion-icon>
+                  <span>المزامنة والإتصال</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ion-content>
+    </ion-menu>
   </ion-split-pane>
   
+  <!-- Login View -->
   <ion-router-outlet *ngIf="isAuth == false"></ion-router-outlet>
-
-
 </ion-app>

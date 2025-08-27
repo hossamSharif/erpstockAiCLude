@@ -1,0 +1,18 @@
+<ion-content>
+  <ion-list class="user-actions-list" lines="none">
+    <ion-item button (click)="navigateToProfile()" class="user-action-item">
+      <ion-icon name="person-outline" slot="start"></ion-icon>
+      <ion-label>الملف الشخصي</ion-label>
+    </ion-item>
+    
+    <ion-item button (click)="navigateToCategories()" class="user-action-item">
+      <ion-icon name="grid-outline" slot="start"></ion-icon>
+      <ion-label>التصنيفات</ion-label>
+    </ion-item>
+    
+    <ion-item button (click)="logout()" class="user-action-item logout-item">
+      <ion-icon name="log-out-outline" slot="start"></ion-icon>
+      <ion-label>تسجيل الخروج</ion-label>
+    </ion-item>
+  </ion-list>
+</ion-content>

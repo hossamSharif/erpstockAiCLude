@@ -1559,6 +1559,44 @@ sub {
 /* Core CSS required for Ionic components to work properly */
 /* Basic CSS for apps built with Ionic */
 /* Optional CSS utils that can be commented out */
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  direction: rtl;
+}
+ion-app {
+  width: 100%;
+  height: 100%;
+}
+ion-split-pane {
+  width: 100%;
+  height: 100%;
+}
+ion-router-outlet {
+  width: 100%;
+  height: 100%;
+}
+[dir=rtl] ion-menu-button {
+  margin-left: 0;
+  margin-right: 16px;
+}
+[dir=rtl] ion-buttons[slot=end] {
+  justify-content: flex-start;
+}
+[dir=rtl] ion-buttons[slot=start] {
+  justify-content: flex-end;
+}
+ion-menu[side=end] {
+  left: auto;
+  right: 0;
+}
+ion-menu[side=start] {
+  right: auto;
+  left: 0;
+}
 .cust_Toast {
   font-size: larger;
   color: white;
