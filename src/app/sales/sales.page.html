@@ -5,7 +5,12 @@
       <ion-menu-button *ngIf="!showBackButton"></ion-menu-button>
     </ion-buttons>
     <ion-title>فاتورة مبيعات</ion-title>
-    
+    <!-- Date in header -->
+    <ion-buttons slot="end">
+      <ion-button (click)="openDatePicker()">
+        <ion-label>{{ payInvo.pay_date | date:'dd/MM/yyyy' }}</ion-label>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -15,7 +20,7 @@
   <ion-grid *ngIf="user_info && store_info">
     <ion-row dir="rtl" class="top-card-row">
       <!-- First Column: Account Selector -->
-      <ion-col size="3" class="account-column">
+      <ion-col size="4" class="account-column">
         <app-account-selector
           accountType="customer"
           placeholder="اختر حساب العميل"
@@ -44,17 +49,8 @@
         </div>
       </ion-col>
       
-      
-      <!-- Date Column -->
-      <ion-col size="3" class="date-column" dir="rtl">
-        <ion-label class="column-label">التاريخ</ion-label> 
-        <ion-item class="custInput date-input">
-          <ion-input type="date" [(ngModel)]="payInvo.pay_date" placeholder="التاريخ"></ion-input>
-        </ion-item> 
-      </ion-col>
-
-      <!--  Column: Comment -->
-      <ion-col size="3" class="date-comment-column">
+      <!-- Comment Column: Note field in same row -->
+      <ion-col size="4" class="date-comment-column">
         <ion-label class="column-label">ملاحظــة</ion-label>
         <ion-item class="custInput comment-input"> 
           <ion-input placeholder="أكتب تعليقا" [(ngModel)]="payInvo.payComment"></ion-input>
@@ -202,91 +198,107 @@
     
 
 
+    <!-- This column is now empty as we moved the totals and buttons to the footer -->
     <ion-col size="3" class="ion-no-padding">
-      <ion-card>
-        <ion-grid>
-          <ion-row class="ion-justify-content-center">
-            <ion-col size="11">
-              <ion-label class="ion-padding"><strong>اجمالي المبلغ</strong></ion-label>
-              <ion-item class="custInput"> 
-                <ion-input [value]="formatBalance(payInvo.tot_pr)" [readonly]="true" ></ion-input>
-              </ion-item>
-            </ion-col>
-            <ion-col size="11">
-              <!-- Discount Section -->
-              <ion-label class="ion-padding"><strong>  الخصم  </strong> </ion-label>
-                <ion-item dir="rtl"> 
-                  <ion-segment [(ngModel)]="discountType" (ionChange)="onDiscountTypeChange($event)" slot="start">
-                    <ion-segment-button value="percentage">
-                      <ion-label>نسبة %</ion-label>
-                    </ion-segment-button>
-                    <ion-segment-button value="amount">
-                      <ion-label>مبلغ</ion-label>
-                    </ion-segment-button>
-                  </ion-segment>
-                </ion-item>  
-              <!-- Percentage Discount Input -->
-              <ion-item *ngIf="discountType === 'percentage'" class="rtl-input" class="custInput">
-                <ion-label position="floating" class="float-right">نسبة الخصم %</ion-label>
-                <ion-input 
-                  type="number" 
-                  [(ngModel)]="discountPerc" 
-                  (ionInput)="onPercentageDiscountChange($event)"
-                  placeholder="نسبة الخصم %">
-                </ion-input>
-                <ion-note slot="end" *ngIf="calculatedDiscountAmount > 0">
-                  {{ formatBalance(calculatedDiscountAmount) }} 
-                </ion-note>
-              </ion-item>
-
-              <!-- Amount Discount Input -->
-              <ion-item *ngIf="discountType === 'amount'" class="rtl-input" class="custInput">
-                <ion-label position="floating" class="float-right">مبلغ الخصم</ion-label>
-                <ion-input 
-                  type="number" 
-                  [(ngModel)]="discountAmount" 
-                  (ionInput)="onAmountDiscountChange($event)"
-                   placeholder="مبلغ الخصم ">
-                </ion-input>
-                <ion-note slot="end" *ngIf="calculatedDiscountPerc > 0">
-                  {{ calculatedDiscountPerc.toFixed(2) }}%
-                </ion-note>
-              </ion-item>
-            </ion-col>
-            <!-- Total after discount for all sales invoices -->
-            <ion-col size="11">
-              <ion-label class="ion-padding"><strong>المجموع بعد الخصم</strong></ion-label>
-              <ion-item class="custInput total-after-discount"> 
-                <ion-input [value]="formatBalance(+payInvo.tot_pr - +payInvo.discount)" [readonly]="true"></ion-input>
-              </ion-item>
-            </ion-col>
-            
-            <!-- Keep hidden inputs to maintain values -->
-            <input type="hidden" [(ngModel)]="payInvo.pay">
-            <input type="hidden" [(ngModel)]="payInvo.nextPay">
-          </ion-row>
-          <ion-row class="ion-justify-content-center">
-            <ion-col size="5" >
-              <ion-button fill="outline" expand="block" routerDirection="root" color="primary"  (click)="save()" >
-                <ion-label class="ion-text-center"> حفــظ</ion-label>
-              </ion-button>
-            </ion-col>
-            <ion-col size="5"  *ngIf="status == 'initial' || status == 'toFinal'">
-              <ion-button expand="block" routerDirection="root" color="danger"  (click)="presentAlertConfirm('initial')" >
-                <ion-label class="ion-text-center"> حــذف</ion-label>
-              </ion-button>
-            </ion-col>
-          </ion-row>
-        </ion-grid> 
-      </ion-card>
     </ion-col>
   </ion-row>
 
 
  
 </ion-grid>
-
 </ion-content>
+<!-- Footer with totals and action buttons -->
+<ion-footer>
+  <ion-toolbar>
+    <ion-grid>
+      <ion-row class="ion-align-items-center">
+        <!-- Discount controls on the right side -->
+        <ion-col size="8" class="ion-text-end">
+          <ion-grid>
+            <ion-row class="ion-justify-content-end">
+              <ion-col   class="footer-input-container">
+                <ion-label class="footer-input-label">إجمالي المبلغ</ion-label>
+                <ion-item class="custInput footer-input-item">
+                  <ion-input [value]="formatBalance(payInvo.tot_pr)" [readonly]="true"></ion-input>
+                </ion-item>
+              </ion-col>
+              <!-- <ion-col size="3" class="footer-input-container">
+                <ion-label class="footer-input-label">الخصم</ion-label>
+                <ion-item class="custInput footer-input-item">
+                  <ion-input [value]="formatBalance(payInvo.discount)" [readonly]="true"></ion-input>
+                </ion-item>
+              </ion-col> -->
+              <ion-col   class="footer-input-container">
+                <div class="discount-header">
+               
+                  <ion-item dir="rtl" class="discount-segment-container"> 
+                    <ion-segment [(ngModel)]="discountType" (ionChange)="onDiscountTypeChange($event)" class="compact-discount-segment">
+                      <ion-segment-button value="percentage" class="compact-segment-button">
+                        <ion-label>نسبة الخصم%</ion-label>
+                      </ion-segment-button>
+                      <ion-segment-button value="amount" class="compact-segment-button">
+                        <ion-label>مبلغ الخصم</ion-label>
+                      </ion-segment-button>
+                    </ion-segment>
+                  </ion-item>
+                </div>
+                <!-- Percentage Discount Input -->
+                <ion-item *ngIf="discountType === 'percentage'" class="rtl-input custInput discount-input">
+                  <ion-input 
+                    type="number" 
+                    [(ngModel)]="discountPerc" 
+                    (ionInput)="onPercentageDiscountChange($event)"
+                    placeholder="نسبة الخصم %">
+                  </ion-input>
+                  <ion-note slot="end" *ngIf="calculatedDiscountAmount > 0" class="discount-note">
+                    {{ formatBalance(calculatedDiscountAmount) }} 
+                  </ion-note>
+                </ion-item>
+
+                <!-- Amount Discount Input -->
+                <ion-item *ngIf="discountType === 'amount'" class="rtl-input custInput discount-input">
+                  <ion-input 
+                    type="number" 
+                    [(ngModel)]="discountAmount" 
+                    (ionInput)="onAmountDiscountChange($event)"
+                     placeholder="مبلغ الخصم">
+                  </ion-input>
+                  <ion-note slot="end" *ngIf="calculatedDiscountPerc > 0" class="discount-note">
+                    {{ calculatedDiscountPerc.toFixed(2) }}%
+                  </ion-note>
+                </ion-item>
+              </ion-col>
+              <ion-col   class="footer-input-container">
+                <ion-label class="footer-input-label">المجموع بعد الخصم</ion-label>
+                <ion-item class="custInput total-after-discount footer-input-item">
+                  <ion-input [value]="formatBalance(+payInvo.tot_pr - +payInvo.discount)" [readonly]="true"></ion-input>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-col>
+        
+        <!-- Action buttons on the left side -->
+        <ion-col size="4">
+          <ion-grid>
+            <ion-row class="ion-justify-content-end">
+              <ion-col size="6">
+                <ion-button expand="block" routerDirection="root" color="primary" (click)="save()">
+                  <ion-label class="ion-text-center">حفظ</ion-label>
+                </ion-button>
+              </ion-col>
+              <ion-col size="6" *ngIf="status == 'initial' || status == 'toFinal'">
+                <ion-button expand="block" routerDirection="root" color="danger" (click)="presentAlertConfirm('initial')">
+                  <ion-label class="ion-text-center">حذف</ion-label>
+                </ion-button>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </ion-toolbar>
+</ion-footer>
 
 <!-- Journal Entry Modal -->
 <ion-modal [isOpen]="showJournalEntryModal" (willDismiss)="onJournalCancelled()">

@@ -53,7 +53,7 @@ export class PrintModalPage implements OnInit {
     }
     
     // Load item images from itemList
-    await this.loadItemImages();
+  //  await this.loadItemImages();
   }
 
   async loadItemImages() {
@@ -132,18 +132,18 @@ export class PrintModalPage implements OnInit {
       printContent = printContent.replace(/\[src\]="vehicleBase64 \|\| 'assets\/imgs\/tuk\.jpg'"/g, `src="${this.vehicleBase64}"`);
     }
     
-    // Replace item images with base64 encoded versions
-    for (const [originalUrl, base64] of Object.entries(this.itemImagesBase64)) {
-      // Escape special regex characters in the URL
-      const escapedUrl = originalUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // Replace all occurrences of this image URL with base64
-      const regex = new RegExp(`src="${escapedUrl}"`, 'g');
-      printContent = printContent.replace(regex, `src="${base64}"`);
+    // // Replace item images with base64 encoded versions
+    // for (const [originalUrl, base64] of Object.entries(this.itemImagesBase64)) {
+    //   // Escape special regex characters in the URL
+    //   const escapedUrl = originalUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    //   // Replace all occurrences of this image URL with base64
+    //   const regex = new RegExp(`src="${escapedUrl}"`, 'g');
+    //   printContent = printContent.replace(regex, `src="${base64}"`);
       
-      // Also handle Angular property binding format [src]
-      const angularRegex = new RegExp(`\\[src\\]="[^"]*${escapedUrl}[^"]*"`, 'g');
-      printContent = printContent.replace(angularRegex, `src="${base64}"`);
-    }
+    //   // Also handle Angular property binding format [src]
+    //   const angularRegex = new RegExp(`\\[src\\]="[^"]*${escapedUrl}[^"]*"`, 'g');
+    //   printContent = printContent.replace(angularRegex, `src="${base64}"`);
+    // }
     
     // Replace any remaining asset paths with base64 if company logo exists
     if (this.printArr && this.printArr[0] && this.printArr[0].company && this.printArr[0].company.logoUrl) {

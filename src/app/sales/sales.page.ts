@@ -1627,6 +1627,22 @@ onAccountBalanceLoaded(balance: any) {
   }
 }
 
+// Date picker method
+openDatePicker() {
+  // Create a temporary input element to trigger the date picker
+  const dateInput = document.createElement('input');
+  dateInput.type = 'date';
+  dateInput.value = this.payInvo.pay_date;
+  
+  // When the date changes, update the model
+  dateInput.addEventListener('change', (event: any) => {
+    this.payInvo.pay_date = event.target.value;
+  });
+  
+  // Trigger the date picker
+  dateInput.click();
+}
+
 async openPriceAdjustmentDialog() {
   if (!this.itemList || this.itemList.length === 0) {
     this.presentToast('لا توجد أصناف في القائمة لتعديل أسعارها', 'warning');

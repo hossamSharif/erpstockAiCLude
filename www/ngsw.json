@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1756246490453,
+  "timestamp": 1756307983109,
   "index": "/index.html",
   "assetGroups": [
     {
@@ -190,7 +190,7 @@
     "/default-src_app_account-modal_account-modal_page_ts.js": "8640c858bc80c91bf08a12cc89c5a3a337192f41",
     "/default-src_app_item-modal_item-modal_page_ts.js": "ce520d4fffa48bd58b632eb37640f71839f9439f",
     "/default-src_app_module_shared_shared_module_ts.js": "53f4363884138c6434e0b45f6079d51a730bc039",
-    "/default-src_app_print-modal_print-modal_page_ts.js": "9edc795b72f756cf9eb36dbbc3de21dd4ee81776",
+    "/default-src_app_print-modal_print-modal_page_ts.js": "c44ded49f2a49d2b224326781b49fc2ad580cc57",
     "/default-src_app_services_export_service_ts.js": "e690444e6dc7e53ebbda7c4b283cfe2e96baaaf5",
     "/default-src_app_syncService_stock-service_service_ts.js": "903946dd079def8ca46a1d13732fe8590523a1e7",
     "/index.html": "cd9a6235a25191843bb7e5ffe8b98ea54e297a39",
@@ -300,7 +300,7 @@
     "/src_app_purchsndrecord_purchsndrecord_module_ts.js": "b5f7781e28c75901f63d9afb19475aa6d5092af3",
     "/src_app_sales-mob_sales-mob_module_ts.js": "e73b196b1b064ac592e10b532621ae0f2f976015",
     "/src_app_sales-record_sales-record_module_ts.js": "29f4326554a59aa9938f6c2cf540bd3fc47b94b8",
-    "/src_app_sales_sales_module_ts.js": "9a316ecb7bef73738384425f1891422e9d15ac3e",
+    "/src_app_sales_sales_module_ts.js": "a2d43eb38345430e20368ffaab42fa1bf8717b6c",
     "/src_app_salessnd_salessnd_module_ts.js": "fd02d1e26b6ea05ac3e223ff7319b774e6f7c07c",
     "/src_app_salessndrecord_salessndrecord_module_ts.js": "3d6423fedd5f3c05293371d6554c196f15e4b007",
     "/src_app_settings_settings_module_ts.js": "0b6ff09dd4b9b40cd0ee06f53bc3bdb24f4d11b1",
