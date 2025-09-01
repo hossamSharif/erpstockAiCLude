@@ -1,4 +1,7 @@
 <!-- Main Content Container -->
+ 
+
+
 <div class="journal-entry-main" *ngIf="invoiceData">
   
   <!-- Customer Balance Display -->
@@ -25,9 +28,9 @@
 
     <!-- Amount (without currency label) -->
     <div class="form-section">
-      <ion-label class="section-label">المبلغ</ion-label>
       <ion-item class="form-item amount-item" [class.has-error]="!isValidAmount() && pay > 0" #amountItemRef>
         <ion-icon name="cash-outline" slot="start" [color]="isValidAmount() || pay === 0 ? 'success' : 'danger'"></ion-icon>
+        <ion-label class="inline-label" slot="start">المبلغ</ion-label>
         <ion-input 
           #amountInput
           type="number" 
@@ -49,9 +52,9 @@
 
     <!-- Source (المصدر) -->
     <div class="form-section">
-      <ion-label class="section-label">المصدر</ion-label>
       <ion-item class="form-item">
         <ion-icon name="wallet-outline" slot="start" color="primary"></ion-icon>
+        <ion-label class="inline-label" slot="start">المصدر</ion-label>
         <ion-select 
           [(ngModel)]="radioVal" 
           (ionChange)="pickAccountBank($event)" 
@@ -73,9 +76,9 @@
 
     <!-- Description (single line, readonly) -->
     <div class="form-section last-field">
-      <ion-label class="section-label">البيان</ion-label>
       <ion-item class="form-item description-item">
         <ion-icon name="document-text-outline" slot="start" color="tertiary"></ion-icon>
+        <ion-label class="inline-label" slot="start">البيان</ion-label>
         <ion-input 
           [(ngModel)]="journal.j_details"
           placeholder="وصف المعاملة..."
@@ -110,3 +113,4 @@
   </div>
 
 </div>
+

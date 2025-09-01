@@ -1,0 +1,148 @@
+<ion-content>
+  <div style="padding: 20px;">
+    <div #printarea1 id="printarea1">
+      <!-- Header with Images and Title -->
+      <div style="display: table; width: 100%; margin-bottom: 30px;">
+        <div style="display: table-cell; width: 150px; text-align: left; vertical-align: middle;">
+          <img [src]="vehicleBase64 || 'assets/imgs/tuk.jpg'" style="width: 120px; height: 80px; object-fit: contain;" alt="Vehicle">
+        </div>
+        <div style="display: table-cell; text-align: center; vertical-align: middle;">
+          <h2 style="margin: 5px 0 0 0; font-size: 32px; font-weight: bold;">GVS</h2>
+          <h1 style="margin: 10px 0; padding: 15px 25px; background-color: #f0f0f0; display: inline-block; font-size: 28px; border-radius: 8px; direction: rtl;">
+            {{ generateTitle() }}
+          </h1>
+        </div>
+        <div style="display: table-cell; width: 150px; text-align: right; vertical-align: middle;">
+          <img [src]="logoBase64 || 'assets/imgs/logo.png'" style="width: 120px; height: 80px; object-fit: contain;" alt="Logo">
+        </div>
+      </div>
+
+      <!-- Report Information Section - RTL -->
+      <div style="margin-bottom: 25px; border: 2px solid #333; padding: 15px; direction: rtl; border-radius: 8px; background-color: #f9f9f9;">
+        <div style="font-size: 14px; margin-right: 10px;">
+          <div style="margin-bottom: 12px; border-bottom: 2px dotted #666; padding-bottom: 8px;">
+            <span style="display: inline-block; width: 48%; text-align: right;">
+              <strong style="color: #333;">تاريخ التقرير: </strong>
+              <span style="color: #555;">{{ getCurrentDate() }}</span>
+            </span>
+            <span style="display: inline-block; width: 48%; text-align: right;">
+              <strong style="color: #333;">وقت التقرير: </strong>
+              <span style="color: #555;">{{ getCurrentTime() }}</span>
+            </span>
+          </div>
+          <div style="margin-bottom: 8px;">
+            <span style="display: inline-block; width: 48%; text-align: right;">
+              <strong style="color: #333;">إجمالي الأصناف: </strong>
+              <span style="color: #555;">{{ printData?.length || 0 }}</span>
+            </span>
+            <span style="display: inline-block; width: 48%; text-align: right;">
+              <strong style="color: #333;">نوع التقرير: </strong>
+              <span style="color: #555;">
+                {{ exportMode === 'filtered' ? 'مفلتر' : (exportMode === 'search' ? 'بحث' : 'شامل') }}
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Items Table - RTL with Modern Design -->
+      <div *ngIf="printData && printData.length > 0" class="table-responsive" style="margin-bottom: 20px; direction: rtl; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;">
+        <table>
+          <thead>
+            <tr>
+              <th>التسلسل</th>
+              <th>كود الصنف</th>
+              <th>اسم الصنف</th>
+              <th>الوحدة</th>
+              <th>المجموعة</th>
+              <th>الكمية الحالية</th>
+              <th>سعر الشراء</th>
+              <th>سعر البيع</th>
+              <th>قيمة المخزون</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of printData; let i = index; let isOdd = odd">
+              <td>{{ i + 1 }}</td>
+              <td>{{ item.item_code || '-' }}</td>
+              <td>{{ item.item_name || '-' }}</td>
+              <td>{{ item.item_unit || '-' }}</td>
+              <td>{{ item.item_cat || '-' }}</td>
+              <td [style.color]="item.currentQuantity > 0 ? '#28a745' : '#dc3545'">
+                {{ formatBalance(item.currentQuantity || 0) }}
+              </td>
+              <td>{{ formatBalance(item.item_parcode || 0) }}</td>
+              <td>{{ formatBalance(item.item_Sell_price || 0) }}</td>
+              <td>{{ formatBalance((item.currentQuantity || 0) * (item.item_parcode || 0)) }}</td>
+            </tr>
+          </tbody>
+          
+          <!-- Summary Row -->
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="5">الإجمالي</td>
+              <!-- <td>{{ getTotalQuantity() }}</td> -->
+              <td colspan="2"></td>
+              <td>{{ getTotalValue() }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- No Data Message -->
+      <div *ngIf="!printData || printData.length === 0" 
+           style="text-align: center; padding: 40px; background-color: #f8f9fa; border-radius: 8px; margin: 20px 0;">
+        <p style="font-size: 18px; color: #666; direction: rtl;">لا توجد بيانات للعرض</p>
+      </div>
+
+      <!-- Summary Statistics -->
+      <div *ngIf="printData && printData.length > 0" 
+           style="margin-top: 30px; border: 2px solid #333; padding: 20px; direction: rtl; border-radius: 8px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+        <h3 style="text-align: center; margin-bottom: 20px; color: #333; font-size: 20px;">ملخص إحصائيات المخزون</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center;">
+          <div style="background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <strong style="color: #28a745; font-size: 18px;">{{ getItemsInStock() }}</strong>
+            <p style="margin: 5px 0 0 0; color: #666;">أصناف متوفرة</p>
+          </div>
+          <div style="background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <strong style="color: #dc3545; font-size: 18px;">{{ getItemsOutOfStock() }}</strong>
+            <p style="margin: 5px 0 0 0; color: #666;">أصناف غير متوفرة</p>
+          </div>
+          <!-- <div style="background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <strong style="color: #007bff; font-size: 18px;">{{ formatBalance(getAverageStockValue()) }}</strong>
+            <p style="margin: 5px 0 0 0; color: #666;">متوسط قيمة المخزون</p>
+          </div> -->
+        </div>
+      </div>
+
+      <!-- Footer with User Info -->
+      <div style="margin-top: 40px; text-align: center; border-top: 2px solid #333; padding-top: 20px; direction: rtl;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; font-size: 14px; color: #666;">
+          <div>
+            <strong>تم إنشاء التقرير بواسطة:</strong>
+            <p style="margin: 5px 0 0 0; color: #333; font-weight: bold;">{{ userName || 'مستخدم غير معروف' }}</p>
+          </div>
+          <div>
+            <strong>النظام:</strong>
+            <p style="margin: 5px 0 0 0; color: #333; font-weight: bold;">نظام إدارة المخزون - GVS</p>
+          </div>
+          <div>
+            <strong>رقم الصفحة:</strong>
+            <p style="margin: 5px 0 0 0; color: #333; font-weight: bold;">1 من 1</p>
+          </div>
+        </div>
+        
+        <!-- Company Footer -->
+        <!-- <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dotted #ccc;">
+          <p style="margin: 5px 0; font-size: 12px; color: #888;">
+            <strong>شركة جي في اس للإستيراد والتصدير</strong> | 
+            الوكيل الحصري لماركات POWERMAX, SIMBA, GIRISH
+          </p>
+          <p style="margin: 5px 0; font-size: 12px; color: #888;">
+            شكراً لاستخدام نظام إدارة المخزون
+          </p>
+        </div> -->
+      </div>
+    </div>
+  </div>
+</ion-content>

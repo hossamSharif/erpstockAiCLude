@@ -148,8 +148,8 @@
           <ion-card-title class="table-title">
             <ion-icon name="list-outline" slot="start"></ion-icon>
             تقرير حركة الصنف - {{ selectedItemNew?.item_name || 'اختر صنف لعرض البيانات' }}
-            <span class="transaction-count" *ngIf="payArray && payArray.length > 0">
-              ({{ payArray.length }} حركة)
+            <span class="transaction-count" *ngIf="displayedPayArray && displayedPayArray.length > 0">
+              ({{ displayedPayArray.length }} حركة)
             </span>
           </ion-card-title>
         </ion-card-header>
@@ -195,7 +195,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let pay of sortedPayArray; let i = index" class="table-row">
+                <tr *ngFor="let pay of displayedPayArray; let i = index; trackBy: trackByPaymentId" class="table-row">
                   <td class="serial">{{ i + 1 }}</td>
                   <td class="type">
                     <span class="transaction-type" 

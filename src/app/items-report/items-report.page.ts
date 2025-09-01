@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef ,Renderer2,Input} from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef ,Renderer2,Input, ChangeDetectorRef} from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable } from 'rxjs';
 import { AlertController, IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -103,7 +103,7 @@ export class ItemsReportPage implements OnInit {
    totPurch:any 
    }
 
-  constructor( private route: ActivatedRoute,private rout : Router,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService) {
+  constructor( private route: ActivatedRoute,private rout : Router,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private cdr: ChangeDetectorRef) {
     this.selectedItem = {
       id:undefined,
       dateCreated:"",
@@ -1249,6 +1249,9 @@ getItemPaysByItemIdBy2date(){
 
   mixArrayAndOrderong(){
     this.payArray = []
+    console.log('Starting mixArrayAndOrderong - clearing payArray');
+    console.log('Data arrays lengths - perch:', this.perchDetailsArr.length, 'pay:', this.payDetailsArr.length, 'tswia:', this.tswiaDetailsArr.length);
+    
     if(this.perchDetailsArr.length>0){
       for (let i = 0; i < this.perchDetailsArr.length; i++) {
         const element = this.perchDetailsArr[i];
@@ -1301,6 +1304,7 @@ getItemPaysByItemIdBy2date(){
  // Apply advanced sorting for transactions
  this.applyTransactionsSorting();
  
+ console.log('Finished mixArrayAndOrderong - payArray length:', this.payArray.length);
   }
 
 
@@ -1537,10 +1541,13 @@ search(){
     totPurch: 0
   };
   
+  // Clear all arrays before new search
   this.payArray = [];
+  this.sortedPayArray = [];
   this.perchDetailsArr = [];
   this.payDetailsArr = [];
   this.tswiaDetailsArr = [];
+  this.currentTransactionsSort = null; // Reset sorting
   this.showEmpty = false;
   this.loading = true;
 
@@ -1613,6 +1620,10 @@ search(){
             ...item,
             type: 'مبيعات'
           }));
+          console.log('Loaded sales invoices:', this.payDetailsArr.length);
+        } else {
+          this.payDetailsArr = [];
+          console.log('No sales invoices found');
         }
 
         // Process purchase invoices
@@ -1621,6 +1632,10 @@ search(){
             ...item,
             type: 'مشتريات'
           }));
+          console.log('Loaded purchase invoices:', this.perchDetailsArr.length);
+        } else {
+          this.perchDetailsArr = [];
+          console.log('No purchase invoices found');
         }
 
         // Process adjustment records
@@ -1629,6 +1644,10 @@ search(){
             ...item,
             type: 'تسوية جردية'
           }));
+          console.log('Loaded adjustment records:', this.tswiaDetailsArr.length);
+        } else {
+          this.tswiaDetailsArr = [];
+          console.log('No adjustment records found');
         }
 
         // Process the data based on report type
@@ -1644,6 +1663,11 @@ search(){
           // Regular report - combine all arrays
           this.mixArrayAndOrderong();
           this.getTotal();
+          
+          // Ensure sortedPayArray is properly synchronized after all processing
+          console.log('After processing - payArray length:', this.payArray.length);
+          console.log('After processing - sortedPayArray length:', this.sortedPayArray.length);
+          
           if (this.payArray.length == 0) {
             this.showEmpty = true;
           } else {
@@ -1675,13 +1699,14 @@ search(){
 applyTransactionsSorting() {
   if (this.currentTransactionsSort) {
     this.sortedPayArray = this.sortingService.sortData(
-      this.payArray, 
+      [...this.payArray], // Create a deep copy to prevent mutation
       this.currentTransactionsSort.column, 
       this.currentTransactionsSort.direction
     );
   } else {
-    this.sortedPayArray = [...this.payArray];
+    this.sortedPayArray = [...this.payArray]; // Always create a new array copy
   }
+  console.log('Applied transaction sorting, sortedPayArray length:', this.sortedPayArray.length);
 }
 
 // Handle transaction column sort
@@ -1719,6 +1744,16 @@ sortBy(column: string) {
 // Get sort icon for column
 getSortIcon(column: string): string {
   return this.sortingService.getSortIcon(column, this.currentSort);
+}
+
+// TrackBy function for better change detection performance
+trackByPaymentId(index: number, item: any): any {
+  return item.pay_ref || item.id || index;
+}
+
+// Getter to ensure we always have data to display
+get displayedPayArray(): any[] {
+  return this.sortedPayArray && this.sortedPayArray.length > 0 ? this.sortedPayArray : this.payArray;
 }
 
 }

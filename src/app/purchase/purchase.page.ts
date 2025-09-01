@@ -28,6 +28,11 @@ export class PurchasePage implements OnInit {
   @ViewChild('popover2') popover2;
   @ViewChild('popoverNotif3') popoverNotif3;
 
+  // Modal-specific properties
+  @Input() modalMode: boolean = false;
+  @Input() modalStatus: string = '';
+  @Input() modalSelectedItemsList: any[] = [];
+
  discountType: string = 'percentage'; // 'percentage' or 'amount'
   discountAmount: number = 0;
   calculatedDiscountPerc: number = 0;
@@ -218,13 +223,25 @@ async presentAlertConfirm() {
         id: 'cancel-button',
         handler: (blah) => {
           //console.log('Confirm Cancel: blah'); 
-          this.prepareInvo()
+          this.prepareInvo();
+          // Close modal if in modal mode
+          if (this.modalMode) {
+            setTimeout(() => {
+              this.modalController.dismiss({ success: true, data: this.payInvo });
+            }, 500);
+          }
         }
       }, {
         text: 'موافق',
         id: 'confirm-button',
         handler: () => {
-          this.presentModal(this.printArr , 'perch')
+          this.presentModal(this.printArr , 'perch');
+          // Close modal after printing starts if in modal mode
+          if (this.modalMode) {
+            setTimeout(() => {
+              this.modalController.dismiss({ success: true, data: this.payInvo });
+            }, 1000);
+          }
         }
       }
     ]
@@ -315,6 +332,17 @@ Print(elem){
 }
 
 ngOnInit() { 
+  // Handle modal mode
+  if (this.modalMode && this.modalStatus === 'newInvoFromItemsPage' && this.modalSelectedItemsList.length > 0) {
+    this.statusFromRoute = this.modalStatus;
+    this.pendingItemsFromStock = this.modalSelectedItemsList;
+    this.showBackButton = true;
+    console.log('Modal mode: Received items from stock page:', this.pendingItemsFromStock);
+    this.getAppInfo(); // Initialize app info for new invoice
+    this.showPriceAdjustmentDialog('initial');
+    return; // Exit early for modal mode
+  }
+  
   // Check category visibility setting
   
   if(this.status == 'new'){
@@ -2198,10 +2226,17 @@ async  performSyncItem(item_name?){
       this.presentToast('تم حفظ قيد اليومية بنجاح', 'success');
     }
     
-    // Show print confirmation
-    setTimeout(() => {
-      this.presentAlertConfirm();
-    }, 500);
+    // In modal mode, close modal directly after journal entry
+    if (this.modalMode) {
+      setTimeout(() => {
+        this.modalController.dismiss({ success: true, data: this.payInvo, journalSaved: success });
+      }, 1000); // Give time for toast to show
+    } else {
+      // Show print confirmation for regular page mode
+      setTimeout(() => {
+        this.presentAlertConfirm();
+      }, 500);
+    }
     
     this.cleanupAfterInvoice();
   }
@@ -2209,10 +2244,17 @@ async  performSyncItem(item_name?){
   onJournalCancelled() {
     this.showJournalEntryModal = false;
     
-    // Show print confirmation
-    setTimeout(() => {
-      this.presentAlertConfirm();
-    }, 500);
+    // In modal mode, close modal directly after cancelling journal entry
+    if (this.modalMode) {
+      setTimeout(() => {
+        this.modalController.dismiss({ success: true, data: this.payInvo, journalSaved: false });
+      }, 500); // Small delay for smooth transition
+    } else {
+      // Show print confirmation for regular page mode
+      setTimeout(() => {
+        this.presentAlertConfirm();
+      }, 500);
+    }
     
     this.cleanupAfterInvoice();
   }
@@ -2230,7 +2272,11 @@ async  performSyncItem(item_name?){
   }
 
   goBack() {
-    this._location.back();
+    if (this.modalMode) {
+      this.modalController.dismiss();
+    } else {
+      this._location.back();
+    }
   }
 
   getDisplayItemList() {

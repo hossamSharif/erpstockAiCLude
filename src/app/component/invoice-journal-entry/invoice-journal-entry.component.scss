@@ -1,20 +1,24 @@
-// Main container - simple and compact layout
+// Main container - compact modal layout
 .journal-entry-main {
   width: 100%;
-  height: 100%;
+  max-width: 500px;
+  min-width: 320px;
+  height: auto;
+  max-height: 85vh;
   background: #f8fafc;
   direction: rtl;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  margin: 0 auto;
 }
 
 // Customer Balance Header Card - Modern Design
 .balance-header-card {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-radius: 0 0 24px 24px;
-  padding: 20px;
-  margin-bottom: 16px;
+  border-radius: 0 0 20px 20px;
+  padding: 16px;
+  margin-bottom: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e2e8f0;
   border-top: none;
@@ -157,14 +161,13 @@
   }
 }
 
-// Content wrapper - scrollable if needed
+// Content wrapper - compact and minimal scrolling
 .content-wrapper {
-  padding: 16px 20px;
-  max-width: 500px;
-  margin: 0 auto;
+  padding: 12px 16px 8px 16px;
   width: 100%;
   overflow-y: auto;
-  height: 100%;
+  max-height: calc(85vh - 100px);
+  flex: 1;
   
   /* Custom scrollbar for better UX */
   &::-webkit-scrollbar {
@@ -187,11 +190,11 @@
 
 // Form Sections - compact spacing
 .form-section {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   animation: slideInUp 0.4s ease-out;
   
   &.last-field {
-    margin-bottom: 16px; // Reduced space after البيان field
+    margin-bottom: 12px; // Reduced space after البيان field
   }
   
   .section-label {
@@ -201,6 +204,20 @@
     margin-bottom: 8px;
     font-size: 1rem;
   }
+  
+  // Inline label styling
+  .inline-label {
+    font-weight: 600;
+    color: var(--ion-color-dark);
+    font-size: 0.95rem;
+    min-width: 60px;
+    max-width: 80px;
+    margin-left: 12px;
+    margin-right: 8px;
+    text-align: right;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
 }
 
 // Form Items
@@ -209,10 +226,11 @@
   --border-radius: 16px;
   --padding-start: 16px;
   --padding-end: 16px;
-  --min-height: 52px;
+  --min-height: 48px;
   border: 2px solid #e2e8f0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
+  align-items: center;
   
   &:hover, &.item-has-focus {
     border-color: var(--ion-color-primary);
@@ -252,10 +270,15 @@
       transform: translateY(-2px);
     }
     
-    .amount-input {
-      font-size: 1.4em;
+    .inline-label {
+      color: #059669;
       font-weight: 700;
-      text-align: center;
+    }
+    
+    .amount-input {
+      font-size: 1.3em;
+      font-weight: 700;
+      text-align: right;
       --color: #059669;
       --placeholder-color: #86efac;
       
@@ -273,6 +296,15 @@
   
   &.description-item {
     --min-height: auto;
+    
+    .inline-label {
+      color: var(--ion-color-tertiary);
+      font-weight: 600;
+    }
+    
+    ion-input {
+      text-align: right;
+    }
     
     ion-textarea {
       --padding-top: 12px;
@@ -328,8 +360,8 @@
 
 // Inline Buttons Section - directly after last field
 .inline-buttons-section {
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 16px;
+  margin-bottom: 8px;
   
   .buttons-row {
     display: flex;
@@ -343,10 +375,10 @@
 .primary-btn {
   --border-color: var(--ion-color-primary);
   --color: var(--ion-color-primary);
-  --border-radius: 16px;
-  height: 52px;
+  --border-radius: 14px;
+  height: 48px;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.95rem;
   flex: 1;
   margin: 0;
   box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.2);
@@ -374,10 +406,10 @@
 .secondary-btn {
   --color: #6b7280;
   --border-color: #d1d5db;
-  --border-radius: 16px;
-  height: 52px;
+  --border-radius: 14px;
+  height: 48px;
   font-weight: 500;
-  font-size: 0.95em;
+  font-size: 0.9rem;
   flex: 1;
   margin: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);

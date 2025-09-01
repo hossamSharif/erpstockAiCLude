@@ -89,13 +89,9 @@ export class AuthServiceService {
       } 
         //console.log(  'sdlijlf' ,  this.USER_INFO)
         this.storage.set('USER_INFO', this.USER_INFO).then((response) => {
-          if(this.device == 'mobile'){
-            this.router.navigate(['folder/sales-mob']);
-          }else{
-            this.router.navigate(['folder/sales']);
-          }  
-        this.authState.next(true); 
-      });
+          // Let app.component.ts handle navigation to avoid conflicts
+          this.authState.next(true); 
+        });
       }else{
         this.loadingController.dismiss()
         this.presentToast('خطأ في اسم المستخدم او كلمة المرور' ,'danger')
@@ -114,8 +110,8 @@ export class AuthServiceService {
   async logout() {
     this.storage.remove('USER_INFO').then(() => {
       this.storage.remove('STORE_INFO').then(() => { 
-        this.router.navigate(['folder/login']);
         this.authState.next(false);
+        // Let app.component.ts handle navigation to avoid conflicts
       }); 
     }); 
   }

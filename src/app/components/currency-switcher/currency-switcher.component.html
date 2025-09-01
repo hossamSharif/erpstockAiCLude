@@ -1,0 +1,12 @@
+<ion-select 
+  [(ngModel)]="selectedCurrency" 
+  (ionChange)="onCurrencyChange()"
+  interface="popover"
+  placeholder="اختر العملة"
+  class="currency-select">
+  <ion-select-option 
+    *ngFor="let currency of supportedCurrencies" 
+    [value]="currency.currency_code">
+    {{getCurrencyDisplayText(currency)}}
+  </ion-select-option>
+</ion-select>

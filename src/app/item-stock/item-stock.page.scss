@@ -867,6 +867,17 @@ ion-content {
     var(--ion-color-primary), 
     var(--ion-color-primary-shade)
   );
+}
+
+// Print modal styling
+.print-modal {
+  --width: 90%;
+  --height: 90%;
+  --max-width: 1200px;
+  --max-height: 90vh;
+}
+
+.card-header-with-export {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px 12px 0 0;
 

@@ -11,7 +11,7 @@
   );
   --color: var(--ion-color-dark);
   min-height: 100vh;
-  padding: 8px;
+  padding: 8px 8px 100px 8px; // Extra bottom padding to prevent content cutoff
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   
@@ -84,6 +84,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-bottom: 80px; // Extra bottom padding to prevent content cutoff
 }
 
 /* ======================================
@@ -155,6 +156,10 @@
 
 .compact-content, .info-content, .table-content {
   padding: 20px;
+}
+
+.table-content {
+  padding-bottom: 30px; // Extra bottom padding for table to prevent row cutoff
 }
 
 .compact-content {
@@ -364,6 +369,7 @@
   background: rgba(255, 255, 255, 0.9);
   margin: -20px;
   margin-top: 0;
+  margin-bottom: 20px; // Ensure bottom spacing to prevent row cutoff
 }
 
 .modern-table {
@@ -566,7 +572,15 @@
 
 @media (max-width: 768px) {
   .modern-content {
-    padding: 6px;
+    padding: 6px 6px 120px 6px; // Extra bottom padding for mobile to prevent cutoff
+  }
+  
+  .form-container {
+    padding-bottom: 100px; // Increase mobile bottom padding
+  }
+  
+  .table-content {
+    padding-bottom: 40px; // More bottom padding for mobile tables
   }
 
   .main-row {
@@ -638,6 +652,10 @@
 }
 
 @media (max-width: 480px) {
+  .modern-content {
+    padding: 4px 4px 140px 4px; // Extra bottom padding for small mobile devices
+  }
+  
   .table-header {
     padding: 16px;
 
@@ -648,6 +666,10 @@
 
   .compact-content, .info-content, .table-content {
     padding: 16px;
+  }
+  
+  .table-content {
+    padding-bottom: 50px; // Even more bottom padding for small screens
   }
 
   .info-card {

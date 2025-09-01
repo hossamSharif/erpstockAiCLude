@@ -17,7 +17,7 @@ const routes: Routes = [
   },
   {
     path: 'folder/sales',
-    loadChildren: () => import('./sales/sales.module').then( m => m.SalesPageModule), canActivate: [AuthGaurdService]
+    loadChildren: () => import('./sales/sales.module').then( m => m.SalesPageModule)
   },
   {
     path: 'folder/sales-record',
@@ -223,6 +223,10 @@ const routes: Routes = [
     path: 'analytics-dashboard',
     loadChildren: () => import('./analytics-dashboard/analytics-dashboard.module').then( m => m.AnalyticsDashboardPageModule),
     canActivate: [AuthGaurdService]
+  },
+  {
+    path: 'item-stock-print',
+    loadChildren: () => import('./item-stock-print/item-stock-print.module').then( m => m.ItemStockPrintPageModule)
   }
   
 ];

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef ,Renderer2,Input, OnDestroy} from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef ,Renderer2,Input, OnDestroy, ChangeDetectorRef} from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable, Subscription } from 'rxjs';
 import { AlertController, Platform ,IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -66,7 +66,7 @@ export class SalesPage implements OnInit, OnDestroy {
   discountPerc : any = 0
   selectedItem : {id:any ,pay_ref:any,item_name:any,pay_price:any,perch_price:any,item_unit:any,item_desc:any,parcode:any,qty:any,tot:any ,dateCreated:any,availQty:any,aliasEn:any,tax:any,imageUrl:any};
   selectedAccount : {id:any ,ac_id:any,sub_name:any,sub_type:any,sub_code:any,sub_balance:any,store_id:any ,cat_id:any,cat_name:any,phone:any,address:any,currentCustumerStatus:any};
-  payInvo : {pay_id:any ,pay_ref:any ,store_id:any,tot_pr:any,pay:any,pay_date:any,pay_time:any,user_id:any,cust_id:any,pay_method:any,discount:any ,changee:any,sub_name:any,payComment:any,nextPay:any, yearId:any};
+  payInvo : {pay_id:any ,pay_ref:any ,store_id:any,tot_pr:any,pay:any,pay_date:any,pay_time:any,user_id:any,cust_id:any,pay_method:any,discount:any ,changee:any,sub_name:any,payComment:any,nextPay:any, yearId:any}  
   radioVal2 : any = 0  // Keep this for initial/final invoice type
   
   
@@ -110,7 +110,7 @@ export class SalesPage implements OnInit, OnDestroy {
   showJournalEntryModal: boolean = false;
   invoiceJournalData: InvoiceJournalData = null;
   customerBalance: any = null;
-  constructor(private rout : Router ,private platform:Platform,private behavApi:StockServiceService ,private _location: Location, private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private accountCommunicationService: AccountCommunicationService) {
+  constructor(private rout : Router ,private platform:Platform,private behavApi:StockServiceService ,private _location: Location, private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private accountCommunicationService: AccountCommunicationService, private cdr: ChangeDetectorRef) {
   this.selectedAccount = {id:"",ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",phone:"",address:"",currentCustumerStatus:0};
     this.route.queryParams.subscribe(params => {
       
@@ -174,6 +174,12 @@ export class SalesPage implements OnInit, OnDestroy {
   
     ngOnInit() {  
      // Check category visibility setting
+     
+     // Ensure discountType is properly initialized
+     if (!this.discountType) {
+       this.discountType = 'percentage';
+       this.cdr.detectChanges();
+     }
      
      // Subscribe to customer selection from account-selector
      this.customerSubscription = this.accountCommunicationService.customerSelected$.subscribe(
@@ -554,11 +560,14 @@ export class SalesPage implements OnInit, OnDestroy {
         this.radioVal2 = 0
         this.payInvo ={pay_id:undefined ,pay_ref:0 ,store_id:"",tot_pr:0,pay:0,pay_date:"",pay_time:"",user_id:"",cust_id:null,pay_method:"",discount:0 ,changee:0,sub_name:"",payComment:"",nextPay:null, yearId:this.year.id};
         this.discountPerc = 0
-        // Clear discount related variables
-        this.discountType = 'percentage';
-        this.discountAmount = 0;
-        this.calculatedDiscountPerc = 0;
-        this.calculatedDiscountAmount = 0;
+        // Clear discount related variables - use setTimeout to prevent expression change error
+        setTimeout(() => {
+          this.discountType = 'percentage';
+          this.discountAmount = 0;
+          this.calculatedDiscountPerc = 0;
+          this.calculatedDiscountAmount = 0;
+          this.cdr.detectChanges();
+        }, 0);
         let d = new Date
       // this.payInvo.pay_date  = d.getMonth().toString() + "/" + d.getDay().toString()+ "/" + d.getFullYear().toString() 
        this.payInvo.pay_date = this.datePipe.transform(d, 'yyyy-MM-dd')
@@ -764,6 +773,8 @@ onDiscountTypeChange(event: any) {
     this.calculatedDiscountPerc = 0;
     this.calculatedDiscountAmount = 0;
     this.calculateChange();
+    // Trigger change detection to prevent ExpressionChangedAfterItHasBeenCheckedError
+    this.cdr.detectChanges();
   }
 
   onPercentageDiscountChange(event: any) {
@@ -1627,21 +1638,7 @@ onAccountBalanceLoaded(balance: any) {
   }
 }
 
-// Date picker method
-openDatePicker() {
-  // Create a temporary input element to trigger the date picker
-  const dateInput = document.createElement('input');
-  dateInput.type = 'date';
-  dateInput.value = this.payInvo.pay_date;
-  
-  // When the date changes, update the model
-  dateInput.addEventListener('change', (event: any) => {
-    this.payInvo.pay_date = event.target.value;
-  });
-  
-  // Trigger the date picker
-  dateInput.click();
-}
+// Date picker is now handled by ion-input type="date" directly in template
 
 async openPriceAdjustmentDialog() {
   if (!this.itemList || this.itemList.length === 0) {

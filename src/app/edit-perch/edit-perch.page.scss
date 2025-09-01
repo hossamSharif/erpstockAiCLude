@@ -1,3 +1,61 @@
+ion-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999; // High enough to stay above content but below system modals (usually 1000+)
+  
+  ion-toolbar {
+    --background: var(--ion-color-primary);
+    --color: white;
+    
+    ion-title {
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+    
+    ion-buttons[slot="end"] {
+      .header-date-item {
+        --background: rgba(255, 255, 255, 0.2);
+        --border-radius: 20px;
+        --padding-start: 12px;
+        --padding-end: 12px;
+        --min-height: 40px;
+        margin: 0 5px;
+        border: none;
+        
+        .header-date-input {
+          --color: white;
+          --placeholder-color: rgba(255, 255, 255, 0.8);
+          font-weight: 500;
+          font-size: 0.9rem;
+          text-align: center;
+        }
+      }
+      
+      ion-button {
+        --background: rgba(255, 255, 255, 0.2);
+        --background-hover: rgba(255, 255, 255, 0.3);
+        --border-radius: 20px;
+        --padding-start: 12px;
+        --padding-end: 12px;
+        margin: 0 5px;
+        
+        ion-label {
+          font-weight: 500;
+          font-size: 0.9rem;
+        }
+      }
+    }
+  }
+}
+
+// Adjust content padding for fixed header and footer
+ion-content {
+  --padding-top: 56px; // Approximate height of ion-header
+  --padding-bottom: 120px; // Approximate height of footer (adjust based on actual footer height)
+}
+
 .custInput{
     border-style: solid;
     border-color: var(--ion-color-light);
@@ -84,9 +142,9 @@
 
 // Top Card Organization Styling - Multi Column Layout
 .top-card-row {
-  padding: 16px;
+  padding: 8px 12px; // Reduced from 16px for more compact layout
   align-items: flex-start;
-  gap: 16px; // Replace offset with gap
+  gap: 12px; // Reduced gap for more compact layout
   
   .account-column,
   .category-column,
@@ -101,10 +159,10 @@
       display: block;
       font-weight: 600;
       color: var(--ion-color-dark);
-      margin-bottom: 6px; // Reduced margin
+      margin-bottom: 4px; // Further reduced margin for compact layout
       font-size: 0.95rem;
-      height: 22px; // Fixed height for consistent alignment
-      line-height: 30px;
+      height: 20px; // Reduced height for more compact design
+      line-height: 24px; // Adjusted line height
     }
   }
   
@@ -327,6 +385,311 @@ mark {
   .category-section {
     .field-label {
       font-size: 13px;
+    }
+  }
+}
+
+// RTL Input styling for Arabic labels
+.rtl-input {
+  direction: rtl;
+  
+  ion-label.float-right {
+    text-align: right !important;
+    transform-origin: right top !important;
+    right: 0 !important;
+    left: auto !important;
+    
+    &.label-floating {
+      transform: translateY(-14px) scale(0.82) !important;
+      right: 0 !important;
+    }
+  }
+  
+  ion-input.text-right {
+    text-align: right !important;
+    --padding-start: 0;
+    --padding-end: 16px;
+    
+    input {
+      text-align: right !important;
+      direction: ltr; // Keep numbers LTR for better readability
+    }
+  }
+  
+  ion-note {
+    direction: ltr;
+  }
+}
+
+// Add styles for the total after discount field and progress stepper
+.total-after-discount {
+  --background: #f0fdf4;
+  border: 2px solid #16a34a;
+  font-weight: 600;
+  
+  ion-input {
+    --color: #15803d;
+    font-size: 1.1em;
+    text-align: center;
+  }
+}
+
+// Modal styling
+ion-modal {
+  --height: 90%;
+  --border-radius: 16px 16px 0 0;
+}
+
+// Insufficient Stock Modal Styling
+.insufficient-stock-modal {
+  --height: 80vh;
+  --width: 90vw;
+  --max-width: 600px;
+  --border-radius: 12px;
+  
+  @media (max-width: 768px) {
+    --height: 95vh;
+    --width: 95vw;
+  }
+}
+
+/* Footer styles */
+ion-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999; // High enough to stay above content but below system modals
+  
+  ion-toolbar {
+    --background: var(--ion-color-light);
+    --border-color: var(--ion-color-medium);
+  }
+  
+  .total-after-discount {
+    --background: #f0fdf4;
+    border: 2px solid #16a34a;
+    
+    ion-input {
+      --color: #15803d;
+      font-weight: 600;
+    }
+  }
+  
+  ion-item {
+    --background: white;
+    border-radius: 5px;
+    margin: 4px 0;
+  }
+  
+  .footer-input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100%;
+    padding: 6px 0;
+  }
+  
+  .footer-input-label {
+    font-weight: 600;
+    color: var(--ion-color-dark);
+    font-size: 11px;
+    margin-bottom: 3px;
+    text-align: center;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .footer-input-item {
+    width: 100%;
+    
+    ion-input {
+      text-align: center;
+      font-weight: 500;
+      font-size: 13px;
+      --padding-top: 6px;
+      --padding-bottom: 6px;
+    }
+  }
+  
+  .discount-header {
+    display: flex;
+    align-items: center;
+    
+    width: 100%;
+    
+    height: 20px;
+  }
+  
+  .discount-type-label {
+    font-weight: 600;
+    color: var(--ion-color-dark);
+    font-size: 11px;
+    margin-bottom: 0;
+    margin-inline-end: 6px;
+    white-space: nowrap;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .discount-segment-container {
+    --background: transparent;
+    --inner-padding-end: 0;
+    --inner-padding-start: 0;
+    --padding-start: 0;
+    --padding-end: 0;
+    margin: 0;
+    flex: 1;
+    max-width: 140px;
+  }
+  
+  .compact-discount-segment {
+    --background: var(--ion-color-light);
+    border-radius: 14px;
+    padding: 1px;
+    width: 100%;
+    min-height: 24px;
+    
+    .compact-segment-button {
+      --background-checked: var(--ion-color-primary);
+      --color: var(--ion-color-dark);
+      --color-checked: white;
+      --indicator-color: transparent;
+      --border-radius: 12px;
+      --padding-start: 4px;
+      --padding-end: 4px;
+      min-height: 22px;
+      font-size: 10px;
+      
+      ion-label {
+        font-weight: 500;
+        margin: 0;
+      }
+    }
+  }
+  
+  .discount-input {
+    margin-top: 3px;
+    width: 100%;
+    
+    ion-input {
+      text-align: center;
+      font-size: 13px;
+      --padding-top: 6px;
+      --padding-bottom: 6px;
+    }
+    
+    .discount-note {
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--ion-color-primary);
+    }
+  }
+  
+  .discount-section {
+    ion-note {
+      font-weight: bold;
+      color: var(--ion-color-primary);
+    }
+  }
+  
+  .discount-radio-container {
+    --padding-start: 16px;
+    --padding-end: 16px;
+    
+    .inline-radio-group {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 24px;
+      width: 100%;
+      
+      .radio-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        ion-radio {
+          margin: 0;
+          --color: var(--ion-color-medium);
+          --color-checked: var(--ion-color-primary);
+        }
+        
+        ion-label {
+          margin: 0;
+          font-size: 14px;
+          color: var(--ion-color-dark);
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+}
+
+/* Responsive footer for mobile */
+@media (max-width: 768px) {
+  ion-footer {
+    ion-grid {
+      padding: 0;
+    }
+    
+    ion-col {
+      padding: 0 3px;
+    }
+    
+    .footer-input-container {
+      padding: 4px 0;
+    }
+    
+    .footer-input-label,
+    .discount-type-label {
+      font-size: 9px;
+      height: 12px;
+      margin-bottom: 2px;
+    }
+    
+    .discount-header {
+      margin-bottom: 2px;
+      height: 22px;
+    }
+    
+    .footer-input-item,
+    .discount-input {
+      ion-input {
+        font-size: 11px;
+        --padding-top: 5px;
+        --padding-bottom: 5px;
+      }
+    }
+    
+    .discount-segment-container {
+      max-width: 110px;
+    }
+    
+    .compact-discount-segment {
+      min-height: 20px;
+      border-radius: 12px;
+      padding: 1px;
+      
+      .compact-segment-button {
+        min-height: 18px;
+        font-size: 8px;
+        --border-radius: 10px;
+        --padding-start: 3px;
+        --padding-end: 3px;
+      }
+    }
+    
+    ion-button {
+      --padding-start: 0;
+      --padding-end: 0;
+      font-size: 10px;
+      height: 28px;
     }
   }
 }

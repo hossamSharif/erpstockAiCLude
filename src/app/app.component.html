@@ -20,48 +20,50 @@
       
       <ion-content>
         <div class="menu-container">
-          <!-- Logo Section -->
-          <div class="logo-section" [class.collapsed]="isSidebarCollapsed" [class.expanded]="isSidebarExpanded()">
-            <div class="logo-container">
-              <img src="assets/imgs/logo.png" alt="Logo" class="sidebar-logo">
-            </div>
-            <h1 class="app-title">نظام إدارة المخازن</h1>
-          </div>
-          
-          <!-- Toggle Button -->
-          <div class="sidebar-toggle" (click)="toggleSidebar()">
-            <ion-icon 
-              [name]="isSidebarCollapsed ? 'chevron-forward-outline' : 'chevron-back-outline'"
-              class="toggle-icon">
-            </ion-icon>
-          </div>
-          
-          <!-- Header Section -->
-          <div class="menu-header" [class.collapsed]="isSidebarCollapsed" [class.expanded]="isSidebarExpanded()">
-            <ion-label>{{getSelectedEndpointName()}}</ion-label>
-          </div>
-          
-          <!-- User Profile Section -->
-          <div class="user-profile" [class.collapsed]="isSidebarCollapsed" [class.expanded]="isSidebarExpanded()">
-            <div class="user-info-container">
-              <div class="user-avatar">
-                <ion-icon name="person-circle"></ion-icon>
-              </div>
-              <div class="user-details">
-                <h2>{{USER_INFO.full_name}}</h2> 
-              </div>
-
-              <!-- Three dots button for popover -->
-              <ion-button (click)="presentUserPopover($event)" fill="clear" class="user-actions-button">
-                <ion-icon name="ellipsis-vertical"></ion-icon>
-              </ion-button>
-            </div> 
-          </div>
+       
           
           <!-- Navigation Menu -->
           <div class="navigation-menu">
+   <!-- Logo Section -->
+   <div class="logo-section" [class.collapsed]="isSidebarCollapsed" [class.expanded]="isSidebarExpanded()">
+    <div class="logo-container">
+      <img src="assets/imgs/logo.png" alt="Logo" class="sidebar-logo">
+    </div>
+    <h1 class="app-title">نظام إدارة المخازن</h1>
+  </div>
+  
+  <!-- Toggle Button -->
+  <div class="sidebar-toggle" (click)="toggleSidebar()">
+    <ion-icon 
+      [name]="isSidebarCollapsed ? 'chevron-forward-outline' : 'chevron-back-outline'"
+      class="toggle-icon">
+    </ion-icon>
+  </div>
+  
+  <!-- Header Section -->
+  <div class="menu-header" [class.collapsed]="isSidebarCollapsed" [class.expanded]="isSidebarExpanded()">
+    <ion-label>{{getSelectedEndpointName()}}</ion-label>
+  </div>
+  
+  <!-- User Profile Section -->
+  <div class="user-profile" [class.collapsed]="isSidebarCollapsed" [class.expanded]="isSidebarExpanded()">
+    <div class="user-info-container">
+      <div class="user-avatar">
+        <ion-icon name="person-circle"></ion-icon>
+      </div>
+      <div class="user-details">
+        <h2>{{USER_INFO.full_name}}</h2> 
+      </div>
+
+      <!-- Three dots button for popover -->
+      <ion-button (click)="presentUserPopover($event)" fill="clear" class="user-actions-button">
+        <ion-icon name="ellipsis-vertical"></ion-icon>
+      </ion-button>
+    </div> 
+  </div>
+
             <!-- Dashboard -->
-            <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('analytics-dashboard')" data-router-link="analytics-dashboard">
+            <div class="menu-item" [routerLink]="['analytics-dashboard']" routerLinkActive="selected">
               <div class="menu-item-content">
                 <ion-icon name="home"></ion-icon>
                 <span>الرئيسية</span>
@@ -75,21 +77,16 @@
                 <span>المبيعات</span>
               </div>
               
-              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/sales')" data-router-link="folder/sales">
+              <div  class="menu-item"   [routerLink]="['folder/sales']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="receipt"></ion-icon>
                   <span>فاتورة مبيعات</span>
                 </div>
               </div>
               
-              <div class="menu-item" *ngIf="device == 'mobile'" (click)="onMenuItemClick('folder/sales-mob')" data-router-link="folder/sales-mob">
-                <div class="menu-item-content">
-                  <ion-icon name="receipt"></ion-icon>
-                  <span>فاتورة مبيعات</span>
-                </div>
-              </div>
+           
               
-              <div class="menu-item" (click)="onMenuItemClick('folder/sales-record')" data-router-link="folder/sales-record">
+              <div  class="menu-item" [routerLink]="['folder/sales-record']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="document-text"></ion-icon>
                   <span>سجل المبيعات</span>
@@ -104,35 +101,30 @@
                 <span>المشتريات</span>
               </div>
               
-              <div class="menu-item" *ngIf="device == 'mobile'" (click)="onMenuItemClick('folder/purchase-mob')" data-router-link="folder/purchase-mob">
+              
+              
+              <div class="menu-item"   [routerLink]="['folder/purchase']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="cart"></ion-icon>
                   <span>فاتورة مشتريات</span>
                 </div>
               </div>
               
-              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/purchase')" data-router-link="folder/purchase">
-                <div class="menu-item-content">
-                  <ion-icon name="cart"></ion-icon>
-                  <span>فاتورة مشتريات</span>
-                </div>
-              </div>
-              
-              <div class="menu-item" (click)="onMenuItemClick('folder/purchase-record')" data-router-link="folder/purchase-record">
+              <div class="menu-item" [routerLink]="['folder/purchase-record']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="document-text"></ion-icon>
                   <span>سجل المشتريات</span>
                 </div>
               </div>
               
-              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/prch-order')" data-router-link="folder/prch-order">
+              <div class="menu-item" *ngIf="device == 'desktop'" [routerLink]="['folder/prch-order']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="clipboard"></ion-icon>
                   <span>طلبات الشراء</span>
                 </div>
               </div>
               
-              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/prch-order-record')" data-router-link="folder/prch-order-record">
+              <div class="menu-item" *ngIf="device == 'desktop'" [routerLink]="['folder/prch-order-record']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="document-text"></ion-icon>
                   <span>سجل طلبات الشراء</span>
@@ -147,28 +139,28 @@
                 <span>المخزن</span>
               </div>
               
-              <div class="menu-item" (click)="onMenuItemClick('item-stock')" data-router-link="item-stock">
+              <div class="menu-item" [routerLink]="['item-stock']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="cube"></ion-icon>
                   <span>المخزن</span>
                 </div>
               </div>
               
-              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/items-report')" data-router-link="folder/items-report">
+              <div class="menu-item" *ngIf="device == 'desktop'" [routerLink]="['folder/items-report']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="swap-vertical"></ion-icon>
                   <span>حركة الأصناف</span>
                 </div>
               </div>
               
-              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/tswia')" data-router-link="folder/tswia">
+              <div class="menu-item" *ngIf="device == 'desktop'" [routerLink]="['folder/tswia']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="sync"></ion-icon>
                   <span>التسوية الجردية</span>
                 </div>
               </div>
               
-              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/tswia-record')" data-router-link="folder/tswia-record">
+              <div class="menu-item" *ngIf="device == 'desktop'" [routerLink]="['folder/tswia-record']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="document-text"></ion-icon>
                   <span>سجل التسويات الجردية</span>
@@ -183,35 +175,35 @@
                 <span>الحسابات</span>
               </div>
               
-              <div class="menu-item" *ngIf="device == 'desktop'" (click)="onMenuItemClick('folder/sub-account2')" data-router-link="folder/sub-account2">
+              <div class="menu-item" *ngIf="device == 'desktop'" [routerLink]="['folder/sub-account2']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="people"></ion-icon>
                   <span>إدارة الحسابات</span>
                 </div>
               </div>
               
-              <div class="menu-item" (click)="onMenuItemClick('folder/cash2')" data-router-link="folder/cash2">
+              <div class="menu-item" [routerLink]="['folder/cash2']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="card"></ion-icon>
                   <span>السندات</span>
                 </div>
               </div>
               
-              <div class="menu-item" (click)="onMenuItemClick('folder/spend-record2')" data-router-link="folder/spend-record2">
+              <div class="menu-item" [routerLink]="['folder/spend-record2']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="document-text"></ion-icon>
                   <span>سجل السندات</span>
                 </div>
               </div>
               
-              <div class="menu-item" (click)="onMenuItemClick('folder/statement2')" data-router-link="folder/statement2">
+              <div class="menu-item" [routerLink]="['folder/statement2']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="reader"></ion-icon>
                   <span>كشف حساب</span>
                 </div>
               </div>
               
-              <div class="menu-item" (click)="onMenuItemClick('folder/balance-sheet2')" data-router-link="folder/balance-sheet2">
+              <div class="menu-item" [routerLink]="['folder/balance-sheet2']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="bar-chart"></ion-icon>
                   <span>الأرصدة</span>
@@ -226,14 +218,14 @@
                 <span>الإعدادات والضبط</span>
               </div>
               
-              <div class="menu-item" (click)="onMenuItemClick('folder/categories')" data-router-link="folder/categories">
+              <div class="menu-item" [routerLink]="['folder/categories']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="grid"></ion-icon>
                   <span>التصنيفات</span>
                 </div>
               </div>
               
-              <div class="menu-item" (click)="onMenuItemClick('folder/settings')" data-router-link="folder/settings">
+              <div class="menu-item" [routerLink]="['folder/settings']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="sync"></ion-icon>
                   <span>المزامنة والإتصال</span>

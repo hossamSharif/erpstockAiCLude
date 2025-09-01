@@ -12,13 +12,14 @@ import { SalesPage } from './sales.page';
 import { SharedModule } from '../module/shared/shared.module';
 import { InsufficientStockDialogComponent } from '../component/insufficient-stock-dialog/insufficient-stock-dialog.component';
  
+ 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     ShareModule,
     IonicModule,
-    SharedModule,
+    SharedModule, 
     SalesPageRoutingModule 
   ],
   declarations: 

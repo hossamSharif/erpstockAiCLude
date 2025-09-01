@@ -1,0 +1,35 @@
+.currency-select {
+  --background: transparent;
+  --color: var(--ion-color-primary);
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 120px;
+}
+
+.currency-select::part(text) {
+  text-align: right;
+}
+
+.currency-select::part(icon) {
+  color: var(--ion-color-primary);
+}
+
+ion-select-option {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .currency-select {
+    font-size: 12px;
+    min-width: 100px;
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .currency-select {
+    --color: var(--ion-color-primary-tint);
+  }
+}

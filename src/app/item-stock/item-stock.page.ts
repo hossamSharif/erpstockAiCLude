@@ -18,6 +18,7 @@ import { File, IWriteOptions } from '@ionic-native/file/ngx';
 import { NavigationExtras, Router } from '@angular/router'; // Add 
 import { stat } from 'fs';
 import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
+import { ItemStockPrintPage } from '../item-stock-print/item-stock-print.page';
 @Component({
   selector: 'app-item-stock',
   templateUrl: './item-stock.page.html',
@@ -2617,7 +2618,7 @@ incresePrice(data){
     }
   }
 
-  // Export functionality
+  // Export functionality - Print to PDF
   async exportToPDF(): Promise<void> {
     const currentData = this.getDataForExport();
     if (!currentData || currentData.length === 0) {
@@ -2625,18 +2626,33 @@ incresePrice(data){
       return;
     }
 
-    const config: ExportConfig = {
-      title: this.exportService.generateDynamicTitle('item-stock'),
-      subtitle: this.generateSubtitle(),
-      fileName: `item-stock-${this.datePipe.transform(new Date(), 'yyyy-MM-dd')}`,
-      data: currentData,
-      columns: this.getExportColumns(),
-      userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف',
-      pageType: 'item-stock',
-      currentDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
-    };
+    // Transform data to match print template expectations
+    const transformedData = currentData.map(item => ({
+      ...item,
+      currentQuantity: item.quantity || 0, // Map quantity to currentQuantity
+      item_parcode: item.pay_price || 0,   // Map pay_price to item_parcode (purchase price)
+      item_Sell_price: item.perch_price || 0 // Map perch_price to item_Sell_price (selling price)
+    }));
 
-    await this.exportService.exportToPDF(config);
+    // Determine export mode based on current state
+    let exportMode = 'all';
+    if (this.filterMode || this.hasActiveFilters()) {
+      exportMode = 'filtered';
+    } else if (this.searchTerm && this.searchTerm.trim() !== '') {
+      exportMode = 'search';
+    }
+
+    const modal = await this.modalController.create({
+      component: ItemStockPrintPage,
+      componentProps: {
+        printData: transformedData,
+        exportMode: exportMode,
+        userName: this.user_info?.full_name || this.user_info?.user_name || 'مستخدم غير معروف'
+      },
+      cssClass: 'print-modal'
+    });
+
+    await modal.present();
   }
 
   async exportToExcel(): Promise<void> {

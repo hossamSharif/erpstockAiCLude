@@ -1,4 +1,10 @@
 ion-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999; // High enough to stay above content but below system modals (usually 1000+)
+  
   ion-toolbar {
     --background: var(--ion-color-primary);
     --color: white;
@@ -9,6 +15,24 @@ ion-header {
     }
     
     ion-buttons[slot="end"] {
+      .header-date-item {
+        --background: rgba(255, 255, 255, 0.2);
+        --border-radius: 20px;
+        --padding-start: 12px;
+        --padding-end: 12px;
+        --min-height: 40px;
+        margin: 0 5px;
+        border: none;
+        
+        .header-date-input {
+          --color: white;
+          --placeholder-color: rgba(255, 255, 255, 0.8);
+          font-weight: 500;
+          font-size: 0.9rem;
+          text-align: center;
+        }
+      }
+      
       ion-button {
         --background: rgba(255, 255, 255, 0.2);
         --background-hover: rgba(255, 255, 255, 0.3);
@@ -26,6 +50,12 @@ ion-header {
   }
 }
 
+// Adjust content padding for fixed header and footer
+ion-content {
+  --padding-top: 56px; // Approximate height of ion-header
+  --padding-bottom: 120px; // Approximate height of footer (adjust based on actual footer height)
+}
+
 .custInput{
     border-style: solid;
     border-color: var(--ion-color-light);
@@ -38,7 +68,7 @@ ion-header {
 
     .hide{visibility: hidden;}
     .custRow{
-        margin-top: 5rem;
+      //  margin-top: 5rem;
         }
 .bnone{
   border: none;
@@ -381,10 +411,10 @@ ion-modal {
       display: block;
       font-weight: 500;
       color: var(--ion-color-dark);
-      margin-bottom: 6px; // Reduced margin
+    
       font-size: 0.95rem;
-      height: 22px; // Fixed height for consistent alignment
-      line-height: 20px;
+   
+      
     }
   }
   
@@ -397,7 +427,7 @@ ion-modal {
   
   .invoice-type-column {
     .invoice-type-section {
-      margin-top: 10px;
+       
       
       .compact-segment {
         margin-top: 0;
@@ -469,9 +499,6 @@ ion-modal {
 
 // Table container and search styles
 .table-container {
-  max-height: 400px;
-  overflow-y: auto;
-  overflow-x: hidden;
   border: 1px solid var(--ion-color-light-shade);
   border-radius: 8px;
 }
@@ -536,23 +563,6 @@ mark {
   border-radius: 2px;
 }
 
-// Scrollbar styling for webkit browsers
-.table-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.table-container::-webkit-scrollbar-track {
-  background: var(--ion-color-light);
-}
-
-.table-container::-webkit-scrollbar-thumb {
-  background: var(--ion-color-medium);
-  border-radius: 3px;
-}
-
-.table-container::-webkit-scrollbar-thumb:hover {
-  background: var(--ion-color-dark);
-}
 
 /* ======================================
    CATEGORY AND INVOICE TYPE SELECTOR STYLES
@@ -634,6 +644,12 @@ mark {
 
 /* Footer styles */
 ion-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999; // High enough to stay above content but below system modals
+  
   ion-toolbar {
     --background: var(--ion-color-light);
     --border-color: var(--ion-color-medium);
@@ -691,7 +707,7 @@ ion-footer {
   .discount-header {
     display: flex;
     align-items: center;
-    justify-content: center;
+    
     width: 100%;
     
     height: 20px;

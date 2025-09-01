@@ -2,17 +2,16 @@
 .custInput {
   border: 1px solid #ccc;
   border-radius: 4px;
-  margin: 5px 0;
+//margin: 5px 0;
 }
 
 .account-selector-container {
   position: relative;
   width: 100%;
-  margin-bottom: 8px;
+  
 
   .header-container {
-    margin-bottom: 8px;
-
+   
     // New layout for label with buttons in top left - Match item-selector
     .label-with-buttons-container {
       direction: ltr;
@@ -109,7 +108,7 @@
     // Account Selector Enhanced Styles - Match item-selector
     .account-selector-wrapper {
       width: 100%;
-      margin: 5px 0; // Same as other custInput fields
+     // margin: 5px 0; // Same as other custInput fields
       border: 1px solid #ccc;
       border-radius: 4px;
       
@@ -129,7 +128,7 @@
         text-align: right;
         
         // Normal padding since no buttons are over the input now
-        --padding-start: 12px;
+        // --padding-start: 12px;
         --padding-end: 45px; // Space for clear button
         
         &[disabled] {
@@ -218,8 +217,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 8px;
-    padding: 8px 12px;
+     
     background: var(--ion-color-light-tint);
     border-radius: 6px;
     direction: rtl;
@@ -281,7 +279,7 @@
         }
         
         ion-label {
-          font-size: 13px;
+          font-size: 12px;
         }
         
         .account-refresh-btn-left,

@@ -247,7 +247,8 @@ private navigateToInvoicePage(itemList: any[], type: 'sales' | 'purchase') {
     queryParams: {
         status: 'newInvoFromItemsPage',
         selectedItemsList: JSON.stringify(salesitems) 
-    }
+    },
+    replaceUrl: true
   };
       this.rout.navigate(['folder/sales'], navigationExtras); 
   } else {  
@@ -255,7 +256,8 @@ private navigateToInvoicePage(itemList: any[], type: 'sales' | 'purchase') {
     queryParams: {
         status: 'newInvoFromItemsPage',
         selectedItemsList: JSON.stringify(purchitems) 
-    }
+    },
+    replaceUrl: true
   };
       this.rout.navigate(['folder/purchase'], navigationExtras); 
   }

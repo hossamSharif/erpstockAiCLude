@@ -23,7 +23,7 @@ import { FilterPipe3 } from './pipe3';
     IonicModule,
     PurchasePageRoutingModule
   ],
-  exports: [],
+  exports: [PurchasePage],
   declarations: [PurchasePage, FilterPipe, FilterPipe2, FilterPipe3]
 })
 export class PurchasePageModule {}

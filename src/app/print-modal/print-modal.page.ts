@@ -53,7 +53,7 @@ export class PrintModalPage implements OnInit {
     }
     
     // Load item images from itemList
-  //  await this.loadItemImages();
+   // await this.loadItemImages();
   }
 
   async loadItemImages() {
@@ -132,7 +132,7 @@ export class PrintModalPage implements OnInit {
       printContent = printContent.replace(/\[src\]="vehicleBase64 \|\| 'assets\/imgs\/tuk\.jpg'"/g, `src="${this.vehicleBase64}"`);
     }
     
-    // // Replace item images with base64 encoded versions
+    // Replace item images with base64 encoded versions
     // for (const [originalUrl, base64] of Object.entries(this.itemImagesBase64)) {
     //   // Escape special regex characters in the URL
     //   const escapedUrl = originalUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -146,17 +146,17 @@ export class PrintModalPage implements OnInit {
     // }
     
     // Replace any remaining asset paths with base64 if company logo exists
-    if (this.printArr && this.printArr[0] && this.printArr[0].company && this.printArr[0].company.logoUrl) {
-      // Convert company logo to base64 if it's an asset path
-      if (this.printArr[0].company.logoUrl.includes('assets/')) {
-        try {
-          const base64 = await this.convertImageToBase64(this.printArr[0].company.logoUrl);
-          printContent = printContent.replace(new RegExp(this.printArr[0].company.logoUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), base64);
-        } catch (error) {
-          console.log('Failed to convert company logo to base64:', error);
-        }
-      }
-    }
+    // if (this.printArr && this.printArr[0] && this.printArr[0].company && this.printArr[0].company.logoUrl) {
+    //   // Convert company logo to base64 if it's an asset path
+    //   if (this.printArr[0].company.logoUrl.includes('assets/')) {
+    //     try {
+    //       const base64 = await this.convertImageToBase64(this.printArr[0].company.logoUrl);
+    //       printContent = printContent.replace(new RegExp(this.printArr[0].company.logoUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), base64);
+    //     } catch (error) {
+    //       console.log('Failed to convert company logo to base64:', error);
+    //     }
+    //   }
+    // }
     
     var mywindow = window.open('', 'PRINT', 'height=400,width=600'); 
     mywindow.document.write('<html><head>'); 

@@ -9,6 +9,7 @@ import { ItemStockPageRoutingModule } from './item-stock-routing.module';
 import { ItemStockPage } from './item-stock.page';
 import { ShareModule } from '../shareModule/share-module/share-module.module';
 import { SharedModule } from '../module/shared/shared.module';
+import { ItemStockPrintPageModule } from '../item-stock-print/item-stock-print.module';
  
 @NgModule({
   imports: [
@@ -20,7 +21,8 @@ import { SharedModule } from '../module/shared/shared.module';
     
     ShareModule,
     SharedModule,
-    ItemStockPageRoutingModule
+    ItemStockPageRoutingModule,
+    ItemStockPrintPageModule
   ],
   declarations: [ItemStockPage]
 })

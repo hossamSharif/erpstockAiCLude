@@ -5,7 +5,7 @@ import { Storage } from '@ionic/storage';
 import { HttpClient, HttpHeaders , HttpParams } from '@angular/common/http';
 import { ServicesService } from './stockService/services.service';
 import { Observable, Observer, timer } from 'rxjs'; 
-import { Platform, PopoverController } from '@ionic/angular';
+import { Platform, PopoverController, MenuController } from '@ionic/angular';
 import { filter } from 'rxjs/operators';
 import { ActionPopoverComponent } from './component/action-popover/action-popover.component';
 import { UserActionsPopoverComponent } from './component/user-actions-popover/user-actions-popover.component';
@@ -48,7 +48,8 @@ export class AppComponent implements AfterViewInit {
     private storage: Storage,
     private authenticationService: AuthServiceService,
     private router: Router,
-    private popoverController: PopoverController
+    private popoverController: PopoverController,
+    private menuController: MenuController
   ) {
    
       // Use matchMedia to check the user preference
@@ -77,6 +78,7 @@ export class AppComponent implements AfterViewInit {
 
    this.initializeApp();
    this.initializeEndpointInfo();
+   this.setupRouterNavigation();
   //  this.getPayNotif(1)
   //  this.getPerchNotif(1)
   //  this.stockItems(1)
@@ -89,6 +91,15 @@ export class AppComponent implements AfterViewInit {
 
    toggleDarkTheme(shouldAdd) {
     document.body.classList.toggle('dark', shouldAdd);
+  }
+
+  // Setup router navigation handling
+  setupRouterNavigation() {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      this.currentUrl = event.url;
+    });
   }
 
   // for mobile
@@ -350,11 +361,8 @@ checkPlatform(){
   }
 
   // Toggle menu visibility
-  toggleMenu() {
-    const menu = document.querySelector('ion-menu');
-    if (menu) {
-      menu.toggle();
-    }
+  async toggleMenu() {
+    await this.menuController.toggle();
   }
 
   redirectToExternal(url: string) {
@@ -402,9 +410,19 @@ async auth (){
     if (state) { 
       // Initialize endpoint on auth success
       this.api2.initializeEndpoint();
-      this.router.navigate(['folder/sales']);
+      // Only navigate on initial auth, not on every state change
+      if (this.router.url === '/' || this.router.url === '/folder/login') {
+        setTimeout(() => {
+          this.router.navigate(['analytics-dashboard'], { replaceUrl: true });
+        }, 100);
+      }
     } else {
-      this.router.navigate(['folder/login']);
+      // Only navigate to login if not already there
+      if (this.router.url !== '/folder/login') {
+        setTimeout(() => {
+          this.router.navigate(['folder/login'], { replaceUrl: true });
+        }, 100);
+      }
     }
   });
 }
@@ -415,64 +433,34 @@ logOut(){
 
 // Navigate to categories page
 goToCategories() {
-  this.router.navigate(['/folder/categories']);
+  this.router.navigate(['/folder/categories'], { replaceUrl: true });
+}
+
+// Navigate with route replacement to prevent stacking
+async navigateWithReplace(route: string) {
+  try {
+    // Close any open modals first
+    document.querySelectorAll('ion-modal').forEach(modal => {
+      (modal as any).dismiss();
+    });
+    
+    // Close the menu if it's open
+    await this.menuController.close();
+    
+    // Simple navigation using Angular Router
+    await this.router.navigate([route], { replaceUrl: true });
+    
+  } catch (error) {
+    console.error('Navigation error:', error);
+  }
 }
 
   ngAfterViewInit() {
-    // Initialize active menu item based on current route
+    // Initialize current URL
     this.currentUrl = this.router.url;
-    this.updateActiveMenuItems();
   }
 
-  updateActiveMenuItems() {
-    // Remove active class from all menu items
-    const menuItems = document.querySelectorAll('.menu-item');
-    menuItems.forEach(item => {
-      item.classList.remove('selected');
-    });
 
-    // Add active class to matching menu item
-    const activeItem = this.getActiveMenuItem();
-    if (activeItem) {
-      activeItem.classList.add('selected');
-    }
-  }
-
-  getActiveMenuItem(): HTMLElement | null {
-    const menuItems = document.querySelectorAll('.menu-item');
-    let activeItem: HTMLElement | null = null;
-
-    menuItems.forEach(item => {
-      const linkElement = item as HTMLElement;
-      const routerLink = this.getRouterLinkFromElement(linkElement);
-      
-      if (routerLink && this.currentUrl.includes(routerLink)) {
-        // Check for more specific match
-        if (!activeItem || routerLink.length > this.getRouterLinkFromElement(activeItem as HTMLElement)?.length) {
-          activeItem = linkElement;
-        }
-      }
-    });
-
-    return activeItem;
-  }
-
-  getRouterLinkFromElement(element: HTMLElement): string | null {
-    // Extract routerLink from element attributes or data attributes
-    const routerLinkAttr = element.getAttribute('data-router-link');
-    if (routerLinkAttr) {
-      return routerLinkAttr;
-    }
-    
-    return null;
-  }
-
-  // Handle menu item click
-  onMenuItemClick(routerLink: string) {
-    this.router.navigate([routerLink]);
-    this.currentUrl = routerLink;
-    this.updateActiveMenuItems();
-  }
 
   // Toggle sidebar collapsed state
   toggleSidebar() {

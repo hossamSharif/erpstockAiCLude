@@ -6,215 +6,235 @@
     </ion-buttons>
     <ion-title>فاتورة مبيعات</ion-title>
     <!-- Date in header -->
-    <ion-buttons slot="end">
-      <ion-button (click)="openDatePicker()">
-        <ion-label>{{ payInvo.pay_date | date:'dd/MM/yyyy' }}</ion-label>
-      </ion-button>
+    <ion-buttons slot="end" *ngIf="user_info && store_info" >
+      <ion-item class="header-date-item">
+        <ion-input type="date" [(ngModel)]="payInvo.pay_date" class="header-date-input"></ion-input>
+      </ion-item>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
 
-<ion-card class="ion-no-padding ion-no-margin"> 
-  <ion-grid *ngIf="user_info && store_info">
-    <ion-row dir="rtl" class="top-card-row">
-      <!-- First Column: Account Selector -->
-      <ion-col size="4" class="account-column">
-        <app-account-selector
-          accountType="customer"
-          placeholder="اختر حساب العميل"
-          label="حساب العميل"
-          [store_info]="store_info"
-          [year]="year"
-          [showAddButton]="true"
-          [(ngModel)]="selectedAccount"
-          (accountSelected)="onAccountSelected($event)"
-          (balanceLoaded)="onAccountBalanceLoaded($event)">
-        </app-account-selector>
-      </ion-col>
-      
-      <!-- Second Column: Invoice Type -->
-      <ion-col size="3" class="invoice-type-column">
-        <ion-label class="column-label">نوع الفاتورة</ion-label>
-        <div class="invoice-type-section">
-          <ion-segment [(ngModel)]="radioVal2" (ionChange)="radioChange2($event ,'from')" class="compact-segment">
-            <ion-segment-button [value]="0">
-              <span>مبدئية</span>
-            </ion-segment-button>
-            <ion-segment-button [value]="1">
-              <span>نهائية</span>
-            </ion-segment-button>
-          </ion-segment>
-        </div>
-      </ion-col>
-      
-      <!-- Comment Column: Note field in same row -->
-      <ion-col size="4" class="date-comment-column">
-        <ion-label class="column-label">ملاحظــة</ion-label>
-        <ion-item class="custInput comment-input"> 
-          <ion-input placeholder="أكتب تعليقا" [(ngModel)]="payInvo.payComment"></ion-input>
-        </ion-item>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
-</ion-card>
-<ion-grid class="ion-margin-top" *ngIf="user_info && store_info" >
-  <ion-row dir="rtl">
-    <ion-col size="9" class="ion-no-padding">
-      <ion-grid>
-        <ion-row>
-          <ion-col size="12">
-            <ion-card> 
-             <app-item-selector
-                [items]="items"
-                [loadingItems]="loadingItems"
-                [searchLang]="searchLang"
-                [store_info]="store_info"
-                [year]="year"
-                parentPage="sales"
-                [enablePriceUpdateConfirmation]="true"
-                [payRef]="payInvo.pay_ref"
-                [showQuantityInput]="true"
-                [showPriceInput]="true"
-                [showPerchPriceInput]="false"
-                placeholder="اختر الصنف"
-                (itemSelected)="onItemSelected($event)"
-                (itemAdded)="onItemAdded($event)"
-                (refreshItems)="refresh('item')">
-              </app-item-selector>
-            </ion-card>
+    <ion-card class="ion-no-padding ion-no-margin"> 
+      <ion-grid *ngIf="user_info && store_info">
+        <ion-row dir="rtl" class="top-card-row">
+          <!-- First Column: Account Selector -->
+          <ion-col size="4" class="account-column">
+            <app-account-selector
+              accountType="customer"
+              placeholder="اختر حساب العميل"
+              label="حساب العميل"
+              [store_info]="store_info"
+              [year]="year"
+              [showAddButton]="true"
+              [(ngModel)]="selectedAccount"
+              (accountSelected)="onAccountSelected($event)"
+              (balanceLoaded)="onAccountBalanceLoaded($event)">
+            </app-account-selector>
           </ion-col>
-         
+          
+          <!-- Second Column: Invoice Type -->
+          <ion-col size="3" class="invoice-type-column">
+            <ion-label class="column-label">نوع الفاتورة</ion-label>
+            <div class="invoice-type-section">
+              <ion-segment [(ngModel)]="radioVal2" (ionChange)="radioChange2($event ,'from')" class="compact-segment">
+                <ion-segment-button [value]="0">
+                  <span>مبدئية</span>
+                </ion-segment-button>
+                <ion-segment-button [value]="1">
+                  <span>نهائية</span>
+                </ion-segment-button>
+              </ion-segment>
+            </div>
+          </ion-col>
+          
+          <!-- Comment Column: Note field in same row -->
+          <ion-col size="4" class="date-comment-column">
+            <ion-label class="column-label">ملاحظــة</ion-label>
+            <ion-item class="custInput comment-input"> 
+              <ion-input placeholder="أكتب تعليقا" [(ngModel)]="payInvo.payComment"></ion-input>
+            </ion-item>
+          </ion-col>
         </ion-row>
-        <ion-row>
-          <ion-col size="12">
-          <ion-card>
-            <ion-card-header color="primary" class="table-card-header">
-              <ion-card-title>
-                <ion-row class="ion-align-items-center">
-                  <ion-col size="3">
-                    <span>قائمة الأصناف</span>
-                  </ion-col>
-                  <ion-col size="6" class="ion-text-center">
-                    <div class="search-container">
-                      <ion-item lines="none" class="search-item">
-                        <ion-icon name="search" slot="start" color="medium"></ion-icon>
-                        <ion-input
-                          [(ngModel)]="searchTerm"
-                          (ionInput)="onSearchTermChange()"
-                          placeholder="البحث في الأصناف..."
-                          clearInput="true"
-                          class="search-input">
-                        </ion-input>
-                        <div slot="end" class="search-navigation" *ngIf="searchMatches.length > 0">
-                          <span class="search-results">{{ getSearchResultText() }}</span>
-                          <ion-button fill="clear" size="small" (click)="navigateSearch('prev')">
-                            <ion-icon name="chevron-up"></ion-icon>
-                          </ion-button>
-                          <ion-button fill="clear" size="small" (click)="navigateSearch('next')">
-                            <ion-icon name="chevron-down"></ion-icon>
-                          </ion-button>
-                        </div>
-                      </ion-item>
-                    </div>
-                  </ion-col>
-                  <ion-col size="3" class="ion-text-end">
-                    <ion-button 
-                      fill="clear" 
-                      color="light" 
-                      size="small"
-                      (click)="sortItemListAlphabetically()"
-                      [disabled]="!itemList || itemList.length === 0"
-                    >
-                      <ion-icon name="list" slot="start"></ion-icon>
-                      {{ isItemListSorted ? 'ترتيب أصلي' : 'ترتيب أبجدي' }}
-                    </ion-button>
-                    <ion-button 
-                      fill="clear" 
-                      color="light" 
-                      size="small"
-                      (click)="openPriceAdjustmentDialog()"
-                      [disabled]="!itemList || itemList.length === 0"
-                    >
-                      <ion-icon name="pricetag" slot="start"></ion-icon>
-                      تعديل الأسعار
-                    </ion-button>
-                  </ion-col>
-                </ion-row>
-              </ion-card-title>
-            </ion-card-header>
-            <div class="table-container">
-             <table class="table">
-               <tr>
-                <th>no</th>
-                <th>الصنف</th>
-                <th>الكمية</th>
-                <th>سعر الوحده</th>
-                <th>المجموع</th> 
-                <th></th> 
-               </tr>
-               <tr *ngFor="let item of getDisplayItemList() ; let i = index"  
-                   (dblclick)="qtyClick(i)"
-                   [attr.data-index]="i"
-                   [class.search-highlight]="isHighlighted(i)"
-                   [class.search-match]="isSearchMatch(i)">
-                <td>{{i+1}}</td>
-                <td>
-                  <span [innerHTML]="highlightText(item.item_name, searchTerm)"></span>
-                </td>
-                <td >
-                   <ion-text *ngIf="showMe != i">{{item.quantity}}</ion-text> 
-                   <ion-item *ngIf="showMe == i">
-                    <ion-input (keyup.enter)="editCell(i)" [(ngModel)] ="item.quantity" (ionBlur)="editCell(i)" ></ion-input>
-                   </ion-item>
-                </td>
-                <td>
-                  <ion-text *ngIf="showMe != i">{{formatBalance(item.pay_price)}}</ion-text> 
-                   <ion-item *ngIf="showMe == i">
-                    <ion-input (keyup.enter)="editCell(i)" [(ngModel)] ="item.pay_price" (ionBlur)="editCell(i)" ></ion-input>
-                   </ion-item>
-                </td>
-
-                <td>{{formatBalance(+item.tot)}}</td>
-                <td>
-                  <ion-button fill="clear" size="small" (click)="deleteItem(i)">
-                    <ion-icon name="trash" color="danger" ></ion-icon>
-                  </ion-button>
-                </td>
-               </tr>
-               
-             
-             </table>
-            </div> 
-          </ion-card>
-        </ion-col>
-        </ion-row> 
       </ion-grid>
-    </ion-col>
+    </ion-card>
+    <ion-grid  *ngIf="user_info && store_info" >
+      <ion-row dir="rtl" class="ion-justify-content-center">
+        <ion-col size="11" class="ion-no-padding">
+          <ion-grid>
+            <ion-row>
+              <ion-col size="12">
+                <ion-card> 
+                <app-item-selector
+                    [items]="items"
+                    [loadingItems]="loadingItems"
+                    [searchLang]="searchLang"
+                    [store_info]="store_info"
+                    [year]="year"
+                    parentPage="sales"
+                    [enablePriceUpdateConfirmation]="true"
+                    [payRef]="payInvo.pay_ref"
+                    [showQuantityInput]="true"
+                    [showPriceInput]="true"
+                    [showPerchPriceInput]="false"
+                    placeholder="اختر الصنف"
+                    (itemSelected)="onItemSelected($event)"
+                    (itemAdded)="onItemAdded($event)"
+                    (refreshItems)="refresh('item')">
+                  </app-item-selector>
+                </ion-card>
+              </ion-col>
+            
+            </ion-row>
+            <ion-row>
+              <ion-col size="12">
+              <ion-card>
+                <ion-card-header color="primary" class="table-card-header">
+                  <ion-card-title>
+                    <ion-row class="ion-align-items-center">
+                      <ion-col size="3">
+                        <span>قائمة الأصناف</span>
+                      </ion-col>
+                      <ion-col size="6" class="ion-text-center">
+                        <div class="search-container">
+                          <ion-item lines="none" class="search-item">
+                            <ion-icon name="search" slot="start" color="medium"></ion-icon>
+                            <ion-input
+                              [(ngModel)]="searchTerm"
+                              (ionInput)="onSearchTermChange()"
+                              placeholder="البحث في الأصناف..."
+                              clearInput="true"
+                              class="search-input">
+                            </ion-input>
+                            <div slot="end" class="search-navigation" *ngIf="searchMatches.length > 0">
+                              <span class="search-results">{{ getSearchResultText() }}</span>
+                              <ion-button fill="clear" size="small" (click)="navigateSearch('prev')">
+                                <ion-icon name="chevron-up"></ion-icon>
+                              </ion-button>
+                              <ion-button fill="clear" size="small" (click)="navigateSearch('next')">
+                                <ion-icon name="chevron-down"></ion-icon>
+                              </ion-button>
+                            </div>
+                          </ion-item>
+                        </div>
+                      </ion-col>
+                      <ion-col size="3" class="ion-text-end">
+                        <ion-button 
+                          fill="clear" 
+                          color="light" 
+                          size="small"
+                          (click)="sortItemListAlphabetically()"
+                          [disabled]="!itemList || itemList.length === 0"
+                        >
+                          <ion-icon name="list" slot="start"></ion-icon>
+                          {{ isItemListSorted ? 'ترتيب أصلي' : 'ترتيب أبجدي' }}
+                        </ion-button>
+                        <ion-button 
+                          fill="clear" 
+                          color="light" 
+                          size="small"
+                          (click)="openPriceAdjustmentDialog()"
+                          [disabled]="!itemList || itemList.length === 0"
+                        >
+                          <ion-icon name="pricetag" slot="start"></ion-icon>
+                          تعديل الأسعار
+                        </ion-button>
+                      </ion-col>
+                    </ion-row>
+                  </ion-card-title>
+                </ion-card-header>
+                <div class="table-container">
+                <table class="table">
+                  <tr>
+                    <th>no</th>
+                    <th>الصنف</th>
+                    <th>الكمية</th>
+                    <th>سعر الوحده</th>
+                    <th>المجموع</th> 
+                    <th></th> 
+                  </tr>
+                  <tr *ngFor="let item of getDisplayItemList() ; let i = index"  
+                      (dblclick)="qtyClick(i)"
+                      [attr.data-index]="i"
+                      [class.search-highlight]="isHighlighted(i)"
+                      [class.search-match]="isSearchMatch(i)">
+                    <td>{{i+1}}</td>
+                    <td>
+                      <span [innerHTML]="highlightText(item.item_name, searchTerm)"></span>
+                    </td>
+                    <td >
+                      <ion-text *ngIf="showMe != i">{{item.quantity}}</ion-text> 
+                      <ion-item *ngIf="showMe == i">
+                        <ion-input (keyup.enter)="editCell(i)" [(ngModel)] ="item.quantity" (ionBlur)="editCell(i)" ></ion-input>
+                      </ion-item>
+                    </td>
+                    <td>
+                      <ion-text *ngIf="showMe != i">{{formatBalance(item.pay_price)}}</ion-text> 
+                      <ion-item *ngIf="showMe == i">
+                        <ion-input (keyup.enter)="editCell(i)" [(ngModel)] ="item.pay_price" (ionBlur)="editCell(i)" ></ion-input>
+                      </ion-item>
+                    </td>
 
+                    <td>{{formatBalance(+item.tot)}}</td>
+                    <td>
+                      <ion-button fill="clear" size="small" (click)="deleteItem(i)">
+                        <ion-icon name="trash" color="danger" ></ion-icon>
+                      </ion-button>
+                    </td>
+                  </tr>
+                  
+                
+                </table>
+                </div> 
+              </ion-card>
+            </ion-col>
+            </ion-row> 
+          </ion-grid>
+        </ion-col> 
+      </ion-row> 
+    </ion-grid>
+    <!-- Journal Entry Modal -->
+<ion-modal [isOpen]="showJournalEntryModal" (willDismiss)="onJournalCancelled()" style="--width: 90%; --max-width: 600px; --min-width: 320px;">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; direction: rtl;">
+            <ion-icon name="arrow-down-outline" *ngIf="invoiceJournalData?.invoiceType === 'sales'" color="success" style="font-size: 1.2em;"></ion-icon>
+            <ion-icon name="arrow-up-outline" *ngIf="invoiceJournalData?.invoiceType === 'purchase'" color="danger" style="font-size: 1.2em;"></ion-icon>
+            <span *ngIf="invoiceJournalData">
+              {{ invoiceJournalData.invoiceType === 'sales' ? 'سند قبض' : 'سند دفع' }} - {{ invoiceJournalData.customerAccount?.sub_name || 'غير محدد' }}
+            </span>
+          </div>
+        </ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="onJournalCancelled()">
+            <ion-icon name="close"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <app-invoice-journal-entry
+        *ngIf="invoiceJournalData"
+        [invoiceData]="invoiceJournalData"
+        (journalSaved)="onJournalSaved($event)"
+        (journalCancelled)="onJournalCancelled()">
+      </app-invoice-journal-entry>
+    </ion-content>
+  </ng-template>
+</ion-modal>
 
-    
-    
-
-
-    <!-- This column is now empty as we moved the totals and buttons to the footer -->
-    <ion-col size="3" class="ion-no-padding">
-    </ion-col>
-  </ion-row>
-
-
- 
-</ion-grid>
 </ion-content>
 <!-- Footer with totals and action buttons -->
-<ion-footer>
+<ion-footer *ngIf="user_info && store_info" >
   <ion-toolbar>
-    <ion-grid>
+    <ion-grid class="ion-no-padding">
       <ion-row class="ion-align-items-center">
         <!-- Discount controls on the right side -->
         <ion-col size="8" class="ion-text-end">
-          <ion-grid>
+          <ion-grid class="ion-no-padding">
             <ion-row class="ion-justify-content-end">
               <ion-col   class="footer-input-container">
                 <ion-label class="footer-input-label">إجمالي المبلغ</ion-label>
@@ -229,9 +249,8 @@
                 </ion-item>
               </ion-col> -->
               <ion-col   class="footer-input-container">
-                <div class="discount-header">
-               
-                  <ion-item dir="rtl" class="discount-segment-container"> 
+                <div class="discount-header"> 
+                  <div dir="rtl" class="discount-segment-container"> 
                     <ion-segment [(ngModel)]="discountType" (ionChange)="onDiscountTypeChange($event)" class="compact-discount-segment">
                       <ion-segment-button value="percentage" class="compact-segment-button">
                         <ion-label>نسبة الخصم%</ion-label>
@@ -240,7 +259,7 @@
                         <ion-label>مبلغ الخصم</ion-label>
                       </ion-segment-button>
                     </ion-segment>
-                  </ion-item>
+                  </div>
                 </div>
                 <!-- Percentage Discount Input -->
                 <ion-item *ngIf="discountType === 'percentage'" class="rtl-input custInput discount-input">
@@ -300,34 +319,4 @@
   </ion-toolbar>
 </ion-footer>
 
-<!-- Journal Entry Modal -->
-<ion-modal [isOpen]="showJournalEntryModal" (willDismiss)="onJournalCancelled()">
-  <ng-template>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>
-          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; direction: rtl;">
-            <ion-icon name="arrow-down-outline" *ngIf="invoiceJournalData?.invoiceType === 'sales'" color="success" style="font-size: 1.2em;"></ion-icon>
-            <ion-icon name="arrow-up-outline" *ngIf="invoiceJournalData?.invoiceType === 'purchase'" color="danger" style="font-size: 1.2em;"></ion-icon>
-            <span *ngIf="invoiceJournalData">
-              {{ invoiceJournalData.invoiceType === 'sales' ? 'سند قبض' : 'سند دفع' }} - {{ invoiceJournalData.customerAccount?.sub_name || 'غير محدد' }}
-            </span>
-          </div>
-        </ion-title>
-        <ion-buttons slot="end">
-          <ion-button (click)="onJournalCancelled()">
-            <ion-icon name="close"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content>
-      <app-invoice-journal-entry
-        *ngIf="invoiceJournalData"
-        [invoiceData]="invoiceJournalData"
-        (journalSaved)="onJournalSaved($event)"
-        (journalCancelled)="onJournalCancelled()">
-      </app-invoice-journal-entry>
-    </ion-content>
-  </ng-template>
-</ion-modal>
+

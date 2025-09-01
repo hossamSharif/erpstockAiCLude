@@ -1,0 +1,120 @@
+ion-content {
+  --background: var(--ion-color-light);
+}
+
+.form-list {
+  background: transparent;
+  margin-bottom: 20px;
+}
+
+.form-item {
+  --background: white;
+  --border-color: var(--ion-color-medium-tint);
+  --border-width: 1px;
+  --border-style: solid;
+  --border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-label {
+  font-weight: 600;
+  color: var(--ion-color-primary);
+  margin-bottom: 8px;
+}
+
+.required-asterisk {
+  color: var(--ion-color-danger);
+  font-weight: bold;
+}
+
+.form-input,
+.form-select,
+.form-datetime {
+  --color: var(--ion-color-dark);
+  --placeholder-color: var(--ion-color-medium);
+  font-size: 16px;
+}
+
+.form-select {
+  --placeholder-opacity: 0.7;
+}
+
+.error-message {
+  color: var(--ion-color-danger);
+  font-size: 12px;
+  margin-top: -12px;
+  margin-bottom: 12px;
+  margin-right: 16px;
+  font-weight: 500;
+}
+
+.button-container {
+  margin-top: 24px;
+  padding: 0 16px;
+}
+
+.save-button {
+  --border-radius: 8px;
+  height: 48px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.cancel-button {
+  --border-radius: 8px;
+  height: 44px;
+  font-weight: 500;
+}
+
+/* RTL support */
+ion-label,
+ion-input,
+ion-select,
+ion-datetime {
+  text-align: right;
+  direction: rtl;
+}
+
+ion-button {
+  direction: rtl;
+}
+
+/* Loading state */
+.save-button:disabled {
+  opacity: 0.6;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  ion-content {
+    --padding-start: 12px;
+    --padding-end: 12px;
+  }
+
+  .form-item {
+    margin-bottom: 12px;
+  }
+
+  .button-container {
+    padding: 0 8px;
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .form-item {
+    --background: var(--ion-color-dark-tint);
+    --border-color: var(--ion-color-medium-shade);
+  }
+
+  .form-label {
+    color: var(--ion-color-primary-tint);
+  }
+}
+
+/* Custom toast styling for RTL */
+.rtl-toast {
+  direction: rtl;
+  text-align: right;
+}

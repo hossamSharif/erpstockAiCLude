@@ -1,14 +1,28 @@
  
 
-
-
- - مشكلة حفظ الفاتورة عند التحويب من نهائية الي مبديئة 
- - afte update the item using item-modal and dissmess the updated item must be selected and ready to add to ist 
  
+
+
+
+
+ -
+
+  
+  -مشكلة سعؤ الوحدة في حركة الأصناف  فاتورة 
  
  -  اضافة الصنف والتعديل مراجعىة الالة الحاسبة في 
  
  - مراحعة قائمة الأصناف وتغيير التصميم للفلتر 
+
+
+- الوحدات والعبوات 
+- 
+
+
+
+ 
+ -  اضافة الضريبة والصورة والitem_ref .... etc
+
 
 
 - in the @item-report i wanna add new view for item movmment that preview the all item move of spicific date 
@@ -34,14 +48,14 @@
 
  you have 
 
-
+ 
 
   مرتجعات 
   والتسوية 
  
  
  -- الصلاحيات
-
+ -- التقاريؤ لكل قسم علي 
  save to wrk later
  - - @sales and @purchase and @edit-sales @edit-perch , i wanna add a functionality to auto save changes in itemList to local storage 
      so user can later open it to continue working :
@@ -52,7 +66,26 @@
     
 
 
- --  العملة 
+ --  i wanna add multicurrency  feature  to app : this multi currency feature fucos in sudanese bound rate vs other currenceis 
+  the rates of specific currency to the sudanese pound in certin data will fetch from a back-ends which is store in a database table spicify to store the rate of the 
+  sudanese pound vs other currency (dollar , derham , rial)
+
+
+   how it's work :
+   when user change the curreny from spicific currency switcher in certin page 
+   whe he  changed from sudanese pound to other currency , the rate will retreived from the backend 
+   to get the rate of today for sudanese pound vs the selected currency 
+   if there are not record on that date then get the nearest date to that date and use it as a rate 
+   all totals and prices will converted to this currenscy by do the nessery calculation depend on the rate of sudanese pound vs the selected currency
+
+
+
+  
+   to implemnt this approch you need  to app the nessery pages of to store the rate of sudanese pound vs othor currency in spicific time 
+   and also you need a page to retrive those record and update them 
+
+
+
 
 
  - update page that with summary :
@@ -63,14 +96,6 @@
  - الأوفلاين مود 
 
 - اللغة الأنجليزية للفيو 
-
-- الوحدات والعبوات 
-- 
-
-
-
- 
- -  اضافة الضريبة والصورة والitem_ref .... etc
 
 
 
