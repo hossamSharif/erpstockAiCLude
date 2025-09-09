@@ -74,7 +74,7 @@ export class InvoiceJournalEntryComponent implements OnInit, AfterViewInit {
   getAmountValidationError(): string {
     const maxAmount = this.invoiceData?.totalAfterDiscount || this.invoiceData?.invoiceAmount || 0;
     if (this.pay > maxAmount) {
-      return `المبلغ لا يمكن أن يتجاوز ${maxAmount.toLocaleString()}`;
+      return `المبلغ لا يمكن أن يتجاوز ${maxAmount.toLocaleString('en-US')}`;
     }
     return '';
   }
@@ -140,7 +140,7 @@ export class InvoiceJournalEntryComponent implements OnInit, AfterViewInit {
     const invoiceTypeText = this.invoiceData.invoiceType === 'sales' ? 'مبيعات' : 'مشتريات';
     const customerName = this.invoiceData.customerAccount?.sub_name || 'غير محدد';
     const invoiceDate = this.invoiceData.invoiceDate || this.datePipe.transform(new Date(), 'dd-MM-yyyy');
-    const totalAmount = (this.invoiceData.totalAfterDiscount || this.invoiceData.invoiceAmount).toLocaleString();
+    const totalAmount = (this.invoiceData.totalAfterDiscount || this.invoiceData.invoiceAmount).toLocaleString('en-US');
     
     this.journal.j_details = `${actionText} فاتورة ${invoiceTypeText} ${customerName} بتاريخ ${invoiceDate} اجمالي ${totalAmount}`;
     

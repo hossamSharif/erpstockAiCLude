@@ -1,9 +1,11 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from '../stockService/services.service';
 import { LoadingController, ToastController } from '@ionic/angular';
 import { DatePipe } from '@angular/common';
 import { Storage } from '@ionic/storage';
 import { Chart, registerables, ChartConfiguration } from 'chart.js';
+import { CurrencyService } from '../services/currency.service';
+import { Subscription } from 'rxjs';
 
 Chart.register(...registerables);
 
@@ -12,7 +14,7 @@ Chart.register(...registerables);
   templateUrl: './analytics-dashboard.page.html',
   styleUrls: ['./analytics-dashboard.page.scss']
 })
-export class AnalyticsDashboardPage implements OnInit, AfterViewInit {
+export class AnalyticsDashboardPage implements OnInit, OnDestroy, AfterViewInit {
 
   @ViewChild('salesPurchaseChart', { static: false }) salesPurchaseChart: ElementRef;
   @ViewChild('cashFlowChart', { static: false }) cashFlowChart: ElementRef;
@@ -29,6 +31,11 @@ export class AnalyticsDashboardPage implements OnInit, AfterViewInit {
   endDate: string = '';
   customDateRange: boolean = false;
   private dateChangeTimeout: any;
+  
+  // Currency management
+  currentCurrency$ = this.currencyService.getCurrentCurrency();
+  dashboardData: any = {};
+  private currencySubscription: Subscription;
 
   // Loading states
   loading: boolean = false;
@@ -93,13 +100,78 @@ export class AnalyticsDashboardPage implements OnInit, AfterViewInit {
     private loadingController: LoadingController,
     private toast: ToastController,
     private datePipe: DatePipe,
-    private storage: Storage
+    private storage: Storage,
+    private currencyService: CurrencyService,
+    private cdr: ChangeDetectorRef
   ) { 
     this.initializeDateRange();
   }
 
   ngOnInit() {
+    this.initializeCurrency();
     this.getAppInfo();
+  }
+  
+  ngOnDestroy() {
+    if (this.currencySubscription) {
+      this.currencySubscription.unsubscribe();
+    }
+  }
+  
+  async initializeCurrency() {
+    try {
+      await this.currencyService.initializeCurrency();
+      await this.currencyService.loadSupportedCurrencies();
+      
+      if (this.store_info && this.year) {
+        await this.currencyService.loadRatesByYear(this.store_info.id, this.year.id);
+      }
+      
+      this.currencySubscription = this.currencyService.getCurrentCurrency().subscribe(currency => {
+        this.updateDashboardCurrency();
+        this.cdr.detectChanges();
+      }, error => {
+        console.error('Currency subscription error:', error);
+        // Continue without currency features if there's an error
+      });
+    } catch (error) {
+      console.error('Currency initialization error:', error);
+      // Continue loading dashboard even if currency initialization fails
+    }
+  }
+  
+  updateDashboardCurrency() {
+    this.convertDashboardMetrics();
+    this.updateChartData();
+  }
+  
+  convertDashboardMetrics() {
+    const currentCurrency = this.currencyService.getCurrentCurrencyValue();
+    
+    // Convert mock data for display
+    if (this.mockCashFlowData) {
+      this.dashboardData.cashIn = this.currencyService.convertFromSDG(
+        this.mockCashFlowData.cashIn || 0, currentCurrency
+      );
+      this.dashboardData.cashOut = this.currencyService.convertFromSDG(
+        this.mockCashFlowData.cashOut || 0, currentCurrency
+      );
+    }
+  }
+  
+  updateChartData() {
+    // Update chart datasets with currency conversion if charts exist
+    // This would be implemented based on the actual chart structure when real data is loaded
+  }
+  
+  getCurrencySymbol(currency: string): string {
+    const symbols = { 'SDG': 'ج.س', 'USD': '$', 'AED': 'د.إ', 'SAR': 'ر.س' };
+    return symbols[currency] || currency;
+  }
+  
+  getExchangeRate(): number {
+    const currentCurrency = this.currencyService.getCurrentCurrencyValue();
+    return this.currencyService.getExchangeRate(currentCurrency);
   }
 
   ngAfterViewInit() {
@@ -717,6 +789,7 @@ export class AnalyticsDashboardPage implements OnInit, AfterViewInit {
   }
 
   formatCurrency(amount: number): string {
+    // Ensure English number format across all currency displays
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2

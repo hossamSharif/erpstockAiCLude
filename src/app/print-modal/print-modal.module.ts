@@ -7,6 +7,7 @@ import { IonicModule } from '@ionic/angular';
 import { PrintModalPageRoutingModule } from './print-modal-routing.module';
 
 import { PrintModalPage } from './print-modal.page';
+import { SharedModule } from '../module/shared/shared.module';
 //import { QRCodeModule } from 'angularx-qrcode';
 
 @NgModule({
@@ -15,7 +16,8 @@ import { PrintModalPage } from './print-modal.page';
     FormsModule,
     IonicModule,
    // QRCodeModule,
-    PrintModalPageRoutingModule
+    PrintModalPageRoutingModule,
+    SharedModule
   ],
   declarations: [PrintModalPage]
 })

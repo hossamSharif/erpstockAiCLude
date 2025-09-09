@@ -3,6 +3,7 @@ import { LoadingController, ToastController } from '@ionic/angular';
 import { AuthServiceService } from "../../app/auth/auth-service.service";
 import { Storage } from '@ionic/storage';
 import { ServicesService } from '../stockService/services.service';
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
@@ -23,7 +24,7 @@ export class LoginPage implements OnInit {
   store_info : {id:any ,store_ref:any , store_name:any , location :any }
   company : { id: any , phone: any, phone2  :any, address :any, logoUrl:any,engName:any,arName:any ,tradNo:any , vatNo:any};
 
-  constructor(private api:ServicesService,private storage: Storage,private toast:ToastController ,private loadingController:LoadingController , private authenticationService: AuthServiceService) {
+  constructor(private api:ServicesService,private storage: Storage,private toast:ToastController ,private loadingController:LoadingController , private authenticationService: AuthServiceService, private router: Router) {
     this.store_info = {id:"1" ,store_ref:"sh" , store_name:"sooq sha'by" , location :"sha'aby" } 
     this.USER_INFO = {
       id: "" ,
@@ -138,19 +139,27 @@ export class LoginPage implements OnInit {
     //console.log('Loading dismissed with role:', role);
   }
 
-   loginUser(){
+   async loginUser(){
    if(this.USER_INFO.user_name == "" || this.USER_INFO.password == ""){
     this.presentToast('الرجاء إكمال بيانات تسجيل الدخول' ,'danger') 
    }else{ 
     
-    this.storage.set('STORE_INFO', this.store_info).then((response) => {
-      
-    })
-    this.storage.set('company', this.company).then((response) => {
-      
-    })
-   
-         this.authenticationService.login(this.USER_INFO)    
+    await this.storage.set('STORE_INFO', this.store_info);
+    await this.storage.set('company', this.company);
+    
+    // Subscribe to auth state changes to handle redirect
+    const authSubscription = this.authenticationService.authState.subscribe(async (isAuthenticated) => {
+      if (isAuthenticated) {
+        // Cleanup subscription
+        authSubscription.unsubscribe();
+        
+        // Navigate to analytics dashboard
+        await this.router.navigate(['/analytics-dashboard'], { replaceUrl: true });
+      }
+    });
+    
+    // Trigger login
+    this.authenticationService.login(this.USER_INFO);    
    }
 
   }

@@ -5,6 +5,7 @@
     </ion-buttons>
     <ion-title class="glass-title">ميزان المراجعة والأرصدة</ion-title>
     <ion-buttons slot="end">
+      <app-currency-switcher></app-currency-switcher>
       <ion-button fill="clear" (click)="refresh()">
         <ion-icon name="refresh-outline"></ion-icon>
       </ion-button>
@@ -92,16 +93,16 @@
           </div>
           <div class="summary-item">
             <div class="summary-label">إجمالي المدين</div>
-            <div class="summary-value debit-total">{{ formatBalance(summary.grand_debit_total) }}</div>
+            <div class="summary-value debit-total">{{ summary.grand_debit_total | currencyDisplay:'SDG':false }}</div>
           </div>
           <div class="summary-item">
             <div class="summary-label">إجمالي الدائن</div>
-            <div class="summary-value credit-total">{{ formatBalance(summary.grand_credit_total) }}</div>
+            <div class="summary-value credit-total">{{ summary.grand_credit_total | currencyDisplay:'SDG':false }}</div>
           </div>
           <div class="summary-item">
             <div class="summary-label">الفرق</div>
             <div class="summary-value" [class.debit-total]="summary.difference > 0" [class.credit-total]="summary.difference < 0">
-              {{ formatBalance(getAbsoluteValue(summary.difference)) }}
+              {{ getAbsoluteValue(summary.difference) | currencyDisplay:'SDG':false }}
             </div>
           </div>
         </div>
@@ -147,15 +148,15 @@
                 </th>
                 <th class="sortable-header" (click)="sortBy('opening_balance')">
                   <ion-icon [name]="getSortIcon('opening_balance')" class="sort-icon"></ion-icon>
-                  الرصيد الافتتاحي
+                  الرصيد الافتتاحي ({{ getCurrencySymbol() }})
                 </th>
                 <th class="sortable-header" (click)="sortBy('display_debit')">
                   <ion-icon [name]="getSortIcon('display_debit')" class="sort-icon"></ion-icon>
-                  مدين (عليه)
+                  مدين (عليه) ({{ getCurrencySymbol() }})
                 </th>
                 <th class="sortable-header" (click)="sortBy('display_credit')">
                   <ion-icon [name]="getSortIcon('display_credit')" class="sort-icon"></ion-icon>
-                  دائن (له)
+                  دائن (له) ({{ getCurrencySymbol() }})
                 </th>
                 <th class="sortable-header" (click)="sortBy('balance_status')">
                   <ion-icon [name]="getSortIcon('balance_status')" class="sort-icon"></ion-icon>
@@ -173,18 +174,18 @@
                     {{ getAccountTypeDisplay(account) }}
                   </span>
                 </td>
-                <td class="opening-balance">{{ formatBalance(account.opening_balance) }}</td>
+                <td class="opening-balance">{{ account.opening_balance | currencyDisplay:'SDG':false }}</td>
                 <td class="debit">
                   <span *ngIf="account.display_debit > 0" class="amount debit-amount">
-                    {{ formatBalance(account.display_debit) }}
+                    {{ account.display_debit | currencyDisplay:'SDG':false }}
                   </span>
-                  <span *ngIf="account.display_debit == 0" class="amount zero-amount">0.00</span>
+                  <span *ngIf="account.display_debit == 0" class="amount zero-amount">{{ 0 | currencyDisplay:'SDG':false }}</span>
                 </td>
                 <td class="credit">
                   <span *ngIf="account.display_credit > 0" class="amount credit-amount">
-                    {{ formatBalance(account.display_credit) }}
+                    {{ account.display_credit | currencyDisplay:'SDG':false }}
                   </span>
-                  <span *ngIf="account.display_credit == 0" class="amount zero-amount">0.00</span>
+                  <span *ngIf="account.display_credit == 0" class="amount zero-amount">{{ 0 | currencyDisplay:'SDG':false }}</span>
                 </td>
                 <td class="balance-status">
                   <span class="status-badge" [ngClass]="{'debit-status': account.balance_status == 'debit', 'credit-status': account.balance_status == 'credit'}">
@@ -211,14 +212,14 @@
               <tr class="totals-row">
                 <td colspan="5" class="totals-label">الإجمالي:</td>
                 <td class="debit-total">
-                  <span class="amount debit-amount">{{ formatBalance(summary.grand_debit_total) }}</span>
+                  <span class="amount debit-amount">{{ summary.grand_debit_total | currencyDisplay:'SDG':false }}</span>
                 </td>
                 <td class="credit-total">
-                  <span class="amount credit-amount">{{ formatBalance(summary.grand_credit_total) }}</span>
+                  <span class="amount credit-amount">{{ summary.grand_credit_total | currencyDisplay:'SDG':false }}</span>
                 </td>
                 <td class="difference-cell">
                   <span class="amount" [class.debit-amount]="summary.difference > 0" [class.credit-amount]="summary.difference < 0">
-                    {{ formatBalance(getAbsoluteValue(summary.difference)) }}
+                    {{ getAbsoluteValue(summary.difference) | currencyDisplay:'SDG':false }}
                   </span>
                 </td>
               </tr>
@@ -263,15 +264,15 @@
           <div class="mobile-balances">
             <div class="balance-row">
               <span class="balance-label">الرصيد الافتتاحي:</span>
-              <span class="balance-value">{{ formatBalance(account.opening_balance) }}</span>
+              <span class="balance-value">{{ account.opening_balance | currencyDisplay:'SDG':false }}</span>
             </div>
             <div class="balance-row" *ngIf="account.display_debit > 0">
               <span class="balance-label">مدين (عليه):</span>
-              <span class="balance-value debit-amount">{{ formatBalance(account.display_debit) }}</span>
+              <span class="balance-value debit-amount">{{ account.display_debit | currencyDisplay:'SDG':false }}</span>
             </div>
             <div class="balance-row" *ngIf="account.display_credit > 0">
               <span class="balance-label">دائن (له):</span>
-              <span class="balance-value credit-amount">{{ formatBalance(account.display_credit) }}</span>
+              <span class="balance-value credit-amount">{{ account.display_credit | currencyDisplay:'SDG':false }}</span>
             </div>
             <div class="balance-row">
               <span class="balance-label">حالة الرصيد:</span>

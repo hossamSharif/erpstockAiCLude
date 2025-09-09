@@ -4,6 +4,9 @@
       <ion-menu-button class="glass-menu-button"></ion-menu-button>
     </ion-buttons>
     <ion-title class="glass-title">إدارة الحسابات</ion-title>
+    <ion-buttons slot="end">
+      <app-currency-switcher></app-currency-switcher>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -139,7 +142,7 @@
                   </th>
                   <th class="sortable-header" (click)="sortBy('current_balance')">
                     <ion-icon [name]="getSortIcon('current_balance')" class="sort-icon"></ion-icon>
-                    الرصيد الحالي
+                    الرصيد الحالي ({{ getCurrencySymbol() }})
                   </th>
                   <th>العمليات</th>
                 </tr>
@@ -189,7 +192,7 @@
                     <div class="balance-info">
                       <span class="balance-amount" 
                             [style.color]="getBalanceColor(account.current_balance) === 'success' ? '#10dc60' : '#f04141'">
-                        {{formatBalance(account.current_balance) || '0.00'}}
+                        {{(account.current_balance || 0) | currencyDisplay:'SDG':false}}
                       </span>
                       <span *ngIf="account.current_balance != 0" class="balance-type" 
                             [style.color]="account.balance_type === 'debit' ? '#10dc60' : '#f04141'">

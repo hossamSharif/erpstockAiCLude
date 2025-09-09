@@ -74,7 +74,7 @@ export class AuthServiceService {
 
 
  async login(user) { 
-   await   this.presentLoadingWithOptions('جاري تسجيل الدخول' , 'login')
+   await this.presentLoadingWithOptions('جاري تسجيل الدخول' , 'login')
     //console.log(user)
     this.api.login(user).subscribe(data =>{
       //console.log('loogingksks',data)
@@ -88,9 +88,12 @@ export class AuthServiceService {
         store_id:res['store_id'] 
       } 
         //console.log(  'sdlijlf' ,  this.USER_INFO)
-        this.storage.set('USER_INFO', this.USER_INFO).then((response) => {
-          // Let app.component.ts handle navigation to avoid conflicts
-          this.authState.next(true); 
+        this.storage.set('USER_INFO', this.USER_INFO).then(async (response) => {
+          // Dismiss loading first
+          await this.loadingController.dismiss();
+          
+          // Set auth state - login page will handle navigation
+          this.authState.next(true);
         });
       }else{
         this.loadingController.dismiss()

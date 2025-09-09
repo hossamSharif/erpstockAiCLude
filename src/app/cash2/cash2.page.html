@@ -1,10 +1,4 @@
-<ion-header class="transparent-header">
-  <ion-toolbar class="transparent-toolbar">
-    <ion-buttons slot="start">
-      <ion-menu-button class="glass-menu-button"></ion-menu-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+ 
 
 <ion-content class="modern-content">
   <!-- Loading State -->
@@ -18,8 +12,14 @@
     <div class="form-container">
       <ion-card class="form-card">
         <ion-card-header class="card-header">
-          <ion-card-title class="card-title">سندات القبض والدفع</ion-card-title>
+          <div class="header-row">
+            <ion-card-title class="card-title">سندات القبض والدفع</ion-card-title>
+            <div class="currency-switcher-container">
+              <app-currency-switcher></app-currency-switcher>
+            </div>
+          </div>
         </ion-card-header>
+      
         <ion-card-content class="compact-content">
           
           <!-- Row 1: Transaction Type -->
@@ -72,7 +72,7 @@
                 <div class="balance-label">الرصيد:</div>
                 <div class="balance-amount" *ngIf="!loadingSourceBalance && sourceAccountBalance" 
                      [style.color]="getBalanceColor(sourceAccountBalance) === 'success' ? '#10dc60' : '#f04141'">
-                  {{ formatBalance(sourceAccountBalance) }}
+                  {{ sourceAccountBalance.current_balance | currencyDisplay }}
                 </div>
                 <div class="balance-loading" *ngIf="loadingSourceBalance">
                   <ion-spinner name="dots" color="primary"></ion-spinner>
@@ -104,7 +104,7 @@
                 <div class="balance-label">الرصيد:</div>
                 <div class="balance-amount" *ngIf="!loadingAccountBalance && selectedAccountBalance" 
                      [style.color]="getBalanceColor(selectedAccountBalance) === 'success' ? '#10dc60' : '#f04141'">
-                  {{ formatBalance(selectedAccountBalance) }}
+                  {{ selectedAccountBalance.current_balance | currencyDisplay }}
                 </div>
                 <div class="balance-loading" *ngIf="loadingAccountBalance">
                   <ion-spinner name="dots" color="primary"></ion-spinner>

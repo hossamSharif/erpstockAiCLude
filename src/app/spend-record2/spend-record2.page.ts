@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable } from 'rxjs';
 import {  AlertController, LoadingController, ModalController, Platform, ToastController } from '@ionic/angular';
@@ -9,6 +9,8 @@ import { PrintModalPage } from '../print-modal/print-modal.page';
 import { FilterPipe } from './pipe';
 import { SortingService, SortConfig } from '../services/sorting.service';
 import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
+import { CurrencyService } from '../services/currency.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-spend-record2',
@@ -16,7 +18,7 @@ import { ExportService, ExportConfig, ExportColumn } from '../services/export.se
   styleUrls: ['./spend-record2.page.scss'],
 })
 
-export class SpendRecord2Page implements OnInit { 
+export class SpendRecord2Page implements OnInit, OnDestroy { 
     jdetailsFrom:Array<any> =[]
     jdetailsTo:Array<any> =[]
     payArray:Array<any> =[]
@@ -42,7 +44,8 @@ export class SpendRecord2Page implements OnInit {
     endDate :any
     loading:boolean = false
     year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
-    constructor(private platform :Platform  ,private alertController: AlertController,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private exportService: ExportService) { 
+    private currencySubscription: Subscription;
+    constructor(private platform :Platform  ,private alertController: AlertController,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private exportService: ExportService, private currencyService: CurrencyService, private cdr: ChangeDetectorRef) { 
      this.searchTerm =""
      this.checkPlatform()
      this.getAppInfo()
@@ -88,7 +91,24 @@ export class SpendRecord2Page implements OnInit {
     }
   
     ngOnInit() {
-  
+      this.initializeCurrency();
+    }
+
+    ngOnDestroy() {
+      if (this.currencySubscription) {
+        this.currencySubscription.unsubscribe();
+      }
+    }
+
+    async initializeCurrency() {
+      await this.currencyService.initializeCurrency();
+      await this.currencyService.loadSupportedCurrencies();
+      if (this.store_info && this.year) {
+        await this.currencyService.loadRatesByYear(this.store_info.id, this.year.id);
+      }
+      this.currencySubscription = this.currencyService.getCurrentCurrency().subscribe(currency => {
+        this.cdr.detectChanges();
+      });
     }
    
     // filterItems(searchTerm) {
@@ -883,4 +903,9 @@ export class SpendRecord2Page implements OnInit {
   }
 
   
+  // Get current currency symbol for table headers
+  getCurrencySymbol(): string {
+    return this.currencyService.getCurrentCurrencySymbol();
+  }
+
   }

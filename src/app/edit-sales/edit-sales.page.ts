@@ -1,5 +1,5 @@
 import { DatePipe, Location } from '@angular/common';
-import { Component, OnInit ,ViewChild, ElementRef} from '@angular/core';
+import { Component, OnInit ,ViewChild, ElementRef, OnDestroy, ChangeDetectorRef} from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { ServicesService } from '../stockService/services.service';
@@ -9,6 +9,7 @@ import { FilterPipe2 } from '../sales/pipe2';
 import { FilterPipe3 } from '../sales/pipe3';
 import { StockServiceService } from '../syncService/stock-service.service';
 import { PriceAdjustmentDialogComponent } from '../component/price-adjustment-dialog/price-adjustment-dialog.component';
+import { CurrencyService } from '../services/currency.service';
 import * as momentObj from 'moment';
 import { Subscription } from 'rxjs';
 @Component({
@@ -16,7 +17,7 @@ import { Subscription } from 'rxjs';
   templateUrl: './edit-sales.page.html',
   styleUrls: ['./edit-sales.page.scss'],
 })
-export class EditSalesPage implements OnInit {
+export class EditSalesPage implements OnInit, OnDestroy {
   @ViewChild("dstEds") dstEds: ElementRef;
   @ViewChild('qtyEds') qtyEds; 
 // Add these properties at the top of your class
@@ -36,6 +37,7 @@ calculatedDiscountAmount: number = 0;
   logHistoryArr:Array<any>=[];
   isOpenNotif = false ;
   subiscribtionNotif:Subscription;
+  private currencySubscription: Subscription;
   newNotif = false ;
  
   isOpen = false; 
@@ -85,7 +87,15 @@ calculatedDiscountAmount: number = 0;
   perchTot :any = 0
   qtyReal:any = 0
   availQty :any = 0
-  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) {
+  
+  // Loading state management
+  isSaving: boolean = false;
+  isDeleting: boolean = false;
+  isUpdating: boolean = false;
+  currentLoadingMessage: string = '';
+  private currentLoader: any = null;
+  
+  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private cdr: ChangeDetectorRef, private currencyService: CurrencyService) {
     this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
     this.route.queryParams.subscribe(params => {
       if (params && params.payInvo) {
@@ -144,8 +154,40 @@ calculatedDiscountAmount: number = 0;
     
 
   ngOnInit() {
+    // Initialize currency service
+    this.initializeCurrency();
+    
     // Check category visibility setting
    
+  }
+  
+  async ngOnDestroy() {
+    // Clean up loading states
+    await this.hideLoading();
+    
+    // Clean up subscriptions
+    if (this.currencySubscription) {
+      this.currencySubscription.unsubscribe();
+    }
+  }
+
+  async initializeCurrency() {
+    try {
+      await this.currencyService.initializeCurrency();
+      await this.currencyService.loadSupportedCurrencies();
+      
+      // Load currency rates when year and store info are available
+      if (this.store_info && this.year) {
+        await this.currencyService.loadRatesByYear(this.store_info.id, this.year.id);
+      }
+      
+      // Subscribe to currency changes
+      this.currencySubscription = this.currencyService.getCurrentCurrency().subscribe(currency => {
+        this.cdr.detectChanges();
+      });
+    } catch (error) {
+      console.error('Error initializing currency:', error);
+    }
   }
 
 
@@ -240,21 +282,29 @@ calculatedDiscountAmount: number = 0;
 
 
 
-saveInvoInit() {
-  // Optimized: Save initial invoice with items and delete final invoice in single API call
-  const invoiceWithItems = {
-    invoice: this.payInvo,
-    items: this.itemList
-  };
+async saveInvoInit() {
+  // Show loading indicator
+  await this.showLoading('جاري تحويل الفاتورة إلى مبدئية...', 'saving');
   
-  this.api.saveSalesInvoInitWithItemsAndDeletePay(invoiceWithItems).subscribe(
-    (response: any) => {
-      this.handleSaveInitSuccess();
-    }, 
-    (err) => {
-      this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري', 'danger')
-    }
-  );
+  try {
+    // Optimized: Save initial invoice with items and delete final invoice in single API call
+    const invoiceWithItems = {
+      invoice: this.payInvo,
+      items: this.itemList
+    };
+    
+    this.api.saveSalesInvoInitWithItemsAndDeletePay(invoiceWithItems).subscribe(
+      async (response: any) => {
+        await this.hideLoading();
+        this.handleSaveInitSuccess();
+      }, 
+      async (err) => {
+        await this.handleError(err, 'saveInvoInit', 'لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري');
+      }
+    );
+  } catch (error) {
+    await this.handleError(error, 'saveInvoInit', 'حدث خطأ غير متوقع أثناء الحفظ');
+  }
 }
 
 private handleSaveInitSuccess() {
@@ -268,11 +318,12 @@ private handleSaveInitSuccess() {
     this.performSyncDelInitialMode();
   });
   
-  // Dismiss loading
-  this.loadingController.dismiss();
+  // Loading already dismissed in saveInvoInit success handler
 }
 
 
+ // Legacy method - should not be directly called in new flow
+ // This method is used in complex multi-step processes - loading managed by parent methods
  saveitemListinit(){  
   this.api.saveSalesitemListInit(this.itemList).subscribe(data=>{  
       this.presentToast('تم الحفظ بنجاح', 'success')
@@ -281,7 +332,7 @@ private handleSaveInitSuccess() {
     //console.log(err);
     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
   }, () => {
-    this.loadingController.dismiss()
+    // Loading dismissal managed by parent method
   }
   )      
 }
@@ -418,20 +469,89 @@ async  performSync(){
      toast.present();
    }
   
-  async presentLoadingWithOptions(msg?) {
-    const loading = await this.loadingController.create({
+  // Centralized loading management methods
+  async showLoading(message: string, operationType: 'saving' | 'deleting' | 'updating' = 'saving') {
+    // Dismiss any existing loader first
+    await this.hideLoading();
+    
+    // Set appropriate state
+    this.resetLoadingStates();
+    switch (operationType) {
+      case 'saving':
+        this.isSaving = true;
+        break;
+      case 'deleting':
+        this.isDeleting = true;
+        break;
+      case 'updating':
+        this.isUpdating = true;
+        break;
+    }
+    
+    this.currentLoadingMessage = message;
+    
+    // Create new loader without auto-dismiss
+    this.currentLoader = await this.loadingController.create({
       spinner: 'bubbles',
-      mode:'ios',
-      duration: 5000,
-      message: msg,
+      mode: 'ios',
+      message: message,
       translucent: true,
-     // cssClass: 'custom-class custom-loading',
       backdropDismiss: false
     });
-    await loading.present();
+    
+    await this.currentLoader.present();
+    this.cdr.detectChanges();
+  }
   
-    const { role, data } = await loading.onDidDismiss();
-    //console.log('Loading dismissed with role:', role);
+  async hideLoading() {
+    if (this.currentLoader) {
+      try {
+        await this.currentLoader.dismiss();
+      } catch (error) {
+        // Loader might already be dismissed, ignore error
+      }
+      this.currentLoader = null;
+    }
+    
+    this.resetLoadingStates();
+    this.currentLoadingMessage = '';
+    this.cdr.detectChanges();
+  }
+  
+  private resetLoadingStates() {
+    this.isSaving = false;
+    this.isDeleting = false;
+    this.isUpdating = false;
+  }
+  
+  // Check if any loading operation is active
+  isLoading(): boolean {
+    return this.isSaving || this.isDeleting || this.isUpdating;
+  }
+  
+  // Global error handler for consistent error management
+  private async handleError(error: any, operation: string, defaultMessage: string = 'حدث خطأ غير متوقع') {
+    await this.hideLoading();
+    console.error(`Error in ${operation}:`, error);
+    
+    // Determine appropriate error message
+    let errorMessage = defaultMessage;
+    if (error?.message) {
+      if (error.message.includes('timeout') || error.message.includes('TimeoutError')) {
+        errorMessage = 'انتهت مهلة الاتصال، يرجى المحاولة مرة أخرى';
+      } else if (error.message.includes('connection') || error.message.includes('Network')) {
+        errorMessage = 'خطأ في الاتصال، يرجى التحقق من الإنترنت والمحاولة مرة أخرى';
+      } else {
+        errorMessage = defaultMessage;
+      }
+    }
+    
+    this.presentToast(errorMessage, 'danger');
+  }
+  
+  // Legacy method - updated to use new system
+  async presentLoadingWithOptions(msg?) {
+    await this.showLoading(msg || 'جاري المعالجة...', 'saving');
   }
 
   
@@ -984,21 +1104,27 @@ async priceChangeAlertConfirm(item  , item_name) {
 }
 
 
-updateItemDetail(item){
-  this.presentLoadingWithOptions('جاري تعديل البيانات ...')  
-  this.api.updatePayPrice(item).subscribe(data => {
-  //console.log(data)
-  if (data['message'] != 'Post Not Updated') {
-   this.presentToast('تم التعديل بنجاح' , 'success') 
-  }else{
-  this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
-  } 
-}, (err) => {
+async updateItemDetail(item){
+  await this.showLoading('جاري تعديل بيانات الصنف...', 'updating');
   
-  this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
-},() => {
- this.loadingController.dismiss()
-}) 
+  try {
+    this.api.updatePayPrice(item).subscribe(
+      async (data) => {
+        //console.log(data)
+        await this.hideLoading();
+        if (data['message'] != 'Post Not Updated') {
+         this.presentToast('تم التعديل بنجاح' , 'success') 
+        }else{
+        this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+        } 
+      }, 
+      async (err) => {
+        await this.handleError(err, 'updateItemDetail', 'لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري');
+      }
+    );
+  } catch (error) {
+    await this.handleError(error, 'updateItemDetail', 'حدث خطأ غير متوقع أثناء التعديل');
+  }
 }
 
 
@@ -1033,23 +1159,29 @@ updateItemDetail(item){
 
    
 
-  updateInvo(){
-    // Optimized: Update invoice and items together in single API call
-    const invoiceWithItems = {
-      invoice: this.payInvo,
-      items: this.itemList
-    };
+  async updateInvo(){
+    // Show loading indicator  
+    await this.showLoading('جاري تحديث الفاتورة النهائية...', 'updating');
     
-    this.api.updateSalesInvoWithItems(invoiceWithItems).subscribe(
-      (response: any) => {
-        this.handleUpdateSuccess();
-      }, 
-      (err) => {
-        this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
-          this.loadingController.dismiss()
-        })
-      }
-    );
+    try {
+      // Optimized: Update invoice and items together in single API call
+      const invoiceWithItems = {
+        invoice: this.payInvo,
+        items: this.itemList
+      };
+      
+      this.api.updateSalesInvoWithItems(invoiceWithItems).subscribe(
+        async (response: any) => {
+          await this.hideLoading();
+          this.handleUpdateSuccess();
+        }, 
+        async (err) => {
+          await this.handleError(err, 'updateInvo', 'لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري');
+        }
+      );
+    } catch (error) {
+      await this.handleError(error, 'updateInvo', 'حدث خطأ غير متوقع أثناء التحديث');
+    }
   }
 
   private handleUpdateSuccess() {
@@ -1073,8 +1205,7 @@ updateItemDetail(item){
       this.performSync();
     });
     
-    // Dismiss loading
-    this.loadingController.dismiss();
+    // Loading already dismissed in updateInvo success handler
   }
 
  
@@ -1180,60 +1311,65 @@ delete() {
 }
 
 
-deleteSalesInvo(){ 
-  let arr :Array<any> =[]
-  arr.push({
-    "payInvo": this.payInvo,
-    "itemList": this.itemList 
-  })
-  this.logHistoryArr.push(
-    {
-      "id":null,
-      "logRef":this.generateRandom2('delete sales'),
-      "userId":this.user_info.id,
-      "typee":'delete sales',
-      "datee": momentObj(new Date()).locale('en').format('YYYY-MM-DD HH:mm:ss'),
-      "logStatus":0,
-      "logToken":JSON.stringify(arr[0]),
-      "yearId":this.year.id,
-      "store_id":this.store_info.id
-    }
-    )
+async deleteSalesInvo(){ 
+  // Always show loading for delete operations
+  await this.showLoading('جاري حذف الفاتورة...', 'deleting');
   
-    if (this.radioVal2 == 1) {
-      this.presentLoadingWithOptions('جاري حذف البيانات ...')
-    }else{
-
-    }
+  try {
+    let arr :Array<any> =[]
+    arr.push({
+      "payInvo": this.payInvo,
+      "itemList": this.itemList 
+    })
+    this.logHistoryArr.push(
+      {
+        "id":null,
+        "logRef":this.generateRandom2('delete sales'),
+        "userId":this.user_info.id,
+        "typee":'delete sales',
+        "datee": momentObj(new Date()).locale('en').format('YYYY-MM-DD HH:mm:ss'),
+        "logStatus":0,
+        "logToken":JSON.stringify(arr[0]),
+        "yearId":this.year.id,
+        "store_id":this.store_info.id
+      }
+    )
    
-  const deletionData = {
-    pay_id: this.payInvo.pay_id,
-    pay_ref: this.payInvo.pay_ref
-  };
+    const deletionData = {
+      pay_id: this.payInvo.pay_id,
+      pay_ref: this.payInvo.pay_ref
+    };
 
-  this.api.deleteSalesInvoWithItems(deletionData).subscribe(data => {
-    //console.log(data)
-    if (data['success']) {
-      this.sales = this.sales.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);
-      //console.log(' case ffff ' ,this.sales)
-      this.storage.set('sales', this.sales).then((response) => {
-        //console.log('sales', response) 
-        
-        if (this.radioVal2 == 1) {
-          this.performSyncDel() 
+    this.api.deleteSalesInvoWithItems(deletionData).subscribe(
+      async (data) => {
+        //console.log(data)
+        if (data['success']) {
+          await this.hideLoading();
+          this.presentToast('تم الحذف بنجاح', 'success');
+          
+          this.sales = this.sales.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);
+          //console.log(' case ffff ' ,this.sales)
+          this.storage.set('sales', this.sales).then((response) => {
+            //console.log('sales', response) 
+            
+            if (this.radioVal2 == 1) {
+              this.performSyncDel() 
+            }else{
+              this.performSyncDelInitialMode()
+            }
+          });
         }else{
-          this.performSyncDelInitialMode()
+          await this.hideLoading();
+          this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
         }
-      });
-    }else{
-      this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
-    }
-  },(err) => {
-    //console.log(err);
-    this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
-  },() => {
-    this.loadingController.dismiss()
-  }) 
+      },
+      async (err) => {
+        await this.handleError(err, 'deleteSalesInvo', 'لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري');
+      }
+    );
+  } catch (error) {
+    await this.handleError(error, 'deleteSalesInvo', 'حدث خطأ غير متوقع أثناء الحذف');
+  }
 }
 
 
@@ -1493,6 +1629,11 @@ formatBalance(balance: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(Math.abs(balance));
+}
+
+// Get current currency symbol for table headers
+getCurrencySymbol(): string {
+  return this.currencyService.getCurrentCurrencySymbol();
 }
 
 }

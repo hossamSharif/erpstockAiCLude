@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild, Input, Output, EventEmitter, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from "../../stockService/services.service";
 import { Storage } from '@ionic/storage';
-import { AlertController, LoadingController, ToastController } from '@ionic/angular';
+import { AlertController, LoadingController, ToastController, IonInput } from '@ionic/angular';
 import { FilterPipe } from './pipe';
 import { ModalController } from '@ionic/angular';
 import { ItemModalPage } from '../../item-modal/item-modal.page';
@@ -14,7 +14,7 @@ import { NavigationExtras, Router } from '@angular/router';
   styleUrls: ['./item-selector.component.scss'],
 })
 export class ItemSelectorComponent implements OnInit {
-  @ViewChild('searchInput', { static: false }) searchInput: ElementRef;
+  @ViewChild('searchInput', { static: false }) searchInput: IonInput;
   @ViewChild('inputWrapper', { static: false }) inputWrapper: ElementRef;
   @ViewChild('qtyId') qtyId;
   
@@ -51,6 +51,8 @@ export class ItemSelectorComponent implements OnInit {
   
   // Price update properties
   @Input() enablePriceUpdateConfirmation: boolean = true;
+  @Input() autoFocusAfterAdd: boolean = true; // Control auto-focus after adding item
+  @Input() focusQuantityAfterSelect: boolean = true; // Control focus on quantity after item selection
   private originalPayPrice: number = 0;
   private originalPerchPrice: number = 0;
   private pricesChanged: boolean = false;
@@ -128,7 +130,7 @@ getItemLoader: boolean = false;
   // Calculate dropdown position
   calculateDropdownPosition() {
     // Use the inner div wrapper for positioning (this is our reference element)
-    const elementToUse = this.inputWrapper?.nativeElement || this.searchInput?.nativeElement;
+    const elementToUse = this.inputWrapper?.nativeElement;
     
     if (elementToUse) {
       const rect = elementToUse.getBoundingClientRect();
@@ -152,53 +154,59 @@ getItemLoader: boolean = false;
   resetAllFieldsAndSelection() {
     console.log('🔄 Starting resetAllFieldsAndSelection...');
     
-    // Use the existing initialization method
+    // Reset component state
     this.initializeSelectedItem();
+    this.resetQuantityValues();
     
-    // Reset additional states not covered in initializeSelectedItem
+    // Reset UI states
     this.loadingQty = false;
     this.updateSuccess = false;
-    
-    // Reset price change tracking
     this.pricesChanged = false;
     this.originalPayPrice = 0;
     this.originalPerchPrice = 0;
-    
-    // Reset any warning states
     this.showQtyWarning = false;
     
-    // Clear search term completely
+    // Clear search and dropdown
     this.searchTerm = '';
-    
-    // Reset dropdown state
     this.showDropdown = false;
     this.highlightedIndex = -1;
     
-    // Force update of all input field displays
-    setTimeout(() => {
-      // Clear the search input field
-      if (this.searchInput && this.searchInput.nativeElement) {
-        console.log('📝 Clearing search input field');
-        this.searchInput.nativeElement.value = '';
-      }
-      
-      // Clear quantity input field if exists
-      if (this.qtyId && this.qtyId.nativeElement) {
-        console.log('📝 Clearing quantity input field');
-        this.qtyId.nativeElement.value = '0';
-      }
-      
-      // Force change detection to update all bindings
-      this.cdr.detectChanges();
-      console.log('🔄 Change detection forced');
-    }, 10);
+    // Update input fields synchronously
+    this.syncInputFields();
     
     // Emit null selection to parent components
     this.itemSelected.emit(null);
-    console.log('📤 Emitted null selection to parent');
     
     console.log('✅ resetAllFieldsAndSelection completed');
-    console.log('Final values - qty:', this.selectedItem.qty, 'pay_price:', this.selectedItem.pay_price, 'availQty:', this.availQty);
+  }
+  
+  // Helper method to sync input field values with component state
+  private async syncInputFields() {
+    console.log('🔄 Syncing input fields - searchTerm:', this.searchTerm, 'selectedItem.qty:', this.selectedItem.qty);
+    
+    // Sync search input using Ionic methods
+    if (this.searchInput) {
+      try {
+        // Get the native input element and set its value
+        const inputElement = await this.searchInput.getInputElement();
+        if (inputElement) {
+          inputElement.value = this.searchTerm;
+          console.log('🔄 Search input value set to:', this.searchTerm);
+        }
+      } catch (error) {
+        console.log('🔄 Error syncing search input:', error);
+      }
+    }
+    
+    // Sync quantity input
+    if (this.qtyId && this.qtyId.nativeElement) {
+      this.qtyId.nativeElement.value = this.selectedItem.qty || '0';
+      console.log('🔄 Quantity input value set to:', this.qtyId.nativeElement.value);
+    }
+    
+    // Force change detection
+    this.cdr.detectChanges();
+    console.log('🔄 Input field sync completed');
   }
   
 
@@ -222,8 +230,8 @@ getItemLoader: boolean = false;
       );
     }
     
-    // Return all items if no search term
-    return this.items;
+    // Return only first 50 items if no search term (for performance)
+    return this.items.slice(0, 50);
   }
 
  
@@ -668,7 +676,7 @@ onDocumentClick(event: Event) {
   const target = event.target as HTMLElement;
   if (!target) return;
   
-  const componentElement = this.inputWrapper?.nativeElement || this.searchInput?.nativeElement;
+  const componentElement = this.inputWrapper?.nativeElement;
   
   // Get all relevant dropdown elements
   const dropdownElements = document.querySelectorAll('.dropdown-container, .category-dropdown-container');
@@ -708,7 +716,7 @@ onDocumentFocusIn(event: Event) {
   const target = event.target as HTMLElement;
   if (!target) return;
   
-  const componentElement = this.inputWrapper?.nativeElement || this.searchInput?.nativeElement;
+  const componentElement = this.inputWrapper?.nativeElement;
   
   // Check if focus moved to an element outside the component
   if (componentElement && !componentElement.contains(target)) {
@@ -747,72 +755,83 @@ onSearchInput(event: any) {
   
   console.log('Search term changed to:', this.searchTerm);
   
-  // Check if input field was cleared - reset all fields and selection
+  // Reset selection when search term changes
   if (this.searchTerm.length === 0) {
-    console.log('Input field cleared - resetting all fields and selection');
-    this.resetAllFieldsAndSelection();
+    this.initializeSelectedItem();
+    this.itemSelected.emit(null);
   }
   
   this.highlightedIndex = -1; // Reset highlight when user types
   
-  // Show dropdown when user starts typing or when there are items
-  if (this.searchTerm.length > 0 || this.items.length > 0) {
-    // Calculate position if dropdown is not already shown
-    if (!this.showDropdown) {
-      this.calculateDropdownPosition();
-    }
-    this.showDropdown = true;
-    console.log('Showing dropdown with', this.getFilteredItems().length, 'filtered items');
-  } else {
-    this.showDropdown = false;
-  }
+  // Update dropdown visibility
+  this.updateDropdownVisibility();
+  
+  console.log('Showing dropdown with', this.getFilteredItems().length, 'filtered items');
 }
 
 // Handle clear button click (X button on ion-input)
 onInputClear(event: any) {
-  console.log('🔴 CLEAR BUTTON CLICKED - ionClear event fired!');
-  console.log('Event details:', event);
-  console.log('Current searchTerm before clear:', this.searchTerm);
-  console.log('Current selectedItem before clear:', this.selectedItem);
+  console.log('🔴 Clear button clicked - resetting component');
+  console.log('🔴 Current focus state before clear:', {
+    componentHasFocus: this.componentHasFocus,
+    activeElement: document.activeElement?.tagName
+  });
   
-  // Immediately set search term to empty
+  // Reset search term and component state
   this.searchTerm = '';
-  
-  // Direct reset without relying on synthetic events
   this.resetAllFieldsAndSelection();
-  
-  // No filters to apply - all items shown
-  
-  // Hide dropdown
   this.showDropdown = false;
   this.highlightedIndex = -1;
   
+  // Keep focus on search input after clearing
+  setTimeout(() => {
+    if (this.searchInput) {
+      this.searchInput.setFocus().then(() => {
+        this.componentHasFocus = true;
+        console.log('🔴 Focus restored to search input after clear');
+      }).catch((error) => {
+        console.log('🔴 Error restoring focus after clear:', error);
+      });
+    }
+  }, 50);
+  
   console.log('🟢 Clear button reset completed');
-  console.log('searchTerm after clear:', this.searchTerm);
-  console.log('selectedItem after clear:', this.selectedItem);
 }
 
 // Handle model changes (including clear button)
 onModelChange(newValue: string) {
-  console.log('🔄 Model changed from:', this.searchTerm, 'to:', newValue);
+  console.log('🔄 Model changed to:', newValue);
   
   // Update the search term
   this.searchTerm = newValue || '';
   
-  // If the new value is empty, reset everything
+  // If the new value is empty, reset selection but keep search behavior
   if (!newValue || newValue.length === 0) {
-    console.log('🧽 Model change detected empty value - resetting component');
-    this.resetAllFieldsAndSelection();
+    this.initializeSelectedItem();
+    this.itemSelected.emit(null);
   }
   
   this.highlightedIndex = -1;
   
-  // Show/hide dropdown based on content
-  if (this.searchTerm.length > 0 || this.getFilteredItems().length > 0) {
+  // Show/hide dropdown based on content and items availability
+  this.updateDropdownVisibility();
+}
+
+// Helper method to manage dropdown visibility
+private updateDropdownVisibility() {
+  if (this.items.length === 0) {
+    this.showDropdown = false;
+    return;
+  }
+
+  const hasSearchTerm = this.searchTerm && this.searchTerm.length > 0;
+  const hasFilteredResults = this.getFilteredItems().length > 0;
+  
+  if (hasSearchTerm || (this.componentHasFocus && hasFilteredResults)) {
     if (!this.showDropdown) {
       this.calculateDropdownPosition();
+      this.showDropdown = true;
     }
-    this.showDropdown = true;
   } else {
     this.showDropdown = false;
   }
@@ -821,6 +840,7 @@ onModelChange(newValue: string) {
 // Reset fields and show dropdown after adding item to list
 resetAfterAddingItem() {
   console.log('📦 Item added - resetting fields and showing dropdown');
+  console.log('📦 Configuration - autoFocusAfterAdd:', this.autoFocusAfterAdd, 'items available:', this.items.length);
   
   // Use the comprehensive reset method
   this.resetAllFieldsAndSelection();
@@ -828,20 +848,289 @@ resetAfterAddingItem() {
   // Set pay_ref back since it should be preserved
   this.selectedItem.pay_ref = this.payRef;
   
-  // Show dropdown automatically to allow quick selection of next item
-  if (this.items.length > 0) {
-    setTimeout(() => {
-      // Calculate position and show dropdown
-      this.calculateDropdownPosition();
-      this.showDropdown = true;
-      
-      // Focus on the search input for immediate typing
-      if (this.searchInput && this.searchInput.nativeElement) {
-        this.searchInput.nativeElement.focus();
+  // Show dropdown and focus search input if enabled
+  if (this.items.length > 0 && this.autoFocusAfterAdd) {
+    console.log('📦 Calling focusSearchInputAndShowDropdown');
+    this.focusSearchInputAfterAdd();
+  } else {
+    console.log('📦 Skipping focus - conditions not met:', {
+      hasItems: this.items.length > 0,
+      autoFocusEnabled: this.autoFocusAfterAdd
+    });
+  }
+}
+
+// Clean method to focus search input and show dropdown
+private focusSearchInputAndShowDropdown() {
+  setTimeout(() => {
+    if (this.searchInput) {
+      // Clear any existing focus
+      if (this.qtyId && this.qtyId.nativeElement) {
+        this.qtyId.nativeElement.blur();
       }
       
-      console.log('📦 Dropdown shown after item added - ready for next selection');
-    }, 100); // Small delay to ensure DOM is updated
+      // Focus search input using Ionic method
+      this.searchInput.setFocus().then(() => {
+        // Show dropdown if items available
+        this.calculateDropdownPosition();
+        this.showDropdown = true;
+        console.log('🎯 Search input focused and dropdown shown');
+      }).catch((error) => {
+        console.log('🎯 Error focusing search input:', error);
+      });
+    }
+  }, 150); // Single reasonable delay
+}
+
+// Enhanced method specifically for focusing search input after adding item
+private focusSearchInputAfterAdd(attemptCount = 1, maxAttempts = 3) {
+  // Longer initial delay to allow parent component processing to complete
+  const delay = attemptCount === 1 ? 400 : 300 * attemptCount; // More time after item add
+  
+  setTimeout(() => {
+    console.log(`🔄 Attempt ${attemptCount}: Focusing search input after item add`);
+    console.log('🔄 Current active element:', document.activeElement?.tagName, document.activeElement?.className);
+    
+    // Clear any existing focus that might interfere
+    if (this.qtyId && this.qtyId.nativeElement) {
+      this.qtyId.nativeElement.blur();
+      console.log('🔄 Blurred quantity input');
+    }
+    
+    // Clear component focus state
+    this.componentHasFocus = false;
+    
+    // Try multiple strategies to focus the search input
+    let focusSuccess = false;
+    
+    // Strategy 1: Use Ionic's setFocus method (most reliable for Ionic components)
+    if (this.searchInput && !focusSuccess) {
+      try {
+        console.log('🔄 Trying Ionic setFocus method');
+        this.searchInput.setFocus().then(() => {
+          console.log('🎯 Ionic setFocus successful - showing dropdown');
+          this.componentHasFocus = true;
+          this.calculateDropdownPosition();
+          this.showDropdown = true;
+          focusSuccess = true;
+        }).catch((error) => {
+          console.log('🔄 Ionic setFocus failed, trying fallback methods:', error);
+          this.tryFallbackFocusMethods(attemptCount, maxAttempts);
+        });
+        return; // Exit here, let the promise handle the rest
+      } catch (error) {
+        console.log('🔄 setFocus method threw error:', error);
+      }
+    }
+    
+    // If we get here, Ionic setFocus is not available, try fallback methods
+    this.tryFallbackFocusMethods(attemptCount, maxAttempts);
+  }, delay);
+}
+
+// Fallback methods when Ionic setFocus fails or is not available
+private async tryFallbackFocusMethods(attemptCount: number, maxAttempts: number) {
+  console.log(`🔄 Trying fallback focus methods, attempt ${attemptCount}`);
+  
+  // Try to get the search input element using various strategies
+  const searchElement = await this.getSearchInputElement();
+  
+  if (searchElement) {
+    console.log('🔄 Found search input element using strategy:', searchElement.strategy);
+    
+    try {
+      // Focus search input using the found element
+      searchElement.element.focus();
+      this.componentHasFocus = true;
+      
+      // Verify focus was successful
+      setTimeout(() => {
+        const activeElement = document.activeElement;
+        const isFocused = activeElement === searchElement.element;
+        console.log('🔄 Fallback focus verification:', {
+          isFocused,
+          activeElementTag: activeElement?.tagName,
+          strategy: searchElement.strategy
+        });
+        
+        if (isFocused) {
+          // Show dropdown if focus was successful
+          this.calculateDropdownPosition();
+          this.showDropdown = true;
+          console.log('🎯 Search input focused successfully with fallback method');
+        } else if (attemptCount < maxAttempts) {
+          console.log(`🔄 Fallback focus verification failed, retrying attempt ${attemptCount + 1}/${maxAttempts}`);
+          this.focusSearchInputAfterAdd(attemptCount + 1, maxAttempts);
+        }
+      }, 50);
+      
+    } catch (error) {
+      console.log('🔄 Error with fallback focus:', error);
+      if (attemptCount < maxAttempts) {
+        this.focusSearchInputAfterAdd(attemptCount + 1, maxAttempts);
+      }
+    }
+  } else {
+    console.log(`🔄 No search input element found with fallback methods`);
+    if (attemptCount < maxAttempts) {
+      this.focusSearchInputAfterAdd(attemptCount + 1, maxAttempts);
+    }
+  }
+}
+
+// Helper method to get search input element using multiple strategies
+private async getSearchInputElement(): Promise<{ element: HTMLElement, strategy: string } | null> {
+  // Strategy 1: Try to get input element via Ionic's getInputElement
+  if (this.searchInput) {
+    try {
+      const inputElement = await this.searchInput.getInputElement();
+      if (inputElement) {
+        console.log('🔍 Strategy 1: Ionic getInputElement available');
+        return { element: inputElement, strategy: 'Ionic.getInputElement' };
+      }
+    } catch (error) {
+      console.log('🔍 Strategy 1 failed:', error);
+    }
+  }
+  
+  // Strategy 2: Use Ionic's setFocus method directly
+  if (this.searchInput) {
+    try {
+      // Try using Ionic's setFocus method
+      console.log('🔍 Strategy 2: Trying Ionic setFocus method');
+      this.searchInput.setFocus().then(() => {
+        console.log('🔍 Strategy 2: Ionic setFocus successful');
+        this.componentHasFocus = true;
+        this.calculateDropdownPosition();
+        this.showDropdown = true;
+      }).catch((error) => {
+        console.log('🔍 Strategy 2: Ionic setFocus failed:', error);
+      });
+      // Don't return here, let other strategies also run as backup
+    } catch (error) {
+      console.log('🔍 Strategy 2 failed:', error);
+    }
+  }
+
+  // Strategy 2b: Try to get the Ionic input element via getInputElement
+  if (this.searchInput) {
+    try {
+      // For Ionic components, sometimes we need to access the input differently
+      const ionInput = this.searchInput as any;
+      if (ionInput.getInputElement) {
+        const inputElement = ionInput.getInputElement();
+        if (inputElement instanceof Promise) {
+          // Handle async getInputElement
+          inputElement.then(el => {
+            if (el) {
+              console.log('🔍 Strategy 2b: Async getInputElement found element');
+              return { element: el, strategy: 'getInputElement-async' };
+            }
+          });
+          return null; // Return null for now, async handling above
+        } else if (inputElement) {
+          console.log('🔍 Strategy 2b: Sync getInputElement found element');
+          return { element: inputElement, strategy: 'getInputElement' };
+        }
+      }
+    } catch (error) {
+      console.log('🔍 Strategy 2b failed:', error);
+    }
+  }
+  
+  // Strategy 3: Query selector for input within the wrapper
+  if (this.inputWrapper && this.inputWrapper.nativeElement) {
+    const inputElement = this.inputWrapper.nativeElement.querySelector('input');
+    if (inputElement) {
+      console.log('🔍 Strategy 3: Found input via querySelector in wrapper');
+      return { element: inputElement, strategy: 'querySelector-wrapper' };
+    }
+  }
+  
+  // Strategy 4: Query selector for ion-input with our reference
+  const ionInputElement = document.querySelector('ion-input.item-selector-input input');
+  if (ionInputElement) {
+    console.log('🔍 Strategy 4: Found input via global querySelector');
+    return { element: ionInputElement as HTMLElement, strategy: 'querySelector-global' };
+  }
+  
+  // Strategy 5: Last resort - find any input in the item selector wrapper
+  const wrapperElement = document.querySelector('.item-selector-wrapper input');
+  if (wrapperElement) {
+    console.log('🔍 Strategy 5: Found input via wrapper class selector');
+    return { element: wrapperElement as HTMLElement, strategy: 'querySelector-wrapper-class' };
+  }
+  
+  console.log('🔍 All strategies failed to find search input element');
+  return null;
+}
+
+// Clean method to focus quantity input with retry mechanism
+private focusQuantityInput(attemptCount = 1, maxAttempts = 3) {
+  if (!this.focusQuantityAfterSelect) {
+    console.log('🎯 Quantity focus disabled by configuration');
+    return;
+  }
+  
+  if (!this.showQuantityInput) {
+    console.log('🎯 Quantity input not shown - cannot focus');
+    return;
+  }
+  
+  const delay = attemptCount === 1 ? 100 : 200 * attemptCount; // Progressive delay
+  
+  setTimeout(() => {
+    if (this.qtyId) {
+      try {
+        // First try: Use Ionic's setFocus method
+        this.qtyId.setFocus().then(() => {
+          console.log('🎯 Quantity input focused successfully with setFocus()');
+        }).catch((error) => {
+          console.log('🎯 setFocus failed:', error);
+          // Fallback: try native focus
+          this.tryNativeFocus();
+        });
+      } catch (error) {
+        console.log('🎯 Error calling setFocus:', error);
+        this.tryNativeFocus();
+      }
+    } else {
+      console.log(`🎯 Attempt ${attemptCount}: Quantity input element not available:`, {
+        qtyIdExists: !!this.qtyId,
+        showQuantityInput: this.showQuantityInput
+      });
+      
+      // Retry if element is not ready yet
+      if (attemptCount < maxAttempts) {
+        console.log(`🎯 Retrying focus attempt ${attemptCount + 1}/${maxAttempts}`);
+        this.focusQuantityInput(attemptCount + 1, maxAttempts);
+      }
+    }
+  }, delay);
+}
+
+// Helper method to try native focus as fallback
+private tryNativeFocus() {
+  if (this.qtyId && this.qtyId.nativeElement) {
+    try {
+      console.log('🎯 Attempting native focus on element:', this.qtyId.nativeElement);
+      this.qtyId.nativeElement.focus();
+      console.log('🎯 Quantity input focused via native element');
+      
+      // Verify focus was successful
+      setTimeout(() => {
+        const activeElement = document.activeElement;
+        console.log('🎯 Active element after native focus:', activeElement?.tagName, activeElement?.className);
+        console.log('🎯 Is quantity input focused?:', activeElement === this.qtyId.nativeElement);
+      }, 50);
+    } catch (fallbackError) {
+      console.log('🎯 Native focus also failed:', fallbackError);
+    }
+  } else {
+    console.log('🎯 tryNativeFocus: Element not available:', {
+      qtyIdExists: !!this.qtyId,
+      nativeElementExists: !!(this.qtyId && this.qtyId.nativeElement)
+    });
   }
 }
 
@@ -858,7 +1147,7 @@ toggleDropdown() {
       // Focus the input field
       if (this.searchInput) {
         setTimeout(() => {
-          this.searchInput.nativeElement.focus();
+          this.searchInput.setFocus();
         }, 100);
       }
     }
@@ -881,7 +1170,7 @@ presentDropdown(event?: Event) {
     // Focus input after short delay
     setTimeout(() => {
       if (this.searchInput) {
-        this.searchInput.nativeElement.focus();
+        this.searchInput.setFocus();
       }
     }, 100);
   }
@@ -1001,29 +1290,51 @@ selectItem(item: any) {
   this.searchTerm = item.item_name;
   this.showDropdown = false;
   this.highlightedIndex = -1;
+  this.componentHasFocus = false; // Clear focus state to prevent interference
   
   // Force change detection
   this.cdr.detectChanges();
   
   // Update input value manually
-  if (this.searchInput && this.searchInput.nativeElement) {
-    setTimeout(() => {
-      const ionInput = this.searchInput.nativeElement;
-      ionInput.value = item.item_name;
-      
-      const inputEvent = new Event('input', { bubbles: true });
-      ionInput.dispatchEvent(inputEvent);
+  if (this.searchInput) {
+    setTimeout(async () => {
+      try {
+        const inputElement = await this.searchInput.getInputElement();
+        if (inputElement) {
+          inputElement.value = item.item_name;
+          
+          const inputEvent = new Event('input', { bubbles: true });
+          inputElement.dispatchEvent(inputEvent);
+        }
+      } catch (error) {
+        console.log('Error updating input value:', error);
+      }
     }, 10);
   }
   
   this.itemSelected.emit(this.selectedItem);
   
-  // Load item quantity data
+  // Load item quantity data and focus quantity input
   if (this.selectedItem.id) {
+    console.log('🔍 selectItem: Loading quantity data and focusing input for item:', this.selectedItem.item_name);
+    console.log('🔍 selectItem: Configuration - focusQuantityAfterSelect:', this.focusQuantityAfterSelect, 'showQuantityInput:', this.showQuantityInput);
+    console.log('🔍 selectItem: Current active element:', document.activeElement?.tagName, document.activeElement?.className);
+    
+    // Blur search input to prevent focus conflicts
+    if (this.searchInput) {
+      try {
+        this.searchInput.getInputElement().then(inputElement => {
+          if (inputElement) {
+            inputElement.blur();
+          }
+        });
+      } catch (error) {
+        console.log('Error blurring search input:', error);
+      }
+    }
+    
     this.readItemByIdQty();
-    setTimeout(() => {
-      this.setFocusOnInput('qtyId');
-    }, 200);
+    this.focusQuantityInput();
   }
 }
 
@@ -1072,10 +1383,8 @@ selectFromPop(item) {
   
   this.isOpen = false;
   
-  // Focus on quantity input after selection
-  setTimeout(() => {
-    this.setFocusOnInput('qtyId');
-  }, 200);
+  // Focus on quantity input after selection with clean timeout
+  this.focusQuantityInput();
 }
 
 
@@ -1315,11 +1624,11 @@ async   addToList() {
     const isPurchasePage = this.parentPage === 'purchase' || this.parentPage === 'edit-perch';
     const isSalesPage = this.parentPage === 'sales' || this.parentPage === 'edit-sales';
 
-    // Show quantity warning for sales pages but don't prevent adding
-    if (isSalesPage && (+this.selectedItem.qty > +this.availQty)) {
-      this.presentToast('الكمية المطلوبة أكبر من المتوفر في المخزن', 'warning');
-      // Continue execution - don't return, just show the warning
-    }
+    // // Show quantity warning for sales pages but don't prevent adding
+    // if (isSalesPage && (+this.selectedItem.qty > +this.availQty)) {
+    //   this.presentToast('الكمية المطلوبة أكبر من المتوفر في المخزن', 'warning');
+    //   // Continue execution - don't return, just show the warning
+    // }
     
     if (this.selectedItem.item_name == "" || this.selectedItem.id == "" || +this.selectedItem.qty == 0) {
       this.presentToast('الرجاء اختيار الصنف وتحديد الكمية', 'danger');
@@ -1357,30 +1666,6 @@ async   addToList() {
       
       // Reset all fields and show dropdown after adding item
       this.resetAfterAddingItem();
-      
-      this.setFocusOnInput('dstPop');
-
-
-      // Store the original trigger element before reopening popover
-    const originalTrigger = this.popover.event;
-    
-    // Close and reopen popover with proper positioning and focus
-    this.isOpen = false;
-     
-    this.resetSelectedItem();
-    setTimeout(() => {
-      // Restore original trigger position
-      this.popover.event = originalTrigger;
-      this.isOpen = true;
-      this.highlightedIndex = -1;
-      this.clearSearch();
-      // Items loaded directly without filtering
-      this.resetSelectedItem();
-      // Multiple focus attempts
-      setTimeout(() => this.forceFocusOnPopInput(), 100);
-      setTimeout(() => this.forceFocusOnPopInput(), 300);
-      setTimeout(() => this.forceFocusOnPopInput(), 500);
-      }, 50);
     }   
  }
 // Helper method for continue without update confirmation
@@ -1513,15 +1798,11 @@ findPayPriceInput() {
   }
 
   setFocusOnInput(inputName: string) {
+    console.log('🔍 setFocusOnInput called with:', inputName);
     if (inputName === 'dstPop' || inputName === 'searchInput') {
-      if (this.searchInput) {
-        this.searchInput.nativeElement.focus();
-      }
-      this.presentDropdown();
+      this.focusSearchInputAndShowDropdown();
     } else if (inputName === 'qtyId') {
-      if (this.qtyId) {
-        this.qtyId.setFocus();
-      }
+      this.focusQuantityInput();
     }
   }
 
@@ -1541,72 +1822,25 @@ findPayPriceInput() {
     toast.present();
   }
 
-  // Compatibility methods for remaining old code
-  calculatePopoverSize() {
-    // Legacy method - no longer needed
-  }
-
+  // Legacy compatibility methods - kept minimal for backwards compatibility
   presentPopover(event?: Event) {
-    // Redirect to new dropdown method
+    // Redirect to dropdown method
     this.presentDropdown(event);
   }
 
   didDismiss() {
-    // Legacy method - handled by new dropdown logic
+    // Clean dismiss handling
     this.showDropdown = false;
     this.highlightedIndex = -1;
-    this.searchTerm = '';
-  }
-
-  onPopoverDidPresent() {
-    // Legacy method - no longer needed
-  }
-
-  onPopoverKeyDown(event: KeyboardEvent) {
-    // Redirect to new method
-    this.onKeyDown(event);
   }
 
   scrollToSelected() {
-    // Legacy method - replaced by scrollHighlightedItemIntoView
+    // Redirect to modern method
     this.scrollHighlightedItemIntoView();
   }
 
-  fixPopoverPosition(event?: Event) {
-    // Legacy method - no longer needed
-  }
-
-  setFocusOnPopInput() {
-    // Legacy method - redirect to new input
-    if (this.searchInput) {
-      this.searchInput.nativeElement.focus();
-    }
-  }
-
-  forceFocusOnPopInput() {
-    // Legacy method - redirect to new input
-    setTimeout(() => {
-      if (this.searchInput) {
-        this.searchInput.nativeElement.focus();
-      }
-    }, 100);
-  }
-
-  onWindowResize() {
-    // Legacy method - no longer needed for dropdowns
-  }
-
-  onOrientationChange() {
-    // Legacy method - no longer needed for dropdowns
-  }
-
   reopenPopover() {
-    // Legacy method - redirect to dropdown
+    // Redirect to dropdown method
     this.reopenDropdown();
-  }
-
-  reopenPopoverWithStoredPosition() {
-    // Legacy method - redirect to dropdown
-    this.presentDropdown();
   }
 }

@@ -164,20 +164,20 @@
                 <tr>
                 <th class="th" style="border-bottom: .5px solid #dddddd ;">الصنف  item</th>
                 <th class="th" style="border-bottom: .5px solid #dddddd ;">الكمية  QTY</th> 
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">سعر  unit price </th> 
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">الخصم   discount</th>
+                <th class="th" style="border-bottom: .5px solid #dddddd ;">سعر  unit price ({{ getCurrencySymbol() }})</th> 
+                <th class="th" style="border-bottom: .5px solid #dddddd ;">الخصم   discount ({{ getCurrencySymbol() }})</th>
                 <th class="th" style="border-bottom: .5px solid #dddddd ;">نسبة الضريبة   VAT%</th> 
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">قيمة الضريبة   VAT</th> 
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">   صافي القيمة  total</th>
+                <th class="th" style="border-bottom: .5px solid #dddddd ;">قيمة الضريبة   VAT ({{ getCurrencySymbol() }})</th> 
+                <th class="th" style="border-bottom: .5px solid #dddddd ;">   صافي القيمة  total ({{ getCurrencySymbol() }})</th>
                 </tr>
                 <tr *ngFor="let item of printArr[0].itemList ; let i = index"> 
                   <td class="td" style="border: none;">{{item.item_name}}</td>
                   <td class="td"  style="border: none;"> {{item.quantity}}</td>
-                  <td  class="td" style="border: none;">  {{formatBalance(item.pay_price)}} </td> 
-                  <td  class="td" style="border: none;">  {{formatBalance(item.discount)}} </td> 
+                  <td  class="td" style="border: none;">  {{item.pay_price | currencyDisplay:'SDG':false}} </td> 
+                  <td  class="td" style="border: none;">  {{item.discount | currencyDisplay:'SDG':false}} </td> 
                   <td  class="td" style="border: none;">  {{item.tax}} </td> 
-                  <td class="td" style="border: none;">{{formatBalance(+item.pay_price + (+item.tax/100 * +item.pay_price))}}</td>
-                  <td  class="td" style="border: none;">  {{formatBalance(item.tot)}} </td> 
+                  <td class="td" style="border: none;">{{(+item.pay_price + (+item.tax/100 * +item.pay_price)) | currencyDisplay:'SDG':false}}</td>
+                  <td  class="td" style="border: none;">  {{item.tot | currencyDisplay:'SDG':false}} </td> 
                 </tr> 
                 <tr>
                   <td ></td>
@@ -185,7 +185,7 @@
                   <td ></td>
                   <td></td>
                   <td></td>
-                  <td class="td" style="border: none;">{{formatBalance(printArr[0].payInvo.tot_pr)}}</td>
+                  <td class="td" style="border: none;">{{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</td>
                 </tr>
               </table> 
               </div> 
@@ -197,7 +197,7 @@
                   <ion-label>صافي المبلغ  / total  </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr)}}</ion-label>
+                  <ion-label> {{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</ion-label>
                 </div>
               </div>
               <div  class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
@@ -205,7 +205,7 @@
                   <ion-label>   نسبة الضريبة % / VAT%</ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  {{formatBalance(printArr[0].payInvo.discount)}} </ion-label>
+                  <ion-label>  {{printArr[0].payInvo.discount | currencyDisplay:'SDG':false}} </ion-label>
                 </div>
               </div>
               <div  class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
@@ -213,7 +213,7 @@
                   <ion-label> قيمة الضريبة / VAT </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  {{formatBalance(printArr[0].payInvo.discount)}} </ion-label>
+                  <ion-label>  {{printArr[0].payInvo.discount | currencyDisplay:'SDG':false}} </ion-label>
                 </div>
               </div> 
 
@@ -222,7 +222,7 @@
                   <ion-label> صافي المبلغ شامل الضريبة / total include VAT   </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}}   </ion-label>
+                  <ion-label> {{(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount) | currencyDisplay:'SDG':false}}   </ion-label>
                 </div>
               </div> 
            </div>
@@ -253,6 +253,12 @@
 
 <!-- NEW ENHANCED PRINTING STYLE -->
 <ion-content *ngIf="mode == 'enhanced'">
+  <!-- Currency Information Header -->
+  <div class="currency-info" style="font-size: 0.8em; margin: 10px 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px; text-align: center;" *ngIf="currentCurrency !== 'SDG'">
+    <p>العملة المحددة: {{currentCurrency}} - سعر الصرف: {{exchangeRate | number:'1.2-6'}}</p>
+    <p>جميع القيم معروضة بالعملة المحددة مع القيمة بالجنيه السوداني</p>
+  </div>
+  
   <div style="padding: 20px;">
     <div #printarea1 id="printarea1">
       <!-- Header with Images and Title -->
@@ -313,12 +319,12 @@
               <th style="border: 1px solid #000; padding: 10px; text-align: center;">الصنف</th>
               <th style="border: 1px solid #000; padding: 10px; text-align: center;">الكمية</th>
               <th style="border: 1px solid #000; padding: 10px; text-align: center;" *ngIf="page=='sales' || page=='sales_record'">
-                سعر الوحدة
+                سعر الوحدة ({{ getCurrencySymbol() }})
               </th>
               <th style="border: 1px solid #000; padding: 10px; text-align: center;" *ngIf="page=='perch' || page=='perch_record'">
-                سعر الشراء
+                سعر الشراء ({{ getCurrencySymbol() }})
               </th>
-              <th style="border: 1px solid #000; padding: 10px; text-align: center;">المجموع</th>
+              <th style="border: 1px solid #000; padding: 10px; text-align: center;">المجموع ({{ getCurrencySymbol() }})</th>
             </tr>
           </thead>
           <tbody>
@@ -327,12 +333,12 @@
               <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">{{item.item_name}}</td>
               <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{item.quantity}}</td>
               <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;" *ngIf="page=='sales' || page=='sales_record'">
-                {{formatBalance(item.pay_price)}}
+                {{item.pay_price | currencyDisplay:'SDG':false}}
               </td>
               <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;" *ngIf="page=='perch' || page=='perch_record'">
-                {{formatBalance(item.perch_price)}}
+                {{item.perch_price | currencyDisplay:'SDG':false}}
               </td>
-              <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{formatBalance(item.tot)}}</td>
+              <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{item.tot | currencyDisplay:'SDG':false}}</td>
             </tr>
             <!-- Totals Row -->
             <!-- <tr style="background-color: #f0f0f0; font-weight: bold;">
@@ -340,7 +346,7 @@
               <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;"></td>
               <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{printArr[0].itemList.length}}</td>
               <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;" *ngIf="page=='sales' || page=='sales_record' || page=='perch' || page=='perch_record'"></td>
-              <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{formatBalance(printArr[0].payInvo.tot_pr)}}</td>
+              <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{formatDualCurrency(printArr[0].payInvo.tot_pr)}}</td>
             </tr> -->
           </tbody>
         </table>
@@ -352,17 +358,17 @@
           <!-- First Row -->
           <div style="margin-bottom: 8px; border-bottom: 1px dotted #ccc; padding-bottom: 8px;">
             <span style="display: inline-block; width: 48%; text-align: right;">
-              <strong>إجمالي المبلغ: </strong>{{formatBalance(printArr[0].payInvo.tot_pr)}} ج.س
+              <strong>إجمالي المبلغ ({{ getCurrencySymbol() }}): </strong>{{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}
             </span>
             <span style="display: inline-block; width: 48%; text-align: right;" *ngIf="+printArr[0].payInvo.discount > 0">
-              <strong>الخصم: </strong>{{formatBalance(printArr[0].payInvo.discount)}} ج.س
+              <strong>الخصم ({{ getCurrencySymbol() }}): </strong>{{printArr[0].payInvo.discount | currencyDisplay:'SDG':false}}
             </span>
             <!-- Hidden pay amount for enhanced mode -->
           </div>
           <!-- Second Row -->
           <div style="margin-bottom: 8px;" *ngIf="+printArr[0].payInvo.discount > 0">
             <span style="display: inline-block; width: 48%; text-align: right;">
-              <strong>الإجمالي بعد الخصم: </strong>{{formatBalance(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}} ج.س
+              <strong>الإجمالي بعد الخصم ({{ getCurrencySymbol() }}): </strong>{{(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount) | currencyDisplay:'SDG':false}}
             </span>
             <!-- Hidden pay amount for enhanced mode with discount -->
           </div>
@@ -449,31 +455,31 @@
                 <th class="th">الصنف</th>
                 <th class="th">الكمية</th>
                 <th  *ngIf="page=='perch' || page=='perch_record'" class="th">
-                  سعر الشراء
+                  سعر الشراء ({{ getCurrencySymbol() }})
                 </th>
                 <th *ngIf="page=='sales' || page=='sales_record'" class="th">
-                  سعر الوحده
+                  سعر الوحده ({{ getCurrencySymbol() }})
                 </th>
-                <th class="th">المجموع</th>
+                <th class="th">المجموع ({{ getCurrencySymbol() }})</th>
                 </tr>
                 <tr   *ngFor="let item of printArr[0].itemList ; let i = index">
                   <td class="td">{{i+1}}</td>
                   <td class="td">{{item.item_name}}</td>
                  <td class="td"> {{item.quantity}}</td>
                  <td *ngIf="page=='sales' || page=='sales_record'" class="td">
-                  {{formatBalance(item.pay_price)}}
+                  {{item.pay_price | currencyDisplay:'SDG':false}}
                 </td>
                  <td  *ngIf="page=='perch' || page=='perch_record'" class="td">
-                  {{formatBalance(item.perch_price)}}
+                  {{item.perch_price | currencyDisplay:'SDG':false}}
                 </td>
-                 <td class="td">{{formatBalance(+item.tot)}}</td>
+                 <td class="td">{{item.tot | currencyDisplay:'SDG':false}}</td>
                 </tr> 
                 <tr>
                   <td ></td>
                   <td ></td>
                   <td></td>
                   <td></td>
-                  <td class="td">{{formatBalance(printArr[0].payInvo.tot_pr)}}</td>
+                  <td class="td">{{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</td>
                 </tr>
               </table> 
               </div> 
@@ -482,26 +488,26 @@
             <div *ngIf="printArr" class="w100 rtl ion-margin"> 
               <div class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
                 <div class="rtl ion-text-center" style=" width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>إجمالي المبلغ </ion-label>
+                  <ion-label>إجمالي المبلغ ({{ getCurrencySymbol() }}) </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr)}} ج.س</ion-label>
+                  <ion-label> {{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</ion-label>
                 </div>
               </div>
               <div *ngIf="+printArr[0].payInvo.discount>0" class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
                 <div class="rtl ion-text-center" style=" width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>   الخصــم </ion-label>
+                  <ion-label>   الخصــم ({{ getCurrencySymbol() }}) </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  {{formatBalance(printArr[0].payInvo.discount)}}  ج.س</ion-label>
+                  <ion-label>  {{printArr[0].payInvo.discount | currencyDisplay:'SDG':false}}</ion-label>
                 </div>
               </div>  
               <div *ngIf="+printArr[0].payInvo.discount>0" class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
                 <div class="rtl ion-text-center" style=" width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> الإجمالي بعدالخصم    </ion-label>
+                  <ion-label> الإجمالي بعدالخصم ({{ getCurrencySymbol() }})    </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}}  ج.س</ion-label>
+                  <ion-label> {{(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount) | currencyDisplay:'SDG':false}}</ion-label>
                 </div>
               </div>
               <!-- Hidden pay amount section for regular mode -->
@@ -565,10 +571,10 @@
               <th class="th">الصنف</th>
               <th class="th">الكمية</th>
               <th  class="th">
-                سعر الشراء
+                سعر الشراء ({{ getCurrencySymbol() }})
               </th>
               
-              <th class="th">المجموع</th>
+              <th class="th">المجموع ({{ getCurrencySymbol() }})</th>
               </tr>
               <tr   *ngFor="let item of printArr[0].itemList ; let i = index">
                 <td class="td">{{i+1}}</td>
@@ -576,16 +582,16 @@
                <td class="td"> {{item.quantity}}</td>
                
                <td   class="td">
-                {{formatBalance(item.perch_price)}}
+                {{item.perch_price | currencyDisplay:'SDG':false}}
               </td>
-               <td class="td">{{formatBalance(+item.tot)}}</td>
+               <td class="td">{{item.tot | currencyDisplay:'SDG':false}}</td>
               </tr> 
               <tr>
                 <td ></td>
                 <td ></td>
                 <td></td>
                 <td></td>
-                <td class="td">{{formatBalance(printArr[0].payInvo.tot_pr)}}</td>
+                <td class="td">{{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</td>
               </tr>
             </table> 
             </div> 
@@ -597,7 +603,7 @@
                 <ion-label>إجمالي المبلغ </ion-label>
               </div>
               <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr)}} ج.س</ion-label>
+                <ion-label> {{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}} ج.س</ion-label>
               </div>
             </div>
 
@@ -664,10 +670,10 @@
         <th class="th">Item</th>
         <th class="th">Qty</th>
         <th   class="th">
-          Purchace price
+          Purchace price ({{ getCurrencySymbol() }})
         </th>
         
-        <th class="th">Total</th>
+        <th class="th">Total ({{ getCurrencySymbol() }})</th>
         </tr>
         <tr   *ngFor="let item of printArr[0].itemList ; let i = index">
           <td class="td">{{i+1}}</td>
@@ -675,16 +681,16 @@
          <td class="td"> {{item.quantity}}</td>
          
          <td   class="td">
-          {{formatBalance(item.perch_price)}}
+          {{item.perch_price | currencyDisplay:'SDG':false}}
         </td>
-         <td class="td">{{formatBalance(+item.tot)}}</td>
+         <td class="td">{{item.tot | currencyDisplay:'SDG':false}}</td>
         </tr> 
         <tr>
           <td ></td>
           <td ></td>
           <td></td>
           <td></td>
-          <td class="td">{{formatBalance(printArr[0].payInvo.tot_pr)}}</td>
+          <td class="td">{{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</td>
         </tr>
       </table> 
       </div> 
@@ -693,10 +699,10 @@
     <div *ngIf="printArr" class="w100 rtl ion-margin"> 
       <div class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
         <div class="rtl ion-text-center" style=" width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-          <ion-label>  Total </ion-label>
+          <ion-label>  Total ({{ getCurrencySymbol() }}) </ion-label>
         </div>
         <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-          <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr)}} S.D</ion-label>
+          <ion-label> {{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</ion-label>
         </div>
       </div>
 
@@ -726,6 +732,11 @@
    </div>
 </div>
 
+      </div>
+      
+      <!-- Exchange Rate Footer -->
+      <div class="exchange-rate-footer" style="font-size: 0.7em; text-align: center; border-top: 1px solid #ccc; padding-top: 5px; margin-top: 20px;" *ngIf="getExchangeRateFooter()">
+        {{getExchangeRateFooter()}}
       </div>
   </div>  
 </ion-content>

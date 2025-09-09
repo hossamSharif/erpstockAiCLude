@@ -1,12 +1,16 @@
-<ion-select 
-  [(ngModel)]="selectedCurrency" 
-  (ionChange)="onCurrencyChange()"
-  interface="popover"
-  placeholder="اختر العملة"
-  class="currency-select">
-  <ion-select-option 
-    *ngFor="let currency of supportedCurrencies" 
-    [value]="currency.currency_code">
-    {{getCurrencyDisplayText(currency)}}
-  </ion-select-option>
-</ion-select>
+<div class="currency-switcher-wrapper">
+  <!-- Currency Trigger Button -->
+  <div class="currency-trigger" #selectTrigger (click)="toggleDropdown($event)">
+    <div class="selected-display" *ngIf="getSelectedCurrency(); else placeholder">
+      <span class="currency-symbol">{{ getSelectedCurrency()?.currency_symbol }}</span>
+    </div>
+    
+    <ng-template #placeholder>
+      <div class="placeholder-display">
+        <ion-icon name="cash-outline"></ion-icon>
+        <span>اختر العملة</span>
+      </div>
+    </ng-template>
+    
+  </div>
+</div>

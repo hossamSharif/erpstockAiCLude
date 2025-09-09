@@ -410,17 +410,14 @@ async auth (){
     if (state) { 
       // Initialize endpoint on auth success
       this.api2.initializeEndpoint();
-      // Only navigate on initial auth, not on every state change
-      if (this.router.url === '/' || this.router.url === '/folder/login') {
-        setTimeout(() => {
-          this.router.navigate(['analytics-dashboard'], { replaceUrl: true });
-        }, 100);
-      }
+      // Don't navigate here - let auth service handle it directly
+      // This prevents double navigation and race conditions
+     
     } else {
       // Only navigate to login if not already there
       if (this.router.url !== '/folder/login') {
         setTimeout(() => {
-          this.router.navigate(['folder/login'], { replaceUrl: true });
+          this.router.navigate(['folder/login']);
         }, 100);
       }
     }

@@ -1085,7 +1085,8 @@ getTswia(){
       )      
       }
   
-
-  
+  navigateToCurrencyManagement() {
+    this.route.navigate(['/currency-management']);
+  }
 
 }

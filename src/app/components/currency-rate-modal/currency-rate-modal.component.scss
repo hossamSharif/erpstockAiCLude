@@ -2,25 +2,28 @@ ion-content {
   --background: var(--ion-color-light);
 }
 
-.form-list {
-  background: transparent;
+// Form grid and layout
+.form-grid {
   margin-bottom: 20px;
 }
 
-.form-item {
-  --background: white;
-  --border-color: var(--ion-color-medium-tint);
-  --border-width: 1px;
-  --border-style: solid;
-  --border-radius: 8px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.form-row {
+  margin-bottom: 8px;
 }
 
-.form-label {
+// Field styling - reduced sizes
+.form-field-col {
+  padding: 4px 8px;
+}
+
+.field-label {
+  display: block;
+  font-size: 12px;
   font-weight: 600;
   color: var(--ion-color-primary);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+  text-align: right;
+  direction: rtl;
 }
 
 .required-asterisk {
@@ -28,46 +31,235 @@ ion-content {
   font-weight: bold;
 }
 
-.form-input,
-.form-select,
-.form-datetime {
+// Custom input styling matching sales page
+.custInput {
+  --background: var(--ion-color-light-tint);
+  --border-color: var(--ion-color-medium-tint);
+  --border-radius: 6px;
+  --border-width: 1px;
+  --border-style: solid;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --min-height: 36px; // Reduced from default
+  margin: 0;
+  font-size: 13px; // Reduced font size
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.custInput ion-input,
+.custInput ion-select {
   --color: var(--ion-color-dark);
-  --placeholder-color: var(--ion-color-medium);
-  font-size: 16px;
+  font-size: 13px;
 }
 
-.form-select {
-  --placeholder-opacity: 0.7;
+// Specific input styling
+.rate-input,
+.date-input {
+  .form-input,
+  .date-picker {
+    --color: var(--ion-color-dark);
+    --placeholder-color: var(--ion-color-medium);
+    font-size: 13px;
+  }
 }
 
+// Currency segment styling - matching sales page
+.currency-section {
+  margin-top: 4px;
+  
+  .currency-segment {
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    min-height: 40px; // Reduced height to match field sizes
+    width: 100%;
+
+    ion-segment-button {
+      --background: transparent;
+      --background-checked: var(--ion-color-primary);
+      --color: var(--ion-color-dark);
+      --color-checked: white;
+      --indicator-color: transparent;
+      --border-radius: 10px;
+      --padding-start: 6px;
+      --padding-end: 6px;
+      min-height: 38px;
+      font-size: 11px; // Reduced font size
+      font-weight: 500;
+      transition: all 0.3s ease;
+      flex-direction: column;
+      
+      span {
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 1.2;
+      }
+      
+      small {
+        font-size: 9px;
+        opacity: 0.8;
+        line-height: 1.1;
+        margin-top: 1px;
+      }
+
+      &:hover {
+        --background: rgba(var(--ion-color-primary-rgb), 0.1);
+      }
+    }
+  }
+}
+
+.date-input {
+  .date-picker {
+    text-align: right;
+    direction: rtl;
+  }
+}
+
+// Error messages
 .error-message {
   color: var(--ion-color-danger);
+  font-size: 11px; // Reduced from 12px
+  margin-top: -8px;
+  margin-bottom: 8px;
+  margin-right: 12px;
+  font-weight: 500;
+}
+
+// Action buttons styling - aligned in same line
+.action-buttons-row {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ion-color-light-shade);
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  --height: 32px; // Reduced button height
+  --border-radius: 6px;
   font-size: 12px;
-  margin-top: -12px;
-  margin-bottom: 12px;
-  margin-right: 16px;
-  font-weight: 500;
+  margin: 2px;
+  min-width: 80px;
+  
+  ion-icon {
+    font-size: 14px;
+  }
 }
 
-.button-container {
-  margin-top: 24px;
-  padding: 0 16px;
-}
-
-.save-button {
-  --border-radius: 8px;
-  height: 48px;
+.save-btn {
+  --background: var(--ion-color-primary);
+  --color: white;
   font-weight: 600;
-  margin-bottom: 12px;
 }
 
-.cancel-button {
-  --border-radius: 8px;
-  height: 44px;
-  font-weight: 500;
+.reset-btn,
+.cancel-btn {
+  --border-color: var(--ion-color-medium);
+  --color: var(--ion-color-medium-shade);
 }
 
-/* RTL support */
+// Responsive design for large screens - 2 columns
+@media (min-width: 992px) {
+  .form-field-col {
+    max-width: 50%;
+    flex: 0 0 50%;
+  }
+  
+  .button-group {
+    justify-content: center;
+  }
+}
+
+// Medium screens
+@media (max-width: 991px) and (min-width: 768px) {
+  .form-field-col {
+    max-width: 50%;
+    flex: 0 0 50%;
+  }
+  
+  .field-label {
+    font-size: 11px;
+  }
+  
+  .custInput {
+    --min-height: 34px;
+    font-size: 12px;
+  }
+  
+  .button-group {
+    justify-content: center;
+    gap: 6px;
+  }
+}
+
+// Small screens - single column
+@media (max-width: 767px) {
+  .form-field-col {
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+  
+  ion-content {
+    --padding-start: 12px;
+    --padding-end: 12px;
+  }
+  
+  .field-label {
+    font-size: 11px;
+  }
+  
+  .custInput {
+    --min-height: 32px;
+    font-size: 12px;
+  }
+  
+  // Mobile responsive for currency segment
+  .currency-section {
+    .currency-segment {
+      min-height: 36px;
+      
+      ion-segment-button {
+        min-height: 34px;
+        font-size: 10px;
+        --padding-start: 4px;
+        --padding-end: 4px;
+        
+        span {
+          font-size: 11px;
+        }
+        
+        small {
+          font-size: 8px;
+        }
+      }
+    }
+  }
+  
+  .action-btn {
+    --height: 30px;
+    font-size: 11px;
+    min-width: 70px;
+    
+    ion-icon {
+      font-size: 12px;
+    }
+  }
+  
+  .button-group {
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+// RTL support
 ion-label,
 ion-input,
 ion-select,
@@ -80,40 +272,57 @@ ion-button {
   direction: rtl;
 }
 
-/* Loading state */
-.save-button:disabled {
+ion-select-option {
+  text-align: right;
+  direction: rtl;
+}
+
+// Focus states
+.custInput.item-has-focus {
+  --border-color: var(--ion-color-primary);
+  --border-width: 2px;
+}
+
+// Loading state
+.action-btn:disabled {
   opacity: 0.6;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  ion-content {
-    --padding-start: 12px;
-    --padding-end: 12px;
-  }
-
-  .form-item {
-    margin-bottom: 12px;
-  }
-
-  .button-container {
-    padding: 0 8px;
-  }
+// Hover effects for better UX
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Dark theme support */
+// Dark theme support
 @media (prefers-color-scheme: dark) {
-  .form-item {
+  .custInput {
     --background: var(--ion-color-dark-tint);
     --border-color: var(--ion-color-medium-shade);
   }
 
-  .form-label {
+  .field-label {
     color: var(--ion-color-primary-tint);
+  }
+  
+  .currency-section {
+    .currency-segment {
+      background: rgba(var(--ion-color-dark-rgb), 0.8);
+      border-color: var(--ion-color-medium-shade);
+      
+      ion-segment-button {
+        --color: var(--ion-color-light);
+        --color-checked: white;
+      }
+    }
+  }
+  
+  .action-buttons-row {
+    border-top-color: var(--ion-color-dark-shade);
   }
 }
 
-/* Custom toast styling for RTL */
+// Custom toast styling for RTL
 .rtl-toast {
   direction: rtl;
   text-align: right;

@@ -4,6 +4,10 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-title>سجل المشتريات</ion-title>
+    
+    <ion-buttons slot="end">
+      <app-currency-switcher></app-currency-switcher>
+    </ion-buttons>
    
   </ion-toolbar>
 </ion-header>
@@ -129,13 +133,17 @@
                   </th>
                   <th class="sortable-header" (click)="sortBy('tot_pr')">
                     <ion-icon [name]="getSortIcon('tot_pr')" class="sort-icon"></ion-icon>
-                    اجمالي المبلغ
+                    اجمالي المبلغ ({{ getCurrencySymbol() }})
                   </th>
                   <th class="sortable-header" (click)="sortBy('discount')">
                     <ion-icon [name]="getSortIcon('discount')" class="sort-icon"></ion-icon>
-                    الخصــم
+                    الخصــم ({{ getCurrencySymbol() }})
                   </th>  
-                  <th>الإجمالي بعد الخصم</th>  
+                  <th>الإجمالي بعد الخصم ({{ getCurrencySymbol() }})</th>  
+                  <th class="sortable-header" (click)="sortBy('payComment')">
+                    <ion-icon [name]="getSortIcon('payComment')" class="sort-icon"></ion-icon>
+                    المدفوع
+                  </th>
                   <!-- Hidden pay and change columns -->
                   <th class="sortable-header" (click)="sortBy('payComment')">
                     <ion-icon [name]="getSortIcon('payComment')" class="sort-icon"></ion-icon>
@@ -152,10 +160,12 @@
                   <!-- <td>{{pay.pay_id}}</td> -->
                   <td>{{pay.sub_name}}</td>
                   <td> {{pay.pay_date}}</td>
-                  <td>{{formatBalance(pay.tot_pr)}}</td>
-                  <td>{{formatBalance(pay.discount)}}</td>
-                  <td>{{formatBalance(+pay.tot_pr - +pay.discount)}}</td>
+                  <td>{{pay.tot_pr | currencyDisplay:'SDG':false}}</td>
+                  <td>{{pay.discount | currencyDisplay:'SDG':false}}</td>
+                  <td>{{(+pay.tot_pr - +pay.discount) | currencyDisplay:'SDG':false}}</td>
                   <!-- Hidden pay and change data -->
+              
+                  <td>{{pay.pay}}</td>
                   <td>{{pay.payComment}}</td>
                   <!-- <td>
                     <ion-button fill="clear" size="small" (click)="getPayInvoDetail(pay ,pay.sub_name, 'edit')">
@@ -308,7 +318,7 @@
                               <!-- Balance Preview -->
                               <ion-item lines="none" *ngIf="selectedAccount && selectedAccount.sub_name">
                                 <ion-label class="ion-text-wrap">
-                                  <p><strong>الرصيد الحالي:</strong> {{formatBalance(selectedAccount.sub_balance || 0)}} ريال</p>
+                                  <p><strong>الرصيد الحالي:</strong> {{selectedAccount.sub_balance || 0 | currencyDisplay}}</p>
                                 </ion-label>
                               </ion-item>
                             </ion-col> 
@@ -385,7 +395,7 @@
               <ion-label><ion-note>{{pay.pay_date | date:'dd-MM'}}</ion-note>    </ion-label>
             </ion-col>
             <ion-col size="8" class="ion-text-end">
-              <ion-label>{{formatBalance(+pay.tot_pr - +pay.discount)}}</ion-label>
+              <ion-label>{{(+pay.tot_pr - +pay.discount) | currencyDisplay}}</ion-label>
             </ion-col>
           </ion-row>
         </ion-grid>
@@ -420,14 +430,14 @@
         <ion-item-divider></ion-item-divider>
         <ion-list>
           <ion-item lines="none">
-            <ion-label><ion-note>المجموع  : </ion-note><strong>{{formatBalance(pay.tot_pr)}}</strong></ion-label>
+            <ion-label><ion-note>المجموع  : </ion-note><strong>{{pay.tot_pr | currencyDisplay}}</strong></ion-label>
           </ion-item>
           <ion-item lines="none" *ngIf="pay.discount > 0">
-            <ion-label><ion-note>تخفيض  : </ion-note><strong>{{formatBalance(pay.discount)}}</strong></ion-label>
+            <ion-label><ion-note>تخفيض  : </ion-note><strong>{{pay.discount | currencyDisplay}}</strong></ion-label>
           </ion-item>
           <ion-item lines="none" *ngIf="pay.discount > 0">
             <ion-label><ion-note> صافي المبلغ    : 
-            </ion-note><strong> {{formatBalance(+pay.tot_pr - +pay.discount)}} </strong></ion-label>
+            </ion-note><strong> {{(+pay.tot_pr - +pay.discount) | currencyDisplay}} </strong></ion-label>
             </ion-item>
         </ion-list>
         <ion-row class="ion-justify-content-center">
@@ -456,13 +466,13 @@
   <ion-grid dir="rtl" *ngIf="device == 'desktop'">
     <ion-row>
       <ion-col>
-        <ion-label><ion-text>إجمالي المشتريات : </ion-text><br>  <strong>{{formatBalance(sums.tot)}}</strong></ion-label>
+        <ion-label><ion-text>إجمالي المشتريات : </ion-text><br>  <strong>{{sums.tot | currencyDisplay}}</strong></ion-label>
       </ion-col>
       <ion-col>
-        <ion-label><ion-text>اجمالي الخصم  : </ion-text><br>  <strong>{{formatBalance(sums.discount)}}</strong></ion-label>
+        <ion-label><ion-text>اجمالي الخصم  : </ion-text><br>  <strong>{{sums.discount | currencyDisplay}}</strong></ion-label>
       </ion-col>
       <ion-col>
-        <ion-label><ion-text>المشتريات بعد الخصم : </ion-text><br>  <strong>{{formatBalance(sums.totAfterDiscout)}}</strong></ion-label>
+        <ion-label><ion-text>المشتريات بعد الخصم : </ion-text><br>  <strong>{{sums.totAfterDiscout | currencyDisplay}}</strong></ion-label>
       </ion-col>
       <!-- Hidden pay and change summary columns -->
     </ion-row>
@@ -471,13 +481,13 @@
   <ion-grid dir="rtl" *ngIf="device == 'mobile'">
     <ion-row>
       <ion-col size="6">
-        <ion-label><ion-text>إجمالي المشتريات : </ion-text><br>  <strong>{{formatBalance(sums.tot)}}</strong></ion-label>
+        <ion-label><ion-text>إجمالي المشتريات : </ion-text><br>  <strong>{{sums.tot | currencyDisplay}}</strong></ion-label>
       </ion-col>
       <ion-col  size="6">
-        <ion-label><ion-text>اجمالي الخصم  : </ion-text><br>  <strong>{{formatBalance(sums.discount)}}</strong></ion-label>
+        <ion-label><ion-text>اجمالي الخصم  : </ion-text><br>  <strong>{{sums.discount | currencyDisplay}}</strong></ion-label>
       </ion-col>
       <ion-col size="12">
-        <ion-label><ion-text>المشتريات بعد الخصم : </ion-text><br>  <strong>{{formatBalance(sums.totAfterDiscout)}}</strong></ion-label>
+        <ion-label><ion-text>المشتريات بعد الخصم : </ion-text><br>  <strong>{{sums.totAfterDiscout | currencyDisplay}}</strong></ion-label>
       </ion-col>
       <!-- Hidden pay and change summary columns for mobile -->
     </ion-row>

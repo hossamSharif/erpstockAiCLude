@@ -1,0 +1,170 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button (click)="goBack()"></ion-back-button>
+    </ion-buttons>
+    <ion-title>إدارة العملات</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="refreshRates()">
+        <ion-icon name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-progress-bar *ngIf="isLoading" type="indeterminate"></ion-progress-bar>
+  
+  <ion-grid class="ion-margin-top">
+    <!-- Current Currency Display -->
+    <ion-row dir="rtl" class="ion-justify-content-center">
+      <ion-col size="12">
+        <h5>العملة الحالية</h5>
+        <ion-card>
+          <ion-card-content>
+            <div class="current-currency-display">
+              <ion-item lines="none">
+                <ion-avatar slot="start">
+                  <div class="currency-avatar">{{currentCurrency}}</div>
+                </ion-avatar>
+                <ion-label>
+                  <h3>{{getCurrencyName(currentCurrency)}}</h3>
+                  <p>العملة المحددة حالياً</p>
+                </ion-label>
+                <ion-chip slot="end" color="primary">
+                  <ion-label>فعال</ion-label>
+                </ion-chip>
+              </ion-item>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+   
+
+    <!-- Exchange Rates -->
+    <ion-row dir="rtl" class="ion-justify-content-center">
+      <ion-col size="12">
+        <div class="section-header">
+          <h5>أسعار الصرف</h5>
+          <ion-button 
+            fill="outline" 
+            size="small" 
+            (click)="openRateModal()">
+            <ion-icon name="add" slot="start"></ion-icon>
+            إضافة سعر
+          </ion-button>
+        </div>
+        
+        <ion-card>
+          <ion-list class="ion-margin-top ion-margin-bottom">
+            <ion-item-divider>
+              <ion-label>أسعار الصرف مقابل الجنيه السوداني (SDG)</ion-label>
+            </ion-item-divider>
+            
+            <ion-item *ngFor="let rate of rates" button (click)="openRateModal(rate)">
+              <ion-avatar slot="start">
+                <div class="currency-avatar">{{rate.currency}}</div>
+              </ion-avatar>
+              
+              <ion-label>
+                <h3>{{rate.currency_info?.currency_name_ar || rate.currency}}</h3>
+                <div class="exchange-rate-display">
+                  <span class="currency-from">1 {{rate.currency}}</span>
+                  <span class="equals">=</span>
+                  <span class="currency-to">{{formatNumberEnglish(getRateValue(rate.rate))}} SDG</span>
+                </div>
+              </ion-label>
+              
+              <div slot="end" class="rate-actions">
+                <ion-button 
+                  fill="clear" 
+                  size="small" 
+                  color="primary"
+                  (click)="openRateModal(rate); $event.stopPropagation()">
+                  <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+                </ion-button>
+                <ion-button 
+                  *ngIf="rate.id"
+                  fill="clear" 
+                  size="small" 
+                  color="danger"
+                  (click)="deleteRate(rate); $event.stopPropagation()">
+                  <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                </ion-button>
+              </div>
+            </ion-item>
+
+            <!-- Show SDG as base currency -->
+            <ion-item>
+              <ion-avatar slot="start">
+                <div class="currency-avatar">SDG</div>
+              </ion-avatar>
+              
+              <ion-label>
+                <h3>جنيه سوداني</h3>
+                <p>العملة الأساسية</p>
+              </ion-label>
+              
+              <div slot="end" class="rate-display">
+                <ion-chip color="primary">
+                  <ion-label>عملة أساسية</ion-label>
+                </ion-chip>
+              </div>
+            </ion-item>
+            
+            <!-- Empty state -->
+            <ion-item *ngIf="rates.length === 0" lines="none">
+              <div class="empty-state">
+                <ion-icon name="wallet-outline" size="large" color="medium"></ion-icon>
+                <h4>لا توجد أسعار صرف محددة</h4>
+                <p>اضغط على "إضافة سعر" لإضافة أسعار الصرف</p>
+              </div>
+            </ion-item>
+          </ion-list>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+     <!-- Supported Currencies -->
+     <ion-row dir="rtl" class="ion-justify-content-center">
+      <ion-col size="12">
+        <h5>العملات المدعومة</h5>
+        <ion-card>
+          <ion-list class="ion-margin-top ion-margin-bottom">
+            <ion-item *ngFor="let currency of currencies" button>
+              <ion-avatar slot="start">
+                <div class="currency-avatar">{{currency.currency_code}}</div>
+              </ion-avatar>
+              
+              <ion-label>
+                <h3>{{currency.currency_name_ar}}</h3>
+                <p>{{currency.currency_name_en}} ({{currency.currency_symbol}})</p>
+              </ion-label>
+              
+              <div slot="end" class="currency-actions">
+                <!-- Set as Current Currency Button -->
+                <ion-button 
+                  fill="clear" 
+                  size="small" 
+                  [disabled]="currentCurrency === currency.currency_code"
+                  (click)="setCurrency(currency.currency_code)">
+                  <ion-icon name="checkmark-circle-outline"></ion-icon>
+                </ion-button>
+                
+                <!-- Toggle Active Status -->
+                <ion-toggle 
+                  [checked]="currency.is_active" 
+                  (ionChange)="toggleCurrencyStatus(currency)">
+                </ion-toggle>
+              </div>
+            </ion-item>
+          </ion-list>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+   
+  </ion-grid>
+</ion-content>

@@ -4,6 +4,7 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-buttons slot="end">
+      <app-currency-switcher></app-currency-switcher>
       <ion-button fill="clear" (click)="refreshToInitialState()">
         <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
       </ion-button>
@@ -69,7 +70,7 @@
 
       <ion-col size="3" class="ion-text-start">
           <ion-label *ngIf = "filterMode == false"> 
-            <ion-text *ngIf = "loadingStockTotals == false">{{formatBalance(stockValuePayPrice)}}</ion-text> 
+            <ion-text *ngIf = "loadingStockTotals == false">{{stockValuePayPrice | currencyDisplay}}</ion-text> 
             <ion-text *ngIf = "loadingStockTotals == true">
               <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text>
             </ion-text>
@@ -84,7 +85,7 @@
 
       <ion-col size="3" class="ion-text-start">
           <ion-label *ngIf = "filterMode == false && searchTerm == ''"> 
-            <ion-text *ngIf = "loadingStockTotals == false">{{formatBalance(stockValuePerchPrice)}}</ion-text> 
+            <ion-text *ngIf = "loadingStockTotals == false">{{stockValuePerchPrice | currencyDisplay}}</ion-text> 
             <ion-text *ngIf = "loadingStockTotals == true">
               <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text>
             </ion-text>
@@ -504,12 +505,12 @@
                       <ion-icon [name]="getSortIcon('item_unit')"></ion-icon>
                     </ion-button>
                   </th> 
-                  <th  [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">سعر الشراء (purch price)
+                  <th  [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">سعر الشراء ({{ getCurrencySymbol() }})
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('perch_price')">
                       <ion-icon [name]="getSortIcon('perch_price')"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">سعر الوحده (selling price)
+                  <th  [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">سعر الوحده ({{ getCurrencySymbol() }})
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('pay_price')">
                     
                       <ion-icon [name]="getSortIcon('pay_price')"></ion-icon>
@@ -527,7 +528,7 @@
                       <ion-icon [name]="getSortIcon('quantity')"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">المجموع
+                  <th  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">المجموع ({{ getCurrencySymbol() }})
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('total')">
                     
                       <ion-icon [name]="getSortIcon('total')"></ion-icon>
@@ -605,13 +606,13 @@
                      </ion-item> 
                   </td> 
                   <td  [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">
-                    <ion-text *ngIf="showMe != i">{{formatBalance(item.perch_price)}}</ion-text>
+                    <ion-text *ngIf="showMe != i">{{item.perch_price | currencyDisplay:'SDG':false}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.perch_price"  ></ion-input>
                      </ion-item> 
                   </td>
                   <td  [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">
-                    <ion-text *ngIf="showMe != i">{{formatBalance(item.pay_price)}}</ion-text>
+                    <ion-text *ngIf="showMe != i">{{item.pay_price | currencyDisplay:'SDG':false}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.pay_price"  ></ion-input>
                      </ion-item> 
@@ -621,7 +622,7 @@
                   </td>
                 
                   <td  [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">{{item.quantity}}</td>
-                  <td  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">{{formatBalance(+item.quantity * +item.perch_price)}}</td>
+                  <td  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">{{(+item.quantity * +item.perch_price) | currencyDisplay:'SDG':false}}</td>
                   <td  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">{{item.lastSoldDate }}</td>
                   <!-- new -->
                   <!-- <td   >{{item.sales28 }}</td>
@@ -741,11 +742,11 @@
               </ion-col>
               <ion-col size="3" class="ion-text-center">
                 <h3>إجمالي قيمة المخزون</h3>
-                <p class="total-value">{{searchStockTotals.store_tot | number : '1.2-2'}}</p>
+                <p class="total-value">{{searchStockTotals.store_tot | currencyDisplay}}</p>
               </ion-col>
               <ion-col size="3" class="ion-text-center">
                 <h3>إجمالي تكلفة المخزون</h3>
-                <p class="total-value">{{searchStockTotals.perch_tot | number : '1.2-2'}}</p>
+                <p class="total-value">{{searchStockTotals.perch_tot | currencyDisplay}}</p>
               </ion-col>
             </ion-row>
           </ion-grid>
@@ -764,11 +765,11 @@
               </ion-col>
               <ion-col size="3" class="ion-text-center">
                 <h3>إجمالي قيمة المخزون</h3>
-                <p class="total-value">{{allItemsStockTotals.store_tot | number : '1.2-2'}}</p>
+                <p class="total-value">{{allItemsStockTotals.store_tot | currencyDisplay}}</p>
               </ion-col>
               <ion-col size="3" class="ion-text-center">
                 <h3>إجمالي تكلفة المخزون</h3>
-                <p class="total-value">{{allItemsStockTotals.perch_tot | number : '1.2-2'}}</p>
+                <p class="total-value">{{allItemsStockTotals.perch_tot | currencyDisplay}}</p>
               </ion-col>
               <ion-col size="3" class="ion-text-center">
                 <h3>إجمالي الكمية</h3>
@@ -956,13 +957,13 @@
                      </ion-item>
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">
-                    <ion-text *ngIf="showMe != i">{{formatBalance(item.perch_price)}}</ion-text>
+                    <ion-text *ngIf="showMe != i">{{item.perch_price | currencyDisplay:'SDG':false}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.perch_price"  ></ion-input>
                      </ion-item>
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">
-                    <ion-text *ngIf="showMe != i">{{formatBalance(item.pay_price)}}</ion-text>
+                    <ion-text *ngIf="showMe != i">{{item.pay_price | currencyDisplay:'SDG':false}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.pay_price"  ></ion-input>
                      </ion-item>
@@ -971,7 +972,7 @@
                     <ion-text [ngClass]="{'negative': item.quantity < 0}">{{item.quantity}}</ion-text>
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">
-                    <ion-text>{{formatBalance(item.stockValuePayPrice)}}</ion-text>
+                    <ion-text>{{item.stockValuePayPrice | currencyDisplay:'SDG':false}}</ion-text>
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">
                     <ion-text>{{item.lastSoldDate}}</ion-text>

@@ -24,8 +24,8 @@ This document serves as a comprehensive reference for implementing multi-currenc
 
 ### Architecture Flow
 ```
-User Selects Currency ’ Load Exchange Rates (Year-specific) ’ Cache Rates ’ 
-Convert SDG Values ’ Display in Selected Currency
+User Selects Currency ï¿½ Load Exchange Rates (Year-specific) ï¿½ Cache Rates ï¿½ 
+Convert SDG Values ï¿½ Display in Selected Currency
 ```
 
 ## Database Schema
@@ -65,7 +65,7 @@ CREATE TABLE supported_currencies (
 
 -- Default Data
 INSERT INTO supported_currencies VALUES 
-(1, 'SDG', ',FJG 3H/'FJ', 'Sudanese Pound', ',.3', 1, 1, NOW()),
+(1, 'SDG', ',FJG 3H/'FJ', 'Sudanese Pound', ',.3', 1, 1, NOW(),
 (2, 'USD', '/HD'1 #E1JCJ', 'US Dollar', '$', 1, 2, NOW()),
 (3, 'AED', '/1GE %E'1'*J', 'UAE Dirham', '/.%', 1, 3, NOW()),
 (4, 'SAR', '1J'D 39H/J', 'Saudi Riyal', '1.3', 1, 4, NOW());
@@ -126,7 +126,7 @@ INSERT INTO supported_currencies VALUES
      currency_code: "EUR",
      currency_name_ar: "JH1H",
      currency_name_en: "Euro",
-     currency_symbol: "¬"
+     currency_symbol: "ï¿½"
    }
 
 3. UPDATE Currency

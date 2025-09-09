@@ -1,0 +1,217 @@
+.current-currency-display {
+  ion-item {
+    --background: linear-gradient(135deg, var(--ion-color-primary-tint), var(--ion-color-primary));
+    --color: white;
+    border-radius: 12px;
+  }
+}
+
+.currency-avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--ion-color-secondary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.currency-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  
+  h5 {
+    margin: 0;
+  }
+}
+
+.rate-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Enhanced exchange rate display
+.exchange-rate-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.95rem;
+  margin-top: 4px;
+
+  .currency-from {
+    color: var(--ion-color-primary);
+    font-weight: 600;
+    min-width: 60px;
+  }
+
+  .equals {
+    color: var(--ion-color-medium);
+    font-weight: 500;
+    font-size: 1.1rem;
+  }
+
+  .currency-to {
+    color: var(--ion-color-success);
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+  }
+}
+
+// Enhanced conversion rate display
+.conversion-rate-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+
+  .converted-amount {
+    color: var(--ion-color-success);
+    font-weight: 700;
+    font-size: 1.1rem;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  .currency-name {
+    color: var(--ion-color-medium);
+    font-size: 0.85rem;
+    font-weight: 400;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  width: 100%;
+  
+  ion-icon {
+    margin-bottom: 1rem;
+  }
+  
+  h4 {
+    color: var(--ion-color-medium);
+    margin-bottom: 0.5rem;
+  }
+  
+  p {
+    color: var(--ion-color-medium);
+    font-size: 0.9rem;
+  }
+}
+
+.conversion-example {
+  .conversion-item {
+    h4 {
+      color: var(--ion-color-primary);
+      margin-bottom: 0.25rem;
+    }
+    
+    p {
+      color: var(--ion-color-medium);
+      margin: 0;
+      font-size: 0.9rem;
+    }
+  }
+  
+  .conversion-results {
+    .conversion-result {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--ion-color-light);
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      strong {
+        color: var(--ion-color-success);
+      }
+      
+      span {
+        color: var(--ion-color-medium);
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+ion-card {
+  margin: 1rem 0;
+}
+
+ion-list {
+  padding: 0;
+}
+
+ion-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+}
+
+ion-chip {
+  --color: white;
+}
+
+h5 {
+  color: var(--ion-color-dark);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+// RTL support
+[dir="rtl"] {
+  .section-header {
+    direction: rtl;
+  }
+  
+  .currency-actions {
+    direction: rtl;
+  }
+  
+  .rate-display {
+    direction: rtl;
+  }
+  
+  .exchange-rate-display {
+    direction: rtl;
+    
+    .currency-from {
+      text-align: right;
+    }
+    
+    .currency-to {
+      text-align: left; // Keep numbers left-aligned
+    }
+  }
+  
+  .conversion-results {
+    direction: rtl;
+  }
+  
+  .conversion-rate-display {
+    align-items: flex-end;
+    
+    .converted-amount {
+      text-align: left; // Keep numbers left-aligned
+    }
+    
+    .currency-name {
+      text-align: right;
+    }
+  }
+}

@@ -7,7 +7,8 @@ import { ItemModalPage } from '../item-modal/item-modal.page';
 import { Router } from '@angular/router';
 import { Storage } from '@ionic/storage';
 import { SortingService, SortConfig } from '../services/sorting.service';
-import { ExportService, ExportConfig, ExportColumn } from '../services/export.service'; 
+import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
+import { CurrencyService } from '../services/currency.service'; 
 
 @Component({
   selector: 'app-sub-account2',
@@ -63,7 +64,8 @@ export class SubAccount2Page implements OnInit, OnDestroy {
     private toast: ToastController,
     private router: Router,
     private sortingService: SortingService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private currencyService: CurrencyService
   ) { 
     this.initializeData();
     this.getAppInfo();
@@ -856,6 +858,11 @@ getAccountCategory () {
       { key: 'cat_name', title: 'التصنيف', width: 20, type: 'text' },
       { key: 'current_balance', title: 'الرصيد الحالي', width: 20, type: 'currency' }
     ];
+  }
+
+  // Get current currency symbol for headers
+  getCurrencySymbol(): string {
+    return this.currencyService.getCurrentCurrencySymbol();
   }
 
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef ,Renderer2,Input} from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef ,Renderer2,Input, OnDestroy, ChangeDetectorRef} from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable, Subscription } from 'rxjs';
 import { AlertController, IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -14,13 +14,14 @@ import { FilterPipe2 } from './pipe2';
 import { FilterPipe3 } from './pipe3';
 import { ActivatedRoute } from '@angular/router';
 import { StockServiceService } from '../syncService/stock-service.service';
+import { CurrencyService } from '../services/currency.service';
 import * as momentObj from 'moment';
 @Component({
   selector: 'app-purchase',
   templateUrl: './purchase.page.html',
   styleUrls: ['./purchase.page.scss'],
 })
-export class PurchasePage implements OnInit {
+export class PurchasePage implements OnInit, OnDestroy {
   @ViewChild("dstP") nameField: ElementRef;
   @ViewChild('qtyIdP') qtyIdP; 
   @ViewChild('dstPop2') dstPop2; 
@@ -102,8 +103,15 @@ payTotQty:any = 0
 perchTot :any = 0
 qtyReal:any = 0
 availQty :any = 0
+private currencySubscription: Subscription;
+
+// Loading state management - Centralized loading system
+isSaving: boolean = false;
+currentLoadingMessage: string = '';
+currentLoader: HTMLIonLoadingElement | null = null;
+
 // اي طريقة دفع ح يكون في حساب مقابل ليها مثلا الكاش ح يتورد في حساب الخزينة وبنكك في حساب بنك الخرطوم اما الشيك فحيكون بالاجل و ح ينزل في  سجل الشيكات ويتحول الي حساب المعين سواء كان اتورد في حساب بنكي او اتسحب كاش واتورد فيحساب الخزينة 
-constructor( private behavApi:StockServiceService ,private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private _location: Location) {
+constructor( private behavApi:StockServiceService ,private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private _location: Location, private cdr: ChangeDetectorRef, private currencyService: CurrencyService) {
  
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",phone:"",address:""};
 
@@ -279,8 +287,9 @@ async priceChangeAlertConfirm() {
 }
 
 
-updateItemDetail(){
-  this.presentLoadingWithOptions('جاري تعديل البيانات ...') 
+async updateItemDetail(){
+  await this.showLoading('جاري تعديل البيانات...');
+  
   this.logHistoryArr.push(
     {
       "id":null,
@@ -289,27 +298,23 @@ updateItemDetail(){
       "typee":'update item',
       "datee": momentObj(new Date()).locale('en').format('YYYY-MM-DD HH:mm:ss'),
       "logStatus":0,
-      "logToken":JSON.stringify(this.selectedItem)  ,
+      "logToken":JSON.stringify(this.selectedItem),
       "yearId":this.year.id,
       "store_id":this.store_info.id
     }
   )
 
   this.api.updateItem(this.selectedItem).subscribe(data => {
-  //console.log(data)
-  if (data['message'] != 'Post Not Updated') {
-   this.presentToast('تم التعديل بنجاح' , 'success')
-   this.performSync2()
-  }else{
-  this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
-  }
- 
-}, (err) => {
-  //console.log(err);
-  this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
-},() => {
- this.loadingController.dismiss()
-}) 
+    this.hideLoading();
+    if (data['message'] != 'Post Not Updated') {
+      this.presentToast('تم التعديل بنجاح', 'success');
+      this.performSync2();
+    } else {
+      this.presentToast('لم يتم حفظ البيانات، خطأ في الاتصال حاول مرة أخرى', 'danger');
+    }
+  }, (err) => {
+    this.handleError(err, 'updateItemDetail');
+  });
 }
 
 
@@ -332,6 +337,9 @@ Print(elem){
 }
 
 ngOnInit() { 
+  // Initialize currency service
+  this.initializeCurrency();
+  
   // Handle modal mode
   if (this.modalMode && this.modalStatus === 'newInvoFromItemsPage' && this.modalSelectedItemsList.length > 0) {
     this.statusFromRoute = this.modalStatus;
@@ -352,6 +360,89 @@ ngOnInit() {
    }  
   
  
+}
+
+ngOnDestroy() {
+  if (this.currencySubscription) {
+    this.currencySubscription.unsubscribe();
+  }
+  
+  // Cleanup any remaining loading states
+  this.hideLoading();
+}
+
+// Centralized Loading Management Methods
+async showLoading(message: string) {
+  await this.hideLoading(); // Ensure no existing loaders
+  this.resetLoadingStates();
+  
+  this.isSaving = true;
+  this.currentLoadingMessage = message;
+  
+  this.currentLoader = await this.loadingController.create({
+    spinner: 'bubbles',
+    mode: 'ios',
+    message: message,
+    duration: 30000, // 30 second timeout
+    backdropDismiss: false
+  });
+
+  await this.currentLoader.present();
+  
+  // Timeout protection
+  setTimeout(() => {
+    if (this.isSaving && this.currentLoader) {
+      console.log('Loading timeout reached, dismissing...');
+      this.hideLoading();
+    }
+  }, 30000);
+}
+
+async hideLoading() {
+  if (this.currentLoader) {
+    try {
+      await this.currentLoader.dismiss();
+    } catch (error) {
+      console.log('Error dismissing loader:', error);
+    }
+    this.currentLoader = null;
+  }
+  this.resetLoadingStates();
+}
+
+resetLoadingStates() {
+  this.isSaving = false;
+  this.currentLoadingMessage = '';
+}
+
+handleError(error: any, operation: string) {
+  console.error(`Error in ${operation}:`, error);
+  this.hideLoading();
+  this.presentToast('لم يتم حفظ البيانات، خطأ في الاتصال حاول مرة أخرى', 'danger');
+}
+
+// Check if any loading operation is active
+isLoading(): boolean {
+  return this.isSaving;
+}
+
+async initializeCurrency() {
+  try {
+    await this.currencyService.initializeCurrency();
+    await this.currencyService.loadSupportedCurrencies();
+    
+    // Load currency rates when year and store info are available
+    if (this.store_info && this.year) {
+      await this.currencyService.loadRatesByYear(this.store_info.id, this.year.id);
+    }
+    
+    // Subscribe to currency changes
+    this.currencySubscription = this.currencyService.getCurrentCurrency().subscribe(currency => {
+      this.cdr.detectChanges();
+    });
+  } catch (error) {
+    console.error('Error initializing currency:', error);
+  }
 }
 
 async showPriceAdjustmentDialog(mode: 'initial' | 'edit' = 'initial') {
@@ -1606,17 +1697,19 @@ else if(this.payInvo.pay_date == "" || this.payInvo.pay_date == undefined) {
 }
 }
 
-save() { 
+async save() { 
   let d : Date = this.payInvo.pay_date 
   
   this.payInvo.pay_date = this.datePipe.transform(d, 'yyyy-MM-dd')
   
-  
-    if (this.validate() == true) {
-       this.presentLoadingWithOptions('جاري حفظ البيانات ...')
-       this.saveInvo()    
-        
-    }  
+  if (this.validate() == true) {
+    await this.showLoading('جاري حفظ فاتورة الشراء...');
+    try {
+      this.saveInvo();
+    } catch (error) {
+      this.handleError(error, 'save');
+    }
+  }  
 }
 
 
@@ -1709,9 +1802,7 @@ if (data['message'] != 'Post Not Created') {
 } 
   }, (err) => {
 //console.log(err);
-this.presentToast('لم يتم انشاء حساب للمورد , خطا في الإتصال حاول مرة اخري' , 'danger')
- },()=>{
- this.loadingController.dismiss()
+this.presentToast('لم يتم انشاء حساب للمورد، خطأ في الاتصال حاول مرة أخرى', 'danger')
  })
 }
 
@@ -1768,10 +1859,11 @@ saveInvo(){
   
   this.api.savePerchInvoWithItems(invoiceWithItems).subscribe(
     (response: any) => {
+      this.hideLoading(); // Hide loading before success handling
       this.handleSaveSuccess();
     }, 
     (err) => {
-      this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+      this.handleError(err, 'saveInvo');
     }
   );
 }
@@ -1821,9 +1913,6 @@ private handleSaveSuccess() {
   
   // Show journal entry confirmation for all purchase invoices
   this.presentJournalEntryConfirmation();
-  
-  // Dismiss loading
-  this.loadingController.dismiss();
 }
 
 saveitemList(){  
@@ -2409,6 +2498,11 @@ async  performSyncItem(item_name?){
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(Math.abs(balance));
+  }
+
+  // Get current currency symbol for table headers
+  getCurrencySymbol(): string {
+    return this.currencyService.getCurrentCurrencySymbol();
   }
 
 }

@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit,ViewChild ,ElementRef} from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable, Subscription } from 'rxjs';
 import { AlertController, IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -19,12 +19,13 @@ import { NavigationExtras, Router } from '@angular/router'; // Add
 import { stat } from 'fs';
 import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
 import { ItemStockPrintPage } from '../item-stock-print/item-stock-print.page';
+import { CurrencyService } from '../services/currency.service';
 @Component({
   selector: 'app-item-stock',
   templateUrl: './item-stock.page.html',
   styleUrls: ['./item-stock.page.scss'],
 })
-export class ItemStockPage implements OnInit {
+export class ItemStockPage implements OnInit, OnDestroy {
   @HostListener('document:keydown.escape', ['$event']) onKeydownHandler(event: KeyboardEvent) {
     this.hideMe('3')
 }  
@@ -43,7 +44,10 @@ showNotif = false
 LogHistoryLocalArr:Array<any> =[]
 logHistoryArr:Array<any>=[];
 isOpenNotif = false ; 
-newNotif = false ; 
+newNotif = false ;
+
+// Currency management
+private currencySubscription: Subscription; 
 // New sorting system
 currentSort: {column: string, direction: 'asc' | 'desc' | null} = {column: '', direction: null}
 items:Array<any> =[]
@@ -147,7 +151,22 @@ itemsAll:Array<any> =[]
   stockValuePayPrice: number = 0;
   stockValuePerchPrice: number = 0;
   loadingStockTotals: boolean = false;
-  constructor(private router:Router ,private file: File, private fileOpener: FileOpener,private behavApi:StockServiceService,private storage: Storage,private alertController: AlertController,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private exportService: ExportService) { 
+  constructor(
+    private router: Router,
+    private file: File,
+    private fileOpener: FileOpener,
+    private behavApi: StockServiceService,
+    private storage: Storage,
+    private alertController: AlertController,
+    private modalController: ModalController,
+    private loadingController: LoadingController,
+    private datePipe: DatePipe,
+    private api: ServicesService,
+    private toast: ToastController,
+    private exportService: ExportService,
+    private currencyService: CurrencyService,
+    private cdr: ChangeDetectorRef
+  ) { 
     this.store_info = {id:"" ,store_ref:"" , store_name:"" , location :"" }
     this.selectedItem = {id:null ,item_name:"" ,model:"" ,part_no:""  ,min_qty:0 ,brand:"",pay_price:0,perch_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:""};
     this.selectedItem2 = {id:null ,item_name:"" ,model:"" ,part_no:""  ,min_qty:0 ,brand:"",pay_price:0,perch_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:""};
@@ -1010,7 +1029,27 @@ updateItemArrays(itemId,status?) {
     }
 
       ngOnInit() {
-   //   this.loading = true 
+        this.initializeCurrency();
+        //   this.loading = true 
+      }
+      
+      ngOnDestroy() {
+        if (this.currencySubscription) {
+          this.currencySubscription.unsubscribe();
+        }
+      }
+      
+      async initializeCurrency() {
+        await this.currencyService.initializeCurrency();
+        await this.currencyService.loadSupportedCurrencies();
+        
+        if (this.store_info && this.year) {
+          await this.currencyService.loadRatesByYear(this.store_info.id, this.year.id);
+        }
+        
+        this.currencySubscription = this.currencyService.getCurrentCurrency().subscribe(currency => {
+          this.cdr.detectChanges();
+        });
       }
 
     initializeFilterOptions() {
@@ -2747,6 +2786,11 @@ incresePrice(data){
     columns.push({ key: 'firstQuantity', title: 'المخزون الإفتتاحي', width: 15, type: 'number' });
     
     return columns;
+  }
+
+  // Get current currency symbol for table headers
+  getCurrencySymbol(): string {
+    return this.currencyService.getCurrentCurrencySymbol();
   }
 
 }

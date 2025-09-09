@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import {  LoadingController,Platform, ModalController, ToastController, PopoverController } from '@ionic/angular';
 import { DatePipe } from '@angular/common'; 
 import { Storage } from '@ionic/storage';
@@ -11,13 +11,15 @@ import { InvoicePriceConfigDialogComponent } from '../component/invoice-price-co
 import { CategoriesPage } from '../categories/categories.page';
 import { SortingService, SortConfig } from '../services/sorting.service';
 import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
+import { CurrencyService } from '../services/currency.service';
  
 @Component({
   selector: 'app-purchase-record',
   templateUrl: './purchase-record.page.html',
-  styleUrls: ['./purchase-record.page.scss'],
+  styleUrls: ['./purchase-record.page.scss']
+  
 })
-export class PurchaseRecordPage implements OnInit {
+export class PurchaseRecordPage implements OnInit, OnDestroy {
   payArray:Array<any> =[]
   sortedPayArray:Array<any> =[] // Sorted invoices for display
   currentSort: SortConfig | null = null
@@ -57,7 +59,12 @@ export class PurchaseRecordPage implements OnInit {
   color :any ='dark'
   sums : {pay:any ,change:any,discount:any,tot:any,totAfterDiscout:any}
   year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
-  constructor(private popoverController: PopoverController ,private platform :Platform ,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private exportService: ExportService) { 
+
+  // Currency-related properties
+  currentCurrency$ = this.currencyService.getCurrentCurrency();
+  private subscription: Subscription = new Subscription();
+
+  constructor(private popoverController: PopoverController ,private platform :Platform ,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private exportService: ExportService, private currencyService: CurrencyService, private cdr: ChangeDetectorRef) { 
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
     this.sums = {pay:0 ,change:0,discount:0,tot:0,totAfterDiscout:0}
     this.checkPlatform()
@@ -87,6 +94,31 @@ export class PurchaseRecordPage implements OnInit {
     //console.log('ngOnInit')
     this.getAppInfo() 
     this.prepareOffline()
+    this.initializeCurrency()
+  }
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
+  }
+
+  private async initializeCurrency() {
+    // Initialize currency service
+    await this.currencyService.initializeCurrency();
+    
+    // Load supported currencies
+    await this.currencyService.loadSupportedCurrencies();
+    
+    // Load currency rates when store_info and year are available
+    if (this.store_info && this.year) {
+      await this.currencyService.loadRatesByYear(this.store_info.id, this.year.id);
+    }
+    
+    // Subscribe to currency changes for UI updates
+    this.subscription.add(
+      this.currencyService.getCurrentCurrency().subscribe(currency => {
+        this.cdr.detectChanges(); // Trigger UI update for price displays
+      })
+    );
   }
 
 
@@ -1243,6 +1275,11 @@ private getExportColumns(): ExportColumn[] {
     { key: 'payComment', title: 'تعليق', width: 20, type: 'text' },
     { key: 'user_name', title: 'المستخدم', width: 15, type: 'text' }
   ];
+}
+
+// Get current currency symbol for table headers
+getCurrencySymbol(): string {
+  return this.currencyService.getCurrentCurrencySymbol();
 }
 
 }

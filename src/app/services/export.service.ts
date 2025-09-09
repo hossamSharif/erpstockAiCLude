@@ -1223,7 +1223,7 @@ export class ExportService {
       <div style="direction: rtl; text-align: right;">
         <div style="${titleStyle}">${config.title}</div>
         ${config.subtitle ? `<div style="text-align: center; margin: 5px 0; color: #666;">${config.subtitle}</div>` : ''}
-        <div style="text-align: center; margin: 5px 0; color: #888; font-size: 12px;">${config.currentDate || new Date().toLocaleDateString()}</div>
+        <div style="text-align: center; margin: 5px 0; color: #888; font-size: 12px;">${config.currentDate || new Date().toLocaleDateString('en-US')}</div>
         
         <table style="${tableStyle}">
           <thead>
@@ -1252,7 +1252,7 @@ export class ExportService {
         
         <div style="margin-top: 20px; font-size: 10px; color: #666;">
           <div>المستخدم: ${config.userName}</div>
-          <div>تاريخ التصدير: ${new Date().toLocaleString('ar-SA')}</div>
+          <div>تاريخ التصدير: ${new Date().toLocaleString('en-US')}</div>
         </div>
       </div>
     `;

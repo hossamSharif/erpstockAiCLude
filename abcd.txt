@@ -1,9 +1,9 @@
  
 
- 
 
+عند اضافة صنف الي القائمة لا يركز الفوكس الب حقل اسم الصنف 
 
-
+when user click to edit qty or itm in itemlist the total not changed after dismiss ed 
 
  -
 

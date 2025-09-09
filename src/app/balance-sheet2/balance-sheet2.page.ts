@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { AlertController, LoadingController, ModalController, Platform, ToastController } from '@ionic/angular';
 import { DatePipe } from '@angular/common'; 
@@ -6,13 +6,15 @@ import { Storage } from '@ionic/storage';
 import { NavigationExtras, Router } from '@angular/router';
 import { SortingService, SortConfig } from '../services/sorting.service';
 import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
+import { CurrencyService } from '../services/currency.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-balance-sheet2',
   templateUrl: './balance-sheet2.page.html',
   styleUrls: ['./balance-sheet2.page.scss'], 
 })
-export class BalanceSheet2Page implements OnInit {
+export class BalanceSheet2Page implements OnInit, OnDestroy {
   
   // Core data
   accounts: Array<any> = [];
@@ -44,6 +46,9 @@ export class BalanceSheet2Page implements OnInit {
     grand_credit_total: 0,
     difference: 0
   };
+  
+  // Currency management
+  private currencySubscription: Subscription;
 
   constructor(
     private platform: Platform,
@@ -56,18 +61,39 @@ export class BalanceSheet2Page implements OnInit {
     private api: ServicesService,
     private toast: ToastController,
     private sortingService: SortingService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private currencyService: CurrencyService,
+    private cdr: ChangeDetectorRef
   ) { 
     this.checkPlatform();
     this.getAppInfo();
   }
 
   ngOnInit() {
-    // Component initialization
+    this.initializeCurrency();
+  }
+  
+  ngOnDestroy() {
+    if (this.currencySubscription) {
+      this.currencySubscription.unsubscribe();
+    }
   }
 
   ionViewDidEnter() {
     this.getAppInfo();
+  }
+  
+  async initializeCurrency() {
+    await this.currencyService.initializeCurrency();
+    await this.currencyService.loadSupportedCurrencies();
+    
+    if (this.store_info && this.year) {
+      await this.currencyService.loadRatesByYear(this.store_info.id, this.year.id);
+    }
+    
+    this.currencySubscription = this.currencyService.getCurrentCurrency().subscribe(currency => {
+      this.cdr.detectChanges();
+    });
   }
 
   checkPlatform() {
@@ -330,6 +356,11 @@ export class BalanceSheet2Page implements OnInit {
       { key: 'current_balance', title: 'الرصيد الحالي', width: 15, type: 'currency' },
       { key: 'balance_type', title: 'نوع الرصيد', width: 10, type: 'text' }
     ];
+  }
+
+  // Get current currency symbol for table headers
+  getCurrencySymbol(): string {
+    return this.currencyService.getCurrentCurrencySymbol();
   }
 
 }

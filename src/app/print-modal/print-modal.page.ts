@@ -1,12 +1,14 @@
-import { Component, OnInit,Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, ChangeDetectorRef } from '@angular/core';
 import { ModalController, ToastController } from '@ionic/angular';
+import { CurrencyService } from '../services/currency.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-print-modal',
   templateUrl: './print-modal.page.html',
   styleUrls: ['./print-modal.page.scss'],
 })
-export class PrintModalPage implements OnInit {
+export class PrintModalPage implements OnInit, OnDestroy {
   @Input() printArr: any;
   @Input() page: any;
    //mode = 'pos' 
@@ -14,15 +16,77 @@ export class PrintModalPage implements OnInit {
    logoBase64: string = '';
    vehicleBase64: string = '';
    itemImagesBase64: { [key: string]: string } = {};
+   
+   // Currency management
+   currentCurrency: string = 'SDG';
+   exchangeRate: number = 1.0;
+   private currencySubscription: Subscription;
   
-  constructor(private modalController: ModalController,private toast :ToastController) {
-    this.mode = 'enhanced' 
-   }
+  constructor(
+    private modalController: ModalController,
+    private toast: ToastController,
+    private currencyService: CurrencyService,
+    private cdr: ChangeDetectorRef
+  ) {
+    this.mode = 'enhanced';
+  }
 
   async ngOnInit() {
     console.log(this.printArr[0]);
-    this.sortItemListAlphabetically()
+    this.sortItemListAlphabetically();
     await this.loadImages();
+    await this.initializeCurrencyForPrint();
+  }
+  
+  ngOnDestroy() {
+    if (this.currencySubscription) {
+      this.currencySubscription.unsubscribe();
+    }
+  }
+  
+  async initializeCurrencyForPrint() {
+    await this.currencyService.initializeCurrency();
+    this.currentCurrency = this.currencyService.getCurrentCurrencyValue();
+    this.exchangeRate = this.currencyService.getExchangeRate(this.currentCurrency);
+    
+    this.currencySubscription = this.currencyService.getCurrentCurrency().subscribe(currency => {
+      this.currentCurrency = currency;
+      this.exchangeRate = this.currencyService.getExchangeRate(currency);
+      this.cdr.detectChanges();
+    });
+    
+    this.addCurrencyToPrintData();
+  }
+  
+  addCurrencyToPrintData() {
+    if (this.printArr && this.printArr[0]) {
+      this.printArr[0].currency = {
+        code: this.currentCurrency,
+        rate: this.exchangeRate,
+        baseCurrency: 'SDG'
+      };
+    }
+  }
+  
+  formatDualCurrency(amount: number): string {
+    if (!amount && amount !== 0) return '0.00';
+    
+    const convertedAmount = this.currencyService.convertFromSDG(amount, this.currentCurrency);
+    const baseCurrency = this.currencyService.formatCurrency(amount, 'SDG');
+    const targetCurrency = this.currencyService.formatCurrency(convertedAmount, this.currentCurrency);
+    
+    if (this.currentCurrency === 'SDG') {
+      return baseCurrency;
+    }
+    
+    return `${targetCurrency} (${baseCurrency})`;
+  }
+  
+  getExchangeRateFooter(): string {
+    if (this.currentCurrency === 'SDG') return '';
+    
+    const today = new Date().toLocaleDateString('en-US');
+    return `سعر الصرف المستخدم: 1 ${this.currentCurrency} = ${this.exchangeRate} جنيه سوداني (تاريخ: ${today})`;
   }
 
   sortItemListAlphabetically() {
@@ -180,6 +244,11 @@ formatBalance(balance: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(Math.abs(balance));
+}
+
+// Get current currency symbol for headers
+getCurrencySymbol(): string {
+  return this.currencyService.getCurrentCurrencySymbol();
 }
 
 }

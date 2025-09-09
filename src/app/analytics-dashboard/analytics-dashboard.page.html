@@ -5,6 +5,7 @@
     </ion-buttons>
     <ion-title> الرئيسية    </ion-title>
     <ion-buttons slot="end">
+      <app-currency-switcher></app-currency-switcher>
       <ion-button (click)="refresh()" [disabled]="loading">
         <ion-icon name="refresh-outline"></ion-icon>
       </ion-button>
@@ -79,7 +80,7 @@
               </div>
               <div class="card-content">
                 <h3>إجمالي المبيعات</h3>
-                <p class="amount">{{formatCurrency(dashboardTotals.totalSales)}}</p>
+                <p class="amount">{{dashboardTotals.totalSales | currencyDisplay}}</p>
               </div>
             </div>
           </div>
@@ -99,7 +100,7 @@
               </div>
               <div class="card-content">
                 <h3>إجمالي المشتريات</h3>
-                <p class="amount">{{formatCurrency(dashboardTotals.totalPurchase)}}</p>
+                <p class="amount">{{dashboardTotals.totalPurchase | currencyDisplay}}</p>
               </div>
             </div>
           </div>
@@ -119,7 +120,7 @@
               </div>
               <div class="card-content">
                 <h3>الوارد النقدي</h3>
-                <p class="amount">{{formatCurrency(dashboardTotals.cashIn)}}</p>
+                <p class="amount">{{dashboardTotals.cashIn | currencyDisplay}}</p>
               </div>
             </div>
           </div>
@@ -139,7 +140,7 @@
               </div>
               <div class="card-content">
                 <h3>الصادر النقدي</h3>
-                <p class="amount">{{formatCurrency(dashboardTotals.cashOut)}}</p>
+                <p class="amount">{{dashboardTotals.cashOut | currencyDisplay}}</p>
               </div>
             </div>
           </div>
@@ -159,7 +160,7 @@
               </div>
               <div class="card-content">
                 <h3>المدينون</h3>
-                <p class="amount">{{formatCurrency(dashboardTotals.debtors)}}</p>
+                <p class="amount">{{dashboardTotals.debtors | currencyDisplay}}</p>
               </div>
             </div>
           </div>
@@ -179,7 +180,7 @@
               </div>
               <div class="card-content">
                 <h3>الدائنون</h3>
-                <p class="amount">{{formatCurrency(dashboardTotals.creditors)}}</p>
+                <p class="amount">{{dashboardTotals.creditors | currencyDisplay}}</p>
               </div>
             </div>
           </div>
@@ -265,18 +266,18 @@
         <div class="summary-grid">
           <div class="summary-item">
             <span class="label">صافي المبيعات:</span>
-            <span class="value positive">{{formatCurrency(dashboardTotals.totalSales - dashboardTotals.totalPurchase)}}</span>
+            <span class="value positive">{{(dashboardTotals.totalSales - dashboardTotals.totalPurchase) | currencyDisplay}}</span>
           </div>
           <div class="summary-item">
             <span class="label">صافي النقدية:</span>
             <span class="value" [class.positive]="(dashboardTotals.cashIn - dashboardTotals.cashOut) >= 0" 
                   [class.negative]="(dashboardTotals.cashIn - dashboardTotals.cashOut) < 0">
-              {{formatCurrency(dashboardTotals.cashIn - dashboardTotals.cashOut)}}
+              {{(dashboardTotals.cashIn - dashboardTotals.cashOut) | currencyDisplay}}
             </span>
           </div>
           <div class="summary-item">
             <span class="label">إجمالي الذمم:</span>
-            <span class="value">{{formatCurrency(dashboardTotals.debtors + dashboardTotals.creditors)}}</span>
+            <span class="value">{{(dashboardTotals.debtors + dashboardTotals.creditors) | currencyDisplay}}</span>
           </div>
         </div>
       </ion-card-content>

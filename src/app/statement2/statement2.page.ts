@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { AlertController, LoadingController, ModalController, Platform, ToastController, IonPopover } from '@ionic/angular';
 import { DatePipe } from '@angular/common'; 
@@ -6,6 +6,8 @@ import { Storage } from '@ionic/storage';
 import { NavigationExtras, Router } from '@angular/router';
 import { SortingService, SortConfig } from '../services/sorting.service';
 import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
+import { CurrencyService } from '../services/currency.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-statement2',
@@ -90,6 +92,9 @@ export class Statement2Page implements OnInit, OnDestroy {
   
   // Search timeout for debouncing
   private searchTimeout: any;
+  
+  // Currency management
+  private currencySubscription: Subscription;
 
   constructor(
     private platform: Platform,
@@ -102,7 +107,9 @@ export class Statement2Page implements OnInit, OnDestroy {
     private api: ServicesService,
     private toast: ToastController,
     private sortingService: SortingService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private currencyService: CurrencyService,
+    private cdr: ChangeDetectorRef
   ) {
     this.initializeData();
     this.checkPlatform();
@@ -114,16 +121,32 @@ export class Statement2Page implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // Component initialization
+    this.initializeCurrency();
   }
 
   ionViewDidEnter() {
     this.getAppInfo();
   }
+  
+  async initializeCurrency() {
+    await this.currencyService.initializeCurrency();
+    await this.currencyService.loadSupportedCurrencies();
+    
+    if (this.store_info && this.year) {
+      await this.currencyService.loadRatesByYear(this.store_info.id, this.year.id);
+    }
+    
+    this.currencySubscription = this.currencyService.getCurrentCurrency().subscribe(currency => {
+      this.cdr.detectChanges();
+    });
+  }
 
   ngOnDestroy() {
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
+    }
+    if (this.currencySubscription) {
+      this.currencySubscription.unsubscribe();
     }
   }
 
@@ -529,6 +552,11 @@ export class Statement2Page implements OnInit, OnDestroy {
       { key: 'running_balance', title: 'الرصيد الجاري', width: 15, type: 'currency' },
       { key: 'user_name', title: 'المستخدم', width: 15, type: 'text' }
     ];
+  }
+
+  // Get current currency symbol for table headers
+  getCurrencySymbol(): string {
+    return this.currencyService.getCurrentCurrencySymbol();
   }
 
 }

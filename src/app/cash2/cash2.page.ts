@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef ,Renderer2,Input} from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, Renderer2, Input, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { from, Observable } from 'rxjs';
 import { AlertController, IonInput, LoadingController, ModalController, Platform, ToastController } from '@ionic/angular';
@@ -9,12 +9,13 @@ import { AuthServiceService } from '../auth/auth-service.service';
 import { StockServiceService } from '../syncService/stock-service.service';
 import * as momentObj from 'moment';
 import { Subscription } from 'rxjs';
+import { CurrencyService } from '../services/currency.service';
 @Component({
   selector: 'app-cash2',
   templateUrl: './cash2.page.html',
   styleUrls: ['./cash2.page.scss']
 })
-export class Cash2Page implements OnInit { 
+export class Cash2Page implements OnInit, OnDestroy { 
   @ViewChild('popoverNotif22') popoverNotif22;
   notifArr:Array<any> =[]
   showNotif = false
@@ -22,7 +23,8 @@ export class Cash2Page implements OnInit {
   logHistoryArr:Array<any>=[];
   isOpenNotif = false ;
   subiscribtionNotif:Subscription;
-  newNotif = false ; 
+  newNotif = false ;
+  private currencySubscription: Subscription; 
   
   sub_accountFrom:Array<any> =[] 
   itemList:Array<any> =[] 
@@ -81,13 +83,30 @@ year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
   loadingAccountBalance = false;
   loadingSourceBalance = false;
 
-  constructor(private platform :Platform ,private behavApi:StockServiceService ,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) {
+  constructor(private platform :Platform ,private behavApi:StockServiceService ,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private currencyService: CurrencyService, private cdr: ChangeDetectorRef) {
     this.selectedBankAccount = {id:null,ac_id:null,sub_name:null,sub_type:null,sub_code:null,sub_balance:null,store_id:null,debit:null ,credit:null, currentType:null} 
     this.getAppInfo() 
    }
 
   ngOnInit() {
-  
+    this.initializeCurrency();
+  }
+
+  ngOnDestroy() {
+    if (this.currencySubscription) {
+      this.currencySubscription.unsubscribe();
+    }
+  }
+
+  async initializeCurrency() {
+    await this.currencyService.initializeCurrency();
+    await this.currencyService.loadSupportedCurrencies();
+    if (this.store_info && this.year) {
+      await this.currencyService.loadRatesByYear(this.store_info.id, this.year.id);
+    }
+    this.currencySubscription = this.currencyService.getCurrentCurrency().subscribe(currency => {
+      this.cdr.detectChanges();
+    });
   }
 
   presentAccountPopover(event) {
@@ -116,7 +135,9 @@ year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
   
   ionViewDidLeave(){
     //console.log('ionViewWillLeave') 
-    this.subiscribtionNotif.unsubscribe()
+    if (this.subiscribtionNotif) {
+      this.subiscribtionNotif.unsubscribe()
+    }
   } 
 
   ionViewDidEnter(){

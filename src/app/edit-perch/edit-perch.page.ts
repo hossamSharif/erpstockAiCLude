@@ -1,5 +1,5 @@
 import { DatePipe, Location } from '@angular/common';
-import { Component, OnInit , ViewChild, ElementRef} from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { ServicesService } from '../stockService/services.service';
@@ -11,13 +11,14 @@ import { FilterPipe3 } from '../sales/pipe3';
 import { StockServiceService } from '../syncService/stock-service.service';
 import * as momentObj from 'moment';
 import { Subscription } from 'rxjs';
+import { CurrencyService } from '../services/currency.service';
 import { PriceAdjustmentDialogComponent } from '../component/price-adjustment-dialog/price-adjustment-dialog.component';
 @Component({
   selector: 'app-edit-perch',
   templateUrl: './edit-perch.page.html',
   styleUrls: ['./edit-perch.page.scss'],
 })
-export class EditPerchPage implements OnInit { 
+export class EditPerchPage implements OnInit, OnDestroy { 
   @ViewChild("dstEp") dstEp: ElementRef;
   @ViewChild('qtyIdEp') qtyIdEp; 
  loadingItems:boolean = false
@@ -37,6 +38,7 @@ calculatedDiscountAmount: number = 0;
   isOpenNotif = false ;
   subiscribtionNotif:Subscription;
   newNotif = false ;
+  private currencySubscription: Subscription;
  
   currenQty:any = 0
   firstQty:any = 0
@@ -153,7 +155,13 @@ searchResult :Array<any> =[]
 aliasResult :Array<any> =[]
 year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any} 
 
-  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) {
+// Loading state management - Centralized loading system
+isUpdating: boolean = false;
+isDeleting: boolean = false;
+currentLoadingMessage: string = '';
+currentLoader: HTMLIonLoadingElement | null = null;
+
+  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private currencyService: CurrencyService, private cdr: ChangeDetectorRef) {
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
   this.route.queryParams.subscribe(params => {
     if (params && params.payInvo) {
@@ -189,8 +197,89 @@ year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
 
   ngOnInit() { 
     // Check category visibility setting
-     
-   }
+    this.initializeCurrency();
+  }
+
+  ngOnDestroy() {
+    if (this.currencySubscription) {
+      this.currencySubscription.unsubscribe();
+    }
+    
+    // Cleanup any remaining loading states
+    this.hideLoading();
+  }
+
+  // Centralized Loading Management Methods
+  async showLoading(message: string, operationType: 'updating' | 'deleting' = 'updating') {
+    await this.hideLoading(); // Ensure no existing loaders
+    this.resetLoadingStates();
+    
+    if (operationType === 'updating') {
+      this.isUpdating = true;
+    } else if (operationType === 'deleting') {
+      this.isDeleting = true;
+    }
+    
+    this.currentLoadingMessage = message;
+    
+    this.currentLoader = await this.loadingController.create({
+      spinner: 'bubbles',
+      mode: 'ios',
+      message: message,
+      duration: 30000, // 30 second timeout
+      backdropDismiss: false
+    });
+
+    await this.currentLoader.present();
+    
+    // Timeout protection
+    setTimeout(() => {
+      if ((this.isUpdating || this.isDeleting) && this.currentLoader) {
+        console.log('Loading timeout reached, dismissing...');
+        this.hideLoading();
+      }
+    }, 30000);
+  }
+
+  async hideLoading() {
+    if (this.currentLoader) {
+      try {
+        await this.currentLoader.dismiss();
+      } catch (error) {
+        console.log('Error dismissing loader:', error);
+      }
+      this.currentLoader = null;
+    }
+    this.resetLoadingStates();
+  }
+
+  resetLoadingStates() {
+    this.isUpdating = false;
+    this.isDeleting = false;
+    this.currentLoadingMessage = '';
+  }
+
+  handleError(error: any, operation: string) {
+    console.error(`Error in ${operation}:`, error);
+    this.hideLoading();
+    this.presentToast('لم يتم حفظ البيانات، خطأ في الاتصال حاول مرة أخرى', 'danger');
+  }
+
+  // Check if any loading operation is active
+  isLoading(): boolean {
+    return this.isUpdating || this.isDeleting;
+  }
+
+  async initializeCurrency() {
+    await this.currencyService.initializeCurrency();
+    await this.currencyService.loadSupportedCurrencies();
+    if (this.store_info && this.year) {
+      await this.currencyService.loadRatesByYear(this.store_info.id, this.year.id);
+    }
+    this.currencySubscription = this.currencyService.getCurrentCurrency().subscribe(currency => {
+      this.cdr.detectChanges();
+    });
+  }
 
    initializeDiscountValues() {
   // Initialize discount type based on existing discount
@@ -1081,7 +1170,7 @@ saveLogHistoryForInsertItem(){
  }) 
 }
 
-update() {
+async update() {
   //console.log('papa',this.payInvo)
   let d : Date = this.payInvo.pay_date  
   this.payInvo.sub_name = this.selectedAccount.sub_name  
@@ -1091,8 +1180,12 @@ update() {
   }
  
   if (this.validate() == true) {
-     this.presentLoadingWithOptions('جاري حفظ البيانات ...')
-     this.updateInvo() 
+    await this.showLoading('جاري تحديث فاتورة الشراء...', 'updating');
+    try {
+      this.updateInvo();
+    } catch (error) {
+      this.handleError(error, 'update');
+    }
   } 
 }
 
@@ -1122,12 +1215,11 @@ updateInvo(){
   
   this.api.updatePerchInvoWithItems(invoiceWithItems).subscribe(
     (response: any) => {
+      this.hideLoading(); // Hide loading before success handling
       this.handleUpdateSuccess();
     }, 
     (err) => {
-      this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
-        this.loadingController.dismiss()
-      })
+      this.handleError(err, 'updateInvo');
     }
   );
 }
@@ -1155,9 +1247,6 @@ private handleUpdateSuccess() {
   
   // Perform sync
   this.performSync();
-  
-  // Dismiss loading
-  this.loadingController.dismiss();
 }
 
  
@@ -1268,8 +1357,8 @@ delete() {
 }
 
 
-deleteSalesInvo(){ 
-  this.presentLoadingWithOptions('جاري حذف البيانات ...')
+async deleteSalesInvo(){ 
+  await this.showLoading('جاري حذف فاتورة الشراء...', 'deleting');
   
   const deletionData = {
     pay_id: this.payInvo.pay_id,
@@ -1277,23 +1366,19 @@ deleteSalesInvo(){
   };
 
   this.api.deletePerchInvoWithItems(deletionData).subscribe(data => {
-    //console.log(data)
+    this.hideLoading(); // Hide loading before processing response
     if (data['success']) {
       this.purchase = this.purchase.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);
-      //console.log(' case ffff ' ,this.purchase)
       this.storage.set('purchase', this.purchase).then((response) => {
-        //console.log('purchase', response) 
-        this.performSyncDel()
+        this.performSyncDel();
       });
-    }else{
-      this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+      this.presentToast('تم حذف البيانات بنجاح', 'success');
+    } else {
+      this.presentToast('لم يتم حذف البيانات، خطأ في الاتصال حاول مرة أخرى', 'danger');
     }
-  },(err) => {
-    //console.log(err);
-    this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
-  },() => {
-    this.loadingController.dismiss()
-  }) 
+  }, (err) => {
+    this.handleError(err, 'deleteSalesInvo');
+  }); 
 }
 
  
@@ -1428,6 +1513,11 @@ formatBalance(balance: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(Math.abs(balance));
+}
+
+// Get current currency symbol for table headers
+getCurrencySymbol(): string {
+  return this.currencyService.getCurrentCurrencySymbol();
 }
 
 }

@@ -11,113 +11,133 @@
 
 <ion-content class="ion-padding">
   <form [formGroup]="rateForm" (ngSubmit)="save()">
-    <ion-list class="form-list">
+    
+    <ion-grid class="form-grid">
+      <!-- First Row: Currency and Exchange Rate -->
+      <ion-row class="form-row">
+        <ion-col size-lg="6" size-md="6" size="12" class="form-field-col">
+          <ion-label class="field-label">
+            العملة <span class="required-asterisk">*</span>
+          </ion-label>
+          <div class="currency-section">
+            <ion-segment 
+              [value]="rateForm.get('target_currency')?.value" 
+              (ionChange)="onCurrencySegmentChange($event)"
+              [disabled]="mode === 'edit'"
+              class="compact-segment currency-segment"
+              scrollable="true">
+              <ion-segment-button 
+                *ngFor="let currency of supportedCurrencies" 
+                [value]="currency.currency_code"
+                class="compact-segment-button">
+                <span>{{ currency.currency_code }}</span>
+                <small>{{ currency.currency_name_ar }}</small>
+              </ion-segment-button>
+            </ion-segment>
+          </div>
+          <div *ngIf="isFieldInvalid('target_currency')" class="error-message">
+            {{ getFieldErrorMessage('target_currency') }}
+          </div>
+        </ion-col>
+        
+        <ion-col size-lg="6" size-md="6" size="12" class="form-field-col">
+          <ion-label class="field-label">
+            سعر الصرف (مقابل الجنيه السوداني) <span class="required-asterisk">*</span>
+          </ion-label>
+          <ion-item class="custInput rate-input">
+            <ion-input 
+              type="number" 
+              formControlName="exchange_rate" 
+              step="0.000001"
+              placeholder="450.50"
+              class="form-input">
+            </ion-input>
+          </ion-item>
+          <div *ngIf="isFieldInvalid('exchange_rate')" class="error-message">
+            {{ getFieldErrorMessage('exchange_rate') }}
+          </div>
+        </ion-col>
+      </ion-row>
+
+      <!-- Second Row: Date -->
+      <ion-row class="form-row">
+        <ion-col size-lg="6" size-md="6" size="12" class="form-field-col">
+          <ion-label class="field-label">
+            التاريخ <span class="required-asterisk">*</span>
+          </ion-label>
+          <ion-item class="custInput date-input">
+            <ion-input 
+              type="date" 
+              formControlName="rate_date"
+              [max]="maxDate"
+              class="date-picker">
+            </ion-input>
+          </ion-item>
+          <div *ngIf="isFieldInvalid('rate_date')" class="error-message">
+            {{ getFieldErrorMessage('rate_date') }}
+          </div>
+        </ion-col>
+        
+        <!-- Empty column for spacing on large screens -->
+        <ion-col size-lg="6" size-md="6" size="12" class="form-field-col">
+          <!-- Placeholder for future fields or keep empty for better layout -->
+        </ion-col>
+      </ion-row>
       
-      <!-- Currency Selection -->
-      <ion-item class="form-item">
-        <ion-label position="stacked" class="form-label">
-          العملة <span class="required-asterisk">*</span>
-        </ion-label>
-        <ion-select 
-          formControlName="target_currency" 
-          placeholder="اختر العملة"
-          interface="popover"
-          [disabled]="mode === 'edit'"
-          class="form-select">
-          <ion-select-option 
-            *ngFor="let currency of supportedCurrencies" 
-            [value]="currency.currency_code">
-            {{ getCurrencyDisplayText(currency) }}
-          </ion-select-option>
-        </ion-select>
-      </ion-item>
-      <div *ngIf="isFieldInvalid('target_currency')" class="error-message">
-        {{ getFieldErrorMessage('target_currency') }}
-      </div>
+      <!-- Hidden fields for functionality only -->
+      <input type="hidden" formControlName="base_currency" />
+      <input type="hidden" formControlName="store_id" />
+      <input type="hidden" formControlName="year_id" />
+      <input type="hidden" formControlName="created_by" />
+      <input type="hidden" formControlName="updated_by" />
 
-      <!-- Exchange Rate -->
-      <ion-item class="form-item">
-        <ion-label position="stacked" class="form-label">
-          سعر الصرف (مقابل الجنيه السوداني) <span class="required-asterisk">*</span>
-        </ion-label>
-        <ion-input 
-          type="number" 
-          formControlName="exchange_rate" 
-          step="0.000001"
-          placeholder="450.50"
-          class="form-input">
-        </ion-input>
-      </ion-item>
-      <div *ngIf="isFieldInvalid('exchange_rate')" class="error-message">
-        {{ getFieldErrorMessage('exchange_rate') }}
-      </div>
+      <!-- Action Buttons Row - placed in same line -->
+      <ion-row class="action-buttons-row">
+        <ion-col class="ion-text-center">
+          <div class="button-group">
+            <ion-button 
+              type="submit" 
+              [disabled]="!rateForm.valid || isLoading"
+              color="primary"
+              size="small"
+              class="action-btn save-btn">
+              <ion-icon name="save-outline" slot="start"></ion-icon>
+              {{ getSaveButtonText() }}
+            </ion-button>
 
-      <!-- Rate Date -->
-      <ion-item class="form-item">
-        <ion-label position="stacked" class="form-label">
-          التاريخ <span class="required-asterisk">*</span>
-        </ion-label>
-        <ion-datetime 
-          formControlName="rate_date" 
-          displayFormat="YYYY-MM-DD"
-          pickerFormat="YYYY-MM-DD"
-          [max]="new Date().toISOString().split('T')[0]"
-          class="form-datetime">
-        </ion-datetime>
-      </ion-item>
-      <div *ngIf="isFieldInvalid('rate_date')" class="error-message">
-        {{ getFieldErrorMessage('rate_date') }}
-      </div>
+            <ion-button 
+              fill="outline" 
+              color="medium" 
+              size="small"
+              (click)="resetForm()"
+              class="action-btn reset-btn">
+              <ion-icon name="refresh-outline" slot="start"></ion-icon>
+              إعادة تعيين
+            </ion-button>
 
-      <!-- Store ID (Hidden if passed from parent) -->
-      <ion-item *ngIf="!store_info" class="form-item">
-        <ion-label position="stacked" class="form-label">
-          رقم المتجر <span class="required-asterisk">*</span>
-        </ion-label>
-        <ion-input 
-          type="number" 
-          formControlName="store_id" 
-          placeholder="1"
-          class="form-input">
-        </ion-input>
-      </ion-item>
+            <ion-button 
+              *ngIf="mode === 'edit' && rateData?.id"
+              fill="outline" 
+              color="danger" 
+              size="small"
+              (click)="delete()"
+              class="action-btn delete-btn">
+              <ion-icon name="trash-outline" slot="start"></ion-icon>
+              حذف
+            </ion-button>
 
-      <!-- Year ID (Hidden if passed from parent) -->
-      <ion-item *ngIf="!year" class="form-item">
-        <ion-label position="stacked" class="form-label">
-          رقم السنة <span class="required-asterisk">*</span>
-        </ion-label>
-        <ion-input 
-          type="number" 
-          formControlName="year_id" 
-          placeholder="1"
-          class="form-input">
-        </ion-input>
-      </ion-item>
-
-    </ion-list>
-
-    <!-- Action Buttons -->
-    <div class="button-container">
-      <ion-button 
-        expand="block" 
-        type="submit" 
-        [disabled]="!rateForm.valid || isLoading"
-        color="primary"
-        class="save-button">
-        <ion-icon name="save-outline" slot="start"></ion-icon>
-        {{ getSaveButtonText() }}
-      </ion-button>
-
-      <ion-button 
-        expand="block" 
-        fill="outline" 
-        color="medium" 
-        (click)="dismiss()"
-        class="cancel-button">
-        <ion-icon name="close-outline" slot="start"></ion-icon>
-        إلغاء
-      </ion-button>
-    </div>
+            <ion-button 
+              fill="outline" 
+              color="medium" 
+              size="small"
+              (click)="dismiss()"
+              class="action-btn cancel-btn">
+              <ion-icon name="close-outline" slot="start"></ion-icon>
+              إلغاء
+            </ion-button>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
   </form>
 </ion-content>

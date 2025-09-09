@@ -4,20 +4,19 @@ import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
-import { Cash2PageRoutingModule } from './cash2-routing.module'; 
-import { Cash2Page } from './cash2.page';
-import { ShareModule } from '../shareModule/share-module/share-module.module';
+import { CurrencyManagementPageRoutingModule } from './currency-management-routing.module';
+
+import { CurrencyManagementPage } from './currency-management.page';
 import { SharedModule } from '../module/shared/shared.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
-    ShareModule,
-    SharedModule,
     IonicModule,
-    Cash2PageRoutingModule
+    CurrencyManagementPageRoutingModule,
+    SharedModule
   ],
-  declarations: [Cash2Page]
+  declarations: [CurrencyManagementPage]
 })
-export class Cash2PageModule {}
+export class CurrencyManagementPageModule {}

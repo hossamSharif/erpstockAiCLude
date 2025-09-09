@@ -1,7 +1,8 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { IonicStorageModule } from '@ionic/storage-angular';
 import { ItemSelectorComponent } from '../../component/item-selector/item-selector.component';
 import { FilterPipe } from '../../component/item-selector/pipe';
 import { EnhancedItemSelectorComponent } from '../../component/enhanced-item-selector/enhanced-item-selector.component';
@@ -11,6 +12,9 @@ import { AccountSelectorComponent } from '../../components/account-selector/acco
 import { ActionPopoverComponent } from '../../component/action-popover/action-popover.component';
 import { InvoiceJournalEntryComponent } from 'src/app/component/invoice-journal-entry/invoice-journal-entry.component';
 import { ExportButtonsComponent } from '../../component/export-buttons/export-buttons.component';
+import { CurrencySwitcherComponent } from '../../components/currency-switcher/currency-switcher.component';
+import { CurrencyRateModalComponent } from '../../components/currency-rate-modal/currency-rate-modal.component';
+import { CurrencyDisplayPipe } from '../../pipes/currency-display.pipe';
 
 
 @NgModule({
@@ -23,13 +27,21 @@ import { ExportButtonsComponent } from '../../component/export-buttons/export-bu
     ActionPopoverComponent,
     AccountSelectorComponent ,
     InvoiceJournalEntryComponent,
-    ExportButtonsComponent
+    ExportButtonsComponent,
+    CurrencySwitcherComponent,
+    CurrencyRateModalComponent,
+    CurrencyDisplayPipe
   ],
   imports: [
     CommonModule,
     FormsModule,
-    IonicModule
-  ] ,
+    ReactiveFormsModule,
+    IonicModule,
+    IonicStorageModule
+  ],
+  providers: [
+    DatePipe
+  ],
   exports: [
     ItemSelectorComponent,
     FilterPipe,
@@ -39,7 +51,10 @@ import { ExportButtonsComponent } from '../../component/export-buttons/export-bu
     InvoicePriceConfigDialogComponent,
     AccountSelectorComponent ,
     InvoiceJournalEntryComponent,
-    ExportButtonsComponent
+    ExportButtonsComponent,
+    CurrencySwitcherComponent,
+    CurrencyRateModalComponent,
+    CurrencyDisplayPipe
 
   ]
 })

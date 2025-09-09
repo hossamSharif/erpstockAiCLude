@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { Storage } from '@ionic/storage';
 import { ServicesService } from '../stockService/services.service';
 
@@ -76,7 +77,12 @@ export class CurrencyService {
   }
   
   createCurrencyRate(rateData: any): Observable<any> {
-    return this.http.post(this.api + 'currency_rates/create.php', rateData);
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+    return this.http.post(this.api + 'currency_rates/create.php', rateData, httpOptions);
   }
   
   getCurrencyRates(filters: any): Observable<any> {
@@ -91,7 +97,14 @@ export class CurrencyService {
   }
   
   updateCurrencyRate(id: any, rateData: any): Observable<any> {
-    return this.http.put(this.api + 'currency_rates/update.php', {id, ...rateData});
+    const payload = {id, ...rateData};
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+    
+    return this.http.put(this.api + 'currency_rates/update.php', payload, httpOptions);
   }
   
   deleteCurrencyRate(id: any): Observable<any> {
@@ -131,13 +144,15 @@ export class CurrencyService {
       'AED': 'د.إ',
       'SAR': 'ر.س'
     };
-    return `${amount.toLocaleString('ar-SD', {minimumFractionDigits: 2})} ${symbols[currency] || currency}`;
+    // Use 'en-US' locale to ensure English numerals are displayed
+    return `${amount.toLocaleString('en-US', {minimumFractionDigits: 2})} ${symbols[currency] || currency}`;
   }
   
   // Supported Currencies
   getSupportedCurrencies(): Observable<any> {
     return this.http.get(this.api + 'currencies/read.php');
   }
+
 
   getActiveCurrencies(): Observable<any> {
     const params = new HttpParams().set('active_only', 'true');
@@ -208,7 +223,7 @@ export class CurrencyService {
   // Load and cache supported currencies
   async loadSupportedCurrencies(): Promise<void> {
     try {
-      const response = await this.getActiveCurrencies().toPromise();
+      const response = await this.getSupportedCurrencies().toPromise();
       if (response && response.data) {
         this.supportedCurrencies.next(response.data);
       }
@@ -247,5 +262,39 @@ export class CurrencyService {
       const sdgAmount = this.convertToSDG(amount, fromCurrency);
       return this.convertFromSDG(sdgAmount, currentCurrency);
     }
+  }
+
+  // Get current currency symbol
+  getCurrentCurrencySymbol(): string {
+    const currentCurrency = this.getCurrentCurrencyValue();
+    const symbols = {
+      'SDG': 'ج.س',
+      'USD': '$',
+      'AED': 'د.إ',
+      'SAR': 'ر.س'
+    };
+    return symbols[currentCurrency] || currentCurrency;
+  }
+
+  // Get currency symbol for header display
+  getCurrentCurrencySymbolForHeader(labelText: string): string {
+    const symbol = this.getCurrentCurrencySymbol();
+    return `${labelText} (${symbol})`;
+  }
+
+  // Format number without currency symbol (for table cells)
+  formatAmountWithoutSymbol(amount: number, currency?: string): string {
+    const currentCurrency = currency || this.getCurrentCurrencyValue();
+    let convertedAmount = amount;
+
+    // Convert from SDG to current currency if needed
+    if (currentCurrency !== 'SDG') {
+      convertedAmount = this.convertFromSDG(amount, currentCurrency);
+    }
+
+    return convertedAmount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   }
 }

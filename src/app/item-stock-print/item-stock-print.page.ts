@@ -1,27 +1,58 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, ChangeDetectorRef } from '@angular/core';
 import { ModalController, ToastController } from '@ionic/angular';
+import { CurrencyService } from '../services/currency.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-item-stock-print',
   templateUrl: './item-stock-print.page.html',
   styleUrls: ['./item-stock-print.page.scss'],
 })
-export class ItemStockPrintPage implements OnInit {
+export class ItemStockPrintPage implements OnInit, OnDestroy {
   @Input() printData: any;
   @Input() exportMode: string = 'all'; // 'all', 'filtered', 'search'
   @Input() userName: string;
   
   logoBase64: string = '';
   vehicleBase64: string = '';
+  
+  // Currency management
+  currentCurrency: string = 'SDG';
+  private currencySubscription: Subscription;
 
   constructor(
     private modalController: ModalController,
-    private toast: ToastController
+    private toast: ToastController,
+    private currencyService: CurrencyService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   async ngOnInit() {
     console.log('Print data:', this.printData);
     await this.loadImages();
+    await this.initializeCurrency();
+  }
+  
+  ngOnDestroy() {
+    if (this.currencySubscription) {
+      this.currencySubscription.unsubscribe();
+    }
+  }
+  
+  async initializeCurrency() {
+    await this.currencyService.initializeCurrency();
+    this.currentCurrency = this.currencyService.getCurrentCurrencyValue();
+    
+    this.currencySubscription = this.currencyService.getCurrentCurrency().subscribe(currency => {
+      this.currentCurrency = currency;
+      this.cdr.detectChanges();
+    });
+  }
+  
+  formatStockValue(item: any): string {
+    const stockValue = (item.quantity || 0) * (item.unit_price || item.pay_price || 0);
+    const convertedValue = this.currencyService.convertFromSDG(stockValue, this.currentCurrency);
+    return this.currencyService.formatCurrency(convertedValue, this.currentCurrency);
   }
 
   async loadImages() {
@@ -227,6 +258,13 @@ export class ItemStockPrintPage implements OnInit {
     }, 0);
     return this.formatBalance(total);
   }
+  
+  getTotalValueRaw(): number {
+    if (!this.printData || this.printData.length === 0) return 0;
+    return this.printData.reduce((sum, item) => {
+      return sum + ((item.currentQuantity || 0) * (item.item_parcode || 0));
+    }, 0);
+  }
 
   getItemsInStock(): number {
     if (!this.printData || this.printData.length === 0) return 0;
@@ -247,10 +285,15 @@ export class ItemStockPrintPage implements OnInit {
   }
 
   getCurrentDate(): string {
-    return new Date().toLocaleDateString('ar-EG');
+    return new Date().toLocaleDateString('en-US');
   }
 
   getCurrentTime(): string {
-    return new Date().toLocaleTimeString('ar-EG');
+    return new Date().toLocaleTimeString('en-US');
+  }
+  
+  // Get current currency symbol for headers
+  getCurrencySymbol(): string {
+    return this.currencyService.getCurrentCurrencySymbol();
   }
 }

@@ -6,6 +6,7 @@
     <ion-title>تعديل فاتورة مشتريات</ion-title>
     <!-- Date in header -->
     <ion-buttons slot="end">
+      <app-currency-switcher></app-currency-switcher>
       <ion-item class="header-date-item">
         <ion-input type="date" [(ngModel)]="payInvo.pay_date" class="header-date-input"></ion-input>
       </ion-item>
@@ -36,7 +37,7 @@
           <ion-col size="4" class="date-comment-column">
             <ion-label class="column-label">ملاحظة</ion-label>
             <ion-item class="custInput comment-input"> 
-              <ion-input placeholder="أكتب تعليقا" [(ngModel)]="payInvo.payComment"></ion-input>
+              <ion-input placeholder="أكتب تعليقا" [(ngModel)]="payInvo.payComment" [disabled]="isLoading()"></ion-input>
             </ion-item>
           </ion-col>
         </ion-row>
@@ -132,8 +133,8 @@
                   <th>no</th>
                   <th>الصنف</th>
                   <th>الكمية</th>
-                  <th>سعر الشراء</th>
-                  <th>المجموع</th> 
+                  <th>سعر الشراء ({{ getCurrencySymbol() }})</th>
+                  <th>المجموع ({{ getCurrencySymbol() }})</th> 
                   <th></th> 
                  </tr>
                  <tr *ngFor="let item of getDisplayItemList() ; let i = index" 
@@ -152,12 +153,12 @@
                     </ion-item>
                  </td>
                  <td>
-                   <ion-text *ngIf="showMe != i">{{item.perch_price}}</ion-text> 
+                   <ion-text *ngIf="showMe != i">{{item.perch_price | currencyDisplay:'SDG':false}}</ion-text> 
                     <ion-item *ngIf="showMe == i">
                      <ion-input (keyup.enter)="editCell(i)" [(ngModel)] ="item.perch_price" (ionBlur)="editCell(i)" ></ion-input>
                     </ion-item>
                  </td>
-                  <td>{{+item.tot}}</td>
+                  <td>{{item.tot | currencyDisplay:'SDG':false}}</td>
                   <td>
                     <ion-button fill="clear" size="small" (click)="deleteItem(i)">
                       <ion-icon name="trash" color="danger" ></ion-icon>
@@ -189,13 +190,13 @@
               <ion-col class="footer-input-container">
                 <ion-label class="footer-input-label">إجمالي المبلغ</ion-label>
                 <ion-item class="custInput footer-input-item">
-                  <ion-input [(ngModel)]="payInvo.tot_pr" [readonly]="true"></ion-input>
+                  <ion-input [value]="payInvo.tot_pr | currencyDisplay" [readonly]="true"></ion-input>
                 </ion-item>
               </ion-col>
               <ion-col class="footer-input-container">
                 <div class="discount-header"> 
                   <div dir="rtl" class="discount-segment-container"> 
-                    <ion-segment [(ngModel)]="discountType" (ionChange)="onDiscountTypeChange($event)" class="compact-discount-segment">
+                    <ion-segment [(ngModel)]="discountType" (ionChange)="onDiscountTypeChange($event)" class="compact-discount-segment" [disabled]="isLoading()">
                       <ion-segment-button value="percentage" class="compact-segment-button">
                         <ion-label>نسبة الخصم%</ion-label>
                       </ion-segment-button>
@@ -211,10 +212,11 @@
                     type="number" 
                     [(ngModel)]="discountPerc" 
                     (ionInput)="onPercentageDiscountChange($event)"
-                    placeholder="نسبة الخصم %">
+                    placeholder="نسبة الخصم %"
+                    [disabled]="isLoading()">
                   </ion-input>
                   <ion-note slot="end" *ngIf="calculatedDiscountAmount > 0" class="discount-note">
-                    {{ calculatedDiscountAmount.toFixed(2) }} 
+                    {{ calculatedDiscountAmount | currencyDisplay }} 
                   </ion-note>
                 </ion-item>
 
@@ -224,7 +226,8 @@
                     type="number" 
                     [(ngModel)]="discountAmount" 
                     (ionInput)="onAmountDiscountChange($event)"
-                     placeholder="مبلغ الخصم">
+                     placeholder="مبلغ الخصم"
+                     [disabled]="isLoading()">
                   </ion-input>
                   <ion-note slot="end" *ngIf="calculatedDiscountPerc > 0" class="discount-note">
                     {{ calculatedDiscountPerc.toFixed(2) }}%
@@ -234,7 +237,7 @@
               <ion-col class="footer-input-container">
                 <ion-label class="footer-input-label">المجموع بعد الخصم</ion-label>
                 <ion-item class="custInput total-after-discount footer-input-item">
-                  <ion-input [value]="(+payInvo.tot_pr - +payInvo.discount).toFixed(2)" [readonly]="true"></ion-input>
+                  <ion-input [value]="(+payInvo.tot_pr - +payInvo.discount) | currencyDisplay" [readonly]="true"></ion-input>
                 </ion-item>
               </ion-col>
             </ion-row>
@@ -246,13 +249,15 @@
           <ion-grid>
             <ion-row class="ion-justify-content-end">
               <ion-col size="6">
-                <ion-button expand="block" routerDirection="root" color="success" (click)="update()">
-                  <ion-label class="ion-text-center">حفظ</ion-label>
+                <ion-button expand="block" routerDirection="root" color="success" (click)="update()" [disabled]="isLoading()">
+                  <ion-spinner *ngIf="isUpdating" slot="start" name="dots"></ion-spinner>
+                  <ion-label class="ion-text-center">{{ isUpdating ? currentLoadingMessage : 'حفظ' }}</ion-label>
                 </ion-button>
               </ion-col>
               <ion-col size="6">
-                <ion-button expand="block" routerDirection="root" color="danger" (click)="delete()">
-                  <ion-label class="ion-text-center">حذف</ion-label>
+                <ion-button expand="block" routerDirection="root" color="danger" (click)="delete()" [disabled]="isLoading()">
+                  <ion-spinner *ngIf="isDeleting" slot="start" name="dots"></ion-spinner>
+                  <ion-label class="ion-text-center">{{ isDeleting ? currentLoadingMessage : 'حذف' }}</ion-label>
                 </ion-button>
               </ion-col>
             </ion-row>

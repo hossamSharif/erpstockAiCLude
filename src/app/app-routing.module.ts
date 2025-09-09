@@ -227,6 +227,10 @@ const routes: Routes = [
   {
     path: 'item-stock-print',
     loadChildren: () => import('./item-stock-print/item-stock-print.module').then( m => m.ItemStockPrintPageModule)
+  },
+  {
+    path: 'currency-management',
+    loadChildren: () => import('./currency-management/currency-management.module').then( m => m.CurrencyManagementPageModule)
   }
   
 ];
