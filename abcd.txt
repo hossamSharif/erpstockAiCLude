@@ -1,11 +1,15 @@
  
 
 
-عند اضافة صنف الي القائمة لا يركز الفوكس الب حقل اسم الصنف 
-
+ 
 when user click to edit qty or itm in itemlist the total not changed after dismiss ed 
 
  -
+
+ consider the following : ignore the stock adjustment and for design make the style and layout like @src\app\sales\ . also     │
+│   the multi currency implementation must follow the same approch in the @src\app\sales\ ; it's use to preview the totals and    │
+│   prices in selected format and always the data send to back end in the default currency without converting to avoide effect    │
+│   the values that stored in the back end . another consideration . the   
 
   
   -مشكلة سعؤ الوحدة في حركة الأصناف  فاتورة 

@@ -135,6 +135,12 @@
 	
 } -->
 <ion-content  style="max-width : 30px" *ngIf="mode == 'pos'">
+  <!-- Loading indicator for images -->
+  <div *ngIf="!imagesLoaded" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000;">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p style="margin-top: 16px; font-size: 14px; color: #666;">جاري تحضير الصور للطباعة...</p>
+    <p style="font-size: 12px; color: #999;">Preparing images for printing...</p>
+  </div>
   <div class="ion-padding" >
       <div   #printarea1  id="printarea1" >
         <div style="width : 100px ; height: 100px ;margin-left: 20%" >
@@ -164,20 +170,20 @@
                 <tr>
                 <th class="th" style="border-bottom: .5px solid #dddddd ;">الصنف  item</th>
                 <th class="th" style="border-bottom: .5px solid #dddddd ;">الكمية  QTY</th> 
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">سعر  unit price ({{ getCurrencySymbol() }})</th> 
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">الخصم   discount ({{ getCurrencySymbol() }})</th>
+                <th class="th" style="border-bottom: .5px solid #dddddd ;">سعر  unit price </th> 
+                <th class="th" style="border-bottom: .5px solid #dddddd ;">الخصم   discount </th>
                 <th class="th" style="border-bottom: .5px solid #dddddd ;">نسبة الضريبة   VAT%</th> 
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">قيمة الضريبة   VAT ({{ getCurrencySymbol() }})</th> 
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">   صافي القيمة  total ({{ getCurrencySymbol() }})</th>
+                <th class="th" style="border-bottom: .5px solid #dddddd ;">قيمة الضريبة   VAT </th> 
+                <th class="th" style="border-bottom: .5px solid #dddddd ;">   صافي القيمة  total </th>
                 </tr>
                 <tr *ngFor="let item of printArr[0].itemList ; let i = index"> 
                   <td class="td" style="border: none;">{{item.item_name}}</td>
                   <td class="td"  style="border: none;"> {{item.quantity}}</td>
-                  <td  class="td" style="border: none;">  {{item.pay_price | currencyDisplay:'SDG':false}} </td> 
-                  <td  class="td" style="border: none;">  {{item.discount | currencyDisplay:'SDG':false}} </td> 
+                  <td  class="td" style="border: none;">  {{formatNumberWithSeparators(item.pay_price)}} </td> 
+                  <td  class="td" style="border: none;">  {{formatNumberWithSeparators(item.discount)}} </td> 
                   <td  class="td" style="border: none;">  {{item.tax}} </td> 
-                  <td class="td" style="border: none;">{{(+item.pay_price + (+item.tax/100 * +item.pay_price)) | currencyDisplay:'SDG':false}}</td>
-                  <td  class="td" style="border: none;">  {{item.tot | currencyDisplay:'SDG':false}} </td> 
+                  <td class="td" style="border: none;">{{formatNumberWithSeparators(+item.pay_price + (+item.tax/100 * +item.pay_price))}}</td>
+                  <td  class="td" style="border: none;">  {{formatNumberWithSeparators(item.tot)}} </td> 
                 </tr> 
                 <tr>
                   <td ></td>
@@ -185,7 +191,7 @@
                   <td ></td>
                   <td></td>
                   <td></td>
-                  <td class="td" style="border: none;">{{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</td>
+                  <td class="td" style="border: none;">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
                 </tr>
               </table> 
               </div> 
@@ -197,7 +203,7 @@
                   <ion-label>صافي المبلغ  / total  </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> {{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</ion-label>
+                  <ion-label> {{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</ion-label>
                 </div>
               </div>
               <div  class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
@@ -205,7 +211,7 @@
                   <ion-label>   نسبة الضريبة % / VAT%</ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  {{printArr[0].payInvo.discount | currencyDisplay:'SDG':false}} </ion-label>
+                  <ion-label>  {{formatNumberWithSeparators(printArr[0].payInvo.discount)}} </ion-label>
                 </div>
               </div>
               <div  class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
@@ -213,7 +219,7 @@
                   <ion-label> قيمة الضريبة / VAT </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  {{printArr[0].payInvo.discount | currencyDisplay:'SDG':false}} </ion-label>
+                  <ion-label>  {{formatNumberWithSeparators(printArr[0].payInvo.discount)}} </ion-label>
                 </div>
               </div> 
 
@@ -222,7 +228,7 @@
                   <ion-label> صافي المبلغ شامل الضريبة / total include VAT   </ion-label>
                 </div>
                 <div class="rtl ion-text-center "  style="width:30% ;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> {{(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount) | currencyDisplay:'SDG':false}}   </ion-label>
+                  <ion-label> {{formatNumberWithSeparators(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}}   </ion-label>
                 </div>
               </div> 
            </div>
@@ -253,16 +259,23 @@
 
 <!-- NEW ENHANCED PRINTING STYLE -->
 <ion-content *ngIf="mode == 'enhanced'">
+  <!-- Loading indicator for images -->
+  <div *ngIf="!imagesLoaded" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000;">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p style="margin-top: 16px; font-size: 14px; color: #666;">جاري تحضير الصور للطباعة...</p>
+    <p style="font-size: 12px; color: #999;">Preparing images for printing...</p>
+  </div>
+
   <!-- Currency Information Header -->
   <div class="currency-info" style="font-size: 0.8em; margin: 10px 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px; text-align: center;" *ngIf="currentCurrency !== 'SDG'">
     <p>العملة المحددة: {{currentCurrency}} - سعر الصرف: {{exchangeRate | number:'1.2-6'}}</p>
     <p>جميع القيم معروضة بالعملة المحددة مع القيمة بالجنيه السوداني</p>
   </div>
   
-  <div style="padding: 20px;">
+  <div style="padding: 13px;">
     <div #printarea1 id="printarea1">
       <!-- Header with Images and Title -->
-      <div style="display: table; width: 100%; margin-bottom: 20px;">
+      <div style="display: table; width: 100%; margin-bottom: 12px;">
         <div style="display: table-cell; width: 150px; text-align: left; vertical-align: middle;">
           <img [src]="vehicleBase64 || 'assets/imgs/tuk.jpg'" style="width: 120px; height: 80px; object-fit: contain;" alt="Vehicle">
         </div>
@@ -279,7 +292,7 @@
      
 
       <!-- General Information Section - RTL -->
-      <div *ngIf="printArr" style="margin-bottom: 25px;margin-top: 35px; border: 1px solid #ccc; padding: 15px; direction: rtl;">
+      <div *ngIf="printArr" style="margin-bottom: 13px;margin-top: 20px; border: 1px solid #ccc; padding: 15px; direction: rtl;">
         <div style="font-size: 14px; margin-right: 10px;">
           <!-- First Row -->
           <div style="margin-bottom: 8px; border-bottom: 1px dotted #ccc; padding-bottom: 8px;">
@@ -300,13 +313,13 @@
           </div>
           <!-- Second Row -->
           <div style="margin-bottom: 8px;">
-            <span style="display: inline-block; width: 48%; text-align: right;">
+            <span style="display: inline-block; width: 48%; text-align: right;" *ngIf="printArr[0].selectedAccount.address && printArr[0].selectedAccount.address.trim() != ''">
               <strong>العنوان: </strong>{{printArr[0].selectedAccount.address}}
             </span>
-            <span style="display: inline-block; width: 48%; text-align: right;">
+            <span style="display: inline-block; width: 48%; text-align: right;" *ngIf="printArr[0].selectedAccount.phone && printArr[0].selectedAccount.phone.trim() != ''">
               <strong>الهاتف: </strong>{{printArr[0].selectedAccount.phone}}
             </span>
-          </div>
+          </div> 
         </div>
       </div>
 
@@ -319,26 +332,26 @@
               <th style="border: 1px solid #000; padding: 10px; text-align: center;">الصنف</th>
               <th style="border: 1px solid #000; padding: 10px; text-align: center;">الكمية</th>
               <th style="border: 1px solid #000; padding: 10px; text-align: center;" *ngIf="page=='sales' || page=='sales_record'">
-                سعر الوحدة ({{ getCurrencySymbol() }})
+                سعر الوحدة 
               </th>
               <th style="border: 1px solid #000; padding: 10px; text-align: center;" *ngIf="page=='perch' || page=='perch_record'">
-                سعر الشراء ({{ getCurrencySymbol() }})
+                سعر الشراء 
               </th>
-              <th style="border: 1px solid #000; padding: 10px; text-align: center;">المجموع ({{ getCurrencySymbol() }})</th>
+              <th style="border: 1px solid #000; padding: 10px; text-align: center;">المجموع </th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of printArr[0].itemList; let i = index">
-              <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{i+1}}</td>
-              <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">{{item.item_name}}</td>
-              <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{item.quantity}}</td>
-              <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;" *ngIf="page=='sales' || page=='sales_record'">
-                {{item.pay_price | currencyDisplay:'SDG':false}}
+              <td style="border: 1px solid #000; padding: 3px; text-align: center;font-size: 16px;">{{i+1}}</td>
+              <td style="border: 1px solid #000; padding: 3px; text-align: right;font-size: 16px;">{{item.item_name}}</td>
+              <td style="border: 1px solid #000; padding: 3px; text-align: center;font-size: 16px;">{{item.quantity}}</td>
+              <td style="border: 1px solid #000; padding: 3px; text-align: center;font-size: 16px;" *ngIf="page=='sales' || page=='sales_record'">
+                {{formatNumberWithSeparators(item.pay_price)}}
               </td>
-              <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;" *ngIf="page=='perch' || page=='perch_record'">
-                {{item.perch_price | currencyDisplay:'SDG':false}}
+              <td style="border: 1px solid #000; padding: 3px; text-align: center;font-size: 16px;" *ngIf="page=='perch' || page=='perch_record'">
+                {{formatNumberWithSeparators(item.perch_price)}}
               </td>
-              <td style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">{{item.tot | currencyDisplay:'SDG':false}}</td>
+              <td style="border: 1px solid #000; padding: 3px; text-align: center;font-size: 16px;">{{formatNumberWithSeparators(item.tot)}}</td>
             </tr>
             <!-- Totals Row -->
             <!-- <tr style="background-color: #f0f0f0; font-weight: bold;">
@@ -355,26 +368,18 @@
       <!-- Totals Section - RTL with Values After Colon -->
       <div *ngIf="printArr" style="margin-top: 20px; border: 1px solid #ccc; padding: 15px; direction: rtl;">
         <div style="font-size: 14px; margin-right: 10px;">
-          <!-- First Row -->
+          <!-- All totals in one row -->
           <div style="margin-bottom: 8px; border-bottom: 1px dotted #ccc; padding-bottom: 8px;">
-            <span style="display: inline-block; width: 48%; text-align: right;">
-              <strong>إجمالي المبلغ ({{ getCurrencySymbol() }}): </strong>{{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}
+            <span style="display: inline-block; width: 32%; text-align: right;">
+              <strong>إجمالي المبلغ : </strong>{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}
             </span>
-            <span style="display: inline-block; width: 48%; text-align: right;" *ngIf="+printArr[0].payInvo.discount > 0">
-              <strong>الخصم ({{ getCurrencySymbol() }}): </strong>{{printArr[0].payInvo.discount | currencyDisplay:'SDG':false}}
+            <span style="display: inline-block; width: 32%; text-align: right;" *ngIf="+printArr[0].payInvo.discount > 0">
+              <strong>الخصم : </strong>{{formatNumberWithSeparators(printArr[0].payInvo.discount)}}
+            </span>
+            <span style="display: inline-block; width: 32%; text-align: right;" *ngIf="+printArr[0].payInvo.discount > 0">
+              <strong>الإجمالي بعد الخصم : </strong>{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}}
             </span>
             <!-- Hidden pay amount for enhanced mode -->
-          </div>
-          <!-- Second Row -->
-          <div style="margin-bottom: 8px;" *ngIf="+printArr[0].payInvo.discount > 0">
-            <span style="display: inline-block; width: 48%; text-align: right;">
-              <strong>الإجمالي بعد الخصم ({{ getCurrencySymbol() }}): </strong>{{(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount) | currencyDisplay:'SDG':false}}
-            </span>
-            <!-- Hidden pay amount for enhanced mode with discount -->
-          </div>
-          <!-- Third Row for remaining amount -->
-          <div style="margin-bottom: 8px;">
-            <!-- Hidden remaining amount for enhanced mode -->
           </div>
         </div>
       </div>
@@ -396,6 +401,12 @@
 </ion-content>
 
 <ion-content *ngIf="mode != 'pos' && mode != 'enhanced'">
+  <!-- Loading indicator for images -->
+  <div *ngIf="!imagesLoaded" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000;">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p style="margin-top: 16px; font-size: 14px; color: #666;">جاري تحضير الصور للطباعة...</p>
+    <p style="font-size: 12px; color: #999;">Preparing images for printing...</p>
+  </div>
   <div class="ion-padding"  >
       <div   #printarea1  id="printarea1" >
         <h4 class="ion-text-center">GVS FOR IMPORT AND EXPORT </h4>
@@ -434,11 +445,11 @@
           </div>
 
           <div class="w100 rtl" style="display:inline-block ;">
-            <div class="ion-margin" *ngIf="page=='sales' || page=='sales_record'" style="width: 30%; position: relative; float: right ; text-align:right;"> 
+            <div class="ion-margin" *ngIf="(page=='sales' || page=='sales_record') && printArr[0].selectedAccount.address && printArr[0].selectedAccount.address.trim() != ''" style="width: 30%; position: relative; float: right ; text-align:right;"> 
               <ion-label>المكان : {{printArr[0].selectedAccount.address}}</ion-label>
             </div>
 
-            <div *ngIf="page=='sales' || page=='sales_record'" class="rtl ion-margin" style="width: 30%; position: relative; float: left; text-align:left;">
+            <div *ngIf="(page=='sales' || page=='sales_record') && printArr[0].selectedAccount.phone && printArr[0].selectedAccount.phone.trim() != ''" class="rtl ion-margin" style="width: 30%; position: relative; float: left; text-align:left;">
               <ion-label>  رقم الهاتف   :  {{printArr[0].selectedAccount.phone}} </ion-label> 
             </div> 
              <!--   -->
@@ -455,59 +466,56 @@
                 <th class="th">الصنف</th>
                 <th class="th">الكمية</th>
                 <th  *ngIf="page=='perch' || page=='perch_record'" class="th">
-                  سعر الشراء ({{ getCurrencySymbol() }})
+                  سعر الشراء 
                 </th>
                 <th *ngIf="page=='sales' || page=='sales_record'" class="th">
-                  سعر الوحده ({{ getCurrencySymbol() }})
+                  سعر الوحده 
                 </th>
-                <th class="th">المجموع ({{ getCurrencySymbol() }})</th>
+                <th class="th">المجموع </th>
                 </tr>
                 <tr   *ngFor="let item of printArr[0].itemList ; let i = index">
                   <td class="td">{{i+1}}</td>
                   <td class="td">{{item.item_name}}</td>
                  <td class="td"> {{item.quantity}}</td>
                  <td *ngIf="page=='sales' || page=='sales_record'" class="td">
-                  {{item.pay_price | currencyDisplay:'SDG':false}}
+                  {{formatNumberWithSeparators(item.pay_price)}}
                 </td>
                  <td  *ngIf="page=='perch' || page=='perch_record'" class="td">
-                  {{item.perch_price | currencyDisplay:'SDG':false}}
+                  {{formatNumberWithSeparators(item.perch_price)}}
                 </td>
-                 <td class="td">{{item.tot | currencyDisplay:'SDG':false}}</td>
+                 <td class="td">{{formatNumberWithSeparators(item.tot)}}</td>
                 </tr> 
                 <tr>
                   <td ></td>
                   <td ></td>
                   <td></td>
                   <td></td>
-                  <td class="td">{{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</td>
+                  <td class="td">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
                 </tr>
               </table> 
               </div> 
             </div>
 
             <div *ngIf="printArr" class="w100 rtl ion-margin"> 
+              <!-- All totals in one row -->
               <div class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
-                <div class="rtl ion-text-center" style=" width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>إجمالي المبلغ ({{ getCurrencySymbol() }}) </ion-label>
+                <div class="rtl ion-text-center" style=" width:15% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
+                  <ion-label>إجمالي المبلغ  </ion-label>
                 </div>
-                <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> {{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</ion-label>
+                <div class="rtl ion-text-center "  style="width:18% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
+                  <ion-label> {{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</ion-label>
                 </div>
-              </div>
-              <div *ngIf="+printArr[0].payInvo.discount>0" class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
-                <div class="rtl ion-text-center" style=" width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>   الخصــم ({{ getCurrencySymbol() }}) </ion-label>
+                <div *ngIf="+printArr[0].payInvo.discount>0" class="rtl ion-text-center" style=" width:12% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
+                  <ion-label>الخصــم  </ion-label>
                 </div>
-                <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label>  {{printArr[0].payInvo.discount | currencyDisplay:'SDG':false}}</ion-label>
+                <div *ngIf="+printArr[0].payInvo.discount>0" class="rtl ion-text-center "  style="width:15% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
+                  <ion-label>{{formatNumberWithSeparators(printArr[0].payInvo.discount)}}</ion-label>
                 </div>
-              </div>  
-              <div *ngIf="+printArr[0].payInvo.discount>0" class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
-                <div class="rtl ion-text-center" style=" width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> الإجمالي بعدالخصم ({{ getCurrencySymbol() }})    </ion-label>
+                <div *ngIf="+printArr[0].payInvo.discount>0" class="rtl ion-text-center" style=" width:15% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
+                  <ion-label>الإجمالي بعدالخصم</ion-label>
                 </div>
-                <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                  <ion-label> {{(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount) | currencyDisplay:'SDG':false}}</ion-label>
+                <div *ngIf="+printArr[0].payInvo.discount>0" class="rtl ion-text-center "  style="width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
+                  <ion-label>{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}}</ion-label>
                 </div>
               </div>
               <!-- Hidden pay amount section for regular mode -->
@@ -553,11 +561,11 @@
         </div>
 
         <div class="w100 rtl" style="display:inline-block ;">
-          <div class="ion-margin" style="width: 30%; position: relative; float: right ; text-align:right;"> 
+          <div class="ion-margin" *ngIf="printArr[0].selectedAccount.address && printArr[0].selectedAccount.address.trim() != ''" style="width: 30%; position: relative; float: right ; text-align:right;"> 
             <ion-label>العنوان : {{printArr[0].selectedAccount.address}}</ion-label>
           </div>
 
-          <div class="rtl ion-margin" style="width: 30%; position: relative; float: left; text-align:left;">
+          <div class="rtl ion-margin" *ngIf="printArr[0].selectedAccount.phone && printArr[0].selectedAccount.phone.trim() != ''" style="width: 30%; position: relative; float: left; text-align:left;">
             <ion-label>  رقم الهاتف   :  {{printArr[0].selectedAccount.phone}} </ion-label> 
           </div> 
            <!--   -->
@@ -571,10 +579,10 @@
               <th class="th">الصنف</th>
               <th class="th">الكمية</th>
               <th  class="th">
-                سعر الشراء ({{ getCurrencySymbol() }})
+                سعر الشراء 
               </th>
               
-              <th class="th">المجموع ({{ getCurrencySymbol() }})</th>
+              <th class="th">المجموع </th>
               </tr>
               <tr   *ngFor="let item of printArr[0].itemList ; let i = index">
                 <td class="td">{{i+1}}</td>
@@ -582,16 +590,16 @@
                <td class="td"> {{item.quantity}}</td>
                
                <td   class="td">
-                {{item.perch_price | currencyDisplay:'SDG':false}}
+                {{formatNumberWithSeparators(item.perch_price)}}
               </td>
-               <td class="td">{{item.tot | currencyDisplay:'SDG':false}}</td>
+               <td class="td">{{formatNumberWithSeparators(item.tot)}}</td>
               </tr> 
               <tr>
                 <td ></td>
                 <td ></td>
                 <td></td>
                 <td></td>
-                <td class="td">{{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</td>
+                <td class="td">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
               </tr>
             </table> 
             </div> 
@@ -603,7 +611,7 @@
                 <ion-label>إجمالي المبلغ </ion-label>
               </div>
               <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                <ion-label> {{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}} ج.س</ion-label>
+                <ion-label> {{formatCurrencyWithSeparators(printArr[0].payInvo.tot_pr)}}</ion-label>
               </div>
             </div>
 
@@ -613,7 +621,7 @@
                 <ion-label>   الخصــم </ion-label>
               </div>
               <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                <ion-label>  {{formatBalance(printArr[0].payInvo.discount)}}  ج.س</ion-label>
+                <ion-label>  {{formatCurrencyWithSeparators(printArr[0].payInvo.discount)}}  </ion-label>
               </div>
             </div>  
             <div *ngIf="+printArr[0].payInvo.discount>0" class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
@@ -621,7 +629,7 @@
                 <ion-label> الإجمالي بعدالخصم    </ion-label>
               </div>
               <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-                <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}}  ج.س</ion-label>
+                <ion-label> {{formatCurrencyWithSeparators(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}}  </ion-label>
               </div>
             </div> -->
             <!-- "sub_balanse": this.selectedAccount.sub_balance,
@@ -652,11 +660,11 @@
   </div>
 
   <div class="w100 rtl" style="display:inline-block ;">
-    <div class="ion-margin" style="width: 30%; position: relative; float: right ; text-align:right;"> 
+    <div class="ion-margin" *ngIf="printArr[0].selectedAccount.address && printArr[0].selectedAccount.address.trim() != ''" style="width: 30%; position: relative; float: right ; text-align:right;"> 
       <ion-label>Address : {{printArr[0].selectedAccount.address}}</ion-label>
     </div>
 
-    <div class="rtl ion-margin" style="width: 30%; position: relative; float: left; text-align:left;">
+    <div class="rtl ion-margin" *ngIf="printArr[0].selectedAccount.phone && printArr[0].selectedAccount.phone.trim() != ''" style="width: 30%; position: relative; float: left; text-align:left;">
       <ion-label> Phone No  :  {{printArr[0].selectedAccount.phone}} </ion-label> 
     </div> 
      <!--   -->
@@ -670,10 +678,10 @@
         <th class="th">Item</th>
         <th class="th">Qty</th>
         <th   class="th">
-          Purchace price ({{ getCurrencySymbol() }})
+          Purchace price 
         </th>
         
-        <th class="th">Total ({{ getCurrencySymbol() }})</th>
+        <th class="th">Total </th>
         </tr>
         <tr   *ngFor="let item of printArr[0].itemList ; let i = index">
           <td class="td">{{i+1}}</td>
@@ -681,16 +689,16 @@
          <td class="td"> {{item.quantity}}</td>
          
          <td   class="td">
-          {{item.perch_price | currencyDisplay:'SDG':false}}
+          {{formatNumberWithSeparators(item.perch_price)}}
         </td>
-         <td class="td">{{item.tot | currencyDisplay:'SDG':false}}</td>
+         <td class="td">{{formatNumberWithSeparators(item.tot)}}</td>
         </tr> 
         <tr>
           <td ></td>
           <td ></td>
           <td></td>
           <td></td>
-          <td class="td">{{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</td>
+          <td class="td">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
         </tr>
       </table> 
       </div> 
@@ -699,10 +707,10 @@
     <div *ngIf="printArr" class="w100 rtl ion-margin"> 
       <div class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
         <div class="rtl ion-text-center" style=" width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-          <ion-label>  Total ({{ getCurrencySymbol() }}) </ion-label>
+          <ion-label>  Total  </ion-label>
         </div>
         <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-          <ion-label> {{printArr[0].payInvo.tot_pr | currencyDisplay:'SDG':false}}</ion-label>
+          <ion-label> {{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</ion-label>
         </div>
       </div>
 
@@ -712,7 +720,7 @@
           <ion-label>   الخصــم </ion-label>
         </div>
         <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-          <ion-label>  {{formatBalance(printArr[0].payInvo.discount)}}  ج.س</ion-label>
+          <ion-label>  {{formatCurrencyWithSeparators(printArr[0].payInvo.discount)}}</ion-label>
         </div>
       </div>  
       <div *ngIf="+printArr[0].payInvo.discount>0" class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
@@ -720,7 +728,7 @@
           <ion-label> الإجمالي بعدالخصم    </ion-label>
         </div>
         <div class="rtl ion-text-center "  style="width:30% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
-          <ion-label> {{formatBalance(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}}  ج.س</ion-label>
+          <ion-label> {{formatCurrencyWithSeparators(printArr[0].payInvo.tot_pr - +printArr[0].payInvo.discount)}}</ion-label>
         </div>
       </div> -->
       <!-- "sub_balanse": this.selectedAccount.sub_balance,

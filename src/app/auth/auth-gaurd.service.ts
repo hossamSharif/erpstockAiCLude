@@ -15,29 +15,31 @@ export class AuthGaurdService implements CanActivate  {
   ) {}
 
    async canActivate(): Promise<boolean> {
-    // Check both the auth state and storage
-    const isAuthenticated = this.authenticationService.isAuthenticated();
-    
-    if (isAuthenticated) {
-      return true;
-    }
-    
-    // Double-check with storage as fallback
+    // First ensure storage is created
     try {
       await this.storage.create();
+      
+      // Check storage for user info first
       const userInfo = await this.storage.get('USER_INFO');
+      console.log('AuthGuard - USER_INFO from storage:', userInfo);
+      
       if (userInfo && userInfo.id) {
-        // Update auth state if user exists in storage but state is false
-        this.authenticationService.authState.next(true);
+        // User exists in storage, ensure auth state is updated
+        if (!this.authenticationService.isAuthenticated()) {
+          this.authenticationService.authState.next(true);
+        }
         return true;
+      } else {
+        // No user in storage, redirect to login
+        this.router.navigate(['folder/login'], { replaceUrl: true });
+        return false;
       }
     } catch (error) {
-      console.error('Error checking storage in AuthGuard:', error);
+      console.error('Error in AuthGuard:', error);
+      // On error, redirect to login
+      this.router.navigate(['folder/login'], { replaceUrl: true });
+      return false;
     }
-    
-    // If not authenticated, redirect to login with replace to avoid history issues
-    this.router.navigate(['folder/login'], { replaceUrl: true });
-    return false;
   }
 
 }

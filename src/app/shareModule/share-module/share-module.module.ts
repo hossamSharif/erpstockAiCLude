@@ -1,14 +1,13 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';  
 import { DateAgoPipe } from 'src/app/pipes/date-ago.pipe';
-import { CurrencyDisplayPipe } from 'src/app/pipes/currency-display.pipe';
   
 @NgModule({
-  declarations: [ DateAgoPipe, CurrencyDisplayPipe ],
+  declarations: [ DateAgoPipe ],
   imports: [
     CommonModule
   ],
-  exports:[DateAgoPipe, CurrencyDisplayPipe ]
+  exports:[DateAgoPipe ]
  
 })
 export class ShareModule {}

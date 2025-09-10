@@ -1,1 +1,68 @@
- 
+// Print Modal Styles
+
+// Table styles for all print modes
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px; // Increased font size from default
+}
+
+.th {
+  padding: 6px 8px; // Reduced padding for smaller row height
+  border: 1px solid #000;
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px; // Increased font size
+  line-height: 1.2; // Reduced line height
+}
+
+.td {
+  padding: 4px 8px; // Reduced padding for smaller row height
+  border: 1px solid #000;
+  text-align: center;
+  font-size: 16px; // Increased font size
+  line-height: 1.2; // Reduced line height
+}
+
+// Enhanced mode table styles
+table[style*="border-collapse: collapse"] {
+  th {
+    padding: 6px 8px !important; // Reduced padding
+    font-size: 16px !important; // Increased font size
+    line-height: 1.2 !important; // Reduced line height
+  }
+  
+  td {
+    padding: 4px 8px !important; // Reduced padding
+    font-size: 16px !important; // Increased font size
+    line-height: 1.2 !important; // Reduced line height
+  }
+}
+
+// POS mode specific styles
+ion-content[style*="max-width : 30px"] {
+  .table {
+    .th, .td {
+      font-size: 14px; // Smaller font for POS mode due to width constraints
+      padding: 3px 6px; // Even smaller padding for POS
+      line-height: 1.1;
+    }
+  }
+}
+
+// General text size improvements for better readability
+ion-label {
+  font-size: 16px;
+}
+
+h4, h3 {
+  line-height: 1.3; // Reduce line height for headers
+  margin: 8px 0; // Reduce margins
+}
+
+// RTL text improvements
+.rtl {
+  ion-label {
+    font-size: 14px;
+  }
+}

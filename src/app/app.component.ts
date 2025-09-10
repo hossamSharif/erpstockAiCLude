@@ -410,16 +410,11 @@ async auth (){
     if (state) { 
       // Initialize endpoint on auth success
       this.api2.initializeEndpoint();
-      // Don't navigate here - let auth service handle it directly
-      // This prevents double navigation and race conditions
-     
+      // Don't navigate here - let the auth guard handle all navigation
+      // This prevents conflicts with the guard's routing logic
     } else {
-      // Only navigate to login if not already there
-      if (this.router.url !== '/folder/login') {
-        setTimeout(() => {
-          this.router.navigate(['folder/login']);
-        }, 100);
-      }
+      // Don't navigate here either - let the auth guard handle it
+      // The guard will redirect to login when authentication fails
     }
   });
 }
