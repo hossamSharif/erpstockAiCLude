@@ -156,7 +156,9 @@
         <div class="ion-margin-top rtl"  *ngIf="printArr && page!='perchOrderEn' && page!='perchOrderAr' && page!='perchOrderAr-record'  && page!='perchOrderEn-record'">
           <div class="w100 rtl" style="display:inline-block ;">
             <div class=" rtl flr ion-margin" style="width: 100%; position: relative; float: right; text-align:right;">
-               <ion-label><ion-text>التاريخ / date: </ion-text> <ion-text>{{printArr[0].payInvo.pay_date }} {{printArr[0].payInvo.pay_time }}</ion-text></ion-label>
+               <ion-label><ion-text>التاريخ / date: </ion-text> 
+                <ion-text>{{getInvoiceDate()}} {{getInvoiceTime()}}</ion-text>
+               </ion-label>
             </div>
             <div class=" rtl flr ion-margin" style="width: 100%; position: relative; float: right; text-align:right;">
               <ion-label><ion-text>  اسم المستخدم  / user name:</ion-text>  <ion-text>{{printArr[0].user_name }} </ion-text> </ion-label>  
@@ -167,32 +169,36 @@
             <div class="ion-margin rtl"  >
               <div class="ion-margin">
                 <table class="table" >
-                <tr>
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">الصنف  item</th>
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">الكمية  QTY</th> 
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">سعر  unit price </th> 
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">الخصم   discount </th>
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">نسبة الضريبة   VAT%</th> 
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">قيمة الضريبة   VAT </th> 
-                <th class="th" style="border-bottom: .5px solid #dddddd ;">   صافي القيمة  total </th>
-                </tr>
-                <tr *ngFor="let item of printArr[0].itemList ; let i = index"> 
-                  <td class="td" style="border: none;">{{item.item_name}}</td>
-                  <td class="td"  style="border: none;"> {{item.quantity}}</td>
-                  <td  class="td" style="border: none;">  {{formatNumberWithSeparators(item.pay_price)}} </td> 
-                  <td  class="td" style="border: none;">  {{formatNumberWithSeparators(item.discount)}} </td> 
-                  <td  class="td" style="border: none;">  {{item.tax}} </td> 
-                  <td class="td" style="border: none;">{{formatNumberWithSeparators(+item.pay_price + (+item.tax/100 * +item.pay_price))}}</td>
-                  <td  class="td" style="border: none;">  {{formatNumberWithSeparators(item.tot)}} </td> 
-                </tr> 
-                <tr>
-                  <td ></td>
-                  <td ></td>
-                  <td ></td>
-                  <td></td>
-                  <td></td>
-                  <td class="td" style="border: none;">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
-                </tr>
+                <thead>
+                  <tr>
+                  <th class="th" style="border-bottom: .5px solid #dddddd ;">الصنف  item</th>
+                  <th class="th" style="border-bottom: .5px solid #dddddd ;">الكمية  QTY</th> 
+                  <th class="th" style="border-bottom: .5px solid #dddddd ;">سعر  unit price </th> 
+                  <th class="th" style="border-bottom: .5px solid #dddddd ;">الخصم   discount </th>
+                  <th class="th" style="border-bottom: .5px solid #dddddd ;">نسبة الضريبة   VAT%</th> 
+                  <th class="th" style="border-bottom: .5px solid #dddddd ;">قيمة الضريبة   VAT </th> 
+                  <th class="th" style="border-bottom: .5px solid #dddddd ;">   صافي القيمة  total </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of printArr[0].itemList ; let i = index"> 
+                    <td class="td" style="border: none;">{{item.item_name}}</td>
+                    <td class="td"  style="border: none;"> {{item.quantity}}</td>
+                    <td  class="td" style="border: none;">  {{formatNumberWithSeparators(item.pay_price)}} </td> 
+                    <td  class="td" style="border: none;">  {{formatNumberWithSeparators(item.discount)}} </td> 
+                    <td  class="td" style="border: none;">  {{item.tax}} </td> 
+                    <td class="td" style="border: none;">{{formatNumberWithSeparators(+item.pay_price + (+item.tax/100 * +item.pay_price))}}</td>
+                    <td  class="td" style="border: none;">  {{formatNumberWithSeparators(item.tot)}} </td> 
+                  </tr> 
+                  <tr>
+                    <td ></td>
+                    <td ></td>
+                    <td ></td>
+                    <td></td>
+                    <td></td>
+                    <td class="td" style="border: none;">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
+                  </tr>
+                </tbody>
               </table> 
               </div> 
             </div>
@@ -416,6 +422,7 @@
        
         <h3 class="ion-text-center" *ngIf="page=='sales' || page=='sales_record'"> فاتورة مبيعات  </h3> 
         <h3 class="ion-text-center"  *ngIf="page=='perch' || page=='perch_record'"> فاتورة مشتريات  </h3> 
+        <h3 class="ion-text-center"  *ngIf="page=='sales_returns' || page=='sales_return_record'"> فاتورة مرتجعة مبيعات  </h3> 
         <h3 class="ion-text-center"  *ngIf="page=='perchOrderEn' || page=='perchOrderEn-record'">  Purchase Order  </h3> 
         <h3 class="ion-text-center"  *ngIf="page=='perchOrderAr' || page==' perchOrderAr-record'"> امر شراء    </h3> 
         
@@ -461,37 +468,41 @@
             <div class="ion-margin rtl"  >
               <div class="ion-margin">
                 <table class="table" >
-                <tr>
-                <th class="th">التسلسل</th>
-                <th class="th">الصنف</th>
-                <th class="th">الكمية</th>
-                <th  *ngIf="page=='perch' || page=='perch_record'" class="th">
-                  سعر الشراء 
-                </th>
-                <th *ngIf="page=='sales' || page=='sales_record'" class="th">
-                  سعر الوحده 
-                </th>
-                <th class="th">المجموع </th>
-                </tr>
-                <tr   *ngFor="let item of printArr[0].itemList ; let i = index">
-                  <td class="td">{{i+1}}</td>
-                  <td class="td">{{item.item_name}}</td>
-                 <td class="td"> {{item.quantity}}</td>
-                 <td *ngIf="page=='sales' || page=='sales_record'" class="td">
-                  {{formatNumberWithSeparators(item.pay_price)}}
-                </td>
-                 <td  *ngIf="page=='perch' || page=='perch_record'" class="td">
-                  {{formatNumberWithSeparators(item.perch_price)}}
-                </td>
-                 <td class="td">{{formatNumberWithSeparators(item.tot)}}</td>
-                </tr> 
-                <tr>
-                  <td ></td>
-                  <td ></td>
-                  <td></td>
-                  <td></td>
-                  <td class="td">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
-                </tr>
+                <thead>
+                  <tr>
+                  <th class="th">التسلسل</th>
+                  <th class="th">الصنف</th>
+                  <th class="th">الكمية</th>
+                  <th  *ngIf="page=='perch' || page=='perch_record'" class="th">
+                    سعر الشراء 
+                  </th>
+                  <th *ngIf="page=='sales' || page=='sales_record'" class="th">
+                    سعر الوحده 
+                  </th>
+                  <th class="th">المجموع </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr   *ngFor="let item of printArr[0].itemList ; let i = index">
+                    <td class="td">{{i+1}}</td>
+                    <td class="td">{{item.item_name}}</td>
+                   <td class="td"> {{item.quantity}}</td>
+                   <td *ngIf="page=='sales' || page=='sales_record'" class="td">
+                    {{formatNumberWithSeparators(item.pay_price)}}
+                  </td>
+                   <td  *ngIf="page=='perch' || page=='perch_record'" class="td">
+                    {{formatNumberWithSeparators(item.perch_price)}}
+                  </td>
+                   <td class="td">{{formatNumberWithSeparators(item.tot)}}</td>
+                  </tr> 
+                  <tr>
+                    <td ></td>
+                    <td ></td>
+                    <td></td>
+                    <td></td>
+                    <td class="td">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
+                  </tr>
+                </tbody>
               </table> 
               </div> 
             </div>
@@ -574,33 +585,37 @@
           <div class="ion-margin rtl"  >
             <div class="ion-margin">
               <table class="table" >
-              <tr>
-              <th class="th">التسلسل</th>
-              <th class="th">الصنف</th>
-              <th class="th">الكمية</th>
-              <th  class="th">
-                سعر الشراء 
-              </th>
-              
-              <th class="th">المجموع </th>
-              </tr>
-              <tr   *ngFor="let item of printArr[0].itemList ; let i = index">
-                <td class="td">{{i+1}}</td>
-                <td class="td">{{item.item_name}}</td>
-               <td class="td"> {{item.quantity}}</td>
-               
-               <td   class="td">
-                {{formatNumberWithSeparators(item.perch_price)}}
-              </td>
-               <td class="td">{{formatNumberWithSeparators(item.tot)}}</td>
-              </tr> 
-              <tr>
-                <td ></td>
-                <td ></td>
-                <td></td>
-                <td></td>
-                <td class="td">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
-              </tr>
+              <thead>
+                <tr>
+                <th class="th">التسلسل</th>
+                <th class="th">الصنف</th>
+                <th class="th">الكمية</th>
+                <th  class="th">
+                  سعر الشراء 
+                </th>
+                
+                <th class="th">المجموع </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr   *ngFor="let item of printArr[0].itemList ; let i = index">
+                  <td class="td">{{i+1}}</td>
+                  <td class="td">{{item.item_name}}</td>
+                 <td class="td"> {{item.quantity}}</td>
+                 
+                 <td   class="td">
+                  {{formatNumberWithSeparators(item.perch_price)}}
+                </td>
+                 <td class="td">{{formatNumberWithSeparators(item.tot)}}</td>
+                </tr> 
+                <tr>
+                  <td ></td>
+                  <td ></td>
+                  <td></td>
+                  <td></td>
+                  <td class="td">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
+                </tr>
+              </tbody>
             </table> 
             </div> 
           </div>
@@ -673,33 +688,37 @@
     <div class="ion-margin rtl"  >
       <div class="ion-margin">
         <table class="table" >
-        <tr>
-        <th class="th">No</th>
-        <th class="th">Item</th>
-        <th class="th">Qty</th>
-        <th   class="th">
-          Purchace price 
-        </th>
-        
-        <th class="th">Total </th>
-        </tr>
-        <tr   *ngFor="let item of printArr[0].itemList ; let i = index">
-          <td class="td">{{i+1}}</td>
-          <td class="td">{{item.item_desc}}</td>
-         <td class="td"> {{item.quantity}}</td>
-         
-         <td   class="td">
-          {{formatNumberWithSeparators(item.perch_price)}}
-        </td>
-         <td class="td">{{formatNumberWithSeparators(item.tot)}}</td>
-        </tr> 
-        <tr>
-          <td ></td>
-          <td ></td>
-          <td></td>
-          <td></td>
-          <td class="td">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
-        </tr>
+        <thead>
+          <tr>
+          <th class="th">No</th>
+          <th class="th">Item</th>
+          <th class="th">Qty</th>
+          <th   class="th">
+            Purchace price 
+          </th>
+          
+          <th class="th">Total </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr   *ngFor="let item of printArr[0].itemList ; let i = index">
+            <td class="td">{{i+1}}</td>
+            <td class="td">{{item.item_desc}}</td>
+           <td class="td"> {{item.quantity}}</td>
+           
+           <td   class="td">
+            {{formatNumberWithSeparators(item.perch_price)}}
+          </td>
+           <td class="td">{{formatNumberWithSeparators(item.tot)}}</td>
+          </tr> 
+          <tr>
+            <td ></td>
+            <td ></td>
+            <td></td>
+            <td></td>
+            <td class="td">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
+          </tr>
+        </tbody>
       </table> 
       </div> 
     </div>

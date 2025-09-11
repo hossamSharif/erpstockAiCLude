@@ -1,0 +1,437 @@
+/* Sales Return Page Styles - Following Sales Page Pattern */
+
+.container {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header Styles */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  
+  ion-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--ion-color-primary);
+    text-align: center;
+  }
+}
+
+/* Section Styles */
+.section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--ion-color-primary);
+  text-align: center;
+}
+
+/* Form Styles */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 16px;
+  align-items: end;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  ion-item {
+    margin-bottom: 0;
+  }
+}
+
+/* Invoice Selection Styles */
+.invoices-list {
+  margin-top: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+  
+  ion-item {
+    --padding-start: 16px;
+    --padding-end: 16px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--ion-color-light);
+    
+    &:hover {
+      background-color: var(--ion-color-light);
+    }
+  }
+}
+
+.invoice-info {
+  h3 {
+    margin: 0 0 4px 0;
+    font-weight: bold;
+    color: var(--ion-color-primary);
+  }
+  
+  p {
+    margin: 2px 0;
+    color: var(--ion-color-medium);
+    font-size: 0.9rem;
+  }
+  
+  .invoice-total {
+    color: var(--ion-color-success);
+    font-weight: bold;
+  }
+}
+
+/* Toggle Styles */
+.toggle-label {
+  margin-right: 12px;
+  
+  h2 {
+    margin: 0 0 4px 0;
+    font-size: 1.1rem;
+    color: var(--ion-color-primary);
+  }
+  
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--ion-color-medium);
+  }
+}
+
+/* List Controls */
+.list-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  ion-item {
+    flex: 1;
+    margin: 0;
+  }
+}
+
+/* Table Styles */
+.table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--ion-color-light);
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th, td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid var(--ion-color-light);
+  }
+  
+  th {
+    background-color: var(--ion-color-light);
+    font-weight: bold;
+    color: var(--ion-color-primary);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  
+  tr {
+    &:hover {
+      background-color: var(--ion-color-light-shade);
+    }
+    
+    &.highlighted {
+      background-color: var(--ion-color-primary-tint) !important;
+      border: 2px solid var(--ion-color-primary);
+    }
+    
+    &.search-match {
+      background-color: var(--ion-color-warning-tint);
+    }
+  }
+  
+  td {
+    ion-input {
+      --padding-start: 8px;
+      --padding-end: 8px;
+    }
+  }
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  
+  ion-button {
+    --padding-start: 8px;
+    --padding-end: 8px;
+    min-width: 40px;
+  }
+}
+
+/* Discount Section */
+.discount-section {
+  border: 1px solid var(--ion-color-light);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  background-color: var(--ion-color-light-tint);
+  
+  ion-item {
+    --background: transparent;
+    margin-bottom: 8px;
+  }
+}
+
+/* Totals Styles */
+.totals-card {
+  background: linear-gradient(135deg, var(--ion-color-primary-tint), var(--ion-color-light));
+  border: 2px solid var(--ion-color-primary);
+}
+
+.totals-grid {
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--ion-color-light);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    &.final-total {
+      border-top: 2px solid var(--ion-color-primary);
+      margin-top: 8px;
+      padding-top: 12px;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    
+    .label {
+      font-weight: 500;
+      color: var(--ion-color-dark);
+    }
+    
+    .value {
+      font-weight: bold;
+      font-size: 1.1rem;
+      
+      &.discount {
+        color: var(--ion-color-warning);
+      }
+      
+      &.positive {
+        color: var(--ion-color-success);
+      }
+      
+      &.negative {
+        color: var(--ion-color-danger);
+      }
+    }
+  }
+}
+
+/* Return Type Indicator */
+.return-type-indicator {
+  text-align: center;
+  margin-top: 16px;
+  
+  ion-chip {
+    font-weight: bold;
+  }
+}
+
+/* Action Section */
+.action-section {
+  position: sticky;
+  bottom: 16px;
+  z-index: 10;
+  
+  .action-buttons {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  
+  ion-spinner {
+    --color: var(--ion-color-primary);
+    transform: scale(2);
+    margin-bottom: 20px;
+  }
+  
+  p {
+    color: white;
+    font-size: 1.1rem;
+    text-align: center;
+    margin: 0;
+  }
+}
+
+/* Popover Styles */
+ion-popover {
+  --width: 400px;
+  --max-height: 50vh;
+  
+  @media (max-width: 768px) {
+    --width: 90vw;
+  }
+  
+  ion-content {
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+  }
+  
+  ion-searchbar {
+    --background: var(--ion-color-light);
+    margin-bottom: 8px;
+  }
+  
+  ion-item {
+    --padding-start: 16px;
+    --padding-end: 16px;
+    
+    &:hover {
+      --background: var(--ion-color-light);
+    }
+    
+    ion-label {
+      h2 {
+        margin: 0 0 4px 0;
+        font-weight: bold;
+      }
+      
+      p {
+        margin: 2px 0;
+        font-size: 0.9rem;
+        color: var(--ion-color-medium);
+      }
+    }
+  }
+}
+
+/* Search Highlighting */
+mark {
+  background-color: var(--ion-color-warning);
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-weight: bold;
+}
+
+/* Card Styles */
+ion-card {
+  margin: 16px 0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  ion-card-header {
+    text-align: center;
+    
+    ion-card-title {
+      color: var(--ion-color-primary);
+      font-weight: bold;
+    }
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+  }
+  
+  .section {
+    margin-bottom: 16px;
+  }
+  
+  .items-table {
+    font-size: 0.9rem;
+    
+    th, td {
+      padding: 8px 4px;
+    }
+  }
+  
+  .totals-grid .total-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    
+    .value {
+      align-self: flex-end;
+    }
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  .form-row {
+    direction: rtl;
+  }
+  
+  .totals-grid .total-row {
+    direction: rtl;
+  }
+  
+  .action-buttons {
+    direction: rtl;
+  }
+}
+
+/* Focus States */
+ion-input:focus-within,
+ion-textarea:focus-within,
+ion-select:focus-within {
+  --highlight-color: var(--ion-color-primary);
+}
+
+/* Button Styles */
+ion-button {
+  --border-radius: 8px;
+  
+  &[color="primary"] {
+    font-weight: bold;
+  }
+  
+  &[fill="outline"] {
+    --border-width: 2px;
+  }
+}

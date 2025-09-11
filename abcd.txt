@@ -19,12 +19,7 @@ when user click to edit qty or itm in itemlist the total not changed after dismi
  - مراحعة قائمة الأصناف وتغيير التصميم للفلتر 
 
 
-- الوحدات والعبوات 
-- 
-
-
-
- 
+- الوحدات والعبوات  
  -  اضافة الضريبة والصورة والitem_ref .... etc
 
 
@@ -101,13 +96,11 @@ when user click to edit qty or itm in itemlist the total not changed after dismi
 
 - اللغة الأنجليزية للفيو 
 
-
-
-الفيو للسجلات لحذف سجل البشبه   , التصفح يكون بالداون سهم والفاتةرة بالعمليات تتعرض بالجنب اليمين 
- والعمليات بتاعة الطباعى
+multi store 
 
 
 
+auto save invoices 
 
 نظام الفروع 
 
@@ -116,4 +109,6 @@ when user click to edit qty or itm in itemlist the total not changed after dismi
 موقع فافاديا
 
 
+الفيو للسجلات لحذف سجل البشبه   , التصفح يكون بالداون سهم والفاتةرة بالعمليات تتعرض بالجنب اليمين 
+ والعمليات بتاعة الطباعى
    

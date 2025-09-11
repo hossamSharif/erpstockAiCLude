@@ -63,6 +63,12 @@
                                 <ion-radio [value]="3" class="ion-margin-end"></ion-radio>
                                 <ion-label> فواتير  مبدئية </ion-label> 
                               </ion-item>
+                            </ion-col>
+                            <ion-col class="ion-no-padding ion-no-margin">
+                              <ion-item lines="none">
+                                <ion-radio [value]="4" class="ion-margin-end"></ion-radio>
+                                <ion-label>مرتجعات المبيعات</ion-label> 
+                              </ion-item>
                             </ion-col> 
                           </ion-row>
                         </ion-grid> 
@@ -117,13 +123,24 @@
             <ion-card>
               <ion-card-header class="ion-no-padding">
                 <div class="card-header-with-export">
-                  <ion-card-title>سجل المبيعات</ion-card-title>
-                  <app-export-buttons 
-                    [hasData]="sortedPayArray && sortedPayArray.length > 0"
-                    [isLoading]="loading"
-                    (exportPDF)="exportToPDF()"
-                    (exportExcel)="exportToExcel()">
-                  </app-export-buttons>
+                  <ion-card-title>{{ getTableTitle() }}</ion-card-title>
+                  <div class="header-actions">
+                    <ion-button 
+                      *ngIf="radioVal === 4"
+                      fill="outline" 
+                      color="primary" 
+                      size="small"
+                      (click)="navigateToCreateReturn()">
+                      <ion-icon name="add" slot="start"></ion-icon>
+                      إنشاء مرتجعة جديدة
+                    </ion-button>
+                    <app-export-buttons 
+                      [hasData]="sortedPayArray && sortedPayArray.length > 0"
+                      [isLoading]="loading"
+                      (exportPDF)="exportToPDF()"
+                      (exportExcel)="exportToExcel()">
+                    </app-export-buttons>
+                  </div>
                 </div>
               </ion-card-header>
                <table class="table">
@@ -134,8 +151,8 @@
                     <ion-icon [name]="getSortIcon('sub_name')" class="sort-icon"></ion-icon>
                     العميل
                   </th>
-                  <th class="sortable-header" (click)="sortBy('pay_date')">
-                    <ion-icon [name]="getSortIcon('pay_date')" class="sort-icon"></ion-icon>
+                  <th class="sortable-header" (click)="sortBy(getDateField())">
+                    <ion-icon [name]="getSortIcon(getDateField())" class="sort-icon"></ion-icon>
                     التاريخ
                   </th>
                   <th class="sortable-header" (click)="sortBy('tot_pr')">
@@ -150,8 +167,8 @@
                   <!-- <th> المدفوع </th>  -->
 
                   <!-- Hidden pay and change columns -->   
-                  <th class="sortable-header" (click)="sortBy('payComment')">
-                    <ion-icon [name]="getSortIcon('payComment')" class="sort-icon"></ion-icon>
+                  <th class="sortable-header" (click)="sortBy(getCommentField())">
+                    <ion-icon [name]="getSortIcon(getCommentField())" class="sort-icon"></ion-icon>
                     تعليق
                   </th>
                   <th class="sortable-header" (click)="sortBy('user_name')">
@@ -167,13 +184,13 @@
                   <td>{{i+1}}</td>
                   <!-- <td>{{pay.pay_id}}</td> -->
                   <td>{{pay.sub_name}}</td>
-                  <td> {{pay.pay_date}}</td>
+                  <td> {{getDateValue(pay)}}</td>
                   <td>{{pay.tot_pr | currencyDisplay:'SDG':false}}</td>
                   <td>{{pay.discount | currencyDisplay:'SDG':false}}</td>
                   <td>{{(+pay.tot_pr - +pay.discount) | currencyDisplay:'SDG':false}}</td>
                   <!-- Hidden pay and change data -->
                   <!-- <td>{{pay.pay}}</td>  -->
-                  <td>{{pay.payComment}}</td>
+                  <td>{{getCommentValue(pay)}}</td>
                   
                   <td>{{pay.user_name}}</td>
                   <!-- <td>

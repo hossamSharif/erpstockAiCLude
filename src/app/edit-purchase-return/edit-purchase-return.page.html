@@ -1,0 +1,234 @@
+<ion-content>
+  <ion-card>
+    <div class="container">
+      
+      <!-- Header Section -->
+      <div class="section-header">
+        <ion-title>تعديل فاتورة مرتجعات الشراء</ion-title>
+        <ion-button fill="clear" (click)="back()">
+          <ion-icon name="arrow-back"></ion-icon>
+        </ion-button>
+      </div>
+
+      <!-- Edit Mode Notice -->
+      <div class="section">
+        <ion-card>
+          <ion-card-content>
+            <div class="edit-notice">
+              <ion-icon name="create-outline" color="primary"></ion-icon>
+              <span>وضع التعديل - رقم المرتجعة: {{ returnInvo.return_ref }}</span>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <!-- Original Invoice Information (Read-only in edit mode) -->
+      <div class="section" *ngIf="selectedOriginalInvoice">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title class="section-title">معلومات فاتورة الشراء الأصلية</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="invoice-info-readonly">
+              <div class="info-row">
+                <label>رقم الفاتورة الأصلية:</label>
+                <span>{{ selectedOriginalInvoice.pay_ref }}</span>
+              </div>
+              <div class="info-row">
+                <label>المورد:</label>
+                <span>{{ selectedAccount.sub_name }}</span>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <!-- Return Items Section -->
+      <div class="section" *ngIf="itemList.length > 0">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title class="section-title">أصناف الإرجاع</ion-card-title>
+          </ion-card-header>
+          
+          <ion-card-content>
+            <div class="table-container">
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th>الصنف</th>
+                    <th>الكمية</th>
+                    <th>السعر ({{ getCurrencySymbol() }})</th>
+                    <th>المجموع ({{ getCurrencySymbol() }})</th>
+                    <th>عمليات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of getDisplayItemList(); let i = index">
+                    <td>{{ item.item_name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ formatBalance(item.return_price) }}</td>
+                    <td>{{ formatBalance(item.tot) }}</td>
+                    <td>
+                      <ion-button 
+                        fill="clear" 
+                        color="danger" 
+                        (click)="deleteItem(i)">
+                        <ion-icon name="trash"></ion-icon>
+                      </ion-button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <!-- Discount Section -->
+      <div class="section" *ngIf="itemList.length > 0">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title class="section-title">تفاصيل الخصم والدفع</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <!-- Discount Type Selection -->
+            <ion-item>
+              <ion-label position="stacked">نوع الخصم</ion-label>
+              <ion-select [(ngModel)]="discountType" (ionSelectionChange)="onDiscountTypeChange($event)">
+                <ion-select-option value="percentage">نسبة مئوية</ion-select-option>
+                <ion-select-option value="amount">مبلغ ثابت</ion-select-option>
+              </ion-select>
+            </ion-item>
+
+            <!-- Percentage Discount -->
+            <ion-item *ngIf="discountType === 'percentage'">
+              <ion-label position="stacked">نسبة الخصم (%)</ion-label>
+              <ion-input 
+                type="number" 
+                [(ngModel)]="discountPerc"
+                (ionInput)="onPercentageDiscountChange($event)"
+                placeholder="أدخل نسبة الخصم">
+              </ion-input>
+            </ion-item>
+
+            <!-- Amount Discount -->
+            <ion-item *ngIf="discountType === 'amount'">
+              <ion-label position="stacked">مبلغ الخصم ({{ getCurrencySymbol() }})</ion-label>
+              <ion-input 
+                type="number" 
+                [(ngModel)]="discountAmount"
+                (ionInput)="onAmountDiscountChange($event)"
+                placeholder="أدخل مبلغ الخصم">
+              </ion-input>
+            </ion-item>
+
+            <!-- Payment Amount -->
+            <ion-item>
+              <ion-label position="stacked">المبلغ المدفوع ({{ getCurrencySymbol() }})</ion-label>
+              <ion-input 
+                type="number" 
+                [(ngModel)]="returnInvo.pay"
+                (ionInput)="payChange($event)"
+                placeholder="أدخل المبلغ المدفوع">
+              </ion-input>
+            </ion-item>
+
+            <!-- Return Reason -->
+            <ion-item>
+              <ion-label position="stacked">سبب الإرجاع</ion-label>
+              <ion-textarea 
+                [(ngModel)]="returnReason"
+                rows="3"
+                placeholder="أدخل سبب إرجاع الأصناف">
+              </ion-textarea>
+            </ion-item>
+
+            <!-- Return Date -->
+            <ion-item>
+              <ion-label position="stacked">تاريخ الإرجاع</ion-label>
+              <ion-input 
+                type="date" 
+                [(ngModel)]="returnInvo.return_date"
+                placeholder="تاريخ الإرجاع">
+              </ion-input>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <!-- Summary Section -->
+      <div class="section" *ngIf="itemList.length > 0">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title class="section-title">ملخص فاتورة الإرجاع</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="summary-grid">
+              <div class="summary-row">
+                <label>المجموع الفرعي:</label>
+                <span>{{ formatBalance(itemList.reduce((acc, item) => acc + +item.tot, 0)) }} {{ getCurrencySymbol() }}</span>
+              </div>
+              
+              <div class="summary-row" *ngIf="discountType === 'percentage' && discountPerc > 0">
+                <label>الخصم ({{ discountPerc }}%):</label>
+                <span>{{ formatBalance(calculatedDiscountAmount) }} {{ getCurrencySymbol() }}</span>
+              </div>
+              
+              <div class="summary-row" *ngIf="discountType === 'amount' && discountAmount > 0">
+                <label>الخصم:</label>
+                <span>{{ formatBalance(discountAmount) }} {{ getCurrencySymbol() }}</span>
+              </div>
+              
+              <div class="summary-row total-row">
+                <label>المجموع النهائي:</label>
+                <span>{{ formatBalance(returnInvo.tot_pr) }} {{ getCurrencySymbol() }}</span>
+              </div>
+              
+              <div class="summary-row">
+                <label>المبلغ المدفوع:</label>
+                <span>{{ formatBalance(returnInvo.pay) }} {{ getCurrencySymbol() }}</span>
+              </div>
+              
+              <div class="summary-row">
+                <label>الباقي:</label>
+                <span [class.negative]="returnInvo.changee < 0">{{ formatBalance(returnInvo.changee) }} {{ getCurrencySymbol() }}</span>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="section" *ngIf="itemList.length > 0">
+        <div class="action-buttons">
+          <ion-button 
+            expand="block" 
+            color="success"
+            (click)="save()"
+            [disabled]="isLoading()">
+            <ion-icon name="save" slot="start"></ion-icon>
+            حفظ التعديلات
+          </ion-button>
+          
+          <ion-button 
+            expand="block" 
+            color="danger"
+            fill="outline"
+            (click)="deleteReturn()"
+            [disabled]="isLoading()">
+            <ion-icon name="trash" slot="start"></ion-icon>
+            حذف المرتجعة
+          </ion-button>
+        </div>
+      </div>
+
+    </div>
+  </ion-card>
+
+  <!-- Loading Indicator -->
+  <div class="loading-overlay" *ngIf="isLoading()">
+    <ion-spinner name="bubbles"></ion-spinner>
+    <p>{{ currentLoadingMessage }}</p>
+  </div>
+
+</ion-content>

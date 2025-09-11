@@ -1,0 +1,348 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    
+    <ion-title>تعديل مرتجعة المبيعات</ion-title>
+    
+    <ion-buttons slot="end">
+      <app-currency-switcher></app-currency-switcher>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="container" *ngIf="returnInvo && returnInvo.return_ref">
+    
+    <!-- Return Information Section -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title class="section-title">معلومات المرتجعة</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row>
+            <ion-col size="6">
+              <ion-item>
+                <ion-label position="stacked">رقم المرتجعة</ion-label>
+                <ion-input 
+                  type="text" 
+                  [(ngModel)]="returnInvo.return_ref" 
+                  readonly>
+                </ion-input>
+              </ion-item>
+            </ion-col>
+            <ion-col size="6">
+              <ion-item>
+                <ion-label position="stacked">الفاتورة الأصلية</ion-label>
+                <ion-input 
+                  type="text" 
+                  [(ngModel)]="returnInvo.original_pay_ref" 
+                  readonly>
+                </ion-input>
+              </ion-item>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="6">
+              <ion-item>
+                <ion-label position="stacked">تاريخ المرتجعة</ion-label>
+                <ion-input 
+                  type="date" 
+                  [(ngModel)]="returnInvo.return_date">
+                </ion-input>
+              </ion-item>
+            </ion-col>
+            <ion-col size="6">
+              <ion-item>
+                <ion-label position="stacked">نوع المرتجعة</ion-label>
+                <ion-chip [color]="isReturnAllItems ? 'success' : 'warning'">
+                  {{ isReturnAllItems ? 'مرتجعة كاملة' : 'مرتجعة جزئية' }}
+                </ion-chip>
+              </ion-item>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Customer Information Section -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title class="section-title">معلومات العميل</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <app-account-selector
+          accountType="customer"
+          placeholder="اختر حساب العميل"
+          label="حساب العميل"
+          [store_info]="store_info"
+          [year]="year"
+          [showAddButton]="false"
+          [(ngModel)]="selectedAccount"
+          (accountSelected)="onAccountSelected($event)"
+          (balanceLoaded)="onAccountBalanceLoaded($event)">
+        </app-account-selector>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Return Reason Section -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title class="section-title">سبب الإرجاع</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="stacked">اكتب سبب الإرجاع</ion-label>
+          <ion-textarea 
+            [(ngModel)]="returnReason" 
+            placeholder="مثال: عيب في المنتج، عدم مطابقة المواصفات، إلخ..."
+            rows="3">
+          </ion-textarea>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Items Section -->
+    <ion-card>
+      <ion-card-header>
+        <div class="section-header">
+          <ion-card-title class="section-title">أصناف المرتجعة</ion-card-title>
+          
+          <!-- Search and Sort Controls -->
+          <div class="list-controls" *ngIf="itemList.length > 0">
+            <ion-item>
+              <ion-label position="stacked">البحث في الأصناف</ion-label>
+              <ion-input 
+                type="text" 
+                [(ngModel)]="searchTerm" 
+                (ionInput)="onSearchTermChange()" 
+                placeholder="ابحث عن صنف..."
+                clearInput="true">
+              </ion-input>
+            </ion-item>
+            
+            <div class="search-navigation" *ngIf="searchMatches.length > 0">
+              <ion-button 
+                fill="clear" 
+                size="small" 
+                (click)="navigateSearch('prev')">
+                <ion-icon name="chevron-up"></ion-icon>
+              </ion-button>
+              <span class="search-results">{{ getSearchResultText() }}</span>
+              <ion-button 
+                fill="clear" 
+                size="small" 
+                (click)="navigateSearch('next')">
+                <ion-icon name="chevron-down"></ion-icon>
+              </ion-button>
+            </div>
+            
+            <ion-button 
+              fill="outline" 
+              size="small" 
+              (click)="sortItemListAlphabetically()">
+              <ion-icon name="list" slot="start"></ion-icon>
+              {{ isItemListSorted ? 'الترتيب الأصلي' : 'ترتيب أبجدي' }}
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-header>
+      
+      <ion-card-content *ngIf="itemList.length > 0" class="ion-no-padding">
+        <div class="table-container">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>اسم الصنف</th>
+                <th>الكمية</th>
+                <th>سعر الإرجاع ({{ getCurrencySymbol() }})</th>
+                <th>المجموع ({{ getCurrencySymbol() }})</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr 
+                *ngFor="let item of getDisplayItemList(); let i = index" 
+                [attr.data-index]="i"
+                [class.highlighted]="isHighlighted(i)"
+                [class.search-match]="isSearchMatch(i)">
+                <td>
+                  <span [innerHTML]="highlightText(item.item_name, searchTerm)"></span>
+                </td>
+                <td>
+                  <ion-input 
+                    *ngIf="showMe === i" 
+                    type="number" 
+                    [(ngModel)]="item.quantity"
+                    (ionBlur)="hideMe(i); editCell(i)"
+                    min="0.01"
+                    step="0.01">
+                  </ion-input>
+                  <span 
+                    *ngIf="showMe !== i" 
+                    (click)="qtyClick(i)">
+                    {{ item.quantity }}
+                  </span>
+                </td>
+                <td>
+                  <ion-input 
+                    *ngIf="showMe === i" 
+                    type="number" 
+                    [(ngModel)]="item.return_price"
+                    (ionBlur)="hideMe(i); editCell(i)"
+                    min="0"
+                    step="0.01">
+                  </ion-input>
+                  <span 
+                    *ngIf="showMe !== i" 
+                    (click)="qtyClick(i)">
+                    {{ item.return_price | currencyDisplay:'SDG':false }}
+                  </span>
+                </td>
+                <td>{{ item.tot | currencyDisplay:'SDG':false }}</td>
+                <td>
+                  <div class="action-buttons">
+                    <ion-button 
+                      fill="clear" 
+                      size="small" 
+                      color="danger"
+                      (click)="deleteItem(i)">
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </ion-button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ion-card-content>
+      
+      <ion-card-content *ngIf="itemList.length === 0">
+        <div class="empty-state">
+          <ion-icon name="cube-outline" size="large"></ion-icon>
+          <h3>لا توجد أصناف مرتجعة</h3>
+          <p>لم يتم العثور على أصناف في هذه المرتجعة</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Discount Section -->
+    <ion-card class="discount-section">
+      <ion-card-header>
+        <ion-card-title class="section-title">الخصم</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid>
+          <ion-row>
+            <ion-col size="6">
+              <ion-item>
+                <ion-label position="stacked">نوع الخصم</ion-label>
+                <ion-select 
+                  [(ngModel)]="discountType" 
+                  (ionChange)="onDiscountTypeChange($event)">
+                  <ion-select-option value="percentage">نسبة مئوية (%)</ion-select-option>
+                  <ion-select-option value="amount">مبلغ ثابت</ion-select-option>
+                </ion-select>
+              </ion-item>
+            </ion-col>
+            <ion-col size="6">
+              <ion-item *ngIf="discountType === 'percentage'">
+                <ion-label position="stacked">نسبة الخصم (%)</ion-label>
+                <ion-input 
+                  type="number" 
+                  [(ngModel)]="discountPerc"
+                  (ionInput)="onPercentageDiscountChange($event)"
+                  min="0" 
+                  max="100" 
+                  step="0.01">
+                </ion-input>
+              </ion-item>
+              <ion-item *ngIf="discountType === 'amount'">
+                <ion-label position="stacked">مبلغ الخصم ({{ getCurrencySymbol() }})</ion-label>
+                <ion-input 
+                  type="number" 
+                  [(ngModel)]="discountAmount"
+                  (ionInput)="onAmountDiscountChange($event)"
+                  min="0" 
+                  step="0.01">
+                </ion-input>
+              </ion-item>
+            </ion-col>
+          </ion-row>
+          
+          <!-- Discount Display -->
+          <ion-row *ngIf="returnInvo.discount > 0">
+            <ion-col size="12">
+              <div class="discount-display">
+                <span *ngIf="discountType === 'percentage' && calculatedDiscountAmount > 0">
+                  الخصم: {{ discountPerc }}% = {{ calculatedDiscountAmount | currencyDisplay:'SDG':false }}
+                </span>
+                <span *ngIf="discountType === 'amount' && calculatedDiscountPerc > 0">
+                  الخصم: {{ discountAmount | currencyDisplay:'SDG':false }} = {{ calculatedDiscountPerc.toFixed(2) }}%
+                </span>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Totals Section -->
+    <ion-card class="totals-card">
+      <ion-card-header>
+        <ion-card-title class="section-title">المجاميع</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="totals-grid">
+          <div class="total-row">
+            <span class="label">المجموع الفرعي:</span>
+            <span class="value">{{ (itemList.reduce((acc, item) => acc + +item.tot, 0)) | currencyDisplay:'SDG':false }}</span>
+          </div>
+          <div class="total-row">
+            <span class="label">الخصم:</span>
+            <span class="value discount">{{ returnInvo.discount | currencyDisplay:'SDG':false }}</span>
+          </div>
+          <div class="total-row final-total">
+            <span class="label">المجموع الإجمالي:</span>
+            <span class="value positive">{{ returnInvo.tot_pr | currencyDisplay:'SDG':false }}</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Action Buttons -->
+    <div class="action-section">
+      <div class="action-buttons">
+        <ion-button 
+          expand="block" 
+          color="primary" 
+          [disabled]="isLoading()"
+          (click)="updateReturn()">
+          <ion-icon name="save-outline" slot="start"></ion-icon>
+          حفظ التعديلات
+        </ion-button>
+        
+        <ion-button 
+          expand="block" 
+          color="danger" 
+          fill="outline"
+          [disabled]="isLoading()"
+          (click)="deleteReturn()">
+          <ion-icon name="trash-outline" slot="start"></ion-icon>
+          حذف المرتجعة
+        </ion-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-overlay">
+    <ion-spinner name="bubbles"></ion-spinner>
+    <p>{{ currentLoadingMessage }}</p>
+  </div>
+
+</ion-content>

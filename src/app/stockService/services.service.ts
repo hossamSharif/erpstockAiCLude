@@ -1377,6 +1377,78 @@ getTswiaByDate(store_id,from ,yearId){
     )
   }
 
+  // Sales Return API Methods
+  // Create sales return with items in single API call
+  createSalesReturnWithItems(returnData){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+    return this.http.post(this.api+'sales_returns/createWithItems.php', 
+      returnData, httpOptions
+    )
+  }
+
+  // Update sales return with items in single API call
+  updateSalesReturnWithItems(returnData){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+    return this.http.post(this.api+'sales_returns/updateWithItems.php', 
+      returnData, httpOptions
+    )
+  }
+
+  // Delete sales return with items in single API call
+  deleteSalesReturnWithItems(deletionData){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+    return this.http.post(this.api+'sales_returns/deleteWithItems.php', 
+      deletionData, httpOptions
+    )
+  }
+
+  // Get top sales returns for a store and year
+  getTopSalesReturns(store_id, yearId){ 
+    let params = new HttpParams() 
+    params = params.append('store_id', store_id)
+    params = params.append('yearId', yearId)
+    return this.http.get(this.api+'sales_returns/getTopReturns.php', {params: params})
+  }
+
+  // Get sales returns by date range
+  getSalesReturnsByDate(store_id, from, yearId){ 
+    let params = new HttpParams() 
+    params = params.append('store_id', store_id)
+    params = params.append('from', from) 
+    params = params.append('yearId', yearId)
+    return this.http.get(this.api+'sales_returns/getReturnsByDate.php', {params: params})
+  }
+
+  // Get sales return details by return reference
+  getSalesReturnDetail(store_id, return_ref, yearId){
+    let params = new HttpParams() 
+    params = params.append('store_id', store_id)
+    params = params.append('return_ref', return_ref)
+    params = params.append('yearId', yearId)
+    return this.http.get(this.api+'sales_returns/getReturnDetail.php', {params: params})
+  }
+
+  // Check for existing returns for an original invoice
+  checkExistingReturns(original_pay_ref, store_id, yearId){
+    let params = new HttpParams() 
+    params = params.append('original_pay_ref', original_pay_ref)
+    params = params.append('store_id', store_id)
+    params = params.append('yearId', yearId)
+    return this.http.get(this.api+'sales_returns/checkExistingReturns.php', {params: params})
+  }
+
   createMultiSales(accountList){
     accountList= JSON.stringify(accountList) 
     return this.http.post(this.api+'pay/createMulti.php',
@@ -1658,6 +1730,48 @@ getTswiaByDate(store_id,from ,yearId){
     }
     
     return this.http.get(this.api + 'items/getCompleteItemReport.php', {params: params})
+  }
+
+  // PURCHASE RETURNS API METHODS
+  // Create purchase return with items
+  createPurchaseReturnWithItems(returnData: any): Observable<any> {
+    return this.http.post(this.api+'purchase_returns/createWithItems.php', returnData)
+  }
+
+  // Update purchase return with items  
+  updatePurchaseReturnWithItems(returnData: any): Observable<any> {
+    return this.http.post(this.api+'purchase_returns/updateWithItems.php', returnData)
+  }
+
+  // Delete purchase return with items
+  deletePurchaseReturnWithItems(deletionData: any): Observable<any> {
+    return this.http.post(this.api+'purchase_returns/deleteWithItems.php', deletionData)
+  }
+
+  // Get purchase return detail
+  getPurchaseReturnDetail(store_id: any, return_ref: any, yearId: any): Observable<any> {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('return_ref', return_ref)
+    params = params.append('yearId', yearId)
+    return this.http.get(this.api+'purchase_returns/getReturnDetail.php', {params: params})
+  }
+
+  // Get top purchase returns
+  getTopPurchaseReturns(store_id: any, yearId: any): Observable<any> {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('yearId', yearId)
+    return this.http.get(this.api+'purchase_returns/getTopPurchaseReturns.php', {params: params})
+  }
+
+  // Check for existing purchase returns for an original invoice
+  checkExistingPurchaseReturns(original_pay_ref: any, store_id: any, yearId: any): Observable<any> {
+    let params = new HttpParams()
+    params = params.append('original_pay_ref', original_pay_ref)
+    params = params.append('store_id', store_id)
+    params = params.append('yearId', yearId)
+    return this.http.get(this.api+'purchase_returns/checkExistingReturns.php', {params: params})
   }
 
 }

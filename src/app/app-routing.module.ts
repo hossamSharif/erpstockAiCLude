@@ -24,12 +24,28 @@ const routes: Routes = [
     loadChildren: () => import('./sales-record/sales-record.module').then( m => m.SalesRecordPageModule)
   },
   {
+    path: 'folder/sales-return',
+    loadChildren: () => import('./sales-return/sales-return.module').then( m => m.SalesReturnPageModule)
+  },
+  {
+    path: 'folder/edit-sales-return',
+    loadChildren: () => import('./edit-sales-return/edit-sales-return.module').then( m => m.EditSalesReturnPageModule)
+  },
+  {
     path: 'folder/purchase',
     loadChildren: () => import('./purchase/purchase.module').then( m => m.PurchasePageModule)
   },
   {
     path: 'folder/purchase-record',
     loadChildren: () => import('./purchase-record/purchase-record.module').then( m => m.PurchaseRecordPageModule)
+  },
+  {
+    path: 'folder/purchase-return',
+    loadChildren: () => import('./purchase-return/purchase-return.module').then( m => m.PurchaseReturnPageModule)
+  },
+  {
+    path: 'folder/edit-purchase-return',
+    loadChildren: () => import('./edit-purchase-return/edit-purchase-return.module').then( m => m.EditPurchaseReturnPageModule)
   },
   {
     path: 'folder/spends',

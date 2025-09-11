@@ -162,6 +162,9 @@ export class PurchaseRecordPage implements OnInit, OnDestroy {
         case 'copyPurchase':
           this.copyAsInvoice(pay, 'purchase');
           break;
+        case 'return':
+          this.navigateToReturnPage(pay);
+          break;
       }
     }
   });
@@ -293,6 +296,21 @@ private navigateToInvoicePage(itemList: any[], type: 'sales' | 'purchase') {
   };
       this.rout.navigate(['folder/purchase'], navigationExtras); 
   }
+}
+
+// Navigate to purchase return page
+navigateToReturnPage(pay: any) {
+  let navigationExtras: NavigationExtras = {
+    queryParams: {
+      original_pay_ref: pay.pay_ref,
+      supplier_id: pay.supplier_id,
+      supplier_name: pay.sub_name,
+      original_total: pay.tot_pr,
+      original_date: pay.pay_date
+    },
+    replaceUrl: true
+  };
+  this.rout.navigate(['folder/purchase-return'], navigationExtras);
 }
 
     clear(){

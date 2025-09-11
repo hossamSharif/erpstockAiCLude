@@ -351,17 +351,28 @@ export class SalesRecordPage implements OnInit, OnDestroy {
       component: ActionPopoverComponent,
       event: ev,
       translucent: true,
-      cssClass: 'action-popover-rtl'
+      cssClass: 'action-popover-rtl',
+      componentProps: {
+        contextType: this.radioVal === 4 ? 'returns' : 'sales'
+      }
     });
   
     popover.onDidDismiss().then((result) => {
       if (result.data) {
         switch (result.data.action) {
           case 'print':
-            this.printInvo('', pay);
+            if (this.radioVal === 4) {
+              this.printReturnInvo('', pay);
+            } else {
+              this.printInvo('', pay);
+            }
             break;
           case 'edit':
-            this.getPayInvoDetail(pay, sub_name, '');
+            if (this.radioVal === 4) {
+              this.getReturnInvoDetail(pay, sub_name, '');
+            } else {
+              this.getPayInvoDetail(pay, sub_name, '');
+            }
             break;
           case 'copySales':
             this.copyAsInvoice(pay, 'sales');
@@ -918,6 +929,13 @@ export class SalesRecordPage implements OnInit, OnDestroy {
       }
     } else if (this.radioVal == 3) {
       this.getInitialInvoicesServer()
+    } else if (this.radioVal == 4) {
+      if (this.offline == true) {
+        // TODO: Handle offline sales returns when implemented
+        this.showEmpty = true
+      } else {
+        this.getSalesReturns()
+      }
     }
    }
 
@@ -1003,6 +1021,77 @@ export class SalesRecordPage implements OnInit, OnDestroy {
 
    
    }
+
+   // Get sales returns method
+   getSalesReturns(){
+    this.payArray=[]
+    this.loading = true
+    
+    if (this.radioVal == 4) {
+      // Get recent sales returns (similar to getTopSales)
+      this.api.getTopSalesReturns(this.store_info.id, this.year.id).subscribe(data =>{
+        let res = data
+        if(res['message'] != 'No record Found'){
+          this.payArray = res['data'] 
+        }
+        
+        // Apply account filter if selected
+        if( this.selectedAccount.sub_name != ""){
+          if(this.payArray.length>0){
+            this.payArray = this.payArray.filter(x=> +x.cust_id == +this.selectedAccount.id)
+          }
+        }
+        
+        this.getTotal()
+        this.applySorting();
+        
+        if(this.payArray.length==0){
+          this.showEmpty = true
+        }else{
+          this.showEmpty = false
+        }
+        this.loading = false
+      }, (err) => {
+        console.log('Sales returns error:',err);
+        this.showEmpty = true
+        this.loading = false
+      })
+    }
+   }
+
+   getSalesReturnsByDate(){
+    this.payArray=[]
+    this.loading = true
+    
+    this.api.getSalesReturnsByDate(this.store_info.id, this.startingDate, this.year.id).subscribe(data =>{
+      let res = data
+      if(res['message'] != 'No record Found'){
+        this.payArray = res['data'] 
+      }
+      
+      // Apply account filter if selected  
+      if( this.selectedAccount.sub_name != ""){
+        if(this.payArray.length>0){
+          this.payArray = this.payArray.filter(x=> +x.cust_id == +this.selectedAccount.id)
+        }
+      }
+      
+      this.getTotal()
+      this.applySorting();
+      
+      if(this.payArray.length==0){
+        this.showEmpty = true
+      }else{
+        this.showEmpty = false
+      }
+      this.loading = false
+    }, (err) => {
+      console.log('Sales returns by date error:',err);
+      this.showEmpty = true
+      this.loading = false
+    })
+   }
+
    getTotal(){
     this.sums.tot = this.payArray.reduce( (acc, obj)=> { return acc + +obj.tot_pr; }, 0);
     this.sums.change = this.payArray.reduce( (acc, obj)=> { return acc + +obj.changee; }, 0);
@@ -1579,20 +1668,104 @@ private getDateFilter(): any {
 }
 
 private getExportColumns(): ExportColumn[] {
-  return [
-    { key: 'sub_name', title: 'العميل', width: 20, type: 'text' },
-    { key: 'pay_date', title: 'التاريخ', width: 12, type: 'date' },
-    { key: 'tot_pr', title: 'إجمالي المبلغ', width: 15, type: 'currency' },
-    { key: 'discount', title: 'الخصم', width: 12, type: 'currency' },
-    { key: 'finalAmount', title: 'الإجمالي بعد الخصم', width: 18, type: 'currency' },
-    { key: 'payComment', title: 'تعليق', width: 20, type: 'text' },
-    { key: 'user_name', title: 'المستخدم', width: 15, type: 'text' }
-  ];
+  if (this.radioVal === 4) {
+    // Return-specific columns
+    return [
+      { key: 'sub_name', title: 'العميل', width: 20, type: 'text' },
+      { key: 'return_date', title: 'تاريخ المرتجعة', width: 12, type: 'date' },
+      { key: 'tot_pr', title: 'إجمالي المبلغ', width: 15, type: 'currency' },
+      { key: 'discount', title: 'الخصم', width: 12, type: 'currency' },
+      { key: 'finalAmount', title: 'الإجمالي بعد الخصم', width: 18, type: 'currency' },
+      { key: 'returnComment', title: 'سبب المرتجعة', width: 20, type: 'text' },
+      { key: 'user_name', title: 'المستخدم', width: 15, type: 'text' }
+    ];
+  } else {
+    // Sales-specific columns
+    return [
+      { key: 'sub_name', title: 'العميل', width: 20, type: 'text' },
+      { key: 'pay_date', title: 'التاريخ', width: 12, type: 'date' },
+      { key: 'tot_pr', title: 'إجمالي المبلغ', width: 15, type: 'currency' },
+      { key: 'discount', title: 'الخصم', width: 12, type: 'currency' },
+      { key: 'finalAmount', title: 'الإجمالي بعد الخصم', width: 18, type: 'currency' },
+      { key: 'payComment', title: 'تعليق', width: 20, type: 'text' },
+      { key: 'user_name', title: 'المستخدم', width: 15, type: 'text' }
+    ];
+  }
 }
 
 // Get current currency symbol for table headers
 getCurrencySymbol(): string {
   return this.currencyService.getCurrentCurrencySymbol();
+}
+
+// Helper methods for dynamic table content based on radio selection
+getTableTitle(): string {
+  switch(this.radioVal) {
+    case 4:
+      return 'سجل مرتجعات المبيعات';
+    case 3:
+      return 'الفواتير المبدئية';
+    default:
+      return 'سجل المبيعات';
+  }
+}
+
+getDateField(): string {
+  return this.radioVal === 4 ? 'return_date' : 'pay_date';
+}
+
+getCommentField(): string {
+  return this.radioVal === 4 ? 'returnComment' : 'payComment';
+}
+
+getDateValue(pay: any): string {
+  return this.radioVal === 4 ? pay.return_date : pay.pay_date;
+}
+
+getCommentValue(pay: any): string {
+  return this.radioVal === 4 ? pay.returnComment : pay.payComment;
+}
+
+// Navigate to create new return page
+navigateToCreateReturn() {
+  this.rout.navigate(['/folder/sales-return']);
+}
+
+// Handle printing return invoices
+printReturnInvo(divName: string, returnInvo: any) {
+  this.api.getSalesReturnDetail(this.store_info.id, returnInvo.return_ref, this.year.id).subscribe(
+    data => {
+      let res = data;
+      if (res['message'] != 'No record Found') {
+        this.itemList = res['data'];
+        this.printArr = [{
+          'returnInvo': returnInvo,
+          'itemList': this.itemList,
+          'selectedAccount': { sub_name: returnInvo.sub_name },
+          'sub_nameNew': '',
+          "userInfo": "",
+          "sub_balanse": 0,
+          "balanceStatus": ""
+        }];
+        this.presentModal(this.printArr, 'sales_return');
+      }
+    },
+    (err) => {
+      console.log('Error loading return details for print:', err);
+    }
+  );
+}
+
+// Handle editing return invoices
+getReturnInvoDetail(returnInvo: any, sub_name: any, status: string) {
+  console.log('Edit return invoice:', returnInvo);
+  
+  // Navigate to edit-sales-return page with return_ref parameter
+  this.rout.navigate(['folder/edit-sales-return'], {
+    queryParams: {
+      return_ref: returnInvo.return_ref
+    }
+  });
 }
 
 }

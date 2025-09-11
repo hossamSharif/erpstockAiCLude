@@ -38,4 +38,19 @@
     font-weight: 600;
     color: var(--ion-color-dark);
   }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    ion-button {
+      font-size: 0.9rem;
+      --border-radius: 6px;
+      
+      ion-icon {
+        font-size: 1.1rem;
+      }
+    }
+  }
 }

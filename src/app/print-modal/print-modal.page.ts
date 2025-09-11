@@ -99,6 +99,58 @@ export class PrintModalPage implements OnInit, OnDestroy {
       this.currencySubscription.unsubscribe();
     }
   }
+
+  // Utility method to get the appropriate invoice object
+  getInvoiceData() {
+    if (this.page === 'sales_return' && this.printArr && this.printArr[0].returnInvo) {
+      return this.printArr[0].returnInvo;
+    } else if (this.printArr && this.printArr[0].payInvo) {
+      return this.printArr[0].payInvo;
+    }
+    return {};
+  }
+
+  // Get invoice reference number
+  getInvoiceRef(): string {
+    const invoiceData = this.getInvoiceData();
+    return this.page === 'sales_return' ? (invoiceData.return_ref || '') : (invoiceData.pay_ref || '');
+  }
+
+  // Get invoice date
+  getInvoiceDate(): string {
+    const invoiceData = this.getInvoiceData();
+    return this.page === 'sales_return' ? (invoiceData.return_date || '') : (invoiceData.pay_date || '');
+  }
+
+  // Get invoice time
+  getInvoiceTime(): string {
+    const invoiceData = this.getInvoiceData();
+    return this.page === 'sales_return' ? (invoiceData.return_time || '') : (invoiceData.pay_time || '');
+  }
+
+  // Get invoice total
+  getInvoiceTotal(): number {
+    const invoiceData = this.getInvoiceData();
+    return invoiceData.tot_pr || 0;
+  }
+
+  // Get invoice discount
+  getInvoiceDiscount(): number {
+    const invoiceData = this.getInvoiceData();
+    return invoiceData.discount || 0;
+  }
+
+  // Get invoice comment
+  getInvoiceComment(): string {
+    const invoiceData = this.getInvoiceData();
+    return this.page === 'sales_return' ? (invoiceData.returnComment || invoiceData.return_reason || '') : (invoiceData.payComment || '');
+  }
+
+  // Get user name
+  getUserName(): string {
+    const invoiceData = this.getInvoiceData();
+    return invoiceData.user_name || this.printArr[0]?.user_name || '';
+  }
   
   async initializeCurrencyForPrint() {
     await this.currencyService.initializeCurrency();
@@ -396,9 +448,9 @@ export class PrintModalPage implements OnInit, OnDestroy {
         body { 
           font-family: Arial, 'Times New Roman', sans-serif; 
           font-size: 14px; 
-          line-height: 1.4; 
+          line-height: 1.2; 
           margin: 0; 
-          padding: 10px;
+          padding: 5px;
           direction: rtl;
         }
         .flr { display: block; float: right; }
@@ -420,12 +472,12 @@ export class PrintModalPage implements OnInit, OnDestroy {
         .table { 
           text-align: center; 
           width: 100%; 
-          margin: 8px 0; 
-          font-size: 16px; 
+          margin: 4px 0; 
+          font-size: 14px; 
           border-collapse: collapse;
         }
-        .ion-margin { margin: 8px; }
-        .ion-margin-top { margin-top: 8px; }
+        .ion-margin { margin: 4px; }
+        .ion-margin-top { margin-top: 4px; }
         .rtl { direction: rtl; text-align: right; }
         .ion-text-center { text-align: center; }
         .ion-text-end { text-align: left; }
@@ -437,14 +489,34 @@ export class PrintModalPage implements OnInit, OnDestroy {
           image-rendering: crisp-edges;
         }
         h1, h2, h3, h4, h5, h6 { 
-          margin: 8px 0; 
-          line-height: 1.3; 
+          margin: 4px 0; 
+          line-height: 1.2; 
+          page-break-after: avoid;
         }
         table { 
-          page-break-inside: avoid; 
+          page-break-inside: auto;
+          table-layout: fixed;
+          width: 100%;
+          border-collapse: collapse;
+          orphans: 3;
+          widows: 3;
+        }
+        thead {
+          display: table-header-group;
+        }
+        tbody {
+          display: table-row-group;
         }
         tr { 
-          page-break-inside: avoid; 
+          page-break-inside: avoid;
+          page-break-after: auto;
+        }
+        tbody tr:nth-child(-n+3) {
+          page-break-before: avoid;
+        }
+        td, th {
+          padding: 2px 4px;
+          line-height: 1.1;
         }
       `;
       

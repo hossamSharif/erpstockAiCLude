@@ -19,5 +19,19 @@
     &:hover {
       --background: var(--ion-color-light);
     }
+    
+    &.return-action {
+      .action-icon {
+        color: var(--ion-color-warning);
+      }
+      
+      ion-label {
+        color: var(--ion-color-warning);
+      }
+      
+      &:hover {
+        --background: var(--ion-color-warning-tint);
+      }
+    }
   }
 }
