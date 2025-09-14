@@ -161,10 +161,14 @@ isDeleting: boolean = false;
 currentLoadingMessage: string = '';
 currentLoader: HTMLIonLoadingElement | null = null;
 
+// Data initialization flag to prevent re-initialization from query parameters
+private dataInitialized: boolean = false;
+
   constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private currencyService: CurrencyService, private cdr: ChangeDetectorRef) {
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
   this.route.queryParams.subscribe(params => {
-    if (params && params.payInvo) {
+    // Only initialize from parameters if data hasn't been loaded yet
+    if (params && params.payInvo && !this.dataInitialized) {
       this.payInvo = JSON.parse(params.payInvo);
       this.selectedAccount.sub_name = JSON.parse(params.sub_name);
       this.user_info = JSON.parse(params.user_info);
@@ -172,9 +176,12 @@ currentLoader: HTMLIonLoadingElement | null = null;
       this.itemList = JSON.parse(params.itemList);
       this.resortItemList()
 
-       this.initializeDiscountValues();
+      this.initializeDiscountValues();
       
       this.getAppInfo()
+      
+      // Mark data as initialized to prevent re-initialization
+      this.dataInitialized = true;
     }
   });
  
@@ -207,6 +214,9 @@ currentLoader: HTMLIonLoadingElement | null = null;
     
     // Cleanup any remaining loading states
     this.hideLoading();
+    
+    // Reset flag when component is actually destroyed (not just navigating to subpages)
+    this.dataInitialized = false;
   }
 
   // Centralized Loading Management Methods

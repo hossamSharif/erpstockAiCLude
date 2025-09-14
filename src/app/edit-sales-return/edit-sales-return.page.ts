@@ -742,6 +742,13 @@ export class EditSalesReturnPage implements OnInit, OnDestroy {
     this.currentLoadingMessage = '';
   }
 
+  getSubtotal(): number {
+    if (!this.itemList || this.itemList.length === 0) {
+      return 0;
+    }
+    return this.itemList.reduce((acc, item) => acc + Number(item.tot || 0), 0);
+  }
+
   async presentToast(message: string, color: string = 'primary') {
     const toast = await this.toast.create({
       message: message,

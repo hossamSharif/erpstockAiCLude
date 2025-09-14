@@ -140,10 +140,10 @@
                     الخصــم ({{ getCurrencySymbol() }})
                   </th>  
                   <th>الإجمالي بعد الخصم ({{ getCurrencySymbol() }})</th>  
-                  <!-- <th class="sortable-header" (click)="sortBy('payComment')">
+                  <th class="sortable-header" (click)="sortBy('payComment')">
                     <ion-icon [name]="getSortIcon('payComment')" class="sort-icon"></ion-icon>
                     المدفوع
-                  </th> -->
+                  </th>
                   <!-- Hidden pay and change columns -->
                   <th class="sortable-header" (click)="sortBy('payComment')">
                     <ion-icon [name]="getSortIcon('payComment')" class="sort-icon"></ion-icon>
@@ -165,7 +165,7 @@
                   <td>{{(+pay.tot_pr - +pay.discount) | currencyDisplay:'SDG':false}}</td>
                   <!-- Hidden pay and change data -->
               
-                  <!-- <td>{{pay.pay}}</td> -->
+                  <td>{{pay.pay}}</td>
                   <td>{{pay.payComment}}</td>
                   <!-- <td>
                     <ion-button fill="clear" size="small" (click)="getPayInvoDetail(pay ,pay.sub_name, 'edit')">

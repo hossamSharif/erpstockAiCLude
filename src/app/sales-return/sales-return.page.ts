@@ -23,6 +23,7 @@ import * as momentObj from 'moment';
 })
 
 export class SalesReturnPage implements OnInit, OnDestroy {
+  Math = Math;
   @ViewChild("dst") nameField: ElementRef;
   @ViewChild('dstPop') dstPop;
   @ViewChild('qtyId') qtyId;

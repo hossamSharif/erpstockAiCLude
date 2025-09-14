@@ -300,7 +300,7 @@
         <div class="totals-grid">
           <div class="total-row">
             <span class="label">المجموع الفرعي:</span>
-            <span class="value">{{ (itemList.reduce((acc, item) => acc + +item.tot, 0)) | currencyDisplay:'SDG':false }}</span>
+            <span class="value">{{ getSubtotal() | currencyDisplay:'SDG':false }}</span>
           </div>
           <div class="total-row">
             <span class="label">الخصم:</span>

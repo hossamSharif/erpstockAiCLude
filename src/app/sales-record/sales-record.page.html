@@ -164,7 +164,7 @@
                     الخصــم ({{ getCurrencySymbol() }})
                   </th>  
                   <th>الإجمالي بعد الخصم ({{ getCurrencySymbol() }})</th> 
-                  <!-- <th> المدفوع </th>  -->
+                  <th> المدفوع </th> 
 
                   <!-- Hidden pay and change columns -->   
                   <th class="sortable-header" (click)="sortBy(getCommentField())">
@@ -189,7 +189,7 @@
                   <td>{{pay.discount | currencyDisplay:'SDG':false}}</td>
                   <td>{{(+pay.tot_pr - +pay.discount) | currencyDisplay:'SDG':false}}</td>
                   <!-- Hidden pay and change data -->
-                  <!-- <td>{{pay.pay}}</td>  -->
+                  <td>{{pay.pay}}</td> 
                   <td>{{getCommentValue(pay)}}</td>
                   
                   <td>{{pay.user_name}}</td>

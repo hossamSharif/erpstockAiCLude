@@ -905,6 +905,13 @@ export class EditPurchaseReturnPage implements OnInit, OnDestroy {
     }
   }
 
+  getSubtotal(): number {
+    if (!this.itemList || this.itemList.length === 0) {
+      return 0;
+    }
+    return this.itemList.reduce((acc, item) => acc + Number(item.tot || 0), 0);
+  }
+
   calculateChange() {
     this.returnInvo.changee = +(this.returnInvo.tot_pr - +this.returnInvo.discount) - this.returnInvo.pay;
   }

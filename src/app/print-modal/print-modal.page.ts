@@ -47,6 +47,7 @@
 import { Component, OnInit, OnDestroy, Input, ChangeDetectorRef } from '@angular/core';
 import { ModalController, ToastController } from '@ionic/angular';
 import { CurrencyService } from '../services/currency.service';
+import { Storage } from '@ionic/storage';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -57,12 +58,13 @@ import { Subscription } from 'rxjs';
 export class PrintModalPage implements OnInit, OnDestroy {
   @Input() printArr: any;
   @Input() page: any;
-   //mode = 'pos' 
-   mode = 'enhanced' 
+   //mode = 'pos'
+   mode = 'enhanced'
    logoBase64: string = '';
    vehicleBase64: string = '';
    itemImagesBase64: { [key: string]: string } = {};
-   
+   categoryId: number = 1; // Default to category 1
+
    // Image loading state management
    imagesLoaded: boolean = false;
    imageLoadingAttempts: { [key: string]: number } = {};
@@ -82,6 +84,7 @@ export class PrintModalPage implements OnInit, OnDestroy {
     private modalController: ModalController,
     private toast: ToastController,
     private currencyService: CurrencyService,
+    private storage: Storage,
     private cdr: ChangeDetectorRef
   ) {
     this.mode = 'enhanced';
@@ -90,6 +93,7 @@ export class PrintModalPage implements OnInit, OnDestroy {
   async ngOnInit() {
     console.log(this.printArr[0]);
     this.sortItemListAlphabetically();
+    await this.loadCategoryFromStorage();
     await this.loadImages();
     await this.initializeCurrencyForPrint();
   }
@@ -98,6 +102,11 @@ export class PrintModalPage implements OnInit, OnDestroy {
     if (this.currencySubscription) {
       this.currencySubscription.unsubscribe();
     }
+  }
+
+  // Get the current vehicle image path based on categoryId
+  getVehicleImagePath(): string {
+    return this.categoryId !== 1 ? 'assets/imgs/track.jpg' : 'assets/imgs/tuk.jpg';
   }
 
   // Utility method to get the appropriate invoice object
@@ -197,11 +206,27 @@ export class PrintModalPage implements OnInit, OnDestroy {
     return `سعر الصرف المستخدم: 1 ${this.currentCurrency} = ${this.exchangeRate} جنيه سوداني (تاريخ: ${today})`;
   }
 
+  async loadCategoryFromStorage() {
+    try {
+      const storedCategoryId = await this.storage.get('SELECTED_CATEGORY_ID');
+      if (storedCategoryId) {
+        this.categoryId = parseInt(storedCategoryId, 10);
+        console.log('Loaded category ID from storage:', this.categoryId);
+      } else {
+        this.categoryId = 1; // Default to category 1
+        console.log('No category ID in storage, using default:', this.categoryId);
+      }
+    } catch (error) {
+      console.warn('Error loading category from storage:', error);
+      this.categoryId = 1; // Fallback to default
+    }
+  }
+
   sortItemListAlphabetically() {
     if (!this.printArr[0].itemList || this.printArr[0].itemList.length === 0) {
       return;
     }
-    
+
     this.printArr[0].itemList= [...this.printArr[0].itemList].sort((a, b) => {
       const nameA = a.item_name ? a.item_name.toString().toLowerCase() : '';
       const nameB = b.item_name ? b.item_name.toString().toLowerCase() : '';
@@ -232,12 +257,15 @@ export class PrintModalPage implements OnInit, OnDestroy {
         })
     );
     
-    // Load vehicle image with retry mechanism
+    // Load vehicle image with retry mechanism - conditional based on categoryId
+    const vehicleImagePath = this.categoryId !== 1 ? 'assets/imgs/track.jpg' : 'assets/imgs/tuk.jpg';
+    console.log(`Loading vehicle image based on categoryId ${this.categoryId}: ${vehicleImagePath}`);
+
     imageLoadingPromises.push(
-      this.loadImageWithRetry('assets/imgs/tuk.jpg', 'vehicle')
+      this.loadImageWithRetry(vehicleImagePath, 'vehicle')
         .then((base64) => {
           this.vehicleBase64 = base64;
-          console.log('Vehicle image loaded successfully');
+          console.log('Vehicle image loaded successfully:', vehicleImagePath);
         })
         .catch((error) => {
           console.warn('Failed to load vehicle image after retries, using fallback:', error);
@@ -443,14 +471,14 @@ export class PrintModalPage implements OnInit, OnDestroy {
       const printStyles = `
         @page { 
           size: A4; 
-          margin: 10mm; 
+          margin: 15mm 20mm 15mm 20mm; 
         }
         body { 
           font-family: Arial, 'Times New Roman', sans-serif; 
           font-size: 14px; 
           line-height: 1.2; 
           margin: 0; 
-          padding: 5px;
+          padding: 10px 15px;
           direction: rtl;
         }
         .flr { display: block; float: right; }
@@ -515,9 +543,26 @@ export class PrintModalPage implements OnInit, OnDestroy {
           page-break-before: avoid;
         }
         td, th {
-          padding: 2px 4px;
+          padding: 3px 6px;
           line-height: 1.1;
+          overflow: hidden;
+          word-wrap: break-word;
         }
+        /* Column width adjustments for better item name display */
+        table th:nth-child(1), table td:nth-child(1) { width: 8%; } /* Serial number */
+        table th:nth-child(2), table td:nth-child(2) { width: 40%; text-align: right !important; } /* Item name - wider */
+        table th:nth-child(3), table td:nth-child(3) { width: 12%; } /* Quantity */
+        table th:nth-child(4), table td:nth-child(4) { width: 15%; } /* Unit price */
+        table th:nth-child(5), table td:nth-child(5) { width: 15%; } /* Discount or VAT% */
+        table th:nth-child(6), table td:nth-child(6) { width: 15%; } /* VAT or Total */
+        table th:nth-child(7), table td:nth-child(7) { width: 15%; } /* Total */
+        
+        /* For 5-column tables (purchase orders, etc.) */
+        table.five-column th:nth-child(1), table.five-column td:nth-child(1) { width: 8%; }
+        table.five-column th:nth-child(2), table.five-column td:nth-child(2) { width: 45%; text-align: right !important; }
+        table.five-column th:nth-child(3), table.five-column td:nth-child(3) { width: 12%; }
+        table.five-column th:nth-child(4), table.five-column td:nth-child(4) { width: 17%; }
+        table.five-column th:nth-child(5), table.five-column td:nth-child(5) { width: 18%; }
       `;
       
       mywindow.document.write(printStyles);
@@ -570,7 +615,12 @@ export class PrintModalPage implements OnInit, OnDestroy {
       {
         pattern: /src=['"]assets\/imgs\/tuk\.jpg['"]/gi,
         replacement: `src="${this.vehicleBase64}"`,
-        name: 'vehicle-direct'
+        name: 'vehicle-tuk-direct'
+      },
+      {
+        pattern: /src=['"]assets\/imgs\/track\.jpg['"]/gi,
+        replacement: `src="${this.vehicleBase64}"`,
+        name: 'vehicle-track-direct'
       },
       // Handle variations with different quote styles
       {
@@ -581,7 +631,12 @@ export class PrintModalPage implements OnInit, OnDestroy {
       {
         pattern: /src=assets\/imgs\/tuk\.jpg/gi,
         replacement: `src="${this.vehicleBase64}"`,
-        name: 'vehicle-no-quotes'
+        name: 'vehicle-tuk-no-quotes'
+      },
+      {
+        pattern: /src=assets\/imgs\/track\.jpg/gi,
+        replacement: `src="${this.vehicleBase64}"`,
+        name: 'vehicle-track-no-quotes'
       },
       // Handle Angular property binding results (after rendering)
       {
@@ -592,7 +647,12 @@ export class PrintModalPage implements OnInit, OnDestroy {
       {
         pattern: /src=['"][^'"]*assets\/imgs\/tuk\.jpg[^'"]*['"]/gi,
         replacement: `src="${this.vehicleBase64}"`,
-        name: 'vehicle-property-binding'
+        name: 'vehicle-tuk-property-binding'
+      },
+      {
+        pattern: /src=['"][^'"]*assets\/imgs\/track\.jpg[^'"]*['"]/gi,
+        replacement: `src="${this.vehicleBase64}"`,
+        name: 'vehicle-track-property-binding'
       },
       // Handle fallback paths that might be in the HTML
       {
@@ -603,7 +663,12 @@ export class PrintModalPage implements OnInit, OnDestroy {
       {
         pattern: /assets\/imgs\/tuk\.jpg/gi,
         replacement: this.vehicleBase64,
-        name: 'vehicle-any-occurrence'
+        name: 'vehicle-tuk-any-occurrence'
+      },
+      {
+        pattern: /assets\/imgs\/track\.jpg/gi,
+        replacement: this.vehicleBase64,
+        name: 'vehicle-track-any-occurrence'
       }
     ];
     

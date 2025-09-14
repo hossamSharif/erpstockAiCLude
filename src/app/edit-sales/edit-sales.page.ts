@@ -95,10 +95,14 @@ calculatedDiscountAmount: number = 0;
   currentLoadingMessage: string = '';
   private currentLoader: any = null;
   
+  // Data initialization flag to prevent re-initialization from query parameters
+  private dataInitialized: boolean = false;
+  
   constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private cdr: ChangeDetectorRef, private currencyService: CurrencyService) {
     this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
     this.route.queryParams.subscribe(params => {
-      if (params && params.payInvo) {
+      // Only initialize from parameters if data hasn't been loaded yet
+      if (params && params.payInvo && !this.dataInitialized) {
         this.payInvo = JSON.parse(params.payInvo);
         this.selectedAccount.sub_name = JSON.parse(params.sub_name);
         this.user_info = JSON.parse(params.user_info);
@@ -107,12 +111,15 @@ calculatedDiscountAmount: number = 0;
         this.resortItemList()
         //console.log('lksjda',this.payInvo, this.store_info,  this.user_info ,this.itemList ,this.selectedAccount.sub_name )
        // this.discountPerc = ((+this.payInvo.discount /+this.payInvo.tot_pr) * 100 ).toFixed(2)
-      this.initializeDiscountValues();
-       
+        this.initializeDiscountValues();
+        
         this.getAppInfo()
+        
+        // Mark data as initialized to prevent re-initialization
+        this.dataInitialized = true;
       }
     });
-   
+    console.log('lksjda')
     this.selectedItem = {
       id:undefined,
       dateCreated:"",
@@ -169,6 +176,9 @@ calculatedDiscountAmount: number = 0;
     if (this.currencySubscription) {
       this.currencySubscription.unsubscribe();
     }
+    
+    // Reset flag when component is actually destroyed (not just navigating to subpages)
+    this.dataInitialized = false;
   }
 
   async initializeCurrency() {
@@ -438,21 +448,22 @@ generateRandom2(role):any{
 
 
 async  performSync(){
-  
-  
+  // Ensure all loading is dismissed before navigation
+  await this.hideLoading();
   this.back()
    }
 
 
    async  performSyncDel(){
-    
-     
+    // Ensure all loading is dismissed before navigation
+    await this.hideLoading();
     this.back()
     }
 
     async  performSyncDelInitialMode(){
+     // Ensure all loading is dismissed before navigation
+     await this.hideLoading();
      this.presentToast('تم الحفظ بنجاح' , 'success')
-    
     this.back()
     }
  
@@ -1143,14 +1154,12 @@ async updateItemDetail(item){
     if(this.radioVal2 == 0){
        console.log('update' , this.payInvo)
       if (this.validate() == true) {
-       this.presentLoadingWithOptions('جاري حفظ البيانات ...')
        this.saveInvoInit()  
        } 
 
     }else if(this.radioVal2 == 1){ 
        console.log('update' , this.payInvo)
     if (this.validate() == true) {
-       this.presentLoadingWithOptions('جاري حفظ البيانات ...')
        this.updateInvo() 
     } 
 
@@ -1218,14 +1227,14 @@ async updateItemDetail(item){
     this.saveitemList()    
   }else{
    this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
-    this.loadingController.dismiss()
+    this.hideLoading()
   })
 
   } 
 },(err) => {
   //console.log(err);
   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
-    this.loadingController.dismiss()
+    this.hideLoading()
   })
   
  }) 
@@ -1264,8 +1273,9 @@ this.api.saveSalesitemList(this.itemList).subscribe(data=>{
 }, (err) => {
   //console.log(err);
   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+  this.hideLoading()
 }, () => {
-  this.loadingController.dismiss()
+  this.hideLoading()
 }
 )      
 }
@@ -1440,9 +1450,9 @@ deleteSalesitemList(){
  },(err) => {
    //console.log(err);
    this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
-   
+   this.hideLoading()
   },() => {
-    this.loadingController.dismiss()
+    this.hideLoading()
   }) 
 }
 

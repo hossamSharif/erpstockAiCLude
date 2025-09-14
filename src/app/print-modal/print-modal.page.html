@@ -283,7 +283,7 @@
       <!-- Header with Images and Title -->
       <div style="display: table; width: 100%; margin-bottom: 12px;">
         <div style="display: table-cell; width: 150px; text-align: left; vertical-align: middle;">
-          <img [src]="vehicleBase64 || 'assets/imgs/tuk.jpg'" style="width: 120px; height: 80px; object-fit: contain;" alt="Vehicle">
+          <img [src]="vehicleBase64 || getVehicleImagePath()" style="width: 120px; height: 80px; object-fit: contain;" alt="Vehicle">
         </div>
         <div style="display: table-cell; text-align: center; vertical-align: middle;">
           <h2 style="margin: 5px 0 0 0; font-size: 30px;">   <strong>GVS</strong>      </h2>
@@ -467,7 +467,7 @@
 
             <div class="ion-margin rtl"  >
               <div class="ion-margin">
-                <table class="table" >
+                <table class="table five-column" >
                 <thead>
                   <tr>
                   <th class="th">التسلسل</th>
@@ -584,7 +584,7 @@
 
           <div class="ion-margin rtl"  >
             <div class="ion-margin">
-              <table class="table" >
+              <table class="table five-column" >
               <thead>
                 <tr>
                 <th class="th">التسلسل</th>
@@ -687,7 +687,7 @@
 
     <div class="ion-margin rtl"  >
       <div class="ion-margin">
-        <table class="table" >
+        <table class="table five-column" >
         <thead>
           <tr>
           <th class="th">No</th>

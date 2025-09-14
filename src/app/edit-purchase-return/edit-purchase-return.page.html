@@ -166,7 +166,7 @@
             <div class="summary-grid">
               <div class="summary-row">
                 <label>المجموع الفرعي:</label>
-                <span>{{ formatBalance(itemList.reduce((acc, item) => acc + +item.tot, 0)) }} {{ getCurrencySymbol() }}</span>
+                <span>{{ formatBalance(getSubtotal()) }} {{ getCurrencySymbol() }}</span>
               </div>
               
               <div class="summary-row" *ngIf="discountType === 'percentage' && discountPerc > 0">

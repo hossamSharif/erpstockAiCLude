@@ -1537,6 +1537,13 @@ export class PurchaseReturnPage implements OnInit, OnDestroy {
     }
   }
 
+  getSubtotal(): number {
+    if (!this.itemList || this.itemList.length === 0) {
+      return 0;
+    }
+    return this.itemList.reduce((acc, item) => acc + Number(item.tot || 0), 0);
+  }
+
   private async presentConfirmAlert(header: string, message: string, confirmText: string, cancelText: string): Promise<boolean> {
     return new Promise(async (resolve) => {
       const alert = await this.alertController.create({

@@ -81,7 +81,6 @@
       <div class="section" *ngIf="selectedOriginalInvoice">
         <app-account-selector
           [accountType]="'supplier'"
-          [preSelectedAccount]="selectedAccount"
           (accountSelected)="onAccountSelected($event)"
           (balanceLoaded)="onAccountBalanceLoaded($event)">
         </app-account-selector>
@@ -305,13 +304,13 @@
       <div class="section" *ngIf="itemList.length > 0">
         <ion-card>
           <ion-card-header>
-            <ion-card-title class="section-title">ملخص فاتورة الإرجاع</ion-title>
+            <ion-card-title class="section-title">ملخص فاتورة الإرجاع</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <div class="summary-grid">
               <div class="summary-row">
                 <label>المجموع الفرعي:</label>
-                <span>{{ formatBalance(itemList.reduce((acc, item) => acc + +item.tot, 0)) }} {{ getCurrencySymbol() }}</span>
+                <span>{{ formatBalance(getSubtotal()) }} {{ getCurrencySymbol() }}</span>
               </div>
               
               <div class="summary-row" *ngIf="discountType === 'percentage' && discountPerc > 0">

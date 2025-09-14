@@ -129,9 +129,26 @@ h4, h3 {
     
     // Reduce cell padding for more compact layout
     th, td {
-      padding: 2px 4px !important;
+      padding: 3px 6px !important;
       line-height: 1.1 !important;
       font-size: 14px !important;
+      overflow: hidden !important;
+      word-wrap: break-word !important;
+    }
+    
+    // Column widths for all tables
+    th:nth-child(1), td:nth-child(1) { width: 8% !important; } /* Serial number */
+    th:nth-child(2), td:nth-child(2) { width: 40% !important; text-align: right !important; padding-right: 8px !important; } /* Item name - wider */
+    th:nth-child(3), td:nth-child(3) { width: 12% !important; } /* Quantity */
+    th:nth-child(4), td:nth-child(4) { width: 15% !important; } /* Unit price */
+    th:nth-child(5), td:nth-child(5) { width: 15% !important; } /* Discount/VAT% or Total for 5-column */
+    th:nth-child(6), td:nth-child(6) { width: 10% !important; } /* VAT */
+    th:nth-child(7), td:nth-child(7) { width: 15% !important; } /* Total */
+    
+    // Allow item name column to wrap for long names
+    th:nth-child(2), td:nth-child(2) {
+      white-space: normal !important;
+      word-wrap: break-word !important;
     }
   }
   
