@@ -1774,4 +1774,114 @@ getTswiaByDate(store_id,from ,yearId){
     return this.http.get(this.api+'purchase_returns/checkExistingReturns.php', {params: params})
   }
 
+  // ITEM ANALYTICS API METHODS
+  // Get comprehensive item sales analytics
+  getItemSalesAnalytics(store_id: any, yearId: any, startDate?: string, endDate?: string): Observable<any> {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('yearId', yearId)
+
+    if (startDate && startDate.trim() !== '') {
+      params = params.append('start_date', startDate.trim())
+    }
+
+    if (endDate && endDate.trim() !== '') {
+      params = params.append('end_date', endDate.trim())
+    }
+
+    return this.http.get(this.api + 'analytics/getItemSalesAnalytics.php', {params: params})
+  }
+
+  // Get comprehensive item sales analytics with limit parameter
+  getItemSalesAnalyticsWithLimit(store_id: any, yearId: any, startDate?: string, endDate?: string, limit?: number): Observable<any> {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('yearId', yearId)
+
+    if (startDate && startDate.trim() !== '') {
+      params = params.append('start_date', startDate.trim())
+    }
+
+    if (endDate && endDate.trim() !== '') {
+      params = params.append('end_date', endDate.trim())
+    }
+
+    if (limit && limit > 0) {
+      params = params.append('limit', limit.toString())
+    }
+
+    return this.http.get(this.api + 'analytics/getItemSalesAnalytics.php', {params: params})
+  }
+
+  // Get top selling items by quantity
+  getTopSellingItemsByQuantity(store_id: any, yearId: any, limit: number = 50, startDate?: string, endDate?: string): Observable<any> {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('yearId', yearId)
+    params = params.append('limit', limit.toString())
+
+    if (startDate && startDate.trim() !== '') {
+      params = params.append('start_date', startDate.trim())
+    }
+
+    if (endDate && endDate.trim() !== '') {
+      params = params.append('end_date', endDate.trim())
+    }
+
+    return this.http.get(this.api + 'analytics/getTopSellingItemsByQuantity.php', {params: params})
+  }
+
+  // Get top selling items by revenue (pay_price * quantity)
+  getTopSellingItemsByRevenue(store_id: any, yearId: any, limit: number = 50, startDate?: string, endDate?: string): Observable<any> {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('yearId', yearId)
+    params = params.append('limit', limit.toString())
+
+    if (startDate && startDate.trim() !== '') {
+      params = params.append('start_date', startDate.trim())
+    }
+
+    if (endDate && endDate.trim() !== '') {
+      params = params.append('end_date', endDate.trim())
+    }
+
+    return this.http.get(this.api + 'analytics/getTopSellingItemsByRevenue.php', {params: params})
+  }
+
+  // Get item sales trends for specific item
+  getItemSalesTrends(store_id: any, item_id: any, yearId: any, startDate?: string, endDate?: string): Observable<any> {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('item_id', item_id)
+    params = params.append('yearId', yearId)
+
+    if (startDate && startDate.trim() !== '') {
+      params = params.append('start_date', startDate.trim())
+    }
+
+    if (endDate && endDate.trim() !== '') {
+      params = params.append('end_date', endDate.trim())
+    }
+
+    return this.http.get(this.api + 'analytics/getItemSalesTrends.php', {params: params})
+  }
+
+  // Get sales summary analytics
+  getSalesSummaryAnalytics(store_id: any, yearId: any, startDate?: string, endDate?: string): Observable<any> {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('yearId', yearId)
+
+    if (startDate && startDate.trim() !== '') {
+      params = params.append('start_date', startDate.trim())
+    }
+
+    if (endDate && endDate.trim() !== '') {
+      params = params.append('end_date', endDate.trim())
+    }
+
+    return this.http.get(this.api + 'analytics/getSalesSummaryAnalytics.php', {params: params})
+  }
+
 }

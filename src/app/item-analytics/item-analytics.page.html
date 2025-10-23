@@ -1,0 +1,300 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>تحليل الأصناف</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="exportToPDF()">
+        <ion-icon name="document-text-outline"></ion-icon>
+      </ion-button>
+      <ion-button fill="clear" (click)="exportToExcel()">
+        <ion-icon name="download-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" dir="rtl">
+
+  <!-- Filter Section -->
+  <ion-card class="filter-card">
+    <ion-card-content>
+      <div class="filter-header">
+        <h2>خيارات التحليل</h2>
+      </div>
+
+      <!-- Analysis Type Selection -->
+      <ion-segment [(ngModel)]="analysisType" (ionChange)="onAnalysisTypeChange()">
+        <ion-segment-button value="0">
+          <ion-label>جميع الأوقات</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="1">
+          <ion-label>نطاق زمني</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+
+      <!-- Date Range (only visible when analysisType is 1) -->
+      <div class="date-range" *ngIf="analysisType == 1">
+        <ion-row>
+          <ion-col size="6">
+            <ion-item class="date-input-item">
+              <ion-label position="stacked">من تاريخ</ion-label>
+              <ion-input
+                type="date"
+                [(ngModel)]="dateFrom"
+                (ionBlur)="onAnalysisTypeChange()"
+                (ionChange)="onDateChange()"
+                class="date-input">
+              </ion-input>
+            </ion-item>
+          </ion-col>
+          <ion-col size="6">
+            <ion-item class="date-input-item">
+              <ion-label position="stacked">إلى تاريخ</ion-label>
+              <ion-input
+                type="date"
+                [(ngModel)]="dateTo"
+                (ionBlur)="onAnalysisTypeChange()"
+                (ionChange)="onDateChange()"
+                class="date-input">
+              </ion-input>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+      </div>
+
+      <!-- Sort Options -->
+      <ion-row class="sort-options">
+        <ion-col size="6">
+          <ion-item>
+            <ion-label>ترتيب حسب</ion-label>
+            <ion-select [(ngModel)]="sortBy" (ionChange)="onSortChange()">
+              <ion-select-option value="quantity">الكمية</ion-select-option>
+              <ion-select-option value="revenue">الإيرادات</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+        <ion-col size="6">
+          <ion-item>
+            <ion-label>ترتيب</ion-label>
+            <ion-select [(ngModel)]="sortDirection" (ionChange)="onSortChange()">
+              <ion-select-option value="desc">الأعلى أولاً</ion-select-option>
+              <ion-select-option value="asc">الأقل أولاً</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <!-- Result Limit Options -->
+      <ion-row class="limit-options">
+        <ion-col size="12" size-md="6">
+          <ion-item>
+            <ion-label>عدد النتائج</ion-label>
+            <ion-select [(ngModel)]="resultLimit" (ionChange)="onLimitChange()">
+              <ion-select-option value="all">جميع الأصناف</ion-select-option>
+              <ion-select-option value="25">أفضل 25</ion-select-option>
+              <ion-select-option value="50">أفضل 50</ion-select-option>
+              <ion-select-option value="100">أفضل 100</ion-select-option>
+              <ion-select-option value="200">أفضل 200</ion-select-option>
+              <ion-select-option value="500">أفضل 500</ion-select-option>
+              <ion-select-option value="custom">مخصص</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+        <ion-col size="12" size-md="6" *ngIf="resultLimit === 'custom'">
+          <ion-item>
+            <ion-label position="stacked">عدد مخصص</ion-label>
+            <ion-input
+              type="number"
+              [(ngModel)]="customLimit"
+              (ionBlur)="onCustomLimitChange()"
+              (keyup.enter)="onCustomLimitChange()"
+              placeholder="أدخل العدد (مثال: 75)"
+              min="1"
+              max="10000">
+            </ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards" *ngIf="!loading && !showEmpty">
+    <ion-row>
+      <ion-col size="12" size-md="6" size-lg="3">
+        <ion-card class="summary-card">
+          <ion-card-content>
+            <div class="summary-icon">
+              <ion-icon name="cube-outline"></ion-icon>
+            </div>
+            <div class="summary-content">
+              <h3>{{ formatNumber(summaryData.totalUniqueItems) }}</h3>
+              <p>عدد الأصناف</p>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="12" size-md="6" size-lg="3">
+        <ion-card class="summary-card">
+          <ion-card-content>
+            <div class="summary-icon">
+              <ion-icon name="layers-outline"></ion-icon>
+            </div>
+            <div class="summary-content">
+              <h3>{{ formatNumber(summaryData.totalItemsSold) }}</h3>
+              <p>إجمالي الكمية المبيعة</p>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="12" size-md="6" size-lg="3">
+        <ion-card class="summary-card">
+          <ion-card-content>
+            <div class="summary-icon">
+              <ion-icon name="cash-outline"></ion-icon>
+            </div>
+            <div class="summary-content">
+              <h3>{{ formatCurrency(summaryData.totalRevenue) }}</h3>
+              <p>إجمالي الإيرادات</p>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="12" size-md="6" size-lg="3">
+        <ion-card class="summary-card">
+          <ion-card-content>
+            <div class="summary-icon">
+              <ion-icon name="trending-up-outline"></ion-icon>
+            </div>
+            <div class="summary-content">
+              <h3>{{ formatCurrency(summaryData.averageItemPrice) }}</h3>
+              <p>متوسط سعر الصنف</p>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <ion-spinner></ion-spinner>
+    <p>جاري تحميل البيانات التحليلية...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="showEmpty && !loading">
+    <ion-icon name="analytics-outline"></ion-icon>
+    <h3>لا توجد بيانات للتحليل</h3>
+    <p>لم يتم العثور على بيانات مبيعات في الفترة المحددة</p>
+  </div>
+
+  <!-- Analytics Data Table -->
+  <ion-card *ngIf="!loading && !showEmpty && filteredData.length > 0">
+    <ion-card-header>
+      <ion-card-title>
+        تفاصيل تحليل {{ sortBy === 'quantity' ? 'الكمية' : 'الإيرادات' }}
+      </ion-card-title>
+      <ion-card-subtitle class="performance-indicator">
+        عرض {{ getDisplayedItemsText() }}
+      </ion-card-subtitle>
+    </ion-card-header>
+
+    <ion-card-content>
+      <div class="table-container" [class.mobile-view]="device === 'mobile'">
+
+        <!-- Mobile Cards View -->
+        <div class="mobile-cards" *ngIf="device === 'mobile'">
+          <ion-card *ngFor="let item of filteredData; let i = index" class="item-card">
+            <ion-card-content>
+              <div class="item-header">
+                <h3>{{ item.item_name }}</h3>
+                <ion-badge [color]="sortBy === 'quantity' ? 'primary' : 'success'">
+                  #{{ i + 1 }}
+                </ion-badge>
+              </div>
+
+              <div class="item-details">
+                <div class="detail-row" *ngIf="item.brand">
+                  <span class="label">الماركة:</span>
+                  <span class="value">{{ item.brand }}</span>
+                </div>
+                <div class="detail-row" *ngIf="item.model">
+                  <span class="label">الموديل:</span>
+                  <span class="value">{{ item.model }}</span>
+                </div>
+                <div class="detail-row" *ngIf="item.part_no">
+                  <span class="label">رقم القطعة:</span>
+                  <span class="value">{{ item.part_no }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">إجمالي الكمية:</span>
+                  <span class="value highlight">{{ formatNumber(item.total_quantity) }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">إجمالي الإيرادات:</span>
+                  <span class="value highlight">{{ formatCurrency(item.total_revenue) }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">متوسط السعر:</span>
+                  <span class="value">{{ formatCurrency(item.average_price) }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">عدد المبيعات:</span>
+                  <span class="value">{{ formatNumber(item.sales_count) }}</span>
+                </div>
+                <div class="detail-row" *ngIf="item.last_sale_date">
+                  <span class="label">آخر عملية بيع:</span>
+                  <span class="value">{{ item.last_sale_date | date:'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </div>
+
+        <!-- Desktop Table View -->
+        <table class="analytics-table" *ngIf="device === 'desktop'">
+          <thead>
+            <tr>
+              <th>الترتيب</th>
+              <th>اسم الصنف</th>
+              <th>الماركة</th>
+              <th>الموديل</th>
+              <th>رقم القطعة</th>
+              <th>إجمالي الكمية</th>
+              <th>إجمالي الإيرادات</th>
+              <th>متوسط السعر</th>
+              <th>عدد المبيعات</th>
+              <th>آخر عملية بيع</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of filteredData; let i = index"
+                [class.highlight-row]="i < 3">
+              <td>
+                <ion-badge [color]="i < 3 ? (sortBy === 'quantity' ? 'primary' : 'success') : 'medium'">
+                  {{ i + 1 }}
+                </ion-badge>
+              </td>
+              <td class="item-name">{{ item.item_name }}</td>
+              <td>{{ item.brand || '-' }}</td>
+              <td>{{ item.model || '-' }}</td>
+              <td>{{ item.part_no || '-' }}</td>
+              <td class="quantity">{{ formatNumber(item.total_quantity) }}</td>
+              <td class="revenue">{{ formatCurrency(item.total_revenue) }}</td>
+              <td class="price">{{ formatCurrency(item.average_price) }}</td>
+              <td>{{ formatNumber(item.sales_count) }}</td>
+              <td>{{ item.last_sale_date | date:'dd/MM/yyyy' || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>

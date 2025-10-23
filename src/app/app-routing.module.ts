@@ -247,6 +247,10 @@ const routes: Routes = [
   {
     path: 'currency-management',
     loadChildren: () => import('./currency-management/currency-management.module').then( m => m.CurrencyManagementPageModule)
+  },
+  {
+    path: 'item-analytics',
+    loadChildren: () => import('./item-analytics/item-analytics.module').then( m => m.ItemAnalyticsPageModule)
   }
   
 ];

@@ -14,7 +14,7 @@ export interface ExportConfig {
   data: any[];
   columns: ExportColumn[];
   userName: string;
-  pageType: 'sales-record' | 'purchase-record' | 'item-stock' | 'cash2' | 'statement2' | 'spend-record2' | 'balance-sheet2' | 'sub-account2';
+  pageType: 'sales-record' | 'purchase-record' | 'item-stock' | 'cash2' | 'statement2' | 'spend-record2' | 'balance-sheet2' | 'sub-account2' | 'item-analytics';
   currentDate?: string;
   maxRows?: number;
 }
@@ -62,19 +62,43 @@ export class ExportService {
   }
 
 
-  private formatDate(date: Date, format: string = 'yyyy-MM-dd HH:mm'): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    
+  private formatDate(date: Date | string, format: string = 'yyyy-MM-dd HH:mm'): string {
+    // Handle null, undefined, or empty string values
+    if (!date) {
+      return '';
+    }
+
+    let dateObj: Date;
+
+    // Convert string to Date if needed
+    if (typeof date === 'string') {
+      dateObj = new Date(date);
+      // Check if the date is valid
+      if (isNaN(dateObj.getTime())) {
+        return date; // Return original string if can't parse
+      }
+    } else if (date instanceof Date) {
+      dateObj = date;
+      // Check if the date is valid
+      if (isNaN(dateObj.getTime())) {
+        return '';
+      }
+    } else {
+      return '';
+    }
+
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const hours = String(dateObj.getHours()).padStart(2, '0');
+    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+
     if (format === 'yyyy-MM-dd HH:mm') {
       return `${year}-${month}-${day} ${hours}:${minutes}`;
     } else if (format === 'yyyy-MM-dd') {
       return `${year}-${month}-${day}`;
     }
-    
+
     return `${year}-${month}-${day}`;
   }
 
@@ -126,30 +150,23 @@ export class ExportService {
       let useExternalFont = false;
       
       try {
-        console.log('Attempting to load external Arabic font...');
-        // Try loading a simple Arabic font from online
-        const fontResponse = await fetch('https://fonts.gstatic.com/s/cairo/v28/SLXGc1nY6HkvalIkTp2mxdt0UX8gfO8_19co.woff2');
-        if (fontResponse.ok) {
-          const fontBytes = await fontResponse.arrayBuffer();
-          font = await pdfDoc.embedFont(fontBytes);
-          fontBold = font; // Use same font for bold
-          useExternalFont = true;
-          console.log('✅ Successfully loaded external Arabic font');
-        } else {
-          throw new Error('External font loading failed');
-        }
-      } catch (externalFontError) {
-        console.warn('External Arabic font failed, trying TimesRoman:', externalFontError);
+        // Use TimesRoman first as it has better Unicode support than external fonts
+        console.log('Using TimesRoman font with Unicode support...');
+        font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+        fontBold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+        console.log('✅ Using TimesRoman font with Unicode support');
+      } catch (timesError) {
+        console.warn('TimesRoman failed, trying Helvetica:', timesError);
         try {
-          // Fallback to TimesRoman which has some Unicode support
-          font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-          fontBold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
-          console.log('✅ Using TimesRoman font');
-        } catch (timesError) {
-          // Final fallback to Helvetica
+          // Fallback to Helvetica
           font = await pdfDoc.embedFont(StandardFonts.Helvetica);
           fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-          console.log('⚠️ Using Helvetica font as final fallback');
+          console.log('✅ Using Helvetica font as fallback');
+        } catch (helveticaError) {
+          // Final fallback to Courier
+          font = await pdfDoc.embedFont(StandardFonts.Courier);
+          fontBold = await pdfDoc.embedFont(StandardFonts.CourierBold);
+          console.log('⚠️ Using Courier font as final fallback');
         }
       }
       
@@ -233,82 +250,48 @@ export class ExportService {
         
         console.log(`📝 Drawing header: "${headerText}" (Font: ${useExternalFont ? 'Arabic' : 'Standard'})`);
         
-        // Multiple strategies to render Arabic text
-        let textRendered = false;
-        
-        // Strategy 1: Try with original text (works with Arabic fonts)
-        if (!textRendered) {
+        // Simple and reliable text rendering approach
+        try {
+          // Calculate text position for RTL layout (rough estimation)
+          const estimatedWidth = headerText.length * (textSize * 0.6);
+          const textX = currentX + colWidth - estimatedWidth - 10;
+
+          page.drawText(headerText, {
+            x: Math.max(currentX + 5, textX), // Ensure text doesn't go off-screen
+            y: currentY - 18,
+            size: textSize,
+            font: fontBold,
+            color: rgb(1, 1, 1)
+          });
+
+          console.log(`✅ Header "${headerText}" rendered successfully`);
+        } catch (error) {
+          console.warn(`Header rendering failed for "${headerText}", trying with regular font:`, error);
           try {
-            const textWidth = this.safeCalculateTextWidth(font, headerText, textSize);
-            const textX = currentX + colWidth - textWidth - 10;
-            
+            // Fallback with regular font and smaller size
             page.drawText(headerText, {
-              x: Math.max(currentX + 5, textX),
+              x: currentX + 5,
               y: currentY - 18,
-              size: textSize,
-              font: fontBold,
+              size: Math.max(textSize - 2, 8), // Smaller size
+              font: font, // Use regular font instead of bold
               color: rgb(1, 1, 1)
             });
-            
-            textRendered = true;
-            console.log(`✅ Header "${headerText}" rendered successfully`);
-          } catch (error) {
-            console.warn(`Strategy 1 failed for "${headerText}":`, error);
-          }
-        }
-        
-        // Strategy 2: Try with cleaned Arabic text (remove problematic characters)
-        if (!textRendered && useExternalFont) {
-          try {
-            const cleanedText = this.cleanArabicForRendering(headerText);
-            const textWidth = this.safeCalculateTextWidth(font, cleanedText, textSize);
-            const textX = currentX + colWidth - textWidth - 10;
-            
-            page.drawText(cleanedText, {
-              x: Math.max(currentX + 5, textX),
-              y: currentY - 18,
-              size: textSize,
-              font: fontBold,
-              color: rgb(1, 1, 1)
-            });
-            
-            textRendered = true;
-            console.log(`✅ Header "${cleanedText}" rendered with cleaned text`);
-          } catch (error) {
-            console.warn(`Strategy 2 failed for "${headerText}":`, error);
-          }
-        }
-        
-        // Strategy 3: For non-Arabic fonts, keep trying the original text but with error handling
-        if (!textRendered) {
-          try {
-            // Simple approach: draw text and let the font handle what it can
-            page.drawText(headerText, {
-              x: currentX + 10,
-              y: currentY - 18,
-              size: textSize,
-              font: fontBold,
-              color: rgb(1, 1, 1)
-            });
-            
-            textRendered = true;
-            console.log(`⚠️ Header "${headerText}" rendered with standard approach`);
-          } catch (error) {
-            console.error(`All strategies failed for "${headerText}":`, error);
-            // As absolute last resort, show the original Arabic text even if it doesn't render perfectly
+            console.log(`⚠️ Header "${headerText}" rendered with fallback approach`);
+          } catch (finalError) {
+            // If all else fails, use English column names
+            const englishHeaders = ['Item Name', 'Brand', 'Model', 'Part No', 'Quantity', 'Revenue', 'Avg Price', 'Sales', 'Last Sale'];
+            const fallbackText = englishHeaders[index] || `Col ${index + 1}`;
             try {
-              page.drawText(headerText, {
+              page.drawText(fallbackText, {
                 x: currentX + 5,
                 y: currentY - 18,
-                size: 9, // Smaller size might work better
-                font: font, // Use regular font instead of bold
+                size: Math.max(textSize - 2, 8),
+                font: font,
                 color: rgb(1, 1, 1)
               });
-              textRendered = true;
-              console.log(`⚠️ Header rendered with minimal approach`);
-            } catch (finalError) {
-              console.error(`Final attempt failed for "${headerText}":`, finalError);
-              // Don't render anything rather than showing "Col 1", "Col 2"
+              console.log(`⚠️ Header rendered with English fallback: "${fallbackText}"`);
+            } catch (englishError) {
+              console.error(`All rendering attempts failed for header ${index}:`, englishError);
             }
           }
         }
@@ -615,25 +598,37 @@ export class ExportService {
 
   private safeCalculateTextWidth(font: any, text: string, size: number): number {
     try {
-      return font.widthOfTextAtSize(text, size);
+      if (!font || !text || !size) {
+        return (text?.length || 0) * (size || 12) * 0.6;
+      }
+      if (font.widthOfTextAtSize) {
+        return font.widthOfTextAtSize(text, size);
+      } else {
+        return text.length * size * 0.6;
+      }
     } catch (error) {
       // Fallback calculation based on character count
-      return text.length * size * 0.6;
+      return (text?.length || 0) * (size || 12) * 0.6;
     }
   }
 
   private cleanArabicForRendering(text: string): string {
-    if (!text) return text;
-    
-    // Remove problematic characters that might cause rendering issues
-    return text
-      .replace(/[\u064B-\u0652]/g, '') // Remove most diacritics
-      .replace(/[\u0653-\u0655]/g, '') // Remove additional marks  
-      .replace(/[\u0670\u0640]/g, '') // Remove elongation marks
-      .replace(/\u200C/g, '') // Remove zero-width non-joiner
-      .replace(/\u200D/g, '') // Remove zero-width joiner
-      .normalize('NFKC') // Normalize Unicode
-      .trim();
+    if (!text || typeof text !== 'string') return text || '';
+
+    try {
+      // Remove problematic characters that might cause rendering issues
+      return text
+        .replace(/[\u064B-\u0652]/g, '') // Remove most diacritics
+        .replace(/[\u0653-\u0655]/g, '') // Remove additional marks
+        .replace(/[\u0670\u0640]/g, '') // Remove elongation marks
+        .replace(/\u200C/g, '') // Remove zero-width non-joiner
+        .replace(/\u200D/g, '') // Remove zero-width joiner
+        .normalize('NFKC') // Normalize Unicode
+        .trim();
+    } catch (error) {
+      // If any error occurs during cleaning, return the original text
+      return text || '';
+    }
   }
 
   private detectArabicText(text: string): boolean {
@@ -2591,7 +2586,8 @@ export class ExportService {
       'statement2': 'كشف الحساب',
       'spend-record2': 'تقرير المصروفات',
       'balance-sheet2': 'الميزانية العمومية',
-      'sub-account2': 'تقرير الحسابات الفرعية'
+      'sub-account2': 'تقرير الحسابات الفرعية',
+      'item-analytics': 'تقرير تحليل الأصناف'
     };
     
     return titles[pageType] || 'تقرير';

@@ -645,31 +645,54 @@ qtyClick(i){
 }
 
 hideMe(i){
-  this.showMe = null 
+  this.showMe = null
 }
 
-    editCell(i){
+    // Real-time calculation as user types in cell
+    onCellValueChange(i) {
       const displayList = this.getDisplayItemList();
       const itemToEdit = displayList[i];
-      
+
       // Find the corresponding item in the original itemList
-      const originalIndex = this.itemList.findIndex(item => 
-        item.item_name === itemToEdit.item_name && 
+      const originalIndex = this.itemList.findIndex(item =>
+        item.item_name === itemToEdit.item_name &&
         item.pay_price === itemToEdit.pay_price
       );
-      
+
       if (originalIndex !== -1 && +displayList[i].quantity > 0 && +displayList[i].pay_price > 0) {
-        // Update both the display list and original list
-        displayList[i].tot = +displayList[i].quantity * +displayList[i].pay_price;
+        // Update totals in real-time
+        displayList[i].tot = (+displayList[i].quantity * +displayList[i].pay_price).toFixed(2);
         this.itemList[originalIndex].quantity = displayList[i].quantity;
         this.itemList[originalIndex].pay_price = displayList[i].pay_price;
         this.itemList[originalIndex].tot = displayList[i].tot;
-        
-        // Reset discount but preserve pay amount
-        this.discountPerc = 0
-        this.payInvo.discount = 0
+
+        // Recalculate invoice totals (preserves discount based on discount type)
+        this.getTotal();
+      }
+      // No validation or error messages during typing for smooth UX
+    }
+
+    // Validation when user finishes editing (blur or enter)
+    editCell(i){
+      const displayList = this.getDisplayItemList();
+      const itemToEdit = displayList[i];
+
+      // Find the corresponding item in the original itemList
+      const originalIndex = this.itemList.findIndex(item =>
+        item.item_name === itemToEdit.item_name &&
+        item.pay_price === itemToEdit.pay_price
+      );
+
+      if (originalIndex !== -1 && +displayList[i].quantity > 0 && +displayList[i].pay_price > 0) {
+        // Update both the display list and original list
+        displayList[i].tot = (+displayList[i].quantity * +displayList[i].pay_price).toFixed(2);
+        this.itemList[originalIndex].quantity = displayList[i].quantity;
+        this.itemList[originalIndex].pay_price = displayList[i].pay_price;
+        this.itemList[originalIndex].tot = displayList[i].tot;
+
+        // DO NOT reset discount - getTotal() will handle it properly
         this.hideMe(i)
-        this.getTotal() 
+        this.getTotal()
       } else {
         this.presentToast("خطأ في الإدخال ", "danger")
       }
@@ -904,24 +927,22 @@ getTotal() {
   }
 
   deleteItem(index){
-  //console.log( index); 
+  //console.log( index);
   const displayList = this.getDisplayItemList();
   const itemToDelete = displayList[index];
-  
+
   // Find the item in the original itemList and remove it
-  const originalIndex = this.itemList.findIndex(item => 
-    item.item_name === itemToDelete.item_name && 
+  const originalIndex = this.itemList.findIndex(item =>
+    item.item_name === itemToDelete.item_name &&
     item.pay_price === itemToDelete.pay_price &&
     item.quantity === itemToDelete.quantity
   );
-  
+
   if (originalIndex !== -1) {
     this.itemList.splice(originalIndex, 1);
   }
-  
-  // Reset discount but preserve pay amount
-  this.discountPerc = 0
-  this.payInvo.discount = 0 
+
+  // DO NOT reset discount - getTotal() will preserve and recalculate it properly
   this.getTotal()
   this.updateSortedList()
   }
@@ -970,7 +991,7 @@ getTotal() {
 
       this.selectedItem = {
         id: undefined,
-        dateCreated: "", 
+        dateCreated: "",
         pay_ref:this.payInvo.pay_ref,
         item_desc: "",
         item_name: "",
@@ -984,8 +1005,7 @@ getTotal() {
         aliasEn:""
 
       }
-      this.discountPerc = 0
-      this.payInvo.discount = 0
+      // DO NOT reset discount - getTotal() will preserve and recalculate it properly
 
       this.getTotal()
       this.setFocusOnInput('dstPop3')

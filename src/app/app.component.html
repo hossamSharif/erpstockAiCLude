@@ -138,28 +138,35 @@
                 <ion-icon name="file-tray-full"></ion-icon>
                 <span>المخزن</span>
               </div>
-              
+
               <div class="menu-item" [routerLink]="['item-stock']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="cube"></ion-icon>
                   <span>المخزن</span>
                 </div>
               </div>
-              
+
+              <div class="menu-item" [routerLink]="['item-analytics']" routerLinkActive="selected">
+                <div class="menu-item-content">
+                  <ion-icon name="analytics"></ion-icon>
+                  <span>تحليل الأصناف</span>
+                </div>
+              </div>
+
               <div class="menu-item" *ngIf="device == 'desktop'" [routerLink]="['folder/items-report']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="swap-vertical"></ion-icon>
                   <span>حركة الأصناف</span>
                 </div>
               </div>
-              
+
               <div class="menu-item" *ngIf="device == 'desktop'" [routerLink]="['folder/tswia']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="sync"></ion-icon>
                   <span>التسوية الجردية</span>
                 </div>
               </div>
-              
+
               <div class="menu-item" *ngIf="device == 'desktop'" [routerLink]="['folder/tswia-record']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="document-text"></ion-icon>

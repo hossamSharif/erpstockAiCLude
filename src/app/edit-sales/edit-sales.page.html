@@ -173,15 +173,15 @@
                       <span [innerHTML]="highlightText(item.item_name, searchTerm)"></span>
                     </td>
                     <td >
-                      <ion-text *ngIf="showMe != i">{{item.quantity}}</ion-text> 
+                      <ion-text *ngIf="showMe != i">{{item.quantity}}</ion-text>
                       <ion-item *ngIf="showMe == i">
-                        <ion-input (keyup.enter)="editCell(i)" [(ngModel)] ="item.quantity" (ionBlur)="editCell(i)" ></ion-input>
+                        <ion-input (ionInput)="onCellValueChange(i)" (keyup.enter)="editCell(i)" [(ngModel)] ="item.quantity" (ionBlur)="editCell(i)" ></ion-input>
                       </ion-item>
                     </td>
                     <td>
-                      <ion-text *ngIf="showMe != i">{{item.pay_price | currencyDisplay:'SDG':false}}</ion-text> 
+                      <ion-text *ngIf="showMe != i">{{item.pay_price | currencyDisplay:'SDG':false}}</ion-text>
                       <ion-item *ngIf="showMe == i">
-                        <ion-input (keyup.enter)="editCell(i)" [(ngModel)] ="item.pay_price" (ionBlur)="editCell(i)" ></ion-input>
+                        <ion-input (ionInput)="onCellValueChange(i)" (keyup.enter)="editCell(i)" [(ngModel)] ="item.pay_price" (ionBlur)="editCell(i)" ></ion-input>
                       </ion-item>
                     </td>
 
