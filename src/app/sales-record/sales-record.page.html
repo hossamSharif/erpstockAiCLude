@@ -143,8 +143,63 @@
                   </div>
                 </div>
               </ion-card-header>
+
+               <!-- Selected Invoices Bar -->
+               <div class="selected-items-bar" *ngIf="selectedInvoicesList.length > 0">
+                 <ion-row dir="rtl">
+                   <ion-col size="12">
+                     <div class="selected-items-card">
+                       <div class="selected-items-content">
+                         <ion-grid>
+                           <ion-row class="ion-align-items-center">
+                             <ion-col size="12" size-md="6">
+                               <div class="selected-count">
+                                 <div class="count-badge">
+                                   {{selectedInvoicesList.length}}
+                                 </div>
+                                 <span class="selected-text">فاتورة محددة</span>
+                               </div>
+                             </ion-col>
+                             <ion-col size="12" size-md="6">
+                               <div class="action-buttons">
+                                 <ion-button class="action-btn primary-action"
+                                   (click)="createSalesInvoiceFromSelectedInvoices()">
+                                   <ion-icon name="receipt-outline"></ion-icon>
+                                   إنشاء فاتورة مبيعات
+                                 </ion-button>
+                                 <ion-button class="action-btn primary-action"
+                                   (click)="createPurchaseInvoiceFromSelectedInvoices()">
+                                   <ion-icon name="document-text-outline"></ion-icon>
+                                   إنشاء فاتورة شراء
+                                 </ion-button>
+                                 <ion-button class="action-btn primary-action"
+                                   (click)="createPurchaseOrderFromSelectedInvoices()">
+                                   <ion-icon name="clipboard-outline"></ion-icon>
+                                   إنشاء طلب شراء
+                                 </ion-button>
+                                 <ion-button class="action-btn secondary-action"
+                                   (click)="clearInvoiceSelection()">
+                                   <ion-icon name="close-outline"></ion-icon>
+                                   إلغاء التحديد
+                                 </ion-button>
+                               </div>
+                             </ion-col>
+                           </ion-row>
+                         </ion-grid>
+                       </div>
+                     </div>
+                   </ion-col>
+                 </ion-row>
+               </div>
+
                <table class="table">
                  <tr>
+                  <th>
+                    <ion-checkbox
+                      [(ngModel)]="selectAllInvoices"
+                      (ionChange)="toggleSelectAll($event)">
+                    </ion-checkbox>
+                  </th>
                   <th>التسلسل</th>
                   <!-- <th>رقم الفاتورة</th> -->
                   <th class="sortable-header" (click)="sortBy('sub_name')">
@@ -181,6 +236,12 @@
                   
                  </tr>
                  <tr *ngFor="let pay of sortedPayArray ; let i = index">
+                  <td>
+                    <ion-checkbox
+                      [checked]="isInvoiceSelected(pay)"
+                      (ionChange)="toggleInvoiceSelection(pay, $event)">
+                    </ion-checkbox>
+                  </td>
                   <td>{{i+1}}</td>
                   <!-- <td>{{pay.pay_id}}</td> -->
                   <td>{{pay.sub_name}}</td>
@@ -218,41 +279,45 @@
               <!--    <ion-icon name="cloud-offline-outline"></ion-icon> -->
 
                  <!-- skeleton -->
-                 
+
                  <tr  *ngIf="loading == true">
-                  <td> <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td> <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td>  <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                  </tr>
                  <tr *ngIf="loading == true" >
-                  <td> <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td> <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td>  <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <!-- Hidden skeleton for pay and change columns -->
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                  </tr>
                  <tr  *ngIf="loading == true">
-                  <td> <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td> <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td>  <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <!-- Hidden skeleton for pay and change columns -->
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td> 
-                 </tr> 
-               </table> 
-               <ion-row class="ion-justify-content-center ion-margin-top" *ngIf="showEmpty == true"> 
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                 </tr>
+               </table>
+
+               <ion-row class="ion-justify-content-center ion-margin-top" *ngIf="showEmpty == true">
                  <ion-col size="4" class="ion-text-center">  
                    <ion-label> 
                      <ion-icon style="font-size: 30px;"  name="archive-outline"></ion-icon>

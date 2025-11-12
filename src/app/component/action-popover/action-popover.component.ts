@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { PopoverController } from '@ionic/angular';
 
 @Component({
@@ -7,6 +7,7 @@ import { PopoverController } from '@ionic/angular';
   styleUrls: ['./action-popover.component.scss'],
 })
 export class ActionPopoverComponent  {
+  @Input() context: string = 'invoice'; // 'invoice' or 'order'
 
  constructor(private popoverController: PopoverController) { }
 

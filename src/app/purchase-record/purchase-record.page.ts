@@ -36,9 +36,10 @@ export class PurchaseRecordPage implements OnInit, OnDestroy {
   paInvo :any
   dateFrom :any;
   dateTo :any;
+  purchaseType: string = 'invoice' // 'invoice' or 'order'
   radioVal : any = 0
   startingDate :any
-  endDate :any 
+  endDate :any
   loading:boolean = false
   showEmpty :boolean = false
   offline: boolean = false;
@@ -59,6 +60,10 @@ export class PurchaseRecordPage implements OnInit, OnDestroy {
   color :any ='dark'
   sums : {pay:any ,change:any,discount:any,tot:any,totAfterDiscout:any}
   year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
+
+  // Multi-select invoice properties
+  selectedInvoicesList: Array<any> = []
+  selectAllInvoices: boolean = false
 
   // Currency-related properties
   currentCurrency$ = this.currencyService.getCurrentCurrency();
@@ -142,6 +147,9 @@ export class PurchaseRecordPage implements OnInit, OnDestroy {
    async presentActionPopover(ev: any, pay: any, sub_name: any) {
   const popover = await this.popoverController.create({
     component: ActionPopoverComponent,
+    componentProps: {
+      context: this.purchaseType // Pass 'invoice' or 'order'
+    },
     event: ev,
     translucent: true,
     cssClass: 'action-popover-rtl'
@@ -320,6 +328,8 @@ navigateToReturnPage(pay: any) {
       this.purchLocal = []
       this.showEmpty = false
       this.loading = false
+      // Clear invoice selections when clearing account
+      this.clearInvoiceSelection()
     }
     
    changeMode(){
@@ -467,29 +477,55 @@ getSalesAccount(){
   } 
 }
 
-   printInvo(printarea , dataFrom){   
+   printInvo(printarea , dataFrom){
     if (this.offline==false && dataFrom.pay_id != undefined) {
-      this.paInvo = dataFrom 
-      //console.log( this.paInvo) 
-      this.api.getPerchInvoDetail(this.store_info.id , dataFrom.pay_ref ,this.year.id).subscribe(data =>{
-       //console.log(data)
-       let res = data 
-       this.itemList = res['data']
-       //console.log(res) 
-       this.printArr = []
-       this.printArr.push({
-       'payInvo': this.paInvo,
-       'itemList':this.itemList,
-       'selectedAccount' : this.paInvo.sub_name,
-       'sub_nameNew' : ""
-     }) 
-      //console.log(this.printArr)
-      this.presentModal(this.printArr , 'perch_record')
-       }, (err) => {
-        //console.log(err);
-        this.presentToast('خطا في الإتصال حاول مرة اخري' , 'danger')
-       },()=>{ 
-       })        
+      this.paInvo = dataFrom
+      //console.log( this.paInvo)
+
+      // Check if we're in purchase order mode
+      if (this.purchaseType === 'order') {
+        // Use purchase order API
+        this.api.getPurchaseOrderDetail(this.store_info.id , dataFrom.pay_ref ,this.year.id).subscribe(data =>{
+         //console.log(data)
+         let res = data
+         this.itemList = res['data']
+         //console.log(res)
+         this.printArr = []
+         this.printArr.push({
+         'payInvo': this.paInvo,
+         'itemList':this.itemList,
+         'selectedAccount' : this.paInvo.sub_name,
+         'sub_nameNew' : ""
+       })
+        //console.log(this.printArr)
+        this.presentModal(this.printArr , 'purchase_order_record')
+         }, (err) => {
+          //console.log(err);
+          this.presentToast('خطا في الإتصال حاول مرة اخري' , 'danger')
+         },()=>{
+         })
+      } else {
+        // Use purchase invoice API
+        this.api.getPerchInvoDetail(this.store_info.id , dataFrom.pay_ref ,this.year.id).subscribe(data =>{
+         //console.log(data)
+         let res = data
+         this.itemList = res['data']
+         //console.log(res)
+         this.printArr = []
+         this.printArr.push({
+         'payInvo': this.paInvo,
+         'itemList':this.itemList,
+         'selectedAccount' : this.paInvo.sub_name,
+         'sub_nameNew' : ""
+       })
+        //console.log(this.printArr)
+        this.presentModal(this.printArr , 'perch_record')
+         }, (err) => {
+          //console.log(err);
+          this.presentToast('خطا في الإتصال حاول مرة اخري' , 'danger')
+         },()=>{
+         })
+      }
     } else if (this.offline==false && dataFrom.pay_id == undefined) {
      console .log(dataFrom,dataFrom)
       
@@ -652,16 +688,84 @@ getSalesAccount(){
     this.sums.totAfterDiscout =   + this.sums.tot - this.sums.discount 
     } 
 
+  // Handle purchase type change (invoice vs order)
+  onPurchaseTypeChange(ev) {
+    console.log('Purchase type changed to:', this.purchaseType);
+    this.payArray = [];
+    this.sortedPayArray = [];
+    this.showEmpty = false;
+    this.loading = false;
+    // Clear invoice selections when changing purchase type
+    this.clearInvoiceSelection();
+
+    // If switching to orders, automatically fetch all orders
+    if (this.purchaseType === 'order') {
+      this.getPurchaseOrders();
+    }
+    // If switching back to invoices, keep existing search behavior
+  }
+
+  // Get all purchase orders (no filters)
+  getPurchaseOrders() {
+    // Check if required data is loaded
+    if (!this.store_info || !this.store_info.id || !this.year || !this.year.id) {
+      console.log('Store info or year not loaded yet');
+      this.showEmpty = true;
+      this.loading = false;
+      return;
+    }
+
+    this.loading = true;
+    this.showEmpty = false;
+
+    this.api.getAllPurchaseOrders(this.store_info.id, this.year.id).subscribe(
+      data => {
+        let res = data;
+        if (res['message'] != 'No record Found') {
+          this.payArray = res['data'];
+        } else {
+          this.payArray = [];
+        }
+
+        this.getTotal();
+        this.applySorting();
+
+        if (this.payArray.length == 0) {
+          this.showEmpty = true;
+        } else {
+          this.showEmpty = false;
+        }
+        this.loading = false;
+      },
+      (err) => {
+        console.log(err);
+        this.presentToast('خطا في الإتصال حاول مرة اخري', 'danger');
+        this.loading = false;
+      },
+      () => {
+        this.loading = false;
+      }
+    );
+  }
+
   search(){
     this.showEmpty=false
-    if (this.radioVal == 0) { 
+
+    // If purchase orders are selected, just fetch all orders
+    if (this.purchaseType === 'order') {
+      this.getPurchaseOrders();
+      return;
+    }
+
+    // Otherwise, handle invoice search based on radioVal
+    if (this.radioVal == 0) {
      if (this.offline == true) {
       this.getTopSalesOffline()
     } else {
       this.getTopSales()
     }
     } else if (this.radioVal == 1) {
-      
+
        if (this.offline == true) {
         this.getSalesByDateOffline()
       } else {
@@ -671,7 +775,7 @@ getSalesAccount(){
       if (this.offline == true) {
         this.getSales2DateOffline()
       } else {
-        this.getSales2Date() 
+        this.getSales2Date()
       }
     }
    }
@@ -1013,12 +1117,14 @@ getSalesAccount(){
   }
   
    radioChange(ev){
-    //console.log(ev.target.value) 
+    //console.log(ev.target.value)
     this.payArray = []
     this.sortedPayArray = []
     this.purchLocal = []
     this.showEmpty = false
     this.loading = false
+    // Clear invoice selections when changing invoice type
+    this.clearInvoiceSelection()
    }
  
 
@@ -1026,29 +1132,59 @@ getSalesAccount(){
      console .log(pay,sub_name,status)
    this.presentLoadingWithOptions('جاري جلب التفاصيل ...')
    if (this.offline==false && pay.pay_id != undefined) {
-    this.api.getPerchInvoDetail(this.store_info.id , pay.pay_ref,this.year.id).subscribe(data =>{
-      //console.log(data,'case 1')
-       let res = data 
-       //console.log(pay) 
-       
-       let navigationExtras: NavigationExtras = {
-        queryParams: {
-          payInvo: JSON.stringify(pay),
-          sub_name: JSON.stringify(sub_name),
-          user_info:JSON.stringify(this.user_info),
-          store_info:JSON.stringify(this.store_info),
-          itemList:JSON.stringify(res['data'])
+    // Check if we're in purchase order mode
+    if (this.purchaseType === 'order') {
+      // Use purchase order API
+      this.api.getPurchaseOrderDetail(this.store_info.id , pay.pay_ref, this.year.id).subscribe(data =>{
+        //console.log(data,'case 1 - purchase order')
+         let res = data
+         //console.log(pay)
+
+         let navigationExtras: NavigationExtras = {
+          queryParams: {
+            payInvo: JSON.stringify(pay),
+            sub_name: JSON.stringify(sub_name),
+            user_info:JSON.stringify(this.user_info),
+            store_info:JSON.stringify(this.store_info),
+            itemList:JSON.stringify(res['data'])
+          }
+        };
+        // Navigate to purchase order edit page
+        this.loadingController.dismiss();
+        this.rout.navigate(['/edit-purchase-order'], navigationExtras);
+       }, (err) => {
+       //console.log(err);
+       this.loadingController.dismiss();
+       this.presentToast('خطا في الإتصال حاول مرة اخري' , 'danger')
+     })
+    } else {
+      // Use purchase invoice API
+      this.api.getPerchInvoDetail(this.store_info.id , pay.pay_ref,this.year.id).subscribe(data =>{
+        //console.log(data,'case 1')
+         let res = data
+         //console.log(pay)
+
+         let navigationExtras: NavigationExtras = {
+          queryParams: {
+            payInvo: JSON.stringify(pay),
+            sub_name: JSON.stringify(sub_name),
+            user_info:JSON.stringify(this.user_info),
+            store_info:JSON.stringify(this.store_info),
+            itemList:JSON.stringify(res['data'])
+          }
+        };
+        this.loadingController.dismiss();
+        if(this.device == 'desktop'){
+          this.rout.navigate(['folder/edit-perch'], navigationExtras);
+        }else{
+          this.rout.navigate(['folder/edit-purchase-mob'], navigationExtras);
         }
-      };
-      if(this.device == 'desktop'){
-        this.rout.navigate(['folder/edit-perch'], navigationExtras);  
-      }else{
-        this.rout.navigate(['folder/edit-purchase-mob'], navigationExtras);  
-      }
-     }, (err) => {
-     //console.log(err);
-     this.presentToast('خطا في الإتصال حاول مرة اخري' , 'danger')
-   })  
+       }, (err) => {
+       //console.log(err);
+       this.loadingController.dismiss();
+       this.presentToast('خطا في الإتصال حاول مرة اخري' , 'danger')
+     })
+    }
    } else if (this.offline==false && pay.pay_id == undefined) {
     console .log(pay,sub_name,status)
     this.loadingController.dismiss() 
@@ -1298,6 +1434,315 @@ private getExportColumns(): ExportColumn[] {
 // Get current currency symbol for table headers
 getCurrencySymbol(): string {
   return this.currencyService.getCurrentCurrencySymbol();
+}
+
+// Multi-select invoice methods
+toggleInvoiceSelection(invoice: any, event: any) {
+  if (event.detail.checked) {
+    if (!this.isInvoiceSelected(invoice)) {
+      this.selectedInvoicesList.push(invoice);
+    }
+  } else {
+    this.selectedInvoicesList = this.selectedInvoicesList.filter(
+      selectedInvoice => selectedInvoice.pay_ref !== invoice.pay_ref
+    );
+    this.selectAllInvoices = false;
+  }
+}
+
+isInvoiceSelected(invoice: any): boolean {
+  return this.selectedInvoicesList.some(
+    selectedInvoice => selectedInvoice.pay_ref === invoice.pay_ref
+  );
+}
+
+toggleSelectAll(event: any) {
+  if (event.detail.checked) {
+    this.selectedInvoicesList = [...this.sortedPayArray];
+  } else {
+    this.selectedInvoicesList = [];
+  }
+}
+
+clearInvoiceSelection() {
+  this.selectedInvoicesList = [];
+  this.selectAllInvoices = false;
+}
+
+async createSalesInvoiceFromSelectedInvoices() {
+  if (this.selectedInvoicesList.length === 0) {
+    await this.presentToast('الرجاء تحديد فاتورة واحدة على الأقل', 'warning');
+    return;
+  }
+
+  this.presentLoadingWithOptions('جاري تجميع الأصناف من الفواتير المحددة...');
+
+  try {
+    const allItems: Array<any> = [];
+
+    // Fetch details for all selected invoices
+    const detailPromises = this.selectedInvoicesList.map(invoice => {
+      if (this.purchaseType === 'order') {
+        // Purchase orders
+        return this.api.getPurchaseOrderDetail(this.store_info.id, invoice.pay_ref, this.year.id).toPromise();
+      } else {
+        // Purchase invoices
+        return this.api.getPerchInvoDetail(this.store_info.id, invoice.pay_ref, this.year.id).toPromise();
+      }
+    });
+
+    const results = await Promise.all(detailPromises);
+
+    // Collect all items from all invoices
+    results.forEach(res => {
+      if (res && res['data']) {
+        allItems.push(...res['data']);
+      }
+    });
+
+    // Merge duplicate items by item_id and pay_price, summing quantities
+    const mergedItemsMap = new Map<string, any>();
+
+    allItems.forEach(item => {
+      // Create a unique key based on item_id and pay_price (for sales)
+      const key = `${item.item_id}_${item.pay_price || 0}`;
+
+      if (mergedItemsMap.has(key)) {
+        // Item exists, sum the quantity
+        const existingItem = mergedItemsMap.get(key);
+        existingItem.quantity = +existingItem.quantity + +item.quantity;
+      } else {
+        // New item, add to map with a copy
+        mergedItemsMap.set(key, { ...item });
+      }
+    });
+
+    // Convert map to array and transform for sales page
+    const mergedItems = Array.from(mergedItemsMap.values());
+
+    const salesItems = mergedItems.map(item => ({
+      id: item.item_id,
+      item_id: item.item_id,
+      item_name: item.item_name,
+      item_desc: item.item_desc,
+      part_no: item.part_no,
+      brand: item.brand,
+      model: item.model,
+      item_unit: item.item_unit,
+      perch_price: item.perch_price || 0,
+      pay_price: item.pay_price || 0,  // Use pay_price for sales
+      qty: item.quantity,
+      tot: ((item.pay_price || 0) * item.quantity).toFixed(2),
+      availQty: item.quantity || 0,
+      aliasEn: item.aliasEn,
+      store_id: this.store_info.id,  // Add store_id
+      yearId: this.year.id  // Add yearId
+    }));
+
+    this.loadingController.dismiss();
+
+    // Navigate to sales page with merged items
+    let navigationExtras: NavigationExtras = {
+      queryParams: {
+        status: 'newInvoFromItemsPage',
+        selectedItemsList: JSON.stringify(salesItems)
+      }
+    };
+
+    this.rout.navigate(['folder/sales'], navigationExtras);
+
+    // Clear selection after navigation
+    this.clearInvoiceSelection();
+
+  } catch (error) {
+    this.loadingController.dismiss();
+    console.error('Error creating sales invoice from selected invoices:', error);
+    await this.presentToast('حدث خطأ أثناء تجميع الأصناف', 'danger');
+  }
+}
+
+async createPurchaseInvoiceFromSelectedInvoices() {
+  if (this.selectedInvoicesList.length === 0) {
+    await this.presentToast('الرجاء تحديد فاتورة واحدة على الأقل', 'warning');
+    return;
+  }
+
+  this.presentLoadingWithOptions('جاري تجميع الأصناف من الفواتير المحددة...');
+
+  try {
+    const allItems: Array<any> = [];
+
+    // Fetch details for all selected invoices
+    const detailPromises = this.selectedInvoicesList.map(invoice => {
+      if (this.purchaseType === 'order') {
+        // Purchase orders
+        return this.api.getPurchaseOrderDetail(this.store_info.id, invoice.pay_ref, this.year.id).toPromise();
+      } else {
+        // Purchase invoices
+        return this.api.getPerchInvoDetail(this.store_info.id, invoice.pay_ref, this.year.id).toPromise();
+      }
+    });
+
+    const results = await Promise.all(detailPromises);
+
+    // Collect all items from all invoices
+    results.forEach(res => {
+      if (res && res['data']) {
+        allItems.push(...res['data']);
+      }
+    });
+
+    // Merge duplicate items by item_id and perch_price, summing quantities
+    const mergedItemsMap = new Map<string, any>();
+
+    allItems.forEach(item => {
+      // Create a unique key based on item_id and perch_price (for purchase)
+      const key = `${item.item_id}_${item.perch_price || 0}`;
+
+      if (mergedItemsMap.has(key)) {
+        // Item exists, sum the quantity
+        const existingItem = mergedItemsMap.get(key);
+        existingItem.quantity = +existingItem.quantity + +item.quantity;
+      } else {
+        // New item, add to map with a copy
+        mergedItemsMap.set(key, { ...item });
+      }
+    });
+
+    // Convert map to array and transform for purchase page
+    const mergedItems = Array.from(mergedItemsMap.values());
+
+    const purchaseItems = mergedItems.map(item => ({
+      id: item.item_id,
+      item_id: item.item_id,
+      item_name: item.item_name,
+      item_desc: item.item_desc,
+      part_no: item.part_no,
+      brand: item.brand,
+      model: item.model,
+      item_unit: item.item_unit,
+      perch_price: item.perch_price || 0,  // Use perch_price for purchase
+      pay_price: item.pay_price || 0,
+      qty: item.quantity,
+      tot: ((item.perch_price || 0) * item.quantity).toFixed(2),
+      availQty: item.quantity || 0,
+      aliasEn: item.aliasEn,
+      store_id: this.store_info.id,  // Add store_id
+      yearId: this.year.id  // Add yearId
+    }));
+
+    this.loadingController.dismiss();
+
+    // Navigate to purchase page with merged items
+    let navigationExtras: NavigationExtras = {
+      queryParams: {
+        status: 'newInvoFromItemsPage',
+        selectedItemsList: JSON.stringify(purchaseItems)
+      }
+    };
+
+    this.rout.navigate(['folder/purchase'], navigationExtras);
+
+    // Clear selection after navigation
+    this.clearInvoiceSelection();
+
+  } catch (error) {
+    this.loadingController.dismiss();
+    console.error('Error creating purchase invoice from selected invoices:', error);
+    await this.presentToast('حدث خطأ أثناء تجميع الأصناف', 'danger');
+  }
+}
+
+async createPurchaseOrderFromSelectedInvoices() {
+  if (this.selectedInvoicesList.length === 0) {
+    await this.presentToast('الرجاء تحديد فاتورة واحدة على الأقل', 'warning');
+    return;
+  }
+
+  this.presentLoadingWithOptions('جاري تجميع الأصناف من الفواتير المحددة...');
+
+  try {
+    const allItems: Array<any> = [];
+
+    // Fetch details for all selected invoices
+    const detailPromises = this.selectedInvoicesList.map(invoice => {
+      if (this.purchaseType === 'order') {
+        // Purchase orders
+        return this.api.getPurchaseOrderDetail(this.store_info.id, invoice.pay_ref, this.year.id).toPromise();
+      } else {
+        // Purchase invoices
+        return this.api.getPerchInvoDetail(this.store_info.id, invoice.pay_ref, this.year.id).toPromise();
+      }
+    });
+
+    const results = await Promise.all(detailPromises);
+
+    // Collect all items from all invoices
+    results.forEach(res => {
+      if (res && res['data']) {
+        allItems.push(...res['data']);
+      }
+    });
+
+    // Merge duplicate items by item_id and perch_price, summing quantities
+    const mergedItemsMap = new Map<string, any>();
+
+    allItems.forEach(item => {
+      // Create a unique key based on item_id and perch_price (for purchase order)
+      const key = `${item.item_id}_${item.perch_price || 0}`;
+
+      if (mergedItemsMap.has(key)) {
+        // Item exists, sum the quantity
+        const existingItem = mergedItemsMap.get(key);
+        existingItem.quantity = +existingItem.quantity + +item.quantity;
+      } else {
+        // New item, add to map with a copy
+        mergedItemsMap.set(key, { ...item });
+      }
+    });
+
+    // Convert map to array and transform for purchase order page
+    const mergedItems = Array.from(mergedItemsMap.values());
+
+    const purchaseOrderItems = mergedItems.map(item => ({
+      id: item.item_id,
+      item_id: item.item_id,
+      item_name: item.item_name,
+      item_desc: item.item_desc,
+      part_no: item.part_no,
+      brand: item.brand,
+      model: item.model,
+      item_unit: item.item_unit,
+      perch_price: item.perch_price || 0,  // Use perch_price for purchase order
+      pay_price: item.pay_price || 0,
+      qty: item.quantity,
+      tot: ((item.perch_price || 0) * item.quantity).toFixed(2),
+      availQty: item.quantity || 0,
+      aliasEn: item.aliasEn,
+      store_id: this.store_info.id,  // Add store_id
+      yearId: this.year.id  // Add yearId
+    }));
+
+    this.loadingController.dismiss();
+
+    // Navigate to purchase order page with merged items
+    let navigationExtras: NavigationExtras = {
+      queryParams: {
+        status: 'newInvoFromItemsPage',
+        selectedItemsList: JSON.stringify(purchaseOrderItems)
+      }
+    };
+
+    this.rout.navigate(['/purchase-order'], navigationExtras);
+
+    // Clear selection after navigation
+    this.clearInvoiceSelection();
+
+  } catch (error) {
+    this.loadingController.dismiss();
+    console.error('Error creating purchase order from selected invoices:', error);
+    await this.presentToast('حدث خطأ أثناء تجميع الأصناف', 'danger');
+  }
 }
 
 }

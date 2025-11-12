@@ -1059,12 +1059,81 @@ getTswiaByDate(store_id,from ,yearId){
       }
     
        deletePerchOrderInvo(pay_id){
-        let params = new HttpParams() 
+        let params = new HttpParams()
         params= params.append('pay_id' , pay_id )
           return this.http.delete(this.api+'perchOrder/delete.php', {params: params})
         }
-    
-  
+
+  // Purchase Order API Methods
+  getAllPurchaseOrders(store_id, yearId){
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('yearId', yearId)
+    return this.http.get(this.api+'perchOrder/getAllPurchaseOrders.php', {params: params})
+  }
+
+  getPurchaseOrderDetail(store_id, pay_ref, yearId){
+    let params = new HttpParams()
+    params = params.append('store_id', String(store_id))
+    params = params.append('pay_ref', String(pay_ref))
+    params = params.append('yearId', String(yearId))
+    return this.http.get(this.api+'perchOrder/getPurchaseOrderDetail.php', {params: params})
+  }
+
+  savePurchaseOrderWithItems(orderData){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+    return this.http.post(this.api+'perchOrder/createWithItems.php',
+      orderData, httpOptions
+    )
+  }
+
+  updatePurchaseOrderWithItems(orderData){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+    return this.http.post(this.api+'perchOrder/updateWithItems.php',
+      orderData, httpOptions
+    )
+  }
+
+  deletePurchaseOrderWithItems(deletionData){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+    return this.http.post(this.api+'perchOrder/deleteWithItems.php',
+      deletionData, httpOptions
+    )
+  }
+
+  convertPurchaseOrderToInvoice(conversionData){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+    return this.http.post(this.api+'perchOrder/convertToInvoice.php',
+      conversionData, httpOptions
+    )
+  }
+
+  convertPurchaseInvoiceToOrder(conversionData){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+    return this.http.post(this.api+'perch/convertToOrder.php',
+      conversionData, httpOptions
+    )
+  }
 
   saveSubAccount(sub_account){
     return this.http.post(this.api+'sub_accounts/create.php', 

@@ -108,11 +108,21 @@ calculatedDiscountAmount: number = 0;
         this.user_info = JSON.parse(params.user_info);
         this.store_info = JSON.parse(params.store_info);
         this.itemList = JSON.parse(params.itemList);
+
+        // Fix: Enrich itemList with store_id when coming from items-report
+        // yearId will be set after year is loaded in getAppInfo()
+        if (params.screen === "itemReport" && this.itemList && this.itemList.length > 0) {
+          this.itemList = this.itemList.map(item => ({
+            ...item,
+            store_id: item.store_id || +this.store_info.id
+          }));
+        }
+
         this.resortItemList()
         //console.log('lksjda',this.payInvo, this.store_info,  this.user_info ,this.itemList ,this.selectedAccount.sub_name )
        // this.discountPerc = ((+this.payInvo.discount /+this.payInvo.tot_pr) * 100 ).toFixed(2)
         this.initializeDiscountValues();
-        
+
         this.getAppInfo()
         
         // Mark data as initialized to prevent re-initialization
@@ -249,8 +259,16 @@ calculatedDiscountAmount: number = 0;
 
    this.storage.get('year').then((response) => {
     if (response) {
-      this.year = response 
-    } 
+      this.year = response
+
+      // Fix: Enrich itemList with yearId if items are missing it (e.g., from items-report)
+      if (this.itemList && this.itemList.length > 0) {
+        this.itemList = this.itemList.map(item => ({
+          ...item,
+          yearId: item.yearId || +this.year.id
+        }));
+      }
+    }
   });
      
    this.storage.get('STORE_INFO').then((response) => {

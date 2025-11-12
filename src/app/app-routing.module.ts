@@ -251,6 +251,14 @@ const routes: Routes = [
   {
     path: 'item-analytics',
     loadChildren: () => import('./item-analytics/item-analytics.module').then( m => m.ItemAnalyticsPageModule)
+  },
+  {
+    path: 'purchase-order',
+    loadChildren: () => import('./purchase-order/purchase-order.module').then( m => m.PurchaseOrderPageModule)
+  },
+  {
+    path: 'edit-purchase-order',
+    loadChildren: () => import('./edit-purchase-order/edit-purchase-order.module').then( m => m.EditPurchaseOrderPageModule)
   }
   
 ];

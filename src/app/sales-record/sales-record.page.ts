@@ -54,11 +54,15 @@ export class SalesRecordPage implements OnInit, OnDestroy {
   salesLocal:Array<any> =[]
   sales:Array<any> =[]
   salesOffline:Array<any> =[]
-  color :any ='dark' 
+  color :any ='dark'
   currentCustumerStatus :any = 0
   sums : {pay:any ,change:any,discount:any,tot:any,totAfterDiscout:any}
   year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
   device:any =''
+
+  // Multi-select invoice properties
+  selectedInvoicesList: Array<any> = []
+  selectAllInvoices: boolean = false
    slideOpts = {
     slidesPerView: 4,
     spaceBetween: 0
@@ -554,6 +558,8 @@ export class SalesRecordPage implements OnInit, OnDestroy {
     this.salesLocal = []
     this.showEmpty = false
     this.loading = false
+    // Clear invoice selections when clearing account
+    this.clearInvoiceSelection()
   }
 
   ionViewDidEnter(){
@@ -1443,12 +1449,14 @@ export class SalesRecordPage implements OnInit, OnDestroy {
    }
 
    radioChange(ev){
-    //console.log(ev.target.value) 
+    //console.log(ev.target.value)
     this.payArray = []
     this.sortedPayArray = []
     this.salesLocal = []
     this.showEmpty = false
     this.loading = false
+    // Clear invoice selections when changing invoice type
+    this.clearInvoiceSelection()
    }
 
   
@@ -1598,6 +1606,315 @@ sortBy(column: string) {
 // Get sort icon for column
 getSortIcon(column: string): string {
   return this.sortingService.getSortIcon(column, this.currentSort);
+}
+
+// Multi-select invoice methods
+toggleInvoiceSelection(invoice: any, event: any) {
+  if (event.detail.checked) {
+    if (!this.isInvoiceSelected(invoice)) {
+      this.selectedInvoicesList.push(invoice);
+    }
+  } else {
+    this.selectedInvoicesList = this.selectedInvoicesList.filter(
+      selectedInvoice => selectedInvoice.pay_ref !== invoice.pay_ref
+    );
+    this.selectAllInvoices = false;
+  }
+}
+
+isInvoiceSelected(invoice: any): boolean {
+  return this.selectedInvoicesList.some(
+    selectedInvoice => selectedInvoice.pay_ref === invoice.pay_ref
+  );
+}
+
+toggleSelectAll(event: any) {
+  if (event.detail.checked) {
+    this.selectedInvoicesList = [...this.sortedPayArray];
+  } else {
+    this.selectedInvoicesList = [];
+  }
+}
+
+clearInvoiceSelection() {
+  this.selectedInvoicesList = [];
+  this.selectAllInvoices = false;
+}
+
+async createSalesInvoiceFromSelectedInvoices() {
+  if (this.selectedInvoicesList.length === 0) {
+    await this.presentToast('الرجاء تحديد فاتورة واحدة على الأقل', 'warning');
+    return;
+  }
+
+  this.presentLoadingWithOptions('جاري تجميع الأصناف من الفواتير المحددة...');
+
+  try {
+    const allItems: Array<any> = [];
+
+    // Fetch details for all selected invoices
+    const detailPromises = this.selectedInvoicesList.map(invoice => {
+      if (this.radioVal == 3) {
+        // Initial invoices
+        return this.api.getPayInvoDetailinit(this.store_info.id, invoice.pay_ref).toPromise();
+      } else {
+        // Final invoices
+        return this.api.getPayInvoDetail(this.store_info.id, invoice.pay_ref, this.year.id).toPromise();
+      }
+    });
+
+    const results = await Promise.all(detailPromises);
+
+    // Collect all items from all invoices
+    results.forEach(res => {
+      if (res && res['data']) {
+        allItems.push(...res['data']);
+      }
+    });
+
+    // Merge duplicate items by item_id and pay_price, summing quantities
+    const mergedItemsMap = new Map<string, any>();
+
+    allItems.forEach(item => {
+      // Create a unique key based on item_id and pay_price
+      const key = `${item.item_id}_${item.pay_price || 0}`;
+
+      if (mergedItemsMap.has(key)) {
+        // Item exists, sum the quantity
+        const existingItem = mergedItemsMap.get(key);
+        existingItem.quantity = +existingItem.quantity + +item.quantity;
+      } else {
+        // New item, add to map with a copy
+        mergedItemsMap.set(key, { ...item });
+      }
+    });
+
+    // Convert map to array and transform for sales page
+    const mergedItems = Array.from(mergedItemsMap.values());
+
+    const salesItems = mergedItems.map(item => ({
+      id: item.item_id,
+      item_id: item.item_id,
+      item_name: item.item_name,
+      item_desc: item.item_desc,
+      part_no: item.part_no,
+      brand: item.brand,
+      model: item.model,
+      item_unit: item.item_unit,
+      perch_price: item.perch_price || 0,
+      pay_price: item.pay_price || 0,  // Use pay_price from sales item
+      qty: item.quantity,
+      tot: ((item.pay_price || 0) * item.quantity).toFixed(2),
+      availQty: item.quantity || 0,
+      aliasEn: item.aliasEn,
+      store_id: this.store_info.id,  // Add store_id
+      yearId: this.year.id  // Add yearId
+    }));
+
+    this.loadingController.dismiss();
+
+    // Navigate to sales page with merged items
+    let navigationExtras: NavigationExtras = {
+      queryParams: {
+        status: 'newInvoFromItemsPage',
+        selectedItemsList: JSON.stringify(salesItems)
+      }
+    };
+
+    this.rout.navigate(['folder/sales'], navigationExtras);
+
+    // Clear selection after navigation
+    this.clearInvoiceSelection();
+
+  } catch (error) {
+    this.loadingController.dismiss();
+    console.error('Error creating sales invoice from selected invoices:', error);
+    await this.presentToast('حدث خطأ أثناء تجميع الأصناف', 'danger');
+  }
+}
+
+async createPurchaseInvoiceFromSelectedInvoices() {
+  if (this.selectedInvoicesList.length === 0) {
+    await this.presentToast('الرجاء تحديد فاتورة واحدة على الأقل', 'warning');
+    return;
+  }
+
+  this.presentLoadingWithOptions('جاري تجميع الأصناف من الفواتير المحددة...');
+
+  try {
+    const allItems: Array<any> = [];
+
+    // Fetch details for all selected invoices
+    const detailPromises = this.selectedInvoicesList.map(invoice => {
+      if (this.radioVal == 3) {
+        // Initial invoices
+        return this.api.getPayInvoDetailinit(this.store_info.id, invoice.pay_ref).toPromise();
+      } else {
+        // Final invoices
+        return this.api.getPayInvoDetail(this.store_info.id, invoice.pay_ref, this.year.id).toPromise();
+      }
+    });
+
+    const results = await Promise.all(detailPromises);
+
+    // Collect all items from all invoices
+    results.forEach(res => {
+      if (res && res['data']) {
+        allItems.push(...res['data']);
+      }
+    });
+
+    // Merge duplicate items by item_id and perch_price, summing quantities
+    const mergedItemsMap = new Map<string, any>();
+
+    allItems.forEach(item => {
+      // Create a unique key based on item_id and perch_price
+      const key = `${item.item_id}_${item.perch_price || 0}`;
+
+      if (mergedItemsMap.has(key)) {
+        // Item exists, sum the quantity
+        const existingItem = mergedItemsMap.get(key);
+        existingItem.quantity = +existingItem.quantity + +item.quantity;
+      } else {
+        // New item, add to map with a copy
+        mergedItemsMap.set(key, { ...item });
+      }
+    });
+
+    // Convert map to array and transform for purchase page
+    const mergedItems = Array.from(mergedItemsMap.values());
+
+    const purchaseItems = mergedItems.map(item => ({
+      id: item.item_id,
+      item_id: item.item_id,
+      item_name: item.item_name,
+      item_desc: item.item_desc,
+      part_no: item.part_no,
+      brand: item.brand,
+      model: item.model,
+      item_unit: item.item_unit,
+      perch_price: item.perch_price || 0,  // Use perch_price from sales item
+      pay_price: item.pay_price || 0,
+      qty: item.quantity,
+      tot: ((item.perch_price || 0) * item.quantity).toFixed(2),
+      availQty: item.quantity || 0,
+      aliasEn: item.aliasEn,
+      store_id: this.store_info.id,  // Add store_id
+      yearId: this.year.id  // Add yearId
+    }));
+
+    this.loadingController.dismiss();
+
+    // Navigate to purchase page with merged items
+    let navigationExtras: NavigationExtras = {
+      queryParams: {
+        status: 'newInvoFromItemsPage',
+        selectedItemsList: JSON.stringify(purchaseItems)
+      }
+    };
+
+    this.rout.navigate(['folder/purchase'], navigationExtras);
+
+    // Clear selection after navigation
+    this.clearInvoiceSelection();
+
+  } catch (error) {
+    this.loadingController.dismiss();
+    console.error('Error creating purchase invoice from selected invoices:', error);
+    await this.presentToast('حدث خطأ أثناء تجميع الأصناف', 'danger');
+  }
+}
+
+async createPurchaseOrderFromSelectedInvoices() {
+  if (this.selectedInvoicesList.length === 0) {
+    await this.presentToast('الرجاء تحديد فاتورة واحدة على الأقل', 'warning');
+    return;
+  }
+
+  this.presentLoadingWithOptions('جاري تجميع الأصناف من الفواتير المحددة...');
+
+  try {
+    const allItems: Array<any> = [];
+
+    // Fetch details for all selected invoices
+    const detailPromises = this.selectedInvoicesList.map(invoice => {
+      if (this.radioVal == 3) {
+        // Initial invoices
+        return this.api.getPayInvoDetailinit(this.store_info.id, invoice.pay_ref).toPromise();
+      } else {
+        // Final invoices
+        return this.api.getPayInvoDetail(this.store_info.id, invoice.pay_ref, this.year.id).toPromise();
+      }
+    });
+
+    const results = await Promise.all(detailPromises);
+
+    // Collect all items from all invoices
+    results.forEach(res => {
+      if (res && res['data']) {
+        allItems.push(...res['data']);
+      }
+    });
+
+    // Merge duplicate items by item_id and perch_price, summing quantities
+    const mergedItemsMap = new Map<string, any>();
+
+    allItems.forEach(item => {
+      // Create a unique key based on item_id and perch_price
+      const key = `${item.item_id}_${item.perch_price || 0}`;
+
+      if (mergedItemsMap.has(key)) {
+        // Item exists, sum the quantity
+        const existingItem = mergedItemsMap.get(key);
+        existingItem.quantity = +existingItem.quantity + +item.quantity;
+      } else {
+        // New item, add to map with a copy
+        mergedItemsMap.set(key, { ...item });
+      }
+    });
+
+    // Convert map to array and transform for purchase order page
+    const mergedItems = Array.from(mergedItemsMap.values());
+
+    const purchaseOrderItems = mergedItems.map(item => ({
+      id: item.item_id,
+      item_id: item.item_id,
+      item_name: item.item_name,
+      item_desc: item.item_desc,
+      part_no: item.part_no,
+      brand: item.brand,
+      model: item.model,
+      item_unit: item.item_unit,
+      perch_price: item.perch_price || 0,  // Use perch_price from sales item
+      pay_price: item.pay_price || 0,
+      qty: item.quantity,
+      tot: ((item.perch_price || 0) * item.quantity).toFixed(2),
+      availQty: item.quantity || 0,
+      aliasEn: item.aliasEn,
+      store_id: this.store_info.id,  // Add store_id
+      yearId: this.year.id  // Add yearId
+    }));
+
+    this.loadingController.dismiss();
+
+    // Navigate to purchase order page with merged items
+    let navigationExtras: NavigationExtras = {
+      queryParams: {
+        status: 'newInvoFromItemsPage',
+        selectedItemsList: JSON.stringify(purchaseOrderItems)
+      }
+    };
+
+    this.rout.navigate(['/purchase-order'], navigationExtras);
+
+    // Clear selection after navigation
+    this.clearInvoiceSelection();
+
+  } catch (error) {
+    this.loadingController.dismiss();
+    console.error('Error creating purchase order from selected invoices:', error);
+    await this.presentToast('حدث خطأ أثناء تجميع الأصناف', 'danger');
+  }
 }
 
 // Export functionality

@@ -158,6 +158,7 @@ year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
 // Loading state management - Centralized loading system
 isUpdating: boolean = false;
 isDeleting: boolean = false;
+isConverting: boolean = false;
 currentLoadingMessage: string = '';
 currentLoader: HTMLIonLoadingElement | null = null;
 
@@ -174,12 +175,22 @@ private dataInitialized: boolean = false;
       this.user_info = JSON.parse(params.user_info);
       this.store_info = JSON.parse(params.store_info);
       this.itemList = JSON.parse(params.itemList);
+
+      // Fix: Enrich itemList with store_id when coming from items-report
+      // yearId will be set after year is loaded in getAppInfo()
+      if (params.screen === "itemReport" && this.itemList && this.itemList.length > 0) {
+        this.itemList = this.itemList.map(item => ({
+          ...item,
+          store_id: item.store_id || +this.store_info.id
+        }));
+      }
+
       this.resortItemList()
 
       this.initializeDiscountValues();
-      
+
       this.getAppInfo()
-      
+
       // Mark data as initialized to prevent re-initialization
       this.dataInitialized = true;
     }
@@ -220,16 +231,18 @@ private dataInitialized: boolean = false;
   }
 
   // Centralized Loading Management Methods
-  async showLoading(message: string, operationType: 'updating' | 'deleting' = 'updating') {
+  async showLoading(message: string, operationType: 'updating' | 'deleting' | 'converting' = 'updating') {
     await this.hideLoading(); // Ensure no existing loaders
     this.resetLoadingStates();
-    
+
     if (operationType === 'updating') {
       this.isUpdating = true;
     } else if (operationType === 'deleting') {
       this.isDeleting = true;
+    } else if (operationType === 'converting') {
+      this.isConverting = true;
     }
-    
+
     this.currentLoadingMessage = message;
     
     this.currentLoader = await this.loadingController.create({
@@ -266,6 +279,7 @@ private dataInitialized: boolean = false;
   resetLoadingStates() {
     this.isUpdating = false;
     this.isDeleting = false;
+    this.isConverting = false;
     this.currentLoadingMessage = '';
   }
 
@@ -277,7 +291,7 @@ private dataInitialized: boolean = false;
 
   // Check if any loading operation is active
   isLoading(): boolean {
-    return this.isUpdating || this.isDeleting;
+    return this.isUpdating || this.isDeleting || this.isConverting;
   }
 
   async initializeCurrency() {
@@ -374,8 +388,16 @@ private dataInitialized: boolean = false;
 
    this.storage.get('year').then((response) => {
     if (response) {
-      this.year = response 
-    } 
+      this.year = response
+
+      // Fix: Enrich itemList with yearId if items are missing it (e.g., from items-report)
+      if (this.itemList && this.itemList.length > 0) {
+        this.itemList = this.itemList.map(item => ({
+          ...item,
+          yearId: item.yearId || +this.year.id
+        }));
+      }
+    }
   });
   
   
@@ -1364,6 +1386,80 @@ this.api.savePerchitemList(this.itemList).subscribe(data=>{
 
 delete() {
   this.presentAlertConfirm()
+}
+
+// Convert purchase invoice to purchase order
+async presentConvertConfirm() {
+  const alert = await this.alertController.create({
+    cssClass: 'my-custom-class',
+    header: 'تأكيد التحويل!',
+    mode: 'ios',
+    message: 'هل تريد تحويل هذه الفاتورة إلى طلب شراء؟',
+    buttons: [
+      {
+        text: 'إلغاء',
+        role: 'cancel',
+        cssClass: 'secondary',
+        id: 'cancel-button',
+        handler: () => {
+          console.log('Convert cancelled');
+        }
+      }, {
+        text: 'تحويل',
+        id: 'confirm-button',
+        handler: () => {
+          this.executeConvertToOrder();
+        }
+      }
+    ]
+  });
+
+  await alert.present();
+}
+
+convertToOrder() {
+  this.presentConvertConfirm();
+}
+
+async executeConvertToOrder() {
+  await this.showLoading('جاري تحويل الفاتورة إلى طلب شراء...', 'converting');
+
+  const conversionData = {
+    pay_id: this.payInvo.pay_id,
+    pay_ref: this.payInvo.pay_ref,
+    tot_pr: this.payInvo.tot_pr,
+    pay: this.payInvo.pay,
+    changee: this.payInvo.changee,
+    user_id: this.payInvo.user_id,
+    store_id: this.payInvo.store_id,
+    pay_date: this.payInvo.pay_date,
+    pay_time: this.payInvo.pay_time,
+    nextPay: this.payInvo.nextPay,
+    discount: this.payInvo.discount,
+    payComment: this.payInvo.payComment,
+    cust_id: this.payInvo.cust_id,
+    pay_method: this.payInvo.pay_method,
+    yearId: this.payInvo.yearId
+  };
+
+  this.api.convertPurchaseInvoiceToOrder(conversionData).subscribe(
+    (response: any) => {
+      this.hideLoading();
+      if (response.success) {
+        this.presentToast('تم تحويل الفاتورة إلى طلب شراء بنجاح', 'success');
+        // Update local storage
+        this.purchase = this.purchase.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);
+        this.storage.set('purchase', this.purchase).then(() => {
+          this.performSyncDel();
+        });
+      } else {
+        this.presentToast('لم يتم تحويل الفاتورة، خطأ في الاتصال حاول مرة أخرى', 'danger');
+      }
+    },
+    (err) => {
+      this.handleError(err, 'convertToOrder');
+    }
+  );
 }
 
 

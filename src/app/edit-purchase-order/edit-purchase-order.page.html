@@ -1,9 +1,9 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button (click)="back()" defaultHref="/"></ion-back-button>
+      <ion-back-button (click)="back()" defaultHref="/folder/purchase-record"></ion-back-button>
     </ion-buttons>
-    <ion-title>تعديل فاتورة مشتريات</ion-title>
+    <ion-title>تعديل طلب شراء</ion-title>
     <!-- Date in header -->
     <ion-buttons slot="end">
       <app-currency-switcher></app-currency-switcher>
@@ -14,8 +14,8 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content> 
-    <ion-card class="ion-no-padding ion-no-margin"> 
+<ion-content>
+    <ion-card class="ion-no-padding ion-no-margin">
       <ion-grid *ngIf="payInvo">
         <ion-row dir="rtl" class="top-card-row">
           <!-- First Column: Account Selector -->
@@ -32,11 +32,11 @@
               (balanceLoaded)="onAccountBalanceLoaded($event)">
             </app-account-selector>
           </ion-col>
-          
+
           <!-- Comment Column: Note field in same row -->
           <ion-col size="4" class="date-comment-column">
             <ion-label class="column-label">ملاحظة</ion-label>
-            <ion-item class="custInput comment-input"> 
+            <ion-item class="custInput comment-input">
               <ion-input placeholder="أكتب تعليقا" [(ngModel)]="payInvo.payComment" [disabled]="isLoading()"></ion-input>
             </ion-item>
           </ion-col>
@@ -56,7 +56,7 @@
                 [searchLang]="searchLang"
                 [store_info]="store_info"
                 [year]="year"
-                parentPage="edit-perch"
+                parentPage="edit-purchase-order"
                 [enablePriceUpdateConfirmation]="true"
                 [payRef]="payInvo.pay_ref"
                 [showQuantityInput]="true"
@@ -103,9 +103,9 @@
                       </div>
                     </ion-col>
                     <ion-col size="3" class="ion-text-end">
-                      <ion-button 
-                        fill="clear" 
-                        color="light" 
+                      <ion-button
+                        fill="clear"
+                        color="light"
                         size="small"
                         (click)="sortItemListAlphabetically()"
                         [disabled]="!itemList || itemList.length === 0"
@@ -113,9 +113,9 @@
                         <ion-icon name="list" slot="start"></ion-icon>
                         {{ isItemListSorted ? 'ترتيب أصلي' : 'ترتيب أبجدي' }}
                       </ion-button>
-                      <ion-button 
-                        fill="clear" 
-                        color="light" 
+                      <ion-button
+                        fill="clear"
+                        color="light"
                         size="small"
                         (click)="openPriceAdjustmentDialog()"
                         [disabled]="!itemList || itemList.length === 0"
@@ -134,10 +134,10 @@
                   <th>الصنف</th>
                   <th>الكمية</th>
                   <th>سعر الشراء ({{ getCurrencySymbol() }})</th>
-                  <th>المجموع ({{ getCurrencySymbol() }})</th> 
-                  <th></th> 
+                  <th>المجموع ({{ getCurrencySymbol() }})</th>
+                  <th></th>
                  </tr>
-                 <tr *ngFor="let item of getDisplayItemList() ; let i = index" 
+                 <tr *ngFor="let item of getDisplayItemList() ; let i = index"
                      (dblclick)="qtyClick(i)"
                      [attr.data-index]="i"
                      [class.search-highlight]="isHighlighted(i)"
@@ -147,13 +147,13 @@
                     <span [innerHTML]="highlightText(item.item_name, searchTerm)"></span>
                   </td>
                   <td >
-                    <ion-text *ngIf="showMe != i">{{item.quantity}}</ion-text> 
+                    <ion-text *ngIf="showMe != i">{{item.quantity}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                      <ion-input (keyup.enter)="editCell(i)" [(ngModel)] ="item.quantity" (ionBlur)="editCell(i)" ></ion-input>
                     </ion-item>
                  </td>
                  <td>
-                   <ion-text *ngIf="showMe != i">{{item.perch_price | currencyDisplay:'SDG':false}}</ion-text> 
+                   <ion-text *ngIf="showMe != i">{{item.perch_price | currencyDisplay:'SDG':false}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                      <ion-input (keyup.enter)="editCell(i)" [(ngModel)] ="item.perch_price" (ionBlur)="editCell(i)" ></ion-input>
                     </ion-item>
@@ -164,15 +164,15 @@
                       <ion-icon name="trash" color="danger" ></ion-icon>
                     </ion-button>
                   </td>
-                 </tr> 
+                 </tr>
                </table>
-              </div> 
+              </div>
             </ion-card>
           </ion-col>
           </ion-row>
         </ion-grid>
-      </ion-col> 
-    </ion-row> 
+      </ion-col>
+    </ion-row>
   </ion-grid>
 
 </ion-content>
@@ -194,8 +194,8 @@
                 </ion-item>
               </ion-col>
               <ion-col class="footer-input-container">
-                <div class="discount-header"> 
-                  <div dir="rtl" class="discount-segment-container"> 
+                <div class="discount-header">
+                  <div dir="rtl" class="discount-segment-container">
                     <ion-segment [(ngModel)]="discountType" (ionChange)="onDiscountTypeChange($event)" class="compact-discount-segment" [disabled]="isLoading()">
                       <ion-segment-button value="percentage" class="compact-segment-button">
                         <ion-label>نسبة الخصم%</ion-label>
@@ -208,23 +208,23 @@
                 </div>
                 <!-- Percentage Discount Input -->
                 <ion-item *ngIf="discountType === 'percentage'" class="rtl-input custInput discount-input">
-                  <ion-input 
-                    type="number" 
-                    [(ngModel)]="discountPerc" 
+                  <ion-input
+                    type="number"
+                    [(ngModel)]="discountPerc"
                     (ionInput)="onPercentageDiscountChange($event)"
                     placeholder="نسبة الخصم %"
                     [disabled]="isLoading()">
                   </ion-input>
                   <ion-note slot="end" *ngIf="calculatedDiscountAmount > 0" class="discount-note">
-                    {{ calculatedDiscountAmount | currencyDisplay }} 
+                    {{ calculatedDiscountAmount | currencyDisplay }}
                   </ion-note>
                 </ion-item>
 
                 <!-- Amount Discount Input -->
                 <ion-item *ngIf="discountType === 'amount'" class="rtl-input custInput discount-input">
-                  <ion-input 
-                    type="number" 
-                    [(ngModel)]="discountAmount" 
+                  <ion-input
+                    type="number"
+                    [(ngModel)]="discountAmount"
                     (ionInput)="onAmountDiscountChange($event)"
                      placeholder="مبلغ الخصم"
                      [disabled]="isLoading()">
@@ -243,7 +243,7 @@
             </ion-row>
           </ion-grid>
         </ion-col>
-        
+
         <!-- Action buttons on the left side -->
         <ion-col size="4">
           <ion-grid>
@@ -255,9 +255,9 @@
                 </ion-button>
               </ion-col>
               <ion-col size="4">
-                <ion-button expand="block" routerDirection="root" color="warning" (click)="convertToOrder()" [disabled]="isLoading()">
+                <ion-button expand="block" routerDirection="root" color="warning" (click)="convertToInvoice()" [disabled]="isLoading()">
                   <ion-spinner *ngIf="isConverting" slot="start" name="dots"></ion-spinner>
-                  <ion-label class="ion-text-center">{{ isConverting ? 'جاري التحويل...' : 'تحويل لطلب' }}</ion-label>
+                  <ion-label class="ion-text-center">{{ isConverting ? 'جاري التحويل...' : 'تحويل لفاتورة' }}</ion-label>
                 </ion-button>
               </ion-col>
               <ion-col size="4">

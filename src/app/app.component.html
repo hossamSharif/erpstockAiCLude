@@ -99,37 +99,31 @@
               <div class="section-header">
                 <ion-icon name="bag-remove"></ion-icon>
                 <span>المشتريات</span>
-              </div>
-              
-              
-              
+              </div> 
               <div class="menu-item"   [routerLink]="['folder/purchase']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="cart"></ion-icon>
                   <span>فاتورة مشتريات</span>
                 </div>
+              </div> 
+              <div class="menu-item"  [routerLink]="['purchase-order']" routerLinkActive="selected">
+                <div class="menu-item-content">
+                  <ion-icon name="clipboard"></ion-icon>
+                  <span>طلبات الشراء</span>
+                </div>
               </div>
-              
               <div class="menu-item" [routerLink]="['folder/purchase-record']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="document-text"></ion-icon>
                   <span>سجل المشتريات</span>
                 </div>
               </div>
-              
-              <div class="menu-item" *ngIf="device == 'desktop'" [routerLink]="['folder/prch-order']" routerLinkActive="selected">
-                <div class="menu-item-content">
-                  <ion-icon name="clipboard"></ion-icon>
-                  <span>طلبات الشراء</span>
-                </div>
-              </div>
-              
-              <div class="menu-item" *ngIf="device == 'desktop'" [routerLink]="['folder/prch-order-record']" routerLinkActive="selected">
+              <!-- <div class="menu-item" *ngIf="device == 'desktop'" [routerLink]="['folder/prch-order-record']" routerLinkActive="selected">
                 <div class="menu-item-content">
                   <ion-icon name="document-text"></ion-icon>
                   <span>سجل طلبات الشراء</span>
                 </div>
-              </div>
+              </div> -->
             </div>
             
             <!-- Inventory Section -->
