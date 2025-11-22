@@ -512,10 +512,16 @@
                   </th>
                   <th  [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">سعر الوحده ({{ getCurrencySymbol() }})
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('pay_price')">
-                    
+
                       <ion-icon [name]="getSortIcon('pay_price')"></ion-icon>
                     </ion-button>
-                  </th> 
+                  </th>
+                  <th  [ngClass]="{'hideMe': colSetting.retail_price == false , 'showMe': colSetting.retail_price == true }">سعر التجزئة ({{ getCurrencySymbol() }})
+                    <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('retail_price')">
+
+                      <ion-icon [name]="getSortIcon('retail_price')"></ion-icon>
+                    </ion-button>
+                  </th>
                   <th  [ngClass]="{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }">نسبة الفائدة (profit perc)
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('profit')">
                     
@@ -536,11 +542,23 @@
                   </th>
                   <th  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">اخر عملية بيع
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('lastSold')">
-                    
+
                       <ion-icon [name]="getSortIcon('lastSold')"></ion-icon>
                     </ion-button>
                   </th>
-                 
+                  <th  [ngClass]="{'hideMe': colSetting.lastPurch == false , 'showMe': colSetting.lastPurch == true }">تاريخ اخر شراء
+                    <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('lastPurch')">
+
+                      <ion-icon [name]="getSortIcon('lastPurch')"></ion-icon>
+                    </ion-button>
+                  </th>
+                  <th  [ngClass]="{'hideMe': colSetting.lastPurch == false , 'showMe': colSetting.lastPurch == true }">كمية اخر شراء
+                    <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('lastPurch')">
+
+                      <ion-icon [name]="getSortIcon('lastPurch')"></ion-icon>
+                    </ion-button>
+                  </th>
+
                   <th>المخزون الإفتتاحي</th> 
                   <!-- <th  [ngClass]="{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }"><strong>تعديل</strong>  </th>  -->
                   <!-- <th  [ngClass]="{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }"><strong>حذف</strong>  </th>  -->
@@ -615,8 +633,14 @@
                     <ion-text *ngIf="showMe != i">{{item.pay_price | currencyDisplay:'SDG':false}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.pay_price"  ></ion-input>
-                     </ion-item> 
-                  </td> 
+                     </ion-item>
+                  </td>
+                  <td  [ngClass]="{'hideMe': colSetting.retail_price == false , 'showMe': colSetting.retail_price == true }">
+                    <ion-text *ngIf="showMe != i">{{item.retail_price | currencyDisplay:'SDG':false}}</ion-text>
+                    <ion-item *ngIf="showMe == i">
+                      <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.retail_price"  ></ion-input>
+                     </ion-item>
+                  </td>
                   <td  [ngClass]="{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }">
                     {{calculateProfit(item).toFixed(2)}}
                   </td>
@@ -624,10 +648,12 @@
                   <td  [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">{{item.quantity}}</td>
                   <td  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">{{(+item.quantity * +item.perch_price) | currencyDisplay:'SDG':false}}</td>
                   <td  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">{{item.lastSoldDate }}</td>
+                  <td  [ngClass]="{'hideMe': colSetting.lastPurch == false , 'showMe': colSetting.lastPurch == true }">{{item.lastPurchDate }}</td>
+                  <td  [ngClass]="{'hideMe': colSetting.lastPurch == false , 'showMe': colSetting.lastPurch == true }">{{item.lastPurchQty }}</td>
                   <!-- new -->
                   <!-- <td   >{{item.sales28 }}</td>
                   <td   >{{item.salesQuantity }}</td>
-                  <td   >{{item.purch28 }}</td> 
+                  <td   >{{item.purch28 }}</td>
                   <td   >{{item.perchQuantity }}</td> -->
                   <td>
                      <ion-item *ngIf="showMe == i">
@@ -636,7 +662,7 @@
 
                     <ion-text *ngIf="showMe != i">
                       {{item.firstQuantity}}
-                    </ion-text> 
+                    </ion-text>
                   </td>
                   
 
@@ -889,6 +915,11 @@
                       <ion-icon [name]="getSortIcon('pay_price')"></ion-icon>
                     </ion-button>
                   </th>
+                  <th [ngClass]="{'hideMe': colSetting.retail_price == false , 'showMe': colSetting.retail_price == true }">سعر التجزئة
+                    <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('retail_price')">
+                      <ion-icon [name]="getSortIcon('retail_price')"></ion-icon>
+                    </ion-button>
+                  </th>
                   <th [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">المخزون
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('quantity')">
                       <ion-icon [name]="getSortIcon('quantity')"></ion-icon>
@@ -902,6 +933,16 @@
                   <th [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">اخر عملية بيع
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('lastSold')">
                       <ion-icon [name]="getSortIcon('lastSold')"></ion-icon>
+                    </ion-button>
+                  </th>
+                  <th [ngClass]="{'hideMe': colSetting.lastPurch == false , 'showMe': colSetting.lastPurch == true }">تاريخ اخر شراء
+                    <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('lastPurch')">
+                      <ion-icon [name]="getSortIcon('lastPurch')"></ion-icon>
+                    </ion-button>
+                  </th>
+                  <th [ngClass]="{'hideMe': colSetting.lastPurch == false , 'showMe': colSetting.lastPurch == true }">كمية اخر شراء
+                    <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('lastPurch')">
+                      <ion-icon [name]="getSortIcon('lastPurch')"></ion-icon>
                     </ion-button>
                   </th>
                   <th>المخزون الإفتتاحي</th>
@@ -968,6 +1009,12 @@
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.pay_price"  ></ion-input>
                      </ion-item>
                   </td>
+                  <td [ngClass]="{'hideMe': colSetting.retail_price == false , 'showMe': colSetting.retail_price == true }">
+                    <ion-text *ngIf="showMe != i">{{item.retail_price | currencyDisplay:'SDG':false}}</ion-text>
+                    <ion-item *ngIf="showMe == i">
+                      <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.retail_price"  ></ion-input>
+                     </ion-item>
+                  </td>
                   <td [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">
                     <ion-text [ngClass]="{'negative': item.quantity < 0}">{{item.quantity}}</ion-text>
                   </td>
@@ -976,6 +1023,12 @@
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">
                     <ion-text>{{item.lastSoldDate}}</ion-text>
+                  </td>
+                  <td [ngClass]="{'hideMe': colSetting.lastPurch == false , 'showMe': colSetting.lastPurch == true }">
+                    <ion-text>{{item.lastPurchDate}}</ion-text>
+                  </td>
+                  <td [ngClass]="{'hideMe': colSetting.lastPurch == false , 'showMe': colSetting.lastPurch == true }">
+                    <ion-text>{{item.lastPurchQty}}</ion-text>
                   </td>
                   <td>
                     <ion-text *ngIf="showMe != i">{{item.firstQuantity}}</ion-text>

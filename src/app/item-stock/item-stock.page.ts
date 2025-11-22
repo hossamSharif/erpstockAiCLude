@@ -79,8 +79,8 @@ itemsAll:Array<any> =[]
   exportMode :boolean = false
   showBrand:boolean = false
   showMdel:boolean = false
-  selectedItem2 : {id:any ,item_name:any ,model:any ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,item_unit:any,item_desc:any,item_parcode:any,aliasEn:any , quantity?:any};
-  colSetting : {id:any ,item_name:any ,model:any ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,item_unit:any,item_desc:any,item_parcode:any,profit:any,instock:any,total:any,lastSold:any,edit:any,delete:any,aliasEn:any};
+  selectedItem2 : {id:any ,item_name:any ,model:any ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,retail_price:any,item_unit:any,item_desc:any,item_parcode:any,aliasEn:any , quantity?:any};
+  colSetting : {id:any ,item_name:any ,model:any ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,retail_price:any,item_unit:any,item_desc:any,item_parcode:any,profit:any,instock:any,total:any,lastSold:any,lastPurch:any,edit:any,delete:any,aliasEn:any};
   year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
    selectedItemsList: Array<any> = [];
   logHistoryObj : {id:any,	logRef:any,	userId:any,	typee:any,	datee:any,	logStatus:any,	logToken:any,	yearId:any,	store_id:any}
@@ -169,8 +169,8 @@ itemsAll:Array<any> =[]
   ) { 
     this.store_info = {id:"" ,store_ref:"" , store_name:"" , location :"" }
     this.selectedItem = {id:null ,item_name:"" ,model:"" ,part_no:""  ,min_qty:0 ,brand:"",pay_price:0,perch_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:""};
-    this.selectedItem2 = {id:null ,item_name:"" ,model:"" ,part_no:""  ,min_qty:0 ,brand:"",pay_price:0,perch_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:""};
-    this.colSetting = {id:true ,item_name:true ,model:true ,part_no:true  ,min_qty:true ,brand:true,pay_price:true,perch_price:true,item_unit:true,item_desc:true,item_parcode:true,profit:true,instock:true,total:true,lastSold:true,edit:true,delete:true,aliasEn:true};
+    this.selectedItem2 = {id:null ,item_name:"" ,model:"" ,part_no:""  ,min_qty:0 ,brand:"",pay_price:0,perch_price:0,retail_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:""};
+    this.colSetting = {id:true ,item_name:true ,model:true ,part_no:true  ,min_qty:true ,brand:true,pay_price:true,perch_price:true,retail_price:true,item_unit:true,item_desc:true,item_parcode:true,profit:true,instock:true,total:true,lastSold:true,lastPurch:true,edit:true,delete:true,aliasEn:true};
     this.getAppInfo()
        // Initialize filter state
     this.filterState = {
@@ -750,13 +750,13 @@ delete(){
         console.log(i)
       }else{ 
          this.showMe = i
-        this.selectedItem2 = {id:item.id ,item_name:item.item_name ,model:item.model ,part_no:item.part_no  ,min_qty:item.min_qty ,brand:item.brand,pay_price:item.pay_price,perch_price:item.perch_price,item_unit:item.item_unit,item_desc:item.item_desc,item_parcode:item.item_parcode,aliasEn:item.aliasEn , quantity:item.firstQuantity};
+        this.selectedItem2 = {id:item.id ,item_name:item.item_name ,model:item.model ,part_no:item.part_no  ,min_qty:item.min_qty ,brand:item.brand,pay_price:item.pay_price,perch_price:item.perch_price,retail_price:item.retail_price || 0,item_unit:item.item_unit,item_desc:item.item_desc,item_parcode:item.item_parcode,aliasEn:item.aliasEn , quantity:item.firstQuantity};
       } 
     }
   
     hideMe(i){
       this.showMe = null 
-     this.selectedItem2 = {id: null ,item_name:"" ,model:"" ,part_no:""  ,min_qty:0 ,brand:"",pay_price:0,perch_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:"", quantity:0};
+     this.selectedItem2 = {id: null ,item_name:"" ,model:"" ,part_no:""  ,min_qty:0 ,brand:"",pay_price:0,perch_price:0,retail_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:"", quantity:0};
     }
  
 
@@ -1687,6 +1687,7 @@ setColSetting(data?){
       case 'quantity': return item.quantity;
       case 'total': return item.stockValuePayPrice;
       case 'lastSold': return item.lastSoldDate;
+      case 'lastPurch': return item.lastPurchDate;
       default: return '';
     }
   }
@@ -2781,7 +2782,8 @@ incresePrice(data){
     if (this.colSetting.instock) columns.push({ key: 'quantity', title: 'المخزون', width: 12, type: 'number' });
     if (this.colSetting.total) columns.push({ key: 'stockValue', title: 'المجموع', width: 15, type: 'currency' });
     if (this.colSetting.lastSold) columns.push({ key: 'lastSoldDate', title: 'اخر عملية بيع', width: 15, type: 'text' });
-    
+    if (this.colSetting.lastPurch) columns.push({ key: 'lastPurchDate', title: 'اخر عملية شراء', width: 15, type: 'text' });
+
     // Always add opening stock (firstQuantity) if it exists
     columns.push({ key: 'firstQuantity', title: 'المخزون الإفتتاحي', width: 15, type: 'number' });
     

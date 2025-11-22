@@ -1713,18 +1713,38 @@ async createSalesInvoiceFromSelectedInvoices() {
 
     this.loadingController.dismiss();
 
-    // Navigate to sales page with merged items
-    let navigationExtras: NavigationExtras = {
-      queryParams: {
-        status: 'newInvoFromItemsPage',
-        selectedItemsList: JSON.stringify(salesItems)
+    // Show price configuration dialog
+    const modal = await this.modalController.create({
+      component: InvoicePriceConfigDialogComponent,
+      componentProps: {
+        itemList: salesItems,
+        invoiceType: 'sales',
+        context: 'sales-record'
+      },
+      cssClass: 'invoice-price-config-modal'
+    });
+
+    modal.onDidDismiss().then((result) => {
+      if (result.data) {
+        // User confirmed configuration, navigate with configured items
+        const configuredItems = result.data;
+
+        let navigationExtras: NavigationExtras = {
+          queryParams: {
+            status: 'newInvoFromItemsPage',
+            selectedItemsList: JSON.stringify(configuredItems)
+          }
+        };
+
+        this.rout.navigate(['folder/sales'], navigationExtras);
+
+        // Clear selection after navigation
+        this.clearInvoiceSelection();
       }
-    };
+      // If result.data is null/undefined, user cancelled - don't navigate
+    });
 
-    this.rout.navigate(['folder/sales'], navigationExtras);
-
-    // Clear selection after navigation
-    this.clearInvoiceSelection();
+    return await modal.present();
 
   } catch (error) {
     this.loadingController.dismiss();
@@ -1805,18 +1825,38 @@ async createPurchaseInvoiceFromSelectedInvoices() {
 
     this.loadingController.dismiss();
 
-    // Navigate to purchase page with merged items
-    let navigationExtras: NavigationExtras = {
-      queryParams: {
-        status: 'newInvoFromItemsPage',
-        selectedItemsList: JSON.stringify(purchaseItems)
+    // Show price configuration dialog
+    const modal = await this.modalController.create({
+      component: InvoicePriceConfigDialogComponent,
+      componentProps: {
+        itemList: purchaseItems,
+        invoiceType: 'purchase',
+        context: 'sales-record'
+      },
+      cssClass: 'invoice-price-config-modal'
+    });
+
+    modal.onDidDismiss().then((result) => {
+      if (result.data) {
+        // User confirmed configuration, navigate with configured items
+        const configuredItems = result.data;
+
+        let navigationExtras: NavigationExtras = {
+          queryParams: {
+            status: 'newInvoFromItemsPage',
+            selectedItemsList: JSON.stringify(configuredItems)
+          }
+        };
+
+        this.rout.navigate(['folder/purchase'], navigationExtras);
+
+        // Clear selection after navigation
+        this.clearInvoiceSelection();
       }
-    };
+      // If result.data is null/undefined, user cancelled - don't navigate
+    });
 
-    this.rout.navigate(['folder/purchase'], navigationExtras);
-
-    // Clear selection after navigation
-    this.clearInvoiceSelection();
+    return await modal.present();
 
   } catch (error) {
     this.loadingController.dismiss();
@@ -1897,18 +1937,38 @@ async createPurchaseOrderFromSelectedInvoices() {
 
     this.loadingController.dismiss();
 
-    // Navigate to purchase order page with merged items
-    let navigationExtras: NavigationExtras = {
-      queryParams: {
-        status: 'newInvoFromItemsPage',
-        selectedItemsList: JSON.stringify(purchaseOrderItems)
+    // Show price configuration dialog
+    const modal = await this.modalController.create({
+      component: InvoicePriceConfigDialogComponent,
+      componentProps: {
+        itemList: purchaseOrderItems,
+        invoiceType: 'purchase',
+        context: 'sales-record'
+      },
+      cssClass: 'invoice-price-config-modal'
+    });
+
+    modal.onDidDismiss().then((result) => {
+      if (result.data) {
+        // User confirmed configuration, navigate with configured items
+        const configuredItems = result.data;
+
+        let navigationExtras: NavigationExtras = {
+          queryParams: {
+            status: 'newInvoFromItemsPage',
+            selectedItemsList: JSON.stringify(configuredItems)
+          }
+        };
+
+        this.rout.navigate(['/purchase-order'], navigationExtras);
+
+        // Clear selection after navigation
+        this.clearInvoiceSelection();
       }
-    };
+      // If result.data is null/undefined, user cancelled - don't navigate
+    });
 
-    this.rout.navigate(['/purchase-order'], navigationExtras);
-
-    // Clear selection after navigation
-    this.clearInvoiceSelection();
+    return await modal.present();
 
   } catch (error) {
     this.loadingController.dismiss();

@@ -1,0 +1,33 @@
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Warning:  Attempt to read property "id" on null in /home/gvstechn/erp.gvstech.net/myapiAi/api/items/update.php on line 21
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Warning:  Attempt to read property "item_name" on null in /home/gvstechn/erp.gvstech.net/myapiAi/api/items/update.php on line 26
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Warning:  Attempt to read property "part_no" on null in /home/gvstechn/erp.gvstech.net/myapiAi/api/items/update.php on line 27
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Warning:  Attempt to read property "model" on null in /home/gvstechn/erp.gvstech.net/myapiAi/api/items/update.php on line 28
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Warning:  Attempt to read property "brand" on null in /home/gvstechn/erp.gvstech.net/myapiAi/api/items/update.php on line 29
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Warning:  Attempt to read property "min_qty" on null in /home/gvstechn/erp.gvstech.net/myapiAi/api/items/update.php on line 31
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Warning:  Attempt to read property "item_unit" on null in /home/gvstechn/erp.gvstech.net/myapiAi/api/items/update.php on line 32
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Warning:  Attempt to read property "pay_price" on null in /home/gvstechn/erp.gvstech.net/myapiAi/api/items/update.php on line 33
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Warning:  Attempt to read property "perch_price" on null in /home/gvstechn/erp.gvstech.net/myapiAi/api/items/update.php on line 34
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Warning:  Attempt to read property "item_desc" on null in /home/gvstechn/erp.gvstech.net/myapiAi/api/items/update.php on line 36
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Warning:  Attempt to read property "item_parcode" on null in /home/gvstechn/erp.gvstech.net/myapiAi/api/items/update.php on line 37
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Warning:  Attempt to read property "aliasEn" on null in /home/gvstechn/erp.gvstech.net/myapiAi/api/items/update.php on line 38
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 868
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 869
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 870
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 871
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 872
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 873
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 874
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 875
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 876
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 877
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 879
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 880
+[20-Nov-2025 21:19:19 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 881
+[20-Nov-2025 21:19:20 Asia/Kolkata] PHP Deprecated:  strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php on line 873
+[20-Nov-2025 21:19:21 Asia/Kolkata] PHP Fatal error:  Uncaught Error: PDOStatement::bindParam(): Argument #2 ($var) cannot be passed by reference in /home/gvstechn/erp.gvstech.net/myapiAi/helpers/NotificationHelper.php:190
+Stack trace:
+#0 /home/gvstechn/erp.gvstech.net/myapiAi/helpers/NotificationHelper.php(45): NotificationHelper->logNotificationAttempt()
+#1 /home/gvstechn/erp.gvstech.net/myapiAi/models/items.php(939): NotificationHelper->sendItemChangeNotification()
+#2 /home/gvstechn/erp.gvstech.net/myapiAi/api/items/update.php(48): Items->update()
+#3 {main}
+  thrown in /home/gvstechn/erp.gvstech.net/myapiAi/helpers/NotificationHelper.php on line 190

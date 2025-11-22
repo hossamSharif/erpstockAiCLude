@@ -251,9 +251,20 @@
                   <ion-col size="12">
                     <ion-item class="modern-input" fill="outline">
                       <ion-label position="stacked">سعر البيع *</ion-label>
-                      <ion-input [(ngModel)]="selectedItem.pay_price" 
-                                 type="number" 
+                      <ion-input [(ngModel)]="selectedItem.pay_price"
+                                 type="number"
                                  placeholder="سعر البيع"></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row>
+                  <ion-col size="12">
+                    <ion-item class="modern-input" fill="outline">
+                      <ion-label position="stacked">سعر التجزئة</ion-label>
+                      <ion-input [(ngModel)]="selectedItem.retail_price"
+                                 type="number"
+                                 placeholder="سعر التجزئة"></ion-input>
                     </ion-item>
                   </ion-col>
                 </ion-row>
@@ -435,10 +446,15 @@
               <ion-label> المجموع	 			  </ion-label>
               <ion-checkbox [(ngModel)]="colSettingpr.total"></ion-checkbox>
             </ion-item>
-             
+
               <ion-item>
                 <ion-label> اخر عملية بيع	 			  </ion-label>
                 <ion-checkbox [(ngModel)]="colSettingpr.lastSold"></ion-checkbox>
+              </ion-item>
+
+              <ion-item>
+                <ion-label> اخر عملية شراء (تاريخ وكمية)	 			  </ion-label>
+                <ion-checkbox [(ngModel)]="colSettingpr.lastPurch"></ion-checkbox>
               </ion-item>
           </ion-list>
         </ion-col>

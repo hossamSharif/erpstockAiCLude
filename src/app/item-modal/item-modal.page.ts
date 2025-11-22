@@ -23,9 +23,9 @@ export class ItemModalPage implements OnInit {
   @Input() firstq: any;
   @Input() colSetting: any;
   segme
-  selectedItem : {id:any ,item_name:any,model:any  ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,item_unit:any,item_desc:any,item_parcode:any,aliasEn:any,category_id:any};
+  selectedItem : {id:any ,item_name:any,model:any  ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,retail_price:any,item_unit:any,item_desc:any,item_parcode:any,aliasEn:any,category_id:any};
   firstqObj : {id:any ,item_id:any , store_id:any , quantity :any ,	fq_year:any ,	pay_price:any ,	perch_price:any }
-  colSettingpr : {id:any ,item_name:any ,model:any ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,item_unit:any,item_desc:any,item_parcode:any,profit:any,instock:any,total:any,lastSold:any,aliasEn:any};
+  colSettingpr : {id:any ,item_name:any ,model:any ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,item_unit:any,item_desc:any,item_parcode:any,profit:any,instock:any,total:any,lastSold:any,lastPurch:any,aliasEn:any};
  quantityFilter: {
     enabled: boolean,
     minQuantity: number,
@@ -44,9 +44,9 @@ export class ItemModalPage implements OnInit {
   customPercentage: number = null
   lastAppliedPercentage: number = null 
   constructor(private loadingController:LoadingController,private api:ServicesService,private modalController: ModalController,private toast :ToastController, private alertController: AlertController) {
-    this.selectedItem = {id:"" ,item_name:"",model:"",part_no:""  ,min_qty:0 ,brand:"",pay_price:"",perch_price:"",item_unit:"",item_desc:"",item_parcode:"",aliasEn:"",category_id:""};   
+    this.selectedItem = {id:"" ,item_name:"",model:"",part_no:""  ,min_qty:0 ,brand:"",pay_price:"",perch_price:"",retail_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:"",category_id:""};   
     this.firstqObj = {id:"" ,item_id:"" , store_id:"" , quantity :0 ,	fq_year:"" ,	pay_price:"" ,	perch_price:"" }
-    this.colSettingpr = {id:true ,item_name:true ,model:true ,part_no:true  ,min_qty:true ,brand:true,pay_price:true,perch_price:true,item_unit:true,item_desc:true,item_parcode:true,profit:true,instock:true,total:true,lastSold:true,aliasEn:true};
+    this.colSettingpr = {id:true ,item_name:true ,model:true ,part_no:true  ,min_qty:true ,brand:true,pay_price:true,perch_price:true,item_unit:true,item_desc:true,item_parcode:true,profit:true,instock:true,total:true,lastSold:true,lastPurch:true,aliasEn:true};
    
     this.price = {payval:0,perchval:0 ,type: 'pay', status:'plus'}  
   // Initialize quantity filter
@@ -177,7 +177,7 @@ applyQuantityFilter(items: Array<any>): Array<any> {
 
    checkstatus(){
     if ( this.status == 'edit') { 
-    this.selectedItem = {id:this.item.id ,item_name:this.item.item_name,model:this.item.model,part_no:this.item.part_no  ,min_qty:this.item.min_qty ,brand:this.item.brand,pay_price:this.item.pay_price,perch_price:this.item.perch_price,item_unit:this.item.item_unit,item_desc:this.item.item_desc,item_parcode:this.item.item_parcode, aliasEn:this.item.aliasEn ,category_id:this.item.category_id}; 
+    this.selectedItem = {id:this.item.id ,item_name:this.item.item_name,model:this.item.model,part_no:this.item.part_no  ,min_qty:this.item.min_qty ,brand:this.item.brand,pay_price:this.item.pay_price,perch_price:this.item.perch_price,retail_price:this.item.retail_price || 0,item_unit:this.item.item_unit,item_desc:this.item.item_desc,item_parcode:this.item.item_parcode, aliasEn:this.item.aliasEn ,category_id:this.item.category_id}; 
     // this.firstqObj = {id:this.firstq.id ,item_id:this.firstq.item_id,
       
     //   store_id:this.firstq.store_id,
@@ -185,8 +185,8 @@ applyQuantityFilter(items: Array<any>): Array<any> {
     //   fq_year:this.firstq.fq_year ,
     //   pay_price:this.firstq.pay_price,perch_price:this.firstq.perch_price}; 
      
-      } else if (this.status == 'settings'){  
-        this.colSettingpr = {id: this.colSetting.id ,item_name:this.colSetting.item_name ,model:this.colSetting.model ,part_no:this.colSetting.part_no  ,min_qty:this.colSetting.min_qty ,brand:this.colSetting.brand,pay_price:this.colSetting.pay_price,perch_price:this.colSetting.perch_price,item_unit:this.colSetting.item_unit,item_desc:this.colSetting.item_desc,item_parcode:this.colSetting.item_parcode,profit:this.colSetting.profit,instock:this.colSetting.instock,total:this.colSetting.total,lastSold:this.colSetting.lastSold,aliasEn:this.colSetting.aliasEn};
+      } else if (this.status == 'settings'){
+        this.colSettingpr = {id: this.colSetting.id ,item_name:this.colSetting.item_name ,model:this.colSetting.model ,part_no:this.colSetting.part_no  ,min_qty:this.colSetting.min_qty ,brand:this.colSetting.brand,pay_price:this.colSetting.pay_price,perch_price:this.colSetting.perch_price,item_unit:this.colSetting.item_unit,item_desc:this.colSetting.item_desc,item_parcode:this.colSetting.item_parcode,profit:this.colSetting.profit,instock:this.colSetting.instock,total:this.colSetting.total,lastSold:this.colSetting.lastSold,lastPurch:this.colSetting.lastPurch,aliasEn:this.colSetting.aliasEn};
       }  else if (this.status == 'filter'){  
          this.filterArray = this.filterArrayOrign
          //console.log(this.filterArray)

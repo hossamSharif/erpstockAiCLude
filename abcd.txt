@@ -1,5 +1,6 @@
- -add logs 
- -add a history for edditing the invoice and provide option for the undo and redo 
+ - add another pay price to the items data
+ - add logs 
+ - add a history for edditing the invoice and provide option for the undo and redo 
  - creare new page in accounting sections like the dashboboard pageof the dairy sys
  - auto save invoices 
  - login and mange profile and admin manage users 
