@@ -259,6 +259,10 @@ const routes: Routes = [
   {
     path: 'edit-purchase-order',
     loadChildren: () => import('./edit-purchase-order/edit-purchase-order.module').then( m => m.EditPurchaseOrderPageModule)
+  },
+  {
+    path: 'data-verification',
+    loadChildren: () => import('./data-verification/data-verification.module').then( m => m.DataVerificationPageModule)
   }
   
 ];

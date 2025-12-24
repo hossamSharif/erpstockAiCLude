@@ -3,7 +3,7 @@ import { CurrencyService } from '../services/currency.service';
 
 @Pipe({
   name: 'currencyDisplay',
-  pure: false // Make it impure to react to currency changes
+  pure: true // Pure pipe for better performance - only runs when input value changes
 })
 export class CurrencyDisplayPipe implements PipeTransform {
 

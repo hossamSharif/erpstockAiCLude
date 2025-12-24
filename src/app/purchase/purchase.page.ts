@@ -1442,8 +1442,8 @@ onDiscountTypeChange(event: any) {
     this.discountPerc = event.target.value || 0;
     if (this.payInvo.tot_pr > 0) {
       // Calculate discount amount based on percentage
-      this.calculatedDiscountAmount = (+this.payInvo.tot_pr * +this.discountPerc / 100);
-      this.payInvo.discount = this.calculatedDiscountAmount.toFixed(2);
+      this.calculatedDiscountAmount = this.roundToTwo(+this.payInvo.tot_pr * +this.discountPerc / 100);
+      this.payInvo.discount = this.calculatedDiscountAmount;
       this.calculateChange();
     }
   }
@@ -1452,8 +1452,8 @@ onDiscountTypeChange(event: any) {
     this.discountAmount = event.target.value || 0;
     if (this.payInvo.tot_pr > 0 && this.discountAmount > 0) {
       // Calculate discount percentage based on amount
-      this.calculatedDiscountPerc = ((+this.discountAmount / +this.payInvo.tot_pr) * 100);
-      this.payInvo.discount = this.discountAmount;
+      this.calculatedDiscountPerc = this.roundToTwo((+this.discountAmount / +this.payInvo.tot_pr) * 100);
+      this.payInvo.discount = +this.discountAmount;
       this.calculateChange();
     } else {
       this.calculatedDiscountPerc = 0;
@@ -1462,23 +1462,33 @@ onDiscountTypeChange(event: any) {
     }
   }
 
+  /**
+   * Helper method for consistent rounding to 2 decimal places
+   * Uses Math.round for precise rounding without floating-point issues
+   */
+  private roundToTwo(num: number): number {
+    return Math.round(num * 100) / 100;
+  }
+
   calculateChange() {
-    this.payInvo.changee = +(this.payInvo.tot_pr - +this.payInvo.discount) - this.payInvo.pay;
+    this.payInvo.changee = this.roundToTwo((+this.payInvo.tot_pr - +this.payInvo.discount) - this.payInvo.pay);
   }
 
 
     getTotal() {
+    // Calculate sum from item totals
     let sum = this.itemList.reduce((acc, obj) => { return acc + +obj.tot; }, 0);
-    this.payInvo.tot_pr = sum - +this.payInvo.discount;
-    this.payInvo.changee = +(sum - +this.payInvo.discount) - this.payInvo.pay;
-    this.payInvo.tot_pr = this.payInvo.tot_pr.toFixed(2);
-    this.payInvo.changee = this.payInvo.changee.toFixed(2);
-    
+    sum = this.roundToTwo(sum);
+
+    // Store as numbers (not strings) for consistent type handling
+    this.payInvo.tot_pr = this.roundToTwo(sum - +this.payInvo.discount);
+    this.payInvo.changee = this.roundToTwo(this.payInvo.tot_pr - this.payInvo.pay);
+
     // Recalculate discount labels when total changes
     if (this.discountType === 'percentage' && this.discountPerc > 0) {
-      this.calculatedDiscountAmount = (sum * +this.discountPerc / 100);
+      this.calculatedDiscountAmount = this.roundToTwo(sum * +this.discountPerc / 100);
     } else if (this.discountType === 'amount' && this.discountAmount > 0) {
-      this.calculatedDiscountPerc = ((+this.discountAmount / sum) * 100);
+      this.calculatedDiscountPerc = this.roundToTwo((+this.discountAmount / sum) * 100);
     }
   }
 

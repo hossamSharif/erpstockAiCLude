@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable, Subscription } from 'rxjs';
-import {  LoadingController,Platform, ModalController, ToastController, PopoverController } from '@ionic/angular';
-import { DatePipe } from '@angular/common'; 
+import {  LoadingController,Platform, ModalController, ToastController, PopoverController, AlertController } from '@ionic/angular';
+import { DatePipe } from '@angular/common';
 import { Storage } from '@ionic/storage';
 import { NavigationExtras, Router } from '@angular/router'
 import { PrintModalPage } from '../print-modal/print-modal.page';
@@ -12,6 +12,7 @@ import { CategoriesPage } from '../categories/categories.page';
 import { SortingService, SortConfig } from '../services/sorting.service';
 import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
 import { CurrencyService } from '../services/currency.service';
+import { DataVerificationService } from '../services/data-verification.service';
  
 @Component({
   selector: 'app-purchase-record',
@@ -69,7 +70,7 @@ export class PurchaseRecordPage implements OnInit, OnDestroy {
   currentCurrency$ = this.currencyService.getCurrentCurrency();
   private subscription: Subscription = new Subscription();
 
-  constructor(private popoverController: PopoverController ,private platform :Platform ,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private exportService: ExportService, private currencyService: CurrencyService, private cdr: ChangeDetectorRef) { 
+  constructor(private popoverController: PopoverController ,private platform :Platform ,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private exportService: ExportService, private currencyService: CurrencyService, private cdr: ChangeDetectorRef, private verificationService: DataVerificationService, private alertController: AlertController) { 
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
     this.sums = {pay:0 ,change:0,discount:0,tot:0,totAfterDiscout:0}
     this.checkPlatform()
@@ -178,6 +179,61 @@ export class PurchaseRecordPage implements OnInit, OnDestroy {
   });
 
   return await popover.present();
+}
+
+/**
+ * Verify invoice integrity
+ */
+async verifyInvoice(pay: any) {
+  const loading = await this.loadingController.create({
+    message: 'Verifying invoice... | جاري التحقق من الفاتورة...',
+    spinner: 'crescent'
+  });
+  await loading.present();
+
+  // Pass invoice header data to verification service
+  this.verificationService.verifyPurchaseInvoice(pay.pay_ref, this.store_info.id, this.year.id, pay)
+    .subscribe({
+      next: async (result) => {
+        await loading.dismiss();
+
+        const alert = await this.alertController.create({
+          header: result.status === 'OK' ? 'Verification Passed | تم التحقق بنجاح' : 'Verification Failed | فشل التحقق',
+          message: `
+            <div style="text-align: left; direction: ltr;">
+              <strong>Invoice Ref:</strong> ${result.invoiceRef}<br>
+              <strong>رقم الفاتورة:</strong> ${result.invoiceRef}<br><br>
+              <strong>Supplier:</strong> ${result.customerName}<br>
+              <strong>المورد:</strong> ${result.customerName}<br><br>
+              <strong>Stored Total:</strong> ${result.storedTotal.toFixed(2)}<br>
+              <strong>الإجمالي المحفوظ:</strong> ${result.storedTotal.toFixed(2)}<br><br>
+              <strong>Calculated Total:</strong> ${result.calculatedTotal.toFixed(2)}<br>
+              <strong>الإجمالي المحسوب:</strong> ${result.calculatedTotal.toFixed(2)}<br><br>
+              <strong>Difference:</strong> ${result.difference.toFixed(2)} ${result.difference > 0 ? '(Stored > Calculated)' : result.difference < 0 ? '(Stored < Calculated)' : ''}<br>
+              <strong>الفرق:</strong> ${result.difference.toFixed(2)} ${result.difference > 0 ? '(المحفوظ > المحسوب)' : result.difference < 0 ? '(المحفوظ < المحسوب)' : ''}<br><br>
+              ${result.status === 'OK' ?
+                '<strong style="color: green;">✓ Invoice data is correct | البيانات صحيحة</strong>' :
+                '<strong style="color: red;">✗ Invoice total does not match! | الإجمالي لا يتطابق!</strong>'}
+            </div>
+          `,
+          buttons: ['OK | حسناً']
+        });
+
+        await alert.present();
+      },
+      error: async (error) => {
+        await loading.dismiss();
+        console.error('Verification error:', error);
+
+        const alert = await this.alertController.create({
+          header: 'Error | خطأ',
+          message: 'Failed to verify invoice. Please try again. | فشل التحقق من الفاتورة. حاول مرة أخرى.',
+          buttons: ['OK | حسناً']
+        });
+
+        await alert.present();
+      }
+    });
 }
 
 copyAsInvoice(pay: any, type: 'sales' | 'purchase') {

@@ -760,12 +760,19 @@ delete(){
     }
  
 
-    update(mdata){ 
+    async update(mdata){
        this.presentLoadingWithOptions('جاري تعديل البيانات ...')
        // Remove imageUrl and tax from update data while keeping category_id
        const updateData = { ...mdata[0] } as any;
        if ('imageUrl' in updateData) delete updateData.imageUrl;
        if ('tax' in updateData) delete updateData.tax;
+
+       // Add category_id from localStorage for notifications (SELECTED_CATEGORY_ID)
+       const savedCategoryId = await this.storage.get('SELECTED_CATEGORY_ID');
+       if (savedCategoryId && !updateData.category_id) {
+         updateData.category_id = savedCategoryId;
+       }
+
        this.api.updateItem(updateData).subscribe(data => {
        //console.log(data)
        if (data['message'] != 'Post Not Updated') {
@@ -793,17 +800,24 @@ delete(){
     //console.log('hi man ')
   }
   
-    editCell(i , item){
+    async editCell(i , item){
       this.presentLoadingWithOptions('جاري تعديل البيانات ...')
-      
+
       // Validate input data
       if(this.selectedItem2.perch_price > 0 && this.selectedItem2.pay_price > 0 && this.selectedItem2.item_name != ""){
-        
+
         // Update the item via API
         // Remove imageUrl and tax from inline edit data while keeping category_id
         const editData = { ...this.selectedItem2 } as any;
         if ('imageUrl' in editData) delete editData.imageUrl;
         if ('tax' in editData) delete editData.tax;
+
+        // Add category_id from localStorage for notifications (SELECTED_CATEGORY_ID)
+        const savedCategoryId = await this.storage.get('SELECTED_CATEGORY_ID');
+        if (savedCategoryId && !editData.category_id) {
+          editData.category_id = savedCategoryId;
+        }
+
         this.api.updateItem(editData).subscribe(data => {
           //console.log(data)
           let res = data 

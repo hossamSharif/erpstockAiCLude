@@ -265,14 +265,22 @@
                     </ion-button>
                   </td> -->
                    <td>
-                    <!-- Replace the existing action buttons in your ion-item with this: -->
-                    <ion-button 
-                      fill="clear" 
-                      size="small" 
+                    <!-- Verify button -->
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      (click)="verifyInvoice(pay)"
+                      title="Verify Invoice | التحقق من الفاتورة">
+                      <ion-icon name="shield-checkmark-outline" slot="icon-only" color="success"></ion-icon>
+                    </ion-button>
+                    <!-- Actions popover button -->
+                    <ion-button
+                      fill="clear"
+                      size="small"
                       (click)="presentActionPopover($event, pay, pay.sub_name)"
                       slot="end">
                       <ion-icon name="ellipsis-vertical" slot="icon-only"></ion-icon>
-                    </ion-button> 
+                    </ion-button>
                   </td>
                  </tr>
 
@@ -545,16 +553,22 @@
             </ion-item>
           </ion-list>
           <ion-row class="ion-justify-content-center">
-            <ion-col size="6">
-              <ion-button  fill="outline" color="success"  (click)="getPayInvoDetail(pay , pay.sub_name,'edit')"  > 
+            <ion-col size="4">
+              <ion-button  fill="outline" color="success"  (click)="getPayInvoDetail(pay , pay.sub_name,'edit')"  >
                 <ion-icon name="search-outline" color="success"></ion-icon>
-                <ion-label><ion-text color="dark">تعديل</ion-text></ion-label> 
+                <ion-label><ion-text color="dark">تعديل</ion-text></ion-label>
               </ion-button>
             </ion-col>
-            <ion-col size="6">
-              <ion-button  fill="outline" color="success"  (click)="createPdf(pay)"  > 
+            <ion-col size="4">
+              <ion-button  fill="outline" color="success"  (click)="verifyInvoice(pay)"  >
+                <ion-icon name="shield-checkmark-outline" color="success"></ion-icon>
+                <ion-label><ion-text color="dark">تحقق</ion-text></ion-label>
+              </ion-button>
+            </ion-col>
+            <ion-col size="4">
+              <ion-button  fill="outline" color="success"  (click)="createPdf(pay)"  >
                 <ion-icon name="search-outline" color="success"></ion-icon>
-                <ion-label><ion-text color="dark">طباعة</ion-text></ion-label> 
+                <ion-label><ion-text color="dark">طباعة</ion-text></ion-label>
               </ion-button>
             </ion-col>  
           </ion-row>

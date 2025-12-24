@@ -77,7 +77,7 @@ calculatedDiscountAmount: number = 0;
   aliasResult :Array<any> =[]
   finalResult :Array<any> =[]
   currentCustumerStatus :any
-  year : {id:any ,yearDesc: any ,yearStart :any,yearEnd:any} 
+  year : {id:any ,yearDesc: any ,yearStart :any,yearEnd:any}
   loadingItems:boolean = false
  initialInvoices:Array<any> =[]
   currenQty:any = 0
@@ -87,6 +87,10 @@ calculatedDiscountAmount: number = 0;
   perchTot :any = 0
   qtyReal:any = 0
   availQty :any = 0
+
+  // Store original item values and index before editing to fix price/quantity edit matching issue
+  editingItemOriginal: any = null
+  editingItemOriginalIndex: number = -1
   
   // Loading state management
   isSaving: boolean = false;
@@ -660,60 +664,78 @@ async  performSync(){
 qtyClick(i){
   //console.log(i)
   this.showMe = i
+
+  // Store original values AND find original index in itemList
+  const displayList = this.getDisplayItemList();
+  this.editingItemOriginal = { ...displayList[i] };
+
+  // Find the original index in itemList (not the display list)
+  this.editingItemOriginalIndex = this.itemList.findIndex(item =>
+    item.item_name === this.editingItemOriginal.item_name &&
+    item.pay_price === this.editingItemOriginal.pay_price &&
+    item.quantity === this.editingItemOriginal.quantity
+  );
 }
 
 hideMe(i){
   this.showMe = null
+  this.editingItemOriginal = null
+  this.editingItemOriginalIndex = -1
 }
 
     // Real-time calculation as user types in cell
     onCellValueChange(i) {
+      if (!this.editingItemOriginal) {
+        return; // No original item stored, skip update
+      }
+
       const displayList = this.getDisplayItemList();
-      const itemToEdit = displayList[i];
 
-      // Find the corresponding item in the original itemList
-      const originalIndex = this.itemList.findIndex(item =>
-        item.item_name === itemToEdit.item_name &&
-        item.pay_price === itemToEdit.pay_price
-      );
-
-      if (originalIndex !== -1 && +displayList[i].quantity > 0 && +displayList[i].pay_price > 0) {
-        // Update totals in real-time
+      // Only update the display total for visual feedback, DON'T update itemList yet
+      // itemList will be updated only when user confirms (Enter or Blur) in editCell
+      if (+displayList[i].quantity > 0 && +displayList[i].pay_price > 0) {
         displayList[i].tot = (+displayList[i].quantity * +displayList[i].pay_price).toFixed(2);
-        this.itemList[originalIndex].quantity = displayList[i].quantity;
-        this.itemList[originalIndex].pay_price = displayList[i].pay_price;
-        this.itemList[originalIndex].tot = displayList[i].tot;
-
-        // Recalculate invoice totals (preserves discount based on discount type)
-        this.getTotal();
       }
       // No validation or error messages during typing for smooth UX
     }
 
     // Validation when user finishes editing (blur or enter)
     editCell(i){
-      const displayList = this.getDisplayItemList();
-      const itemToEdit = displayList[i];
-
-      // Find the corresponding item in the original itemList
-      const originalIndex = this.itemList.findIndex(item =>
-        item.item_name === itemToEdit.item_name &&
-        item.pay_price === itemToEdit.pay_price
-      );
-
-      if (originalIndex !== -1 && +displayList[i].quantity > 0 && +displayList[i].pay_price > 0) {
-        // Update both the display list and original list
-        displayList[i].tot = (+displayList[i].quantity * +displayList[i].pay_price).toFixed(2);
-        this.itemList[originalIndex].quantity = displayList[i].quantity;
-        this.itemList[originalIndex].pay_price = displayList[i].pay_price;
-        this.itemList[originalIndex].tot = displayList[i].tot;
-
-        // DO NOT reset discount - getTotal() will handle it properly
-        this.hideMe(i)
-        this.getTotal()
-      } else {
-        this.presentToast("خطأ في الإدخال ", "danger")
+      if (!this.editingItemOriginal || this.editingItemOriginalIndex === -1) {
+        // No error toast - this means edit was already completed successfully by a previous call
+        return;
       }
+
+      const displayList = this.getDisplayItemList();
+
+      // Validate input values
+      if (!displayList[i].quantity || +displayList[i].quantity <= 0 || !displayList[i].pay_price || +displayList[i].pay_price <= 0) {
+        this.presentToast("خطأ في الإدخال - الكمية والسعر يجب أن يكونا أكبر من صفر", "danger");
+        // Restore original values
+        displayList[i].quantity = this.editingItemOriginal.quantity;
+        displayList[i].pay_price = this.editingItemOriginal.pay_price;
+        displayList[i].tot = this.editingItemOriginal.tot;
+        this.hideMe(i);
+        return;
+      }
+
+      // Use the stored original index directly (no need to search again)
+      const originalIndex = this.editingItemOriginalIndex;
+
+      // Update both the display list and original list
+      displayList[i].tot = (+displayList[i].quantity * +displayList[i].pay_price).toFixed(2);
+      this.itemList[originalIndex].quantity = +displayList[i].quantity;
+      this.itemList[originalIndex].pay_price = +displayList[i].pay_price;
+      this.itemList[originalIndex].tot = displayList[i].tot;
+
+      // Update sorted list if needed
+      if (this.isItemListSorted) {
+        this.updateSortedList();
+      }
+
+      // DO NOT reset discount - getTotal() will handle it properly
+      this.hideMe(i);
+      this.getTotal();
     }
 
 
@@ -911,31 +933,38 @@ onAmountDiscountChange(event: any) {
 }
 
 calculateChange() {
-  this.payInvo.changee = +(this.payInvo.tot_pr - +this.payInvo.discount) - this.payInvo.pay;
+  this.payInvo.changee = this.roundToTwo((+this.payInvo.tot_pr - +this.payInvo.discount) - this.payInvo.pay);
 }
 
-
+/**
+ * Helper method for consistent rounding to 2 decimal places
+ * Uses Math.round for precise rounding without floating-point issues
+ */
+private roundToTwo(num: number): number {
+  return Math.round(num * 100) / 100;
+}
 
 // Update your existing getTotal method
 getTotal() {
+  // Calculate sum from item totals
   let sum = this.itemList.reduce((acc, obj) => { return acc + +obj.tot; }, 0);
+  sum = this.roundToTwo(sum);
+
+  // Store as numbers (not strings) for consistent type handling
   this.payInvo.tot_pr = sum;
-  this.payInvo.changee = +(sum - +this.payInvo.discount) - this.payInvo.pay;
-  this.payInvo.tot_pr = this.payInvo.tot_pr.toFixed(2);
-  this.payInvo.changee = this.payInvo.changee.toFixed(2);
-  
+
   // Recalculate discount labels when total changes
   if (this.discountType === 'percentage' && this.discountPerc > 0) {
-    this.calculatedDiscountAmount = (sum * +this.discountPerc / 100);
-    this.payInvo.discount = this.calculatedDiscountAmount.toFixed(2);
+    this.calculatedDiscountAmount = this.roundToTwo(sum * +this.discountPerc / 100);
+    this.payInvo.discount = this.calculatedDiscountAmount;
   } else if (this.discountType === 'amount' && this.discountAmount > 0) {
-    this.calculatedDiscountPerc = ((+this.discountAmount / sum) * 100);
-    this.payInvo.discount = this.discountAmount;
+    this.calculatedDiscountPerc = this.roundToTwo((+this.discountAmount / sum) * 100);
+    // Fix: Ensure discount is always a number (not string)
+    this.payInvo.discount = +this.discountAmount;
   }
-  
-  // Recalculate change after discount update
-  this.payInvo.changee = +(sum - +this.payInvo.discount) - this.payInvo.pay;
-  this.payInvo.changee = this.payInvo.changee.toFixed(2);
+
+  // Calculate change after discount
+  this.payInvo.changee = this.roundToTwo(sum - +this.payInvo.discount - this.payInvo.pay);
 }
 
  

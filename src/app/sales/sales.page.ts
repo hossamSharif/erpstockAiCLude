@@ -433,11 +433,8 @@ export class SalesPage implements OnInit, OnDestroy {
           cssClass: 'secondary',
           id: 'cancel-button',
           handler: (blah) => {
-          //console.log('Confirm Cancel: blah'); 
-           // Reset invoice data when user cancels print (after save)
-           if (!initial) {
-             this.resetPageAfterInvoice();
-           }
+          //console.log('Confirm Cancel: blah');
+           // No need to reset - already reset after save
           }
         }, {
           text: 'موافق',
@@ -446,12 +443,10 @@ export class SalesPage implements OnInit, OnDestroy {
             if(initial){
             this.deleteSalesInvoInit()
             }else{
-             
-              this.presentModal(this.printArr , 'sales').then(() => {
-                // Reset page after print modal is presented
-                this.resetPageAfterInvoice();
-              });
-            } 
+
+              this.presentModal(this.printArr , 'sales');
+              // No need to reset - already reset after save
+            }
           }
         }
       ]
@@ -822,8 +817,8 @@ onDiscountTypeChange(event: any) {
     this.discountPerc = event.target.value || 0;
     if (this.payInvo.tot_pr > 0) {
       // Calculate discount amount based on percentage
-      this.calculatedDiscountAmount = (+this.payInvo.tot_pr * +this.discountPerc / 100);
-      this.payInvo.discount = this.calculatedDiscountAmount.toFixed(2);
+      this.calculatedDiscountAmount = this.roundToTwo(+this.payInvo.tot_pr * +this.discountPerc / 100);
+      this.payInvo.discount = this.calculatedDiscountAmount;
       this.calculateChange();
     }
   }
@@ -832,8 +827,8 @@ onDiscountTypeChange(event: any) {
     this.discountAmount = event.target.value || 0;
     if (this.payInvo.tot_pr > 0 && this.discountAmount > 0) {
       // Calculate discount percentage based on amount
-      this.calculatedDiscountPerc = ((+this.discountAmount / +this.payInvo.tot_pr) * 100);
-      this.payInvo.discount = this.discountAmount;
+      this.calculatedDiscountPerc = this.roundToTwo((+this.discountAmount / +this.payInvo.tot_pr) * 100);
+      this.payInvo.discount = +this.discountAmount;
       this.calculateChange();
     } else {
       this.calculatedDiscountPerc = 0;
@@ -842,37 +837,47 @@ onDiscountTypeChange(event: any) {
     }
   }
 
+  /**
+   * Helper method for consistent rounding to 2 decimal places
+   * Uses Math.round for precise rounding without floating-point issues
+   */
+  private roundToTwo(num: number): number {
+    return Math.round(num * 100) / 100;
+  }
+
   calculateChange() {
-    this.payInvo.changee = +(this.payInvo.tot_pr - +this.payInvo.discount) - this.payInvo.pay;
+    this.payInvo.changee = this.roundToTwo((+this.payInvo.tot_pr - +this.payInvo.discount) - this.payInvo.pay);
   }
 
   // Update your existing discountChange method
   discountChange(ev) {
     // Keep this for backward compatibility if needed
-    this.discountPerc = ((+this.payInvo.discount / +this.payInvo.tot_pr) * 100).toFixed(2);
-    this.payInvo.changee = +(this.payInvo.tot_pr - ev.target.value) - this.payInvo.pay;
+    this.discountPerc = this.roundToTwo((+this.payInvo.discount / +this.payInvo.tot_pr) * 100);
+    this.payInvo.changee = this.roundToTwo((+this.payInvo.tot_pr - ev.target.value) - this.payInvo.pay);
   }
 
   // Update your existing discountPerChange method
   discountPerChange(ev) {
     // Keep this for backward compatibility if needed
-    this.payInvo.discount = (+this.payInvo.tot_pr * +this.discountPerc / 100).toFixed(2);
-    this.payInvo.changee = +(this.payInvo.tot_pr - this.payInvo.discount) - this.payInvo.pay;
+    this.payInvo.discount = this.roundToTwo(+this.payInvo.tot_pr * +this.discountPerc / 100);
+    this.payInvo.changee = this.roundToTwo((+this.payInvo.tot_pr - this.payInvo.discount) - this.payInvo.pay);
   }
 
   // Update your getTotal method to reset discount calculations
   getTotal() {
+    // Calculate sum from item totals
     let sum = this.itemList.reduce((acc, obj) => { return acc + +obj.tot; }, 0);
-    this.payInvo.tot_pr = sum - +this.payInvo.discount;
-    this.payInvo.changee = +(sum - +this.payInvo.discount) - this.payInvo.pay;
-    this.payInvo.tot_pr = this.payInvo.tot_pr.toFixed(2);
-    this.payInvo.changee = this.payInvo.changee.toFixed(2);
-    
+    sum = this.roundToTwo(sum);
+
+    // Store as numbers (not strings) for consistent type handling
+    this.payInvo.tot_pr = this.roundToTwo(sum - +this.payInvo.discount);
+    this.payInvo.changee = this.roundToTwo(this.payInvo.tot_pr - this.payInvo.pay);
+
     // Recalculate discount labels when total changes
     if (this.discountType === 'percentage' && this.discountPerc > 0) {
-      this.calculatedDiscountAmount = (sum * +this.discountPerc / 100);
+      this.calculatedDiscountAmount = this.roundToTwo(sum * +this.discountPerc / 100);
     } else if (this.discountType === 'amount' && this.discountAmount > 0) {
-      this.calculatedDiscountPerc = ((+this.discountAmount / sum) * 100);
+      this.calculatedDiscountPerc = this.roundToTwo((+this.discountAmount / sum) * 100);
     }
   }
  
@@ -1605,36 +1610,44 @@ deleteSalesitemListInit(){
   // Shared success handler for optimized save process
   private handleSaveSuccess() {
     this.presentToast('تم الحفظ بنجاح', 'success');
-    
+
 
      // Check if invoice was converted from initial to final and delete initial invoice
      if (this.status == 'toFinal') {
       console.log('case delete intial', this.status)
       this.deleteSalesInvoInit();
     }
-     
-    // Prepare print data with current invoice information
-    this.printArr = []; 
+
+    // Save invoice type before reset (needed to determine which dialog to show)
+    const savedInvoiceType = this.radioVal2;
+
+    // Prepare print data with current invoice information (DEEP COPY before reset)
+    this.printArr = [];
     this.printArr.push({
-      'payInvo': this.payInvo,
-      'itemList': this.itemList,
-      'selectedAccount': this.selectedAccount,
+      'payInvo': {...this.payInvo},
+      'itemList': [...this.itemList],
+      'selectedAccount': {...this.selectedAccount},
       'sub_nameNew': this.sub_nameNew,
       "user_name": this.user_info.full_name,
       "sub_balanse": this.selectedAccount.sub_balance,
       "balanceStatus": this.selectedAccount.currentCustumerStatus
     });
-    
+
     console.log('Print array prepared:', this.printArr);
-    
+
+    // RESET PAGE IMMEDIATELY after save to allow new invoice creation
+    // This generates new pay_ref, clears itemList, and resets all fields
+    this.resetPageAfterInvoice();
+
     // For final invoices, show journal entry confirmation
-    if (this.radioVal2 == 1) {
+    // Use saved value since radioVal2 was reset
+    if (savedInvoiceType == 1) {
       this.presentJournalEntryConfirmation();
     } else {
       // For initial invoices, go directly to print confirmation
       this.presentAlertConfirm();
     }
-    
+
     // Loading already dismissed by individual save methods
   }
 
@@ -1714,7 +1727,10 @@ goBack() {
 
 // New methods for journal entry workflow
 async presentJournalEntryConfirmation() {
-  const totalAfterDiscount = (+this.payInvo.tot_pr - +this.payInvo.discount);
+  // Use saved print data since page has been reset
+  const savedInvoice = this.printArr[0]?.payInvo;
+  const totalAfterDiscount = savedInvoice ? (+savedInvoice.tot_pr - +savedInvoice.discount) : 0;
+
   const alert = await this.alertController.create({
     cssClass: 'my-custom-class',
     header: 'تأكيد استلام المبلغ',
@@ -1727,7 +1743,7 @@ async presentJournalEntryConfirmation() {
         cssClass: 'secondary',
         handler: () => {
           this.presentAlertConfirm();
-          this.cleanupAfterInvoice();
+          // No need to cleanup - already reset after save
         }
       },
       {
@@ -1742,49 +1758,51 @@ async presentJournalEntryConfirmation() {
 }
 
 showJournalEntryDialog() {
-  
-  const totalAfterDiscount = (+this.payInvo.tot_pr - +this.payInvo.discount);
-  
+  // Use saved print data since page has been reset
+  const savedData = this.printArr[0];
+  const savedInvoice = savedData?.payInvo;
+  const totalAfterDiscount = savedInvoice ? (+savedInvoice.tot_pr - +savedInvoice.discount) : 0;
+
   this.invoiceJournalData = {
     invoiceAmount: totalAfterDiscount,
     totalAfterDiscount: totalAfterDiscount,
-    customerAccount: this.selectedAccount,
-    customerBalance: this.customerBalance,
-    invoiceRef: this.payInvo.pay_ref,
+    customerAccount: savedData?.selectedAccount || this.selectedAccount,
+    customerBalance: savedData?.sub_balanse || this.customerBalance,
+    invoiceRef: savedInvoice?.pay_ref,
     invoiceType: 'sales',
-    invoiceDate: this.payInvo.pay_date,
+    invoiceDate: savedInvoice?.pay_date,
     store_info: this.store_info,
     user_info: this.user_info,
     year: this.year
   };
-  
+
   this.showJournalEntryModal = true;
 }
 
 onJournalSaved(success: boolean) {
   this.showJournalEntryModal = false;
-  
+
   if (success) {
     this.presentToast('تم حفظ قيد اليومية بنجاح', 'success');
   }
-  
+
   // Show print confirmation
   setTimeout(() => {
     this.presentAlertConfirm();
   }, 500);
-  
-  this.cleanupAfterInvoice();
+
+  // No need to cleanup - already reset after save
 }
 
 onJournalCancelled() {
   this.showJournalEntryModal = false;
-  
+
   // Show print confirmation
   setTimeout(() => {
     this.presentAlertConfirm();
   }, 500);
-  
-  this.cleanupAfterInvoice();
+
+  // No need to cleanup - already reset after save
 }
 
 private cleanupAfterInvoice() {

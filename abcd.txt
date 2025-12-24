@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+
+
  - add another pay price to the items data
  - add logs 
  - add a history for edditing the invoice and provide option for the undo and redo 

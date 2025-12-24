@@ -145,15 +145,19 @@ calculatedDiscountAmount: number = 0;
   payInvo : {pay_id:any ,pay_ref:any ,store_id:any,tot_pr:any,pay:any,pay_date:any,pay_time:any,user_id:any,cust_id:any,pay_method:any,discount:any ,changee:any,sub_name:any,payComment:any,nextPay:any,yearId:any};
   discountPerc :any =0
   radioVal : any = 0
-  offline: boolean =false ;   
+  offline: boolean =false ;
   searchLang :any = 0
   showMe:any =null
 firstq : {id:any ,item_id:any , store_id:any , quantity :any ,	fq_year:any ,	pay_price:any ,	perch_price:any , item_name:any}
- 
+
 aliasTerm :any =""
 searchResult :Array<any> =[]
 aliasResult :Array<any> =[]
-year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any} 
+year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
+
+// Store original item values and index before editing to fix price/quantity edit matching issue
+editingItemOriginal: any = null
+editingItemOriginalIndex: number = -1 
 
 // Loading state management - Centralized loading system
 isUpdating: boolean = false;
@@ -433,37 +437,63 @@ private dataInitialized: boolean = false;
 qtyClick(i){
   //console.log(i)
   this.showMe = i
+
+  // Store original values AND find original index in itemList
+  const displayList = this.getDisplayItemList();
+  this.editingItemOriginal = { ...displayList[i] };
+
+  // Find the original index in itemList (not the display list)
+  this.editingItemOriginalIndex = this.itemList.findIndex(item =>
+    item.item_name === this.editingItemOriginal.item_name &&
+    item.perch_price === this.editingItemOriginal.perch_price &&
+    item.quantity === this.editingItemOriginal.quantity
+  );
 }
 
 hideMe(i){
-  this.showMe = null 
+  this.showMe = null
+  this.editingItemOriginal = null
+  this.editingItemOriginalIndex = -1
 }
 
 editCell(i){
-  const displayList = this.getDisplayItemList();
-  const itemToEdit = displayList[i];
-  
-  // Find the corresponding item in the original itemList
-  const originalIndex = this.itemList.findIndex(item => 
-    item.item_name === itemToEdit.item_name && 
-    item.perch_price === itemToEdit.perch_price
-  );
-  
-  if (originalIndex !== -1 && +displayList[i].quantity > 0 && +displayList[i].perch_price > 0) {
-    // Update both the display list and original list
-    displayList[i].tot = +displayList[i].quantity * +displayList[i].perch_price;
-    this.itemList[originalIndex].quantity = displayList[i].quantity;
-    this.itemList[originalIndex].perch_price = displayList[i].perch_price;
-    this.itemList[originalIndex].tot = displayList[i].tot;
-    
-    // Reset discount but preserve pay amount
-    this.discountPerc = 0
-    this.payInvo.discount = 0
-    this.hideMe(i)
-    this.getTotal() 
-  } else {
-    this.presentToast("خطأ في الإدخال ", "danger")
+  if (!this.editingItemOriginal || this.editingItemOriginalIndex === -1) {
+    // No error toast - this means edit was already completed successfully by a previous call
+    return;
   }
+
+  const displayList = this.getDisplayItemList();
+
+  // Validate input values
+  if (!displayList[i].quantity || +displayList[i].quantity <= 0 || !displayList[i].perch_price || +displayList[i].perch_price <= 0) {
+    this.presentToast("خطأ في الإدخال - الكمية والسعر يجب أن يكونا أكبر من صفر", "danger");
+    // Restore original values
+    displayList[i].quantity = this.editingItemOriginal.quantity;
+    displayList[i].perch_price = this.editingItemOriginal.perch_price;
+    displayList[i].tot = this.editingItemOriginal.tot;
+    this.hideMe(i);
+    return;
+  }
+
+  // Use the stored original index directly (no need to search again)
+  const originalIndex = this.editingItemOriginalIndex;
+
+  // Update both the display list and original list
+  displayList[i].tot = (+displayList[i].quantity * +displayList[i].perch_price).toFixed(2);
+  this.itemList[originalIndex].quantity = +displayList[i].quantity;
+  this.itemList[originalIndex].perch_price = +displayList[i].perch_price;
+  this.itemList[originalIndex].tot = displayList[i].tot;
+
+  // Update sorted list if needed
+  if (this.isItemListSorted) {
+    this.updateSortedList();
+  }
+
+  // Reset discount but preserve pay amount
+  this.discountPerc = 0;
+  this.payInvo.discount = 0;
+  this.hideMe(i);
+  this.getTotal();
 }
 
   

@@ -1,0 +1,235 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Data Verification | التحقق من البيانات</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-grid class="ion-padding">
+    <!-- Header Card with Type Selector and Verify Button -->
+    <ion-row>
+      <ion-col size="12">
+        <ion-card>
+          <ion-card-content>
+            <ion-grid class="ion-no-padding">
+              <ion-row class="ion-align-items-center">
+                <!-- Segment Control -->
+                <ion-col size-xs="12" size-md="6">
+                  <ion-segment [(ngModel)]="selectedType" (ionChange)="onSegmentChange($event)" mode="md">
+                    <ion-segment-button value="sales">
+                      <ion-label>Sales Invoices | فواتير المبيعات</ion-label>
+                    </ion-segment-button>
+                    <ion-segment-button value="purchase">
+                      <ion-label>Purchase Invoices | فواتير المشتريات</ion-label>
+                    </ion-segment-button>
+                  </ion-segment>
+                </ion-col>
+
+                <!-- Verify Button -->
+                <ion-col size-xs="12" size-md="6" class="ion-text-center">
+                  <ion-button
+                    expand="block"
+                    (click)="verifyAllInvoices()"
+                    [disabled]="isVerifying"
+                    color="primary">
+                    <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
+                    <ion-label>Verify All | التحقق من الكل</ion-label>
+                  </ion-button>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <!-- Summary Statistics Card -->
+    <ion-row *ngIf="summary">
+      <ion-col size="12">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Verification Summary | ملخص التحقق</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-grid class="ion-no-padding">
+              <ion-row>
+                <ion-col size-xs="6" size-md="3" class="ion-text-center">
+                  <div class="stat-box">
+                    <h2>{{ summary.totalInvoices }}</h2>
+                    <p>Total Invoices<br>إجمالي الفواتير</p>
+                  </div>
+                </ion-col>
+                <ion-col size-xs="6" size-md="3" class="ion-text-center">
+                  <div class="stat-box success">
+                    <h2 style="color: var(--ion-color-success);">{{ summary.okCount }}</h2>
+                    <p>Valid<br>صحيحة</p>
+                  </div>
+                </ion-col>
+                <ion-col size-xs="6" size-md="3" class="ion-text-center">
+                  <div class="stat-box danger">
+                    <h2 style="color: var(--ion-color-danger);">{{ summary.errorCount }}</h2>
+                    <p>Errors<br>أخطاء</p>
+                  </div>
+                </ion-col>
+                <ion-col size-xs="6" size-md="3" class="ion-text-center">
+                  <div class="stat-box">
+                    <h2 [style.color]="'var(--ion-color-' + getAccuracyColor(summary.accuracy) + ')'">
+                      {{ formatNumber(summary.accuracy) }}%
+                    </h2>
+                    <p>Accuracy<br>الدقة</p>
+                  </div>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <!-- Filter Options -->
+    <ion-row *ngIf="verificationResults.length > 0">
+      <ion-col size="12">
+        <ion-card>
+          <ion-card-content>
+            <ion-segment [(ngModel)]="filterStatus" mode="md">
+              <ion-segment-button value="all">
+                <ion-label>All | الكل ({{ verificationResults.length }})</ion-label>
+              </ion-segment-button>
+              <ion-segment-button value="OK">
+                <ion-label>Valid | صحيحة ({{ summary?.okCount || 0 }})</ion-label>
+              </ion-segment-button>
+              <ion-segment-button value="ERROR">
+                <ion-label>Errors | أخطاء ({{ summary?.errorCount || 0 }})</ion-label>
+              </ion-segment-button>
+            </ion-segment>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <!-- Results Table -->
+    <ion-row *ngIf="verificationResults.length > 0">
+      <ion-col size="12">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Verification Results | نتائج التحقق</ion-card-title>
+          </ion-card-header>
+          <ion-card-content class="ion-no-padding">
+            <div class="table-container">
+              <table class="verification-table">
+                <thead>
+                  <tr>
+                    <th>Status | الحالة</th>
+                    <th>Invoice Ref | رقم الفاتورة</th>
+                    <th>Date | التاريخ</th>
+                    <th>Customer/Supplier | العميل/المورد</th>
+                    <th>Stored Total | الإجمالي المحفوظ</th>
+                    <th>Calculated Total | الإجمالي المحسوب</th>
+                    <th>Difference | الفرق</th>
+                    <th>Actions | إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let result of getFilteredResults()"
+                      [class.error-row]="result.status === 'ERROR'"
+                      [class.ok-row]="result.status === 'OK'">
+                    <td class="ion-text-center">
+                      <ion-badge [color]="getStatusColor(result.status)">
+                        {{ result.status }}
+                      </ion-badge>
+                    </td>
+                    <td>{{ result.invoiceRef }}</td>
+                    <td>{{ result.date }}</td>
+                    <td>{{ result.customerName }}</td>
+                    <td class="ion-text-end">{{ formatNumber(result.storedTotal) }}</td>
+                    <td class="ion-text-end">{{ formatNumber(result.calculatedTotal) }}</td>
+                    <td class="ion-text-end" [class.difference-highlight]="Math.abs(result.difference) > 0.01">
+                      {{ formatNumber(result.difference) }}
+                    </td>
+                    <td class="ion-text-center">
+                      <ion-button
+                        fill="clear"
+                        size="small"
+                        (click)="navigateToEditInvoice(result)"
+                        [title]="'Edit Invoice | تعديل الفاتورة'">
+                        <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+                      </ion-button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <!-- Load More Button -->
+    <ion-row *ngIf="hasMoreInvoices && verificationResults.length > 0">
+      <ion-col size="12">
+        <ion-card>
+          <ion-card-content class="ion-text-center">
+            <p>
+              <strong>{{ verificationResults.length }} / {{ totalInvoicesCount }}</strong> invoices verified<br>
+              <strong>{{ verificationResults.length }} / {{ totalInvoicesCount }}</strong> فاتورة تم التحقق منها
+            </p>
+            <ion-button
+              expand="block"
+              (click)="loadMoreInvoices()"
+              [disabled]="isVerifying"
+              color="primary">
+              <ion-icon name="download-outline" slot="start"></ion-icon>
+              <ion-label>Load Next 20 Invoices | تحميل الـ 20 فاتورة التالية</ion-label>
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <!-- No Results Message -->
+    <ion-row *ngIf="!isVerifying && verificationResults.length === 0 && summary">
+      <ion-col size="12">
+        <ion-card>
+          <ion-card-content class="ion-text-center">
+            <ion-icon name="checkmark-circle-outline" size="large" color="success"></ion-icon>
+            <h3>No invoices found | لا توجد فواتير</h3>
+            <p>There are no invoices to verify for the selected type.</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <!-- Initial Message (Before First Verification) -->
+    <ion-row *ngIf="!isVerifying && !summary">
+      <ion-col size="12">
+        <ion-card>
+          <ion-card-content class="ion-text-center">
+            <ion-icon name="documents-outline" size="large" color="primary"></ion-icon>
+            <h3>Invoice Data Integrity Verification Tool</h3>
+            <h4>أداة التحقق من سلامة بيانات الفواتير</h4>
+            <p>
+              This tool verifies that invoice totals match the sum of their item details.<br>
+              تتحقق هذه الأداة من أن إجماليات الفواتير تطابق مجموع تفاصيل العناصر.
+            </p>
+            <p>
+              <strong>Verification Formula:</strong><br>
+              Stored Total = (tot_pr - discount)<br>
+              Calculated Total = SUM(quantity × price)<br>
+              <br>
+              <strong>Batch Processing:</strong> Invoices are verified in batches of 20 to prevent server overload.<br>
+              <strong>المعالجة على دفعات:</strong> يتم التحقق من الفواتير على دفعات من 20 لتجنب إرهاق الخادم.
+            </p>
+            <p>
+              Select an invoice type above and click "Verify All" to start.<br>
+              اختر نوع الفاتورة أعلاه وانقر على "التحقق من الكل" للبدء.
+            </p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+  </ion-grid>
+</ion-content>
