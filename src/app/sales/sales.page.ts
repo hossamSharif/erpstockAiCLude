@@ -421,6 +421,10 @@ export class SalesPage implements OnInit, OnDestroy {
     if(initial){
        msg   = 'هل تريد حذف السجل ؟ '
     }
+
+    // Track if this was an initial invoice update to handle navigation
+    const wasInitialUpdate = this.status === 'initial';
+
     const alert = await this.alertController.create({
       cssClass: 'my-custom-class',
       header: 'تأكيد!',
@@ -433,8 +437,10 @@ export class SalesPage implements OnInit, OnDestroy {
           cssClass: 'secondary',
           id: 'cancel-button',
           handler: (blah) => {
-          //console.log('Confirm Cancel: blah');
-           // No need to reset - already reset after save
+            // Navigate back to sales-record after updating initial invoice
+            if (wasInitialUpdate) {
+              this.back();
+            }
           }
         }, {
           text: 'موافق',
@@ -443,15 +449,13 @@ export class SalesPage implements OnInit, OnDestroy {
             if(initial){
             this.deleteSalesInvoInit()
             }else{
-
-              this.presentModal(this.printArr , 'sales');
-              // No need to reset - already reset after save
+              this.presentModalWithCallback(this.printArr, 'sales', wasInitialUpdate);
             }
           }
         }
       ]
     });
-  
+
     await alert.present();
   }
 
@@ -1162,15 +1166,24 @@ deleteInitial(){
 
 
 
-async deleteSalesInvoInit(){ 
+async deleteSalesInvoInit(invoiceData?: { pay_id: any, pay_ref: any }){
   // Always show loading for delete operations
   await this.showLoading('جاري حذف الفاتورة...', 'deleting');
-  
+
   try {
+    // Use provided invoiceData if available, otherwise fall back to this.payInvo
     const deletionData = {
-      pay_id: this.payInvo.pay_id,
-      pay_ref: this.payInvo.pay_ref
+      pay_id: invoiceData?.pay_id ?? this.payInvo.pay_id,
+      pay_ref: invoiceData?.pay_ref ?? this.payInvo.pay_ref
     };
+
+    // Validate before sending to prevent backend errors
+    if (!deletionData.pay_id || !deletionData.pay_ref) {
+      console.error('Missing deletion data:', deletionData);
+      await this.hideLoading();
+      this.presentToast('خطأ: بيانات الفاتورة غير مكتملة للحذف', 'danger');
+      return;
+    }
 
     this.api.deleteSalesInvoInitWithItems(deletionData).subscribe(
       async (data) => {
@@ -1463,6 +1476,25 @@ deleteSalesitemListInit(){
     });
     return await modal.present();
   }
+
+  async presentModalWithCallback(printArr: any, page: string, navigateBackOnDismiss: boolean) {
+    const modal = await this.modalController.create({
+      component: PrintModalPage,
+      componentProps: {
+        printArr: printArr,
+        page: page
+      }
+    });
+
+    // Handle modal dismiss to navigate back after printing for initial invoice updates
+    modal.onDidDismiss().then(() => {
+      if (navigateBackOnDismiss) {
+        this.back();
+      }
+    });
+
+    return await modal.present();
+  }
   
   // Method to reset page to initial state after invoice operations
   private resetPageAfterInvoice() {
@@ -1611,11 +1643,17 @@ deleteSalesitemListInit(){
   private handleSaveSuccess() {
     this.presentToast('تم الحفظ بنجاح', 'success');
 
+    // IMPORTANT: Save original invoice data BEFORE any operations that might reset payInvo
+    // This ensures we have the correct pay_id and pay_ref for deleting the initial invoice
+    const originalInvoiceData = this.status === 'toFinal' ? {
+      pay_id: this.payInvo.pay_id,
+      pay_ref: this.payInvo.pay_ref
+    } : null;
 
-     // Check if invoice was converted from initial to final and delete initial invoice
-     if (this.status == 'toFinal') {
-      console.log('case delete intial', this.status)
-      this.deleteSalesInvoInit();
+    // Check if invoice was converted from initial to final and delete initial invoice
+    if (this.status === 'toFinal' && originalInvoiceData) {
+      console.log('case delete initial', this.status, 'with data:', originalInvoiceData);
+      this.deleteSalesInvoInit(originalInvoiceData);
     }
 
     // Save invoice type before reset (needed to determine which dialog to show)

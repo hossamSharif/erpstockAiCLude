@@ -165,14 +165,14 @@ export class PurchaseRecordPage implements OnInit, OnDestroy {
         case 'edit':
           this.getPayInvoDetail(pay, sub_name, '');
           break;
+        case 'verify':
+          this.verifyInvoice(pay);
+          break;
         case 'copySales':
           this.copyAsInvoice(pay, 'sales');
           break;
         case 'copyPurchase':
           this.copyAsInvoice(pay, 'purchase');
-          break;
-        case 'return':
-          this.navigateToReturnPage(pay);
           break;
       }
     }

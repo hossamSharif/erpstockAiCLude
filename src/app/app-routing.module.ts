@@ -263,8 +263,20 @@ const routes: Routes = [
   {
     path: 'data-verification',
     loadChildren: () => import('./data-verification/data-verification.module').then( m => m.DataVerificationPageModule)
+  },
+  {
+    path: 'folder/daily-report',
+    loadChildren: () => import('./daily-report/daily-report.module').then( m => m.DailyReportPageModule)
+  },
+  {
+    path: 'expense-record',
+    loadChildren: () => import('./expense-record/expense-record.module').then( m => m.ExpenseRecordPageModule)
+  },
+  {
+    path: 'expense',
+    loadChildren: () => import('./expense/expense.module').then( m => m.ExpensePageModule)
   }
-  
+
 ];
 
 @NgModule({

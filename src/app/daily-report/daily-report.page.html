@@ -1,0 +1,422 @@
+<ion-header class="transparent-header">
+  <ion-toolbar class="transparent-toolbar">
+    <ion-buttons slot="start">
+      <ion-menu-button class="glass-menu-button"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="glass-title">التقرير اليومي</ion-title>
+    <ion-buttons slot="end">
+      <app-currency-switcher></app-currency-switcher>
+      <ion-button fill="clear" (click)="refresh()" *ngIf="reportGenerated">
+        <ion-icon name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="modern-content">
+  <!-- Loading State -->
+  <div *ngIf="!user_info || !store_info" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p class="loading-text">جاري التحميل...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="user_info && store_info" class="main-container">
+    <div class="form-container">
+
+      <!-- Date Selection Card -->
+      <ion-card class="form-card compact-card">
+        <ion-card-content class="compact-content">
+          <!-- Main Row: Search Type -->
+          <div class="main-row">
+            <div class="search-type-section full-width">
+              <ion-label class="field-label">نوع البحث</ion-label>
+              <ion-segment [(ngModel)]="radioVal" class="compact-segment">
+                <ion-segment-button value="1">
+                  <span>تاريخ محدد</span>
+                </ion-segment-button>
+                <ion-segment-button value="2">
+                  <span>فترة زمنية</span>
+                </ion-segment-button>
+              </ion-segment>
+            </div>
+          </div>
+
+          <!-- Date Inputs Row -->
+          <div class="search-row">
+            <!-- Single Date -->
+            <div class="date-field" *ngIf="radioVal == 1">
+              <ion-label class="field-label">التاريخ</ion-label>
+              <ion-input
+                type="date"
+                [(ngModel)]="startingDate"
+                class="mini-input date-input">
+              </ion-input>
+            </div>
+
+            <!-- Date Range -->
+            <div class="date-field" *ngIf="radioVal == 2">
+              <ion-label class="field-label">من تاريخ</ion-label>
+              <ion-input
+                type="date"
+                [(ngModel)]="startingDate"
+                class="mini-input date-input">
+              </ion-input>
+            </div>
+
+            <div class="date-field" *ngIf="radioVal == 2">
+              <ion-label class="field-label">إلى تاريخ</ion-label>
+              <ion-input
+                type="date"
+                [(ngModel)]="endDate"
+                class="mini-input date-input">
+              </ion-input>
+            </div>
+
+            <!-- Generate Button -->
+            <ion-button
+              (click)="generateReport()"
+              fill="solid"
+              class="generate-btn"
+              [disabled]="loading">
+              <ion-icon name="document-text-outline" slot="start"></ion-icon>
+              توليد التقرير
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Report Content (Only shown after generation) -->
+      <div *ngIf="reportGenerated" class="report-content">
+
+        <!-- Report Date Header -->
+        <div class="report-header-card">
+          <div class="report-date">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <span>تقرير {{ getFormattedDate() }}</span>
+          </div>
+        </div>
+
+        <!-- Summary Cards Row -->
+        <div class="summary-cards-row">
+          <!-- Amount In Card -->
+          <ion-card class="summary-card income-card">
+            <ion-card-content>
+              <div class="summary-icon">
+                <ion-icon name="arrow-down-circle"></ion-icon>
+              </div>
+              <div class="summary-info">
+                <span class="summary-label">إجمالي الوارد</span>
+                <span class="summary-value">{{ formatNumber(reportData.summary.amountIn) }}</span>
+              </div>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Amount Out Card -->
+          <ion-card class="summary-card expense-card">
+            <ion-card-content>
+              <div class="summary-icon">
+                <ion-icon name="arrow-up-circle"></ion-icon>
+              </div>
+              <div class="summary-info">
+                <span class="summary-label">إجمالي الصادر</span>
+                <span class="summary-value">{{ formatNumber(reportData.summary.amountOut) }}</span>
+              </div>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Net Income Card -->
+          <ion-card class="summary-card net-card" [ngClass]="{'positive': reportData.summary.netIncome >= 0, 'negative': reportData.summary.netIncome < 0}">
+            <ion-card-content>
+              <div class="summary-icon">
+                <ion-icon [name]="reportData.summary.netIncome >= 0 ? 'trending-up' : 'trending-down'"></ion-icon>
+              </div>
+              <div class="summary-info">
+                <span class="summary-label">صافي الدخل</span>
+                <span class="summary-value">{{ formatNumber(reportData.summary.netIncome) }}</span>
+              </div>
+            </ion-card-content>
+          </ion-card>
+        </div>
+
+        <!-- Sales Section -->
+        <ion-card class="section-card sales-section">
+          <ion-card-header (click)="toggleSection('sales')">
+            <div class="section-header">
+              <div class="section-title">
+                <ion-icon name="cart-outline" class="section-icon"></ion-icon>
+                <span>المبيعات</span>
+              </div>
+              <div class="section-stats">
+                <span class="stat-badge">{{ reportData.sales.invoiceCount }} فاتورة</span>
+                <span class="stat-value">{{ formatNumber(reportData.sales.totalAmount) }}</span>
+                <ion-icon [name]="salesExpanded ? 'chevron-up' : 'chevron-down'"></ion-icon>
+              </div>
+            </div>
+          </ion-card-header>
+          <ion-card-content *ngIf="salesExpanded && reportData.sales.invoices.length > 0">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>الرقم المرجعي</th>
+                    <th>العميل</th>
+                    <th>المبلغ</th>
+                    <th>المستخدم</th>
+                    <th>الوقت</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let invoice of reportData.sales.invoices">
+                    <td>{{ invoice.pay_ref }}</td>
+                    <td>{{ invoice.sub_name }}</td>
+                    <td class="amount">{{ formatNumber(invoice.tot_pr) }}</td>
+                    <td>{{ invoice.user_name }}</td>
+                    <td>{{ invoice.pay_time }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Purchases Section -->
+        <ion-card class="section-card purchases-section">
+          <ion-card-header (click)="toggleSection('purchases')">
+            <div class="section-header">
+              <div class="section-title">
+                <ion-icon name="bag-outline" class="section-icon"></ion-icon>
+                <span>المشتريات</span>
+              </div>
+              <div class="section-stats">
+                <span class="stat-badge">{{ reportData.purchases.invoiceCount }} فاتورة</span>
+                <span class="stat-value">{{ formatNumber(reportData.purchases.totalAmount) }}</span>
+                <ion-icon [name]="purchasesExpanded ? 'chevron-up' : 'chevron-down'"></ion-icon>
+              </div>
+            </div>
+          </ion-card-header>
+          <ion-card-content *ngIf="purchasesExpanded && reportData.purchases.invoices.length > 0">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>الرقم المرجعي</th>
+                    <th>المورد</th>
+                    <th>المبلغ</th>
+                    <th>المستخدم</th>
+                    <th>الوقت</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let invoice of reportData.purchases.invoices">
+                    <td>{{ invoice.pay_ref }}</td>
+                    <td>{{ invoice.sub_name }}</td>
+                    <td class="amount">{{ formatNumber(invoice.tot_pr) }}</td>
+                    <td>{{ invoice.user_name }}</td>
+                    <td>{{ invoice.pay_time }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Expenses Section -->
+        <ion-card class="section-card expenses-section">
+          <ion-card-header (click)="toggleSection('expenses')">
+            <div class="section-header">
+              <div class="section-title">
+                <ion-icon name="receipt-outline" class="section-icon"></ion-icon>
+                <span>المصروفات</span>
+              </div>
+              <div class="section-stats">
+                <span class="stat-badge">{{ reportData.expenses.itemCount }} مصروف</span>
+                <span class="stat-value">{{ formatNumber(reportData.expenses.totalAmount) }}</span>
+                <ion-icon [name]="expensesExpanded ? 'chevron-up' : 'chevron-down'"></ion-icon>
+              </div>
+            </div>
+          </ion-card-header>
+          <ion-card-content *ngIf="expensesExpanded && reportData.expenses.items.length > 0">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>الرقم المرجعي</th>
+                    <th>الوصف</th>
+                    <th>التصنيف</th>
+                    <th>المبلغ</th>
+                    <th>المستخدم</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let expense of reportData.expenses.items">
+                    <td>{{ expense.expense_ref }}</td>
+                    <td>{{ expense.description }}</td>
+                    <td>{{ expense.category_name }}</td>
+                    <td class="amount">{{ formatNumber(expense.amount) }}</td>
+                    <td>{{ expense.user_name }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Receipts Section (Money In) -->
+        <ion-card class="section-card receipts-section">
+          <ion-card-header (click)="toggleSection('receipts')">
+            <div class="section-header">
+              <div class="section-title">
+                <ion-icon name="download-outline" class="section-icon"></ion-icon>
+                <span>سندات القبض</span>
+              </div>
+              <div class="section-stats">
+                <span class="stat-badge">{{ reportData.receipts.transactions.length }} سند</span>
+                <span class="stat-value">{{ formatNumber(reportData.receipts.totalAmount) }}</span>
+                <ion-icon [name]="receiptsExpanded ? 'chevron-up' : 'chevron-down'"></ion-icon>
+              </div>
+            </div>
+          </ion-card-header>
+          <ion-card-content *ngIf="receiptsExpanded && reportData.receipts.transactions.length > 0">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>الرقم المرجعي</th>
+                    <th>البيان</th>
+                    <th>المبلغ</th>
+                    <th>المستخدم</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let tx of reportData.receipts.transactions">
+                    <td>{{ tx.j_ref }}</td>
+                    <td>{{ tx.j_details }}</td>
+                    <td class="amount positive">{{ formatNumber(tx.credit) }}</td>
+                    <td>{{ tx.user_name }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Payments Section (Money Out) -->
+        <ion-card class="section-card payments-section">
+          <ion-card-header (click)="toggleSection('payments')">
+            <div class="section-header">
+              <div class="section-title">
+                <ion-icon name="push-outline" class="section-icon"></ion-icon>
+                <span>سندات الدفع</span>
+              </div>
+              <div class="section-stats">
+                <span class="stat-badge">{{ reportData.payments.transactions.length }} سند</span>
+                <span class="stat-value">{{ formatNumber(reportData.payments.totalAmount) }}</span>
+                <ion-icon [name]="paymentsExpanded ? 'chevron-up' : 'chevron-down'"></ion-icon>
+              </div>
+            </div>
+          </ion-card-header>
+          <ion-card-content *ngIf="paymentsExpanded && reportData.payments.transactions.length > 0">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>الرقم المرجعي</th>
+                    <th>البيان</th>
+                    <th>المبلغ</th>
+                    <th>المستخدم</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let tx of reportData.payments.transactions">
+                    <td>{{ tx.j_ref }}</td>
+                    <td>{{ tx.j_details }}</td>
+                    <td class="amount negative">{{ formatNumber(tx.debit) }}</td>
+                    <td>{{ tx.user_name }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Account Balances Section -->
+        <ion-card class="section-card balances-section">
+          <ion-card-header>
+            <div class="section-header">
+              <div class="section-title">
+                <ion-icon name="wallet-outline" class="section-icon"></ion-icon>
+                <span>أرصدة الحسابات</span>
+              </div>
+            </div>
+          </ion-card-header>
+          <ion-card-content>
+            <!-- Cash Accounts -->
+            <div class="balance-group" *ngIf="reportData.accountBalances.cashAccounts.length > 0">
+              <h4 class="balance-group-title">
+                <ion-icon name="cash-outline"></ion-icon>
+                حسابات الصندوق
+              </h4>
+              <div class="balance-items">
+                <div class="balance-item" *ngFor="let account of reportData.accountBalances.cashAccounts">
+                  <span class="account-name">{{ account.sub_name }}</span>
+                  <span class="account-balance" [ngClass]="{'positive': account.balance >= 0, 'negative': account.balance < 0}">
+                    {{ formatNumber(account.balance) }}
+                  </span>
+                </div>
+                <div class="balance-total">
+                  <span>إجمالي الصندوق</span>
+                  <span class="total-value">{{ formatNumber(reportData.accountBalances.totalCash) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bank Accounts -->
+            <div class="balance-group" *ngIf="reportData.accountBalances.bankAccounts.length > 0">
+              <h4 class="balance-group-title">
+                <ion-icon name="business-outline"></ion-icon>
+                حسابات البنك
+              </h4>
+              <div class="balance-items">
+                <div class="balance-item" *ngFor="let account of reportData.accountBalances.bankAccounts">
+                  <span class="account-name">{{ account.sub_name }}</span>
+                  <span class="account-balance" [ngClass]="{'positive': account.balance >= 0, 'negative': account.balance < 0}">
+                    {{ formatNumber(account.balance) }}
+                  </span>
+                </div>
+                <div class="balance-total">
+                  <span>إجمالي البنك</span>
+                  <span class="total-value">{{ formatNumber(reportData.accountBalances.totalBank) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Total Balance -->
+            <div class="grand-total">
+              <span>إجمالي الأرصدة</span>
+              <span class="grand-total-value">
+                {{ formatNumber(reportData.accountBalances.totalCash + reportData.accountBalances.totalBank) }}
+              </span>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Print Button -->
+        <div class="action-buttons">
+          <ion-button (click)="printReport()" fill="solid" class="print-btn">
+            <ion-icon name="print-outline" slot="start"></ion-icon>
+            طباعة التقرير
+          </ion-button>
+        </div>
+
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!reportGenerated && !loading" class="empty-state">
+        <ion-icon name="document-text-outline"></ion-icon>
+        <p>حدد التاريخ واضغط على "توليد التقرير" لعرض التقرير اليومي</p>
+      </div>
+
+    </div>
+  </div>
+</ion-content>

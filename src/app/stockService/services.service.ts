@@ -672,6 +672,25 @@ getTswiaByDate(store_id,from ,yearId){
     return this.http.get(this.api + 'dashboard/getStockValue.php', {params: params})
   }
 
+  // Expense Analytics Dashboard Methods
+  getDashboardExpenseAnalytics(store_id: any, start_date: string, end_date: string, year_id: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('start_date', start_date)
+    params = params.append('end_date', end_date)
+    params = params.append('year_id', year_id)
+    return this.http.get(this.api + 'dashboard/getExpenseAnalytics.php', {params: params})
+  }
+
+  getDashboardExpenseByCategory(store_id: any, start_date: string, end_date: string, year_id: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('start_date', start_date)
+    params = params.append('end_date', end_date)
+    params = params.append('year_id', year_id)
+    return this.http.get(this.api + 'dashboard/getExpenseByCategory.php', {params: params})
+  }
+
 
   getPerchByDate(store_id,from ,yearId){ 
     let params = new HttpParams() 
@@ -1293,15 +1312,23 @@ getTswiaByDate(store_id,from ,yearId){
   }
 
   deleteJFrom(j_ref){
-    let params = new HttpParams() 
+    let params = new HttpParams()
     params= params.append('j_ref' , j_ref )
       return this.http.delete(this.api+'jdetails_from/deleteMultiServices.php', {params: params})
     }
     deleteJto(j_ref){
-      let params = new HttpParams() 
+      let params = new HttpParams()
       params= params.append('j_ref' , j_ref )
         return this.http.delete(this.api+'jdetails_to/deleteMultiServices.php', {params: params})
       }
+
+  // Bulk delete journals - optimized endpoint
+  bulkDeleteJournals(j_refs: string[]){
+    const body = {
+      j_refs: j_refs
+    };
+    return this.http.post(this.api+'journal/bulkDelete.php', body);
+  }
 
   deletePerchitemList(pay_ref){
     let params = new HttpParams() 
@@ -1951,6 +1978,82 @@ getTswiaByDate(store_id,from ,yearId){
     }
 
     return this.http.get(this.api + 'analytics/getSalesSummaryAnalytics.php', {params: params})
+  }
+
+  // Daily Report - Aggregated endpoint for daily report
+  getDailyReport(store_id: any, yearId: any, from: string, to?: string): Observable<any> {
+    let params = new HttpParams()
+      .append('store_id', store_id)
+      .append('year_id', yearId)
+      .append('from', from);
+
+    if (to && to.trim() !== '') {
+      params = params.append('to', to.trim());
+    }
+
+    return this.http.get(this.api + 'reports/getDailyReport.php', { params: params });
+  }
+
+  // ============== Expense Categories Methods ==============
+
+  getExpenseCategories(store_id: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    return this.http.get(this.api + 'expense_categories/readByStore.php', {params: params})
+  }
+
+  createExpenseCategory(category: any) {
+    return this.http.post(this.api + 'expense_categories/create.php', category)
+  }
+
+  updateExpenseCategory(category: any) {
+    return this.http.post(this.api + 'expense_categories/update.php', category)
+  }
+
+  deleteExpenseCategory(id: any) {
+    let params = new HttpParams()
+    params = params.append('id', id)
+    return this.http.delete(this.api + 'expense_categories/delete.php', {params: params})
+  }
+
+  // ============== Expenses Methods ==============
+
+  getTopExpenses(store_id: any, yearId: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('yearId', yearId)
+    return this.http.get(this.api + 'expenses/getTopExpenses.php', {params: params})
+  }
+
+  getExpensesByDate(store_id: any, from: string, yearId: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('from', from)
+    params = params.append('yearId', yearId)
+    return this.http.get(this.api + 'expenses/getExpensesByDate.php', {params: params})
+  }
+
+  getExpenses2Date(store_id: any, from: string, to: string, yearId: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('from', from)
+    params = params.append('to', to)
+    params = params.append('yearId', yearId)
+    return this.http.get(this.api + 'expenses/getExpenses2Date.php', {params: params})
+  }
+
+  saveExpense(expense: any) {
+    return this.http.post(this.api + 'expenses/create.php', expense)
+  }
+
+  updateExpense(expense: any) {
+    return this.http.post(this.api + 'expenses/update.php', expense)
+  }
+
+  deleteExpense(id: any) {
+    let params = new HttpParams()
+    params = params.append('id', id)
+    return this.http.delete(this.api + 'expenses/delete.php', {params: params})
   }
 
 }

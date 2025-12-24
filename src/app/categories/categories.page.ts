@@ -9,10 +9,19 @@ import { Storage } from '@ionic/storage';
   styleUrls: ['./categories.page.scss']
 })
 export class CategoriesPage implements OnInit {
+  // Category type selector
+  categoryType: 'items' | 'expenses' = 'items';
+
+  // Item categories
   categories: any[] = [];
   loading: any;
-  
+
+  // Expense categories
+  expenseCategories: any[] = [];
+  store_info: any;
+
   newCategory = {
+    id: null,
     category_name: '',
     category_desc: '',
     store_id: null
@@ -20,7 +29,7 @@ export class CategoriesPage implements OnInit {
 
   editingCategory: any = null;
   showAddForm = false;
-  
+
   // Endpoint switching control
   selectedEndpointCategoryId: any = null;
   currentEndpoint: string = '';
@@ -36,9 +45,22 @@ export class CategoriesPage implements OnInit {
   ) { }
 
   ngOnInit() {
+    this.loadStoreInfo();
+  }
+
+  async loadStoreInfo() {
+    await this.storage.create();
+    this.store_info = await this.storage.get('STORE_INFO');
     this.loadCategories();
+    this.loadExpenseCategories();
     this.loadEndpointSettings();
   }
+
+  onCategoryTypeChange(event: any) {
+    this.resetForm();
+  }
+
+  // ==================== ITEM CATEGORIES ====================
 
   async loadCategories() {
     this.loading = await this.loadingController.create({
@@ -47,10 +69,9 @@ export class CategoriesPage implements OnInit {
     await this.loading.present();
 
     try {
-      // Fetch categories and cache them
       const categories: any[] = await this.servicesService.fetchAndCacheCategories();
       this.categories = Array.isArray(categories) ? categories : [];
-      this.loadEndpointSettings(); // Load endpoint settings after categories are loaded
+      this.loadEndpointSettings();
       this.loading.dismiss();
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -66,6 +87,12 @@ export class CategoriesPage implements OnInit {
       return;
     }
 
+    // Route to appropriate method based on category type
+    if (this.categoryType === 'expenses') {
+      await this.addExpenseCategory();
+      return;
+    }
+
     const loading = await this.loadingController.create({
       message: 'جاري حفظ التصنيف...'
     });
@@ -78,7 +105,6 @@ export class CategoriesPage implements OnInit {
           this.presentToast('تم إضافة التصنيف بنجاح', 'success');
           this.resetForm();
           this.loadCategories();
-          // Refresh cached categories
           this.servicesService.fetchAndCacheCategories();
         },
         error => {
@@ -105,6 +131,12 @@ export class CategoriesPage implements OnInit {
       return;
     }
 
+    // Route to appropriate method based on category type
+    if (this.categoryType === 'expenses') {
+      await this.updateExpenseCategory();
+      return;
+    }
+
     const loading = await this.loadingController.create({
       message: 'جاري تحديث التصنيف...'
     });
@@ -117,7 +149,6 @@ export class CategoriesPage implements OnInit {
           this.presentToast('تم تحديث التصنيف بنجاح', 'success');
           this.resetForm();
           this.loadCategories();
-          // Refresh cached categories
           this.servicesService.fetchAndCacheCategories();
         },
         error => {
@@ -168,9 +199,7 @@ export class CategoriesPage implements OnInit {
           } else {
             this.presentToast('تم حذف التصنيف بنجاح', 'success');
             this.loadCategories();
-            // Refresh cached categories
             this.servicesService.fetchAndCacheCategories();
-            // Check if deleted category was the selected endpoint
             if (this.selectedEndpointCategoryId == category.id) {
               this.clearEndpointSettings();
             }
@@ -188,8 +217,152 @@ export class CategoriesPage implements OnInit {
     }
   }
 
+  // ==================== EXPENSE CATEGORIES ====================
+
+  async loadExpenseCategories() {
+    if (!this.store_info) return;
+
+    this.servicesService.getExpenseCategories(this.store_info.id).subscribe(
+      (data: any) => {
+        if (data && data.message !== 'No Categories Found') {
+          this.expenseCategories = data.data || [];
+        } else {
+          this.expenseCategories = [];
+        }
+      },
+      error => {
+        console.error('Error loading expense categories:', error);
+        this.expenseCategories = [];
+      }
+    );
+  }
+
+  async addExpenseCategory() {
+    if (!this.newCategory.category_name.trim()) {
+      this.presentToast('يرجى إدخال اسم التصنيف', 'warning');
+      return;
+    }
+
+    const loading = await this.loadingController.create({
+      message: 'جاري حفظ تصنيف المصروفات...'
+    });
+    await loading.present();
+
+    const categoryData = {
+      category_name: this.newCategory.category_name,
+      category_desc: this.newCategory.category_desc,
+      store_id: this.store_info.id
+    };
+
+    this.servicesService.createExpenseCategory(categoryData).subscribe(
+      data => {
+        loading.dismiss();
+        this.presentToast('تم إضافة تصنيف المصروفات بنجاح', 'success');
+        this.resetForm();
+        this.loadExpenseCategories();
+      },
+      error => {
+        console.error('Error creating expense category:', error);
+        loading.dismiss();
+        this.presentToast('خطأ في إضافة تصنيف المصروفات', 'danger');
+      }
+    );
+  }
+
+  editExpenseCategory(category: any) {
+    this.editingCategory = { ...category };
+    this.showAddForm = true;
+    this.newCategory = {
+      id: category.id,
+      category_name: category.category_name,
+      category_desc: category.category_desc,
+      store_id: category.store_id
+    };
+  }
+
+  async updateExpenseCategory() {
+    if (!this.newCategory.category_name.trim()) {
+      this.presentToast('يرجى إدخال اسم التصنيف', 'warning');
+      return;
+    }
+
+    const loading = await this.loadingController.create({
+      message: 'جاري تحديث تصنيف المصروفات...'
+    });
+    await loading.present();
+
+    const categoryData = {
+      id: this.newCategory.id,
+      category_name: this.newCategory.category_name,
+      category_desc: this.newCategory.category_desc,
+      store_id: this.store_info.id
+    };
+
+    this.servicesService.updateExpenseCategory(categoryData).subscribe(
+      data => {
+        loading.dismiss();
+        this.presentToast('تم تحديث تصنيف المصروفات بنجاح', 'success');
+        this.resetForm();
+        this.loadExpenseCategories();
+      },
+      error => {
+        console.error('Error updating expense category:', error);
+        loading.dismiss();
+        this.presentToast('خطأ في تحديث تصنيف المصروفات', 'danger');
+      }
+    );
+  }
+
+  async deleteExpenseCategory(category: any) {
+    const alert = await this.alertController.create({
+      header: 'تأكيد الحذف',
+      message: `هل أنت متأكد من حذف تصنيف المصروفات "${category.category_name}"؟`,
+      buttons: [
+        {
+          text: 'إلغاء',
+          role: 'cancel'
+        },
+        {
+          text: 'حذف',
+          handler: () => {
+            this.confirmDeleteExpenseCategory(category);
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  async confirmDeleteExpenseCategory(category: any) {
+    const loading = await this.loadingController.create({
+      message: 'جاري حذف تصنيف المصروفات...'
+    });
+    await loading.present();
+
+    this.servicesService.deleteExpenseCategory(category.id).subscribe(
+      (data: any) => {
+        loading.dismiss();
+        if (data.message && data.message.includes('Cannot delete')) {
+          this.presentToast('لا يمكن حذف التصنيف لأنه مستخدم في مصروفات', 'warning');
+        } else {
+          this.presentToast('تم حذف تصنيف المصروفات بنجاح', 'success');
+          this.loadExpenseCategories();
+        }
+      },
+      error => {
+        console.error('Error deleting expense category:', error);
+        loading.dismiss();
+        this.presentToast('خطأ في حذف تصنيف المصروفات', 'danger');
+      }
+    );
+  }
+
+  // ==================== COMMON METHODS ====================
+
   resetForm() {
     this.newCategory = {
+      id: null,
       category_name: '',
       category_desc: '',
       store_id: null
@@ -215,23 +388,22 @@ export class CategoriesPage implements OnInit {
     toast.present();
   }
 
-  // Endpoint switching management methods
+  // ==================== ENDPOINT SWITCHING ====================
+
   async loadEndpointSettings() {
     this.isInitializingEndpoint = true;
     await this.storage.create();
     const savedCategoryId = await this.storage.get('SELECTED_CATEGORY_ID');
     const savedEndpoint = await this.storage.get('SELECTED_ENDPOINT');
     const savedCategory = await this.storage.get('SELECTED_CATEGORY');
-    
+
     if (savedCategoryId && this.categories.length > 0) {
-      // Verify that the saved category still exists in the categories list
       const categoryExists = this.categories.some(cat => cat.id == savedCategoryId);
       if (categoryExists) {
         this.selectedEndpointCategoryId = savedCategoryId;
         this.currentEndpoint = savedEndpoint || '';
         this.selectedCategoryName = savedCategory ? savedCategory.category_name : '';
       } else {
-        // If saved category no longer exists, clear it from storage
         await this.clearEndpointSettings();
       }
     } else {
@@ -239,8 +411,7 @@ export class CategoriesPage implements OnInit {
       this.currentEndpoint = '';
       this.selectedCategoryName = '';
     }
-    
-    // Allow some time for the UI to settle before allowing user interactions
+
     setTimeout(() => {
       this.isInitializingEndpoint = false;
     }, 500);
@@ -248,12 +419,11 @@ export class CategoriesPage implements OnInit {
 
   async setEndpointCategory(event: any) {
     const selectedId = event.detail.value;
-    
-    // Don't show dialog during initialization
+
     if (this.isInitializingEndpoint) {
       return;
     }
-    
+
     if (!selectedId) {
       await this.clearEndpointSettings();
       return;
@@ -266,15 +436,14 @@ export class CategoriesPage implements OnInit {
 
     try {
       const result = await this.servicesService.setEndpointFromCategory(selectedId);
-      
+
       if (result.success) {
         this.selectedEndpointCategoryId = selectedId;
         this.currentEndpoint = result.endpoint;
         this.selectedCategoryName = result.category.category_name;
-        
+
         loading.dismiss();
-        
-        // Show success message and reload confirmation
+
         const alert = await this.alertController.create({
           header: 'تم التحديث بنجاح',
           message: `تم تحديد "${result.category.category_name}" كنقطة اتصال. سيتم إعادة تحميل التطبيق لتطبيق التغييرات.`,
@@ -288,7 +457,7 @@ export class CategoriesPage implements OnInit {
           ]
         });
         await alert.present();
-        
+
       } else {
         loading.dismiss();
         this.presentToast(result.message || 'خطأ في تحديث نقطة الاتصال', 'danger');
@@ -305,8 +474,7 @@ export class CategoriesPage implements OnInit {
     this.selectedEndpointCategoryId = null;
     this.currentEndpoint = '';
     this.selectedCategoryName = '';
-    
-    // Only show toast if not during initialization
+
     if (!this.isInitializingEndpoint) {
       this.presentToast('تم إلغاء نقطة الاتصال المحددة', 'warning');
     }

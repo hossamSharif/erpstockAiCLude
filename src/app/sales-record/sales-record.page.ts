@@ -379,6 +379,9 @@ export class SalesRecordPage implements OnInit, OnDestroy {
               this.getPayInvoDetail(pay, sub_name, '');
             }
             break;
+          case 'verify':
+            this.verifyInvoice(pay);
+            break;
           case 'copySales':
             this.copyAsInvoice(pay, 'sales');
             break;

@@ -1,7 +1,19 @@
 
+item list table enhancement :
 
+  adding new columns to the items list and  implement column control functionality  (hide and show the columns )
 
+  * in the sales and edit sales after the pay\_price in the table of items lists add another column of the pay\_price which will        
+  present the original price of the item that and old pay\_price is from the salese invoice  which is multiable by quantity to get the  
+  the total and can be modify by the user  . the new pay\_price column is for just  for comparing with pay\_price of the sales
+  invoice because the user might changed the price during adding the item to the item\_list
+  * &nbsp;and add  perch\_price  column
+  * make the background color of the new columns deferent
+  * for each 2 new columns apply edit cell functionality which is for edit the item prices (pay
 
+  implement column control functionality  (hide and show the columns ) in the item list  :
+
+  * place the button of the column control modal in the header of the items list next the price setting
 
 
 
@@ -42,14 +54,6 @@ when user click to edit qty or itm in itemlist the total not changed after dismi
 
 - in the @item-report i wanna add new view for item movmment that preview the all item move of spicific date 
 
-
-
- 
-
-
- 
- 
-  
  
  
  i wanna add   salse return section to the app   will have pages fo add new salse return invoice  and page 

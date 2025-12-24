@@ -42,7 +42,7 @@
   
   <!-- Header Section -->
   <div class="menu-header" [class.collapsed]="isSidebarCollapsed" [class.expanded]="isSidebarExpanded()">
-    <ion-label>{{getSelectedEndpointName()}} - <ion-text> <strong> V1000 </strong></ion-text></ion-label>
+    <ion-label>{{getSelectedEndpointName()}} - <ion-text> <strong> V1003 </strong></ion-text></ion-label>
   </div>
   
   <!-- User Profile Section -->
@@ -211,7 +211,44 @@
                 </div>
               </div>
             </div>
-            
+
+            <!-- Expenses Section -->
+            <div class="menu-section">
+              <div class="section-header">
+                <ion-icon name="wallet"></ion-icon>
+                <span>المصروفات</span>
+              </div>
+
+              <div class="menu-item" [routerLink]="['expense']" routerLinkActive="selected">
+                <div class="menu-item-content">
+                  <ion-icon name="add-circle"></ion-icon>
+                  <span>إضافة مصروف</span>
+                </div>
+              </div>
+
+              <div class="menu-item" [routerLink]="['expense-record']" routerLinkActive="selected">
+                <div class="menu-item-content">
+                  <ion-icon name="document-text"></ion-icon>
+                  <span>سجل المصروفات</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Reports Section -->
+            <!-- <div class="menu-section">
+              <div class="section-header">
+                <ion-icon name="newspaper"></ion-icon>
+                <span>التقارير</span>
+              </div>
+
+              <div class="menu-item" [routerLink]="['folder/daily-report']" routerLinkActive="selected">
+                <div class="menu-item-content">
+                  <ion-icon name="today"></ion-icon>
+                  <span>التقرير اليومي</span>
+                </div>
+              </div>
+            </div> -->
+
             <!-- Settings Section -->
             <div class="menu-section">
               <div class="section-header">

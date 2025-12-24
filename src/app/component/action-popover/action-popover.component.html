@@ -9,7 +9,12 @@
     <ion-label>تعديل</ion-label>
   </ion-item>
 
-  <!-- Only show copy and return options for invoices, not for orders -->
+  <ion-item button (click)="selectAction('verify')" class="action-item">
+    <ion-icon name="checkmark-done-outline" slot="start" class="action-icon"></ion-icon>
+    <ion-label>التحقق من الفاتورة</ion-label>
+  </ion-item>
+
+  <!-- Only show copy options for invoices, not for orders -->
   <ng-container *ngIf="context === 'invoice'">
     <ion-item button (click)="selectAction('copySales')" class="action-item">
       <ion-icon name="copy-outline" slot="start" class="action-icon"></ion-icon>
@@ -19,11 +24,6 @@
     <ion-item button (click)="selectAction('copyPurchase')" class="action-item">
       <ion-icon name="copy-outline" slot="start" class="action-icon"></ion-icon>
       <ion-label>نسخ كفاتورة مشتريات</ion-label>
-    </ion-item>
-
-    <ion-item button (click)="selectAction('return')" class="action-item return-action">
-      <ion-icon name="return-down-back-outline" slot="start" class="action-icon"></ion-icon>
-      <ion-label>إرجاع أصناف</ion-label>
     </ion-item>
   </ng-container>
 </ion-list>

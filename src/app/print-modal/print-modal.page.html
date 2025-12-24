@@ -278,7 +278,7 @@
     <p>جميع القيم معروضة بالعملة المحددة مع القيمة بالجنيه السوداني</p>
   </div>
   
-  <div style="padding: 13px;">
+  <div style="padding: 13px;" *ngIf="page != 'daily_report'">
     <div #printarea1 id="printarea1">
       <!-- Header with Images and Title -->
       <div style="display: table; width: 100%; margin-bottom: 12px;">
@@ -287,7 +287,7 @@
         </div>
         <div style="display: table-cell; text-align: center; vertical-align: middle;">
           <h2 style="margin: 5px 0 0 0; font-size: 30px;">   <strong>GVS</strong>      </h2>
-          <h1 style="margin: 0; padding: 10px; background-color: #f0f0f0; display: inline-block; font-size: 30px;" 
+          <h1 style="margin: 0; padding: 10px; background-color: #f0f0f0; display: inline-block; font-size: 30px;"
             *ngIf="page=='sales' || page=='sales_record'">  بيان</h1>
         </div>
         <div style="display: table-cell; width: 150px; text-align: right; vertical-align: middle;">
@@ -402,6 +402,257 @@
         <p style="margin: 5px 0;">الهاتف: {{printArr[0].company?.phone || 'غير متوفر'}}</p>
       </div> -->
 
+    </div>
+  </div>
+
+  <!-- DAILY REPORT TEMPLATE (Enhanced Mode) -->
+  <div class="daily-report-print" #printarea1 id="printarea1" *ngIf="page=='daily_report'" style="direction: rtl; font-family: Arial, sans-serif; padding: 20px;">
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px;">
+      <h1 style="margin: 0; font-size: 24px; color: #333;">التقرير اليومي</h1>
+      <p style="margin: 10px 0 0; font-size: 14px; color: #888;">
+        تاريخ التقرير: {{printArr[0]?.reportDate}}
+        <span *ngIf="printArr[0]?.endDate"> - {{printArr[0]?.endDate}}</span>
+      </p>
+    </div>
+
+    <!-- Summary Section -->
+    <div style="display: flex; justify-content: space-between; margin-bottom: 30px; gap: 20px;">
+      <div style="flex: 1; background: #e8f5e9; padding: 15px; border-radius: 8px; text-align: center;">
+        <div style="font-size: 14px; color: #2e7d32;">إجمالي الوارد</div>
+        <div style="font-size: 22px; font-weight: bold; color: #1b5e20;">{{formatNumberWithSeparators(printArr[0]?.totals?.amountIn || 0)}}</div>
+      </div>
+      <div style="flex: 1; background: #fff3e0; padding: 15px; border-radius: 8px; text-align: center;">
+        <div style="font-size: 14px; color: #ef6c00;">إجمالي الصادر</div>
+        <div style="font-size: 22px; font-weight: bold; color: #e65100;">{{formatNumberWithSeparators(printArr[0]?.totals?.amountOut || 0)}}</div>
+      </div>
+      <div style="flex: 1; padding: 15px; border-radius: 8px; text-align: center;"
+           [style.background]="(printArr[0]?.totals?.netIncome || 0) >= 0 ? '#e3f2fd' : '#ffebee'">
+        <div style="font-size: 14px;" [style.color]="(printArr[0]?.totals?.netIncome || 0) >= 0 ? '#1565c0' : '#c62828'">صافي الدخل</div>
+        <div style="font-size: 22px; font-weight: bold;" [style.color]="(printArr[0]?.totals?.netIncome || 0) >= 0 ? '#0d47a1' : '#b71c1c'">
+          {{formatNumberWithSeparators(printArr[0]?.totals?.netIncome || 0)}}
+        </div>
+      </div>
+    </div>
+
+    <!-- Sales Section -->
+    <div style="margin-bottom: 25px;">
+      <h3 style="font-size: 16px; color: #333; margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-right: 4px solid #4caf50;">
+        المبيعات ({{printArr[0]?.salesSummary?.invoiceCount || 0}} فاتورة) - الإجمالي: {{formatNumberWithSeparators(printArr[0]?.salesSummary?.totalAmount || 0)}}
+      </h3>
+      <table *ngIf="printArr[0]?.salesSummary?.invoices?.length > 0"
+             style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: #e8e8e8;">
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">الرقم المرجعي</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">العميل</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">المبلغ</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">المستخدم</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let inv of printArr[0]?.salesSummary?.invoices">
+            <td style="border: 1px solid #ddd; padding: 6px;">{{inv.pay_ref}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px;">{{inv.sub_name}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">{{formatNumberWithSeparators(inv.tot_pr)}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px;">{{inv.user_name}}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="!printArr[0]?.salesSummary?.invoices?.length" style="color: #888; font-style: italic;">لا توجد مبيعات</p>
+    </div>
+
+    <!-- Purchases Section -->
+    <div style="margin-bottom: 25px;">
+      <h3 style="font-size: 16px; color: #333; margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-right: 4px solid #ff9800;">
+        المشتريات ({{printArr[0]?.purchaseSummary?.invoiceCount || 0}} فاتورة) - الإجمالي: {{formatNumberWithSeparators(printArr[0]?.purchaseSummary?.totalAmount || 0)}}
+      </h3>
+      <table *ngIf="printArr[0]?.purchaseSummary?.invoices?.length > 0"
+             style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: #e8e8e8;">
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">الرقم المرجعي</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">المورد</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">المبلغ</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">المستخدم</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let inv of printArr[0]?.purchaseSummary?.invoices">
+            <td style="border: 1px solid #ddd; padding: 6px;">{{inv.pay_ref}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px;">{{inv.sub_name}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">{{formatNumberWithSeparators(inv.tot_pr)}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px;">{{inv.user_name}}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="!printArr[0]?.purchaseSummary?.invoices?.length" style="color: #888; font-style: italic;">لا توجد مشتريات</p>
+    </div>
+
+    <!-- Expenses Section -->
+    <div style="margin-bottom: 25px;">
+      <h3 style="font-size: 16px; color: #333; margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-right: 4px solid #9c27b0;">
+        المصروفات ({{printArr[0]?.expensesSummary?.itemCount || 0}} مصروف) - الإجمالي: {{formatNumberWithSeparators(printArr[0]?.expensesSummary?.totalAmount || 0)}}
+      </h3>
+      <table *ngIf="printArr[0]?.expensesSummary?.items?.length > 0"
+             style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: #e8e8e8;">
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">الرقم المرجعي</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">الوصف</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">التصنيف</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">المبلغ</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">المستخدم</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let exp of printArr[0]?.expensesSummary?.items">
+            <td style="border: 1px solid #ddd; padding: 6px;">{{exp.expense_ref}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px;">{{exp.description}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px;">{{exp.category_name}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #9c27b0;">{{formatNumberWithSeparators(exp.amount)}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px;">{{exp.user_name}}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="!printArr[0]?.expensesSummary?.items?.length" style="color: #888; font-style: italic;">لا توجد مصروفات</p>
+    </div>
+
+    <!-- Receipts Section -->
+    <div style="margin-bottom: 25px;">
+      <h3 style="font-size: 16px; color: #333; margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-right: 4px solid #2196f3;">
+        سندات القبض ({{printArr[0]?.receipts?.transactions?.length || 0}} سند) - الإجمالي: {{formatNumberWithSeparators(printArr[0]?.receipts?.totalAmount || 0)}}
+      </h3>
+      <table *ngIf="printArr[0]?.receipts?.transactions?.length > 0"
+             style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: #e8e8e8;">
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">الرقم المرجعي</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">البيان</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">المبلغ</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">المستخدم</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let tx of printArr[0]?.receipts?.transactions">
+            <td style="border: 1px solid #ddd; padding: 6px;">{{tx.j_ref}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px;">{{tx.j_details}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #2e7d32;">{{formatNumberWithSeparators(tx.credit)}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px;">{{tx.user_name}}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="!printArr[0]?.receipts?.transactions?.length" style="color: #888; font-style: italic;">لا توجد سندات قبض</p>
+    </div>
+
+    <!-- Payments Section -->
+    <div style="margin-bottom: 25px;">
+      <h3 style="font-size: 16px; color: #333; margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-right: 4px solid #f44336;">
+        سندات الدفع ({{printArr[0]?.payments?.transactions?.length || 0}} سند) - الإجمالي: {{formatNumberWithSeparators(printArr[0]?.payments?.totalAmount || 0)}}
+      </h3>
+      <table *ngIf="printArr[0]?.payments?.transactions?.length > 0"
+             style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: #e8e8e8;">
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">الرقم المرجعي</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">البيان</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">المبلغ</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">المستخدم</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let tx of printArr[0]?.payments?.transactions">
+            <td style="border: 1px solid #ddd; padding: 6px;">{{tx.j_ref}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px;">{{tx.j_details}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #c62828;">{{formatNumberWithSeparators(tx.debit)}}</td>
+            <td style="border: 1px solid #ddd; padding: 6px;">{{tx.user_name}}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="!printArr[0]?.payments?.transactions?.length" style="color: #888; font-style: italic;">لا توجد سندات دفع</p>
+    </div>
+
+    <!-- Account Balances Section -->
+    <div style="margin-bottom: 25px;">
+      <h3 style="font-size: 16px; color: #333; margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-right: 4px solid #9c27b0;">
+        أرصدة الحسابات
+      </h3>
+
+      <!-- Cash Accounts -->
+      <div *ngIf="printArr[0]?.accountBalances?.cashAccounts?.length > 0" style="margin-bottom: 15px;">
+        <h4 style="font-size: 14px; color: #666; margin-bottom: 8px;">حسابات الصندوق</h4>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+          <thead>
+            <tr style="background: #f0f0f0;">
+              <th style="border: 1px solid #ddd; padding: 6px; text-align: right;">الحساب</th>
+              <th style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #2e7d32;">الوارد</th>
+              <th style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #c62828;">الصادر</th>
+              <th style="border: 1px solid #ddd; padding: 6px; text-align: center;">الرصيد</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let acc of printArr[0]?.accountBalances?.cashAccounts" style="border-bottom: 1px solid #eee;">
+              <td style="border: 1px solid #ddd; padding: 6px;">{{acc.sub_name}}</td>
+              <td style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #2e7d32;">{{formatNumberWithSeparators(acc.amount_in || 0)}}</td>
+              <td style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #c62828;">{{formatNumberWithSeparators(acc.amount_out || 0)}}</td>
+              <td style="border: 1px solid #ddd; padding: 6px; text-align: center; font-weight: bold;" [style.color]="acc.balance >= 0 ? '#2e7d32' : '#c62828'">
+                {{formatNumberWithSeparators(acc.balance)}}
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr style="background: #f9f9f9; font-weight: bold;">
+              <td style="border: 1px solid #ddd; padding: 8px;">إجمالي الصندوق</td>
+              <td style="border: 1px solid #ddd; padding: 8px; text-align: center;" colspan="2"></td>
+              <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{{formatNumberWithSeparators(printArr[0]?.accountBalances?.totalCash || 0)}}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Bank Accounts -->
+      <div *ngIf="printArr[0]?.accountBalances?.bankAccounts?.length > 0" style="margin-bottom: 15px;">
+        <h4 style="font-size: 14px; color: #666; margin-bottom: 8px;">حسابات البنك</h4>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+          <thead>
+            <tr style="background: #f0f0f0;">
+              <th style="border: 1px solid #ddd; padding: 6px; text-align: right;">الحساب</th>
+              <th style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #2e7d32;">الوارد</th>
+              <th style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #c62828;">الصادر</th>
+              <th style="border: 1px solid #ddd; padding: 6px; text-align: center;">الرصيد</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let acc of printArr[0]?.accountBalances?.bankAccounts" style="border-bottom: 1px solid #eee;">
+              <td style="border: 1px solid #ddd; padding: 6px;">{{acc.sub_name}}</td>
+              <td style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #2e7d32;">{{formatNumberWithSeparators(acc.amount_in || 0)}}</td>
+              <td style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #c62828;">{{formatNumberWithSeparators(acc.amount_out || 0)}}</td>
+              <td style="border: 1px solid #ddd; padding: 6px; text-align: center; font-weight: bold;" [style.color]="acc.balance >= 0 ? '#2e7d32' : '#c62828'">
+                {{formatNumberWithSeparators(acc.balance)}}
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr style="background: #f9f9f9; font-weight: bold;">
+              <td style="border: 1px solid #ddd; padding: 8px;">إجمالي البنك</td>
+              <td style="border: 1px solid #ddd; padding: 8px; text-align: center;" colspan="2"></td>
+              <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{{formatNumberWithSeparators(printArr[0]?.accountBalances?.totalBank || 0)}}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Grand Total -->
+      <div style="background: #e8eaf6; padding: 12px; border-radius: 6px; text-align: center; margin-top: 15px;">
+        <span style="font-size: 16px; font-weight: bold; color: #3f51b5;">
+          إجمالي الأرصدة: {{formatNumberWithSeparators((printArr[0]?.accountBalances?.totalCash || 0) + (printArr[0]?.accountBalances?.totalBank || 0))}}
+        </span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #333; text-align: center; font-size: 12px; color: #666;">
+      <p>طبع بواسطة: {{printArr[0]?.userName}} | تاريخ الطباعة: {{printDate}}</p>
     </div>
   </div>
 </ion-content>
@@ -760,10 +1011,213 @@
 </div>
 
       </div>
-      
+
+      <!-- DAILY REPORT TEMPLATE -->
+      <div class="daily-report-print" *ngIf="page=='daily_report'" style="direction: rtl; font-family: Arial, sans-serif; padding: 20px;">
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px;">
+          <h1 style="margin: 0; font-size: 24px; color: #333;">التقرير اليومي</h1>
+          <h2 style="margin: 10px 0 0; font-size: 18px; color: #666;">{{printArr[0].storeName}}</h2>
+          <p style="margin: 10px 0 0; font-size: 14px; color: #888;">
+            تاريخ التقرير: {{printArr[0].reportDate}}
+            <span *ngIf="printArr[0].endDate"> - {{printArr[0].endDate}}</span>
+          </p>
+        </div>
+
+        <!-- Summary Section -->
+        <div style="display: flex; justify-content: space-between; margin-bottom: 30px; gap: 20px;">
+          <div style="flex: 1; background: #e8f5e9; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 14px; color: #2e7d32;">إجمالي الوارد</div>
+            <div style="font-size: 22px; font-weight: bold; color: #1b5e20;">{{formatCurrencyWithSeparators(printArr[0].totals.amountIn)}}</div>
+          </div>
+          <div style="flex: 1; background: #fff3e0; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 14px; color: #ef6c00;">إجمالي الصادر</div>
+            <div style="font-size: 22px; font-weight: bold; color: #e65100;">{{formatCurrencyWithSeparators(printArr[0].totals.amountOut)}}</div>
+          </div>
+          <div style="flex: 1; padding: 15px; border-radius: 8px; text-align: center;"
+               [style.background]="printArr[0].totals.netIncome >= 0 ? '#e3f2fd' : '#ffebee'">
+            <div style="font-size: 14px;" [style.color]="printArr[0].totals.netIncome >= 0 ? '#1565c0' : '#c62828'">صافي الدخل</div>
+            <div style="font-size: 22px; font-weight: bold;" [style.color]="printArr[0].totals.netIncome >= 0 ? '#0d47a1' : '#b71c1c'">
+              {{formatCurrencyWithSeparators(printArr[0].totals.netIncome)}}
+            </div>
+          </div>
+        </div>
+
+        <!-- Sales Section -->
+        <div style="margin-bottom: 25px;">
+          <h3 style="font-size: 16px; color: #333; margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-right: 4px solid #4caf50;">
+            المبيعات ({{printArr[0].salesSummary.invoiceCount}} فاتورة) - الإجمالي: {{formatCurrencyWithSeparators(printArr[0].salesSummary.totalAmount)}}
+          </h3>
+          <table *ngIf="printArr[0].salesSummary.invoices && printArr[0].salesSummary.invoices.length > 0"
+                 style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+              <tr style="background: #e8e8e8;">
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">الرقم المرجعي</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">العميل</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">المبلغ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let inv of printArr[0].salesSummary.invoices">
+                <td style="border: 1px solid #ddd; padding: 6px;">{{inv.pay_ref}}</td>
+                <td style="border: 1px solid #ddd; padding: 6px;">{{inv.sub_name}}</td>
+                <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">{{formatCurrencyWithSeparators(inv.tot_pr)}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Purchases Section -->
+        <div style="margin-bottom: 25px;">
+          <h3 style="font-size: 16px; color: #333; margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-right: 4px solid #ff9800;">
+            المشتريات ({{printArr[0].purchaseSummary.invoiceCount}} فاتورة) - الإجمالي: {{formatCurrencyWithSeparators(printArr[0].purchaseSummary.totalAmount)}}
+          </h3>
+          <table *ngIf="printArr[0].purchaseSummary.invoices && printArr[0].purchaseSummary.invoices.length > 0"
+                 style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+              <tr style="background: #e8e8e8;">
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">الرقم المرجعي</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">المورد</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">المبلغ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let inv of printArr[0].purchaseSummary.invoices">
+                <td style="border: 1px solid #ddd; padding: 6px;">{{inv.pay_ref}}</td>
+                <td style="border: 1px solid #ddd; padding: 6px;">{{inv.sub_name}}</td>
+                <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">{{formatCurrencyWithSeparators(inv.tot_pr)}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Expenses Section -->
+        <div style="margin-bottom: 25px;">
+          <h3 style="font-size: 16px; color: #333; margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-right: 4px solid #9c27b0;">
+            المصروفات ({{printArr[0].expensesSummary?.itemCount || 0}} مصروف) - الإجمالي: {{formatCurrencyWithSeparators(printArr[0].expensesSummary?.totalAmount || 0)}}
+          </h3>
+          <table *ngIf="printArr[0].expensesSummary?.items && printArr[0].expensesSummary.items.length > 0"
+                 style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+              <tr style="background: #e8e8e8;">
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">الرقم المرجعي</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">الوصف</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">التصنيف</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">المبلغ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let exp of printArr[0].expensesSummary.items">
+                <td style="border: 1px solid #ddd; padding: 6px;">{{exp.expense_ref}}</td>
+                <td style="border: 1px solid #ddd; padding: 6px;">{{exp.description}}</td>
+                <td style="border: 1px solid #ddd; padding: 6px;">{{exp.category_name}}</td>
+                <td style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #9c27b0;">{{formatCurrencyWithSeparators(exp.amount)}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Receipts Section -->
+        <div style="margin-bottom: 25px;">
+          <h3 style="font-size: 16px; color: #333; margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-right: 4px solid #2196f3;">
+            سندات القبض ({{printArr[0].receipts.transactions?.length || 0}} سند) - الإجمالي: {{formatCurrencyWithSeparators(printArr[0].receipts.totalAmount)}}
+          </h3>
+          <table *ngIf="printArr[0].receipts.transactions && printArr[0].receipts.transactions.length > 0"
+                 style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+              <tr style="background: #e8e8e8;">
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">الرقم المرجعي</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">البيان</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">المبلغ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let tx of printArr[0].receipts.transactions">
+                <td style="border: 1px solid #ddd; padding: 6px;">{{tx.j_ref}}</td>
+                <td style="border: 1px solid #ddd; padding: 6px;">{{tx.j_details}}</td>
+                <td style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #2e7d32;">{{formatCurrencyWithSeparators(tx.credit)}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Payments Section -->
+        <div style="margin-bottom: 25px;">
+          <h3 style="font-size: 16px; color: #333; margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-right: 4px solid #f44336;">
+            سندات الدفع ({{printArr[0].payments.transactions?.length || 0}} سند) - الإجمالي: {{formatCurrencyWithSeparators(printArr[0].payments.totalAmount)}}
+          </h3>
+          <table *ngIf="printArr[0].payments.transactions && printArr[0].payments.transactions.length > 0"
+                 style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+              <tr style="background: #e8e8e8;">
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">الرقم المرجعي</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">البيان</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">المبلغ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let tx of printArr[0].payments.transactions">
+                <td style="border: 1px solid #ddd; padding: 6px;">{{tx.j_ref}}</td>
+                <td style="border: 1px solid #ddd; padding: 6px;">{{tx.j_details}}</td>
+                <td style="border: 1px solid #ddd; padding: 6px; text-align: center; color: #c62828;">{{formatCurrencyWithSeparators(tx.debit)}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Account Balances Section -->
+        <div style="margin-bottom: 25px;">
+          <h3 style="font-size: 16px; color: #333; margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-right: 4px solid #9c27b0;">
+            أرصدة الحسابات
+          </h3>
+
+          <!-- Cash Accounts -->
+          <div *ngIf="printArr[0].accountBalances.cashAccounts && printArr[0].accountBalances.cashAccounts.length > 0" style="margin-bottom: 15px;">
+            <h4 style="font-size: 14px; color: #666; margin-bottom: 8px;">حسابات الصندوق</h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+              <tr *ngFor="let acc of printArr[0].accountBalances.cashAccounts">
+                <td style="border: 1px solid #ddd; padding: 6px; width: 60%;">{{acc.sub_name}}</td>
+                <td style="border: 1px solid #ddd; padding: 6px; text-align: center;"
+                    [style.color]="acc.balance >= 0 ? '#2e7d32' : '#c62828'">
+                  {{formatCurrencyWithSeparators(acc.balance)}}
+                </td>
+              </tr>
+              <tr style="background: #e8f5e9; font-weight: bold;">
+                <td style="border: 1px solid #ddd; padding: 8px;">إجمالي الصندوق</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{{formatCurrencyWithSeparators(printArr[0].accountBalances.totalCash)}}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Bank Accounts -->
+          <div *ngIf="printArr[0].accountBalances.bankAccounts && printArr[0].accountBalances.bankAccounts.length > 0" style="margin-bottom: 15px;">
+            <h4 style="font-size: 14px; color: #666; margin-bottom: 8px;">حسابات البنك</h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+              <tr *ngFor="let acc of printArr[0].accountBalances.bankAccounts">
+                <td style="border: 1px solid #ddd; padding: 6px; width: 60%;">{{acc.sub_name}}</td>
+                <td style="border: 1px solid #ddd; padding: 6px; text-align: center;"
+                    [style.color]="acc.balance >= 0 ? '#2e7d32' : '#c62828'">
+                  {{formatCurrencyWithSeparators(acc.balance)}}
+                </td>
+              </tr>
+              <tr style="background: #e3f2fd; font-weight: bold;">
+                <td style="border: 1px solid #ddd; padding: 8px;">إجمالي البنك</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{{formatCurrencyWithSeparators(printArr[0].accountBalances.totalBank)}}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 11px; color: #888; text-align: center;">
+          <p>تم إعداد التقرير بواسطة: {{printArr[0].userName}}</p>
+          <p>تاريخ الطباعة: {{printDate}}</p>
+        </div>
+      </div>
+
       <!-- Exchange Rate Footer -->
       <div class="exchange-rate-footer" style="font-size: 0.7em; text-align: center; border-top: 1px solid #ccc; padding-top: 5px; margin-top: 20px;" *ngIf="getExchangeRateFooter()">
         {{getExchangeRateFooter()}}
       </div>
-  </div>  
+  </div>
 </ion-content>

@@ -758,3 +758,392 @@ ion-card-subtitle,
     }
   }
 }
+
+// ==================== NEW STYLES ====================
+
+// Tab Segment Styles
+.dashboard-tabs {
+  margin: 16px 0;
+  --background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  ion-segment-button {
+    --border-radius: 10px;
+    --indicator-color: var(--ion-color-primary);
+    --color: var(--ion-color-medium);
+    --color-checked: var(--ion-color-primary);
+    min-height: 48px;
+    font-weight: 600;
+
+    ion-icon {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    ion-label {
+      font-size: 14px;
+    }
+  }
+}
+
+// Expense Card Styling
+.total-card.expenses-card {
+  --card-color: #9b59b6;
+  --card-color-light: #bb8fce;
+  --card-bg: rgba(155, 89, 182, 0.1);
+}
+
+// 7 Cards Grid Layout
+.totals-grid.seven-cards {
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  @media (min-width: 900px) and (max-width: 1199px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  @media (min-width: 600px) and (max-width: 899px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 599px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// 3 Charts Row Layout
+.bottom-charts-row.three-charts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+
+  @media (max-width: 992px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+
+  .third-width {
+    width: 100%;
+  }
+}
+
+// Daily Report Tab Styles
+.daily-report-tab {
+  .report-header-card {
+    background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    color: white;
+
+    .report-date {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 600;
+
+      ion-icon {
+        font-size: 24px;
+      }
+    }
+  }
+
+  .summary-cards-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .summary-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    ion-card-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .summary-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .summary-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .summary-label {
+        font-size: 14px;
+        color: var(--ion-color-medium);
+      }
+
+      .summary-value {
+        font-size: 20px;
+        font-weight: 600;
+      }
+    }
+
+    &.income-card {
+      .summary-icon {
+        background: rgba(16, 220, 96, 0.1);
+        color: #10dc60;
+      }
+      .summary-value { color: #10dc60; }
+    }
+
+    &.expense-card {
+      .summary-icon {
+        background: rgba(240, 65, 65, 0.1);
+        color: #f04141;
+      }
+      .summary-value { color: #f04141; }
+    }
+
+    &.net-card {
+      &.positive {
+        .summary-icon {
+          background: rgba(16, 220, 96, 0.1);
+          color: #10dc60;
+        }
+        .summary-value { color: #10dc60; }
+      }
+      &.negative {
+        .summary-icon {
+          background: rgba(240, 65, 65, 0.1);
+          color: #f04141;
+        }
+        .summary-value { color: #f04141; }
+      }
+    }
+
+    &.cash-balance-card {
+      .summary-icon {
+        background: rgba(255, 206, 0, 0.1);
+        color: #ffce00;
+      }
+      .summary-value {
+        color: #ffb700;
+        font-weight: 600;
+      }
+    }
+
+    &.bank-balance-card {
+      .summary-icon {
+        background: rgba(61, 194, 255, 0.1);
+        color: #3dc2ff;
+      }
+      .summary-value {
+        color: #339dff;
+        font-weight: 600;
+      }
+    }
+
+    &.grand-total-card {
+      .summary-icon {
+        background: rgba(155, 89, 182, 0.1);
+        color: #9b59b6;
+      }
+      .summary-value {
+        color: #8e44ad;
+        font-weight: 700;
+        font-size: 20px;
+      }
+    }
+  }
+
+  .balance-cards-row {
+    margin-bottom: 24px;
+
+    .summary-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  .section-card {
+    border-radius: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    ion-card-header {
+      cursor: pointer;
+      padding: 16px 20px;
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .section-title {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 16px;
+          font-weight: 600;
+
+          .section-icon {
+            font-size: 22px;
+          }
+        }
+
+        .section-stats {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+
+          .stat-badge {
+            background: var(--ion-color-light);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+          }
+
+          .stat-value {
+            font-weight: 600;
+            font-size: 16px;
+          }
+        }
+      }
+    }
+
+    &.sales-section .section-icon { color: #10dc60; }
+    &.purchases-section .section-icon { color: #3dc2ff; }
+    &.expenses-section .section-icon { color: #9b59b6; }
+    &.receipts-section .section-icon { color: #2ecc71; }
+    &.payments-section .section-icon { color: #e74c3c; }
+    &.balances-section .section-icon { color: #8b5cf6; }
+  }
+
+  .table-container {
+    overflow-x: auto;
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+
+      th, td {
+        padding: 12px;
+        text-align: right;
+        border-bottom: 1px solid var(--ion-color-light);
+      }
+
+      th {
+        background: var(--ion-color-light);
+        font-weight: 600;
+      }
+
+      .amount {
+        font-weight: 500;
+        &.positive { color: #10dc60; }
+        &.negative { color: #f04141; }
+      }
+    }
+  }
+
+  .balance-group {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+
+    .balance-group-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ion-color-medium);
+      margin: 0 0 12px 0;
+    }
+
+    .balance-items {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .balance-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+
+      .account-name {
+        font-weight: 500;
+      }
+
+      .account-balance {
+        font-weight: 600;
+        color: var(--ion-color-primary);
+      }
+    }
+
+    .balance-total {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 12px;
+      margin-top: 8px;
+      border-top: 2px solid var(--ion-color-primary);
+      font-weight: 600;
+    }
+  }
+
+  .grand-total {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+    border-radius: 8px;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+
+    ion-icon {
+      font-size: 64px;
+      color: var(--ion-color-medium);
+      margin-bottom: 16px;
+    }
+
+    p {
+      font-size: 16px;
+      color: var(--ion-color-medium);
+    }
+  }
+}
+
+// Summary Grid Update for 4 items
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+
+  @media (min-width: 992px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

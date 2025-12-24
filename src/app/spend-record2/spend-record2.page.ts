@@ -18,7 +18,7 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./spend-record2.page.scss'],
 })
 
-export class SpendRecord2Page implements OnInit, OnDestroy { 
+export class SpendRecord2Page implements OnInit, OnDestroy {
     jdetailsFrom:Array<any> =[]
     jdetailsTo:Array<any> =[]
     payArray:Array<any> =[]
@@ -45,6 +45,13 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
     loading:boolean = false
     year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
     private currencySubscription: Subscription;
+
+    // Multi-select properties
+    selectedRecords: Set<string> = new Set();
+    selectAll: boolean = false;
+
+    // Entry type filter
+    entryTypeFilter: string = 'all'; // 'all', 'سند قبض', 'سند دفع'
     constructor(private platform :Platform  ,private alertController: AlertController,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private exportService: ExportService, private currencyService: CurrencyService, private cdr: ChangeDetectorRef) { 
      this.searchTerm =""
      this.checkPlatform()
@@ -373,9 +380,9 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
         }  
   
       })
-      
-      // Apply sorting after preparing data
-      this.applySorting();
+
+      // Apply sorting and filtering after preparing data
+      this.applyFilters();
      }
   
      getSalesByDate(){
@@ -799,17 +806,9 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
    }) 
   }
 
-  // Apply sorting to payArray
+  // Apply sorting to payArray - now calls applyFilters instead
   applySorting() {
-    if (this.currentSort) {
-      this.sortedPayArray = this.sortingService.sortData(
-        this.payArray, 
-        this.currentSort.column, 
-        this.currentSort.direction
-      );
-    } else {
-      this.sortedPayArray = [...this.payArray];
-    }
+    this.applyFilters();
   }
 
   // Handle column sort
@@ -906,6 +905,201 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
   // Get current currency symbol for table headers
   getCurrencySymbol(): string {
     return this.currencyService.getCurrentCurrencySymbol();
+  }
+
+  // Multi-select methods
+  toggleSelectAll() {
+    this.selectAll = !this.selectAll;
+    if (this.selectAll) {
+      // Select all visible records
+      const visibleRecords = this.searchMode ? this.searchResult : this.sortedPayArray;
+      visibleRecords.forEach(record => {
+        this.selectedRecords.add(record.j_ref);
+      });
+    } else {
+      // Deselect all
+      this.selectedRecords.clear();
+    }
+  }
+
+  toggleRecordSelection(j_ref: string) {
+    if (this.selectedRecords.has(j_ref)) {
+      this.selectedRecords.delete(j_ref);
+      this.selectAll = false;
+    } else {
+      this.selectedRecords.add(j_ref);
+      // Check if all visible records are selected
+      const visibleRecords = this.searchMode ? this.searchResult : this.sortedPayArray;
+      if (this.selectedRecords.size === visibleRecords.length) {
+        this.selectAll = true;
+      }
+    }
+  }
+
+  isRecordSelected(j_ref: string): boolean {
+    return this.selectedRecords.has(j_ref);
+  }
+
+  getSelectedCount(): number {
+    return this.selectedRecords.size;
+  }
+
+  clearSelection() {
+    this.selectedRecords.clear();
+    this.selectAll = false;
+  }
+
+  // Bulk delete confirmation and execution
+  async bulkDelete() {
+    if (this.selectedRecords.size === 0) {
+      this.presentToast('الرجاء اختيار سجل واحد على الأقل للحذف', 'warning');
+      return;
+    }
+
+    const alert = await this.alertController.create({
+      cssClass: 'my-custom-class',
+      header: 'تأكيد الحذف!',
+      mode: 'ios',
+      message: `هل تريد حذف ${this.selectedRecords.size} سجل؟`,
+      buttons: [
+        {
+          text: 'إلغاء',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+            // Do nothing
+          }
+        },
+        {
+          text: 'موافق',
+          handler: () => {
+            this.executeBulkDelete();
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  async executeBulkDelete() {
+    this.presentLoadingWithOptions('جاري حذف البيانات...');
+    const selectedRefs = Array.from(this.selectedRecords);
+
+    // Clear selections immediately
+    this.clearSelection();
+
+    // Use optimized bulk delete endpoint
+    this.api.bulkDeleteJournals(selectedRefs).subscribe(
+      (response: any) => {
+        this.loadingController.dismiss();
+
+        if (response.success) {
+          // Remove deleted records from payArray
+          this.payArray = this.payArray.filter(item => !selectedRefs.includes(item.j_ref));
+
+          // Remove from search results if in search mode
+          if (this.searchMode) {
+            this.searchResult = this.searchResult.filter(item => !selectedRefs.includes(item.j_ref));
+          }
+
+          // Update sorted array by applying filters
+          this.applyFilters();
+
+          // Update empty state
+          if (this.payArray.length === 0) {
+            this.showEmpty = true;
+          } else {
+            this.showEmpty = false;
+          }
+
+          // Force change detection
+          this.cdr.detectChanges();
+
+          this.presentToast(`تم حذف ${response.deleted_count} سجل بنجاح`, 'success');
+        } else {
+          this.presentToast(`فشل حذف السجلات: ${response.message}`, 'danger');
+        }
+      },
+      (error) => {
+        this.loadingController.dismiss();
+        console.error('Bulk delete error:', error);
+        this.presentToast('حدث خطأ أثناء حذف السجلات', 'danger');
+      }
+    );
+  }
+
+  // Promise-based delete for bulk operations
+  deleteRecordComplete(j_ref: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.api.deleteJournal(j_ref).subscribe(
+        (data) => {
+          if (data['message'] !== 'Post Not Deleted') {
+            this.api.deleteJFrom(j_ref).subscribe(
+              (data2) => {
+                if (data2['message'] !== 'Post Not Deleted') {
+                  this.api.deleteJto(j_ref).subscribe(
+                    (data3) => {
+                      if (data3['message'] !== 'Post Not Deleted') {
+                        // Remove from local arrays
+                        this.payArray = this.payArray.filter(item => item.j_ref !== j_ref);
+                        if (this.searchMode) {
+                          this.searchResult = this.searchResult.filter(item => item.j_ref !== j_ref);
+                        }
+                        resolve();
+                      } else {
+                        reject(new Error('Failed to delete jdetails_to'));
+                      }
+                    },
+                    (err) => reject(err)
+                  );
+                } else {
+                  reject(new Error('Failed to delete jdetails_from'));
+                }
+              },
+              (err) => reject(err)
+            );
+          } else {
+            reject(new Error('Failed to delete journal'));
+          }
+        },
+        (err) => reject(err)
+      );
+    });
+  }
+
+  // Entry type filter methods
+  filterByEntryType(type: string) {
+    this.entryTypeFilter = type;
+    this.applyFilters();
+  }
+
+  applyFilters() {
+    let filteredArray = [...this.payArray];
+
+    // Apply entry type filter
+    if (this.entryTypeFilter !== 'all') {
+      filteredArray = filteredArray.filter(record => record.j_type === this.entryTypeFilter);
+    }
+
+    // Apply sorting
+    if (this.currentSort) {
+      this.sortedPayArray = this.sortingService.sortData(
+        filteredArray,
+        this.currentSort.column,
+        this.currentSort.direction
+      );
+    } else {
+      this.sortedPayArray = filteredArray;
+    }
+
+    // Update empty state
+    this.showEmpty = this.sortedPayArray.length === 0;
+  }
+
+  // Override applySorting to work with filters
+  applySortingOverride() {
+    this.applyFilters();
   }
 
   }

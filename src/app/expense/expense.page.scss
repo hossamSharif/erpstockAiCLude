@@ -1,0 +1,335 @@
+/* ========================================
+   EXPENSE PAGE - SIMPLE CLEAN STYLE
+   (Matching Sales Page Design)
+======================================== */
+
+ion-header {
+  ion-toolbar {
+    --background: var(--ion-color-primary);
+    --color: white;
+
+    ion-title {
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+
+    ion-buttons[slot="end"] {
+      .header-date-item {
+        --background: rgba(255, 255, 255, 0.2);
+        --border-radius: 20px;
+        --padding-start: 12px;
+        --padding-end: 12px;
+        --min-height: 40px;
+        margin: 0 5px;
+        border: none;
+
+        .header-date-input {
+          --color: white;
+          --placeholder-color: rgba(255, 255, 255, 0.8);
+          font-weight: 500;
+          font-size: 0.9rem;
+          text-align: center;
+        }
+      }
+    }
+  }
+}
+
+ion-content {
+  --background: var(--ion-color-light);
+  --padding-bottom: 80px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+
+  p {
+    color: var(--ion-color-medium);
+    font-size: 1rem;
+  }
+}
+
+.custInput {
+  border-style: solid;
+  border-color: var(--ion-color-light-shade);
+  border-radius: 5px;
+  --background: white;
+}
+
+.top-card-row {
+  padding: 16px;
+  gap: 12px;
+
+  ion-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .column-label {
+    display: block;
+    font-weight: 500;
+    color: var(--ion-color-dark);
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+
+    .required {
+      color: var(--ion-color-danger);
+    }
+  }
+}
+
+// Custom Dropdown Wrapper - Like item-selector
+.custom-dropdown-wrapper {
+  position: relative;
+  width: 100%;
+
+  .dropdown-input {
+    cursor: pointer;
+    width: 100%;
+
+    ion-input {
+      --color: var(--ion-color-dark);
+      --placeholder-color: var(--ion-color-medium);
+      cursor: pointer;
+      width: 100%;
+      flex: 1;
+    }
+  }
+
+  .dropdown-icon {
+    color: var(--ion-color-medium);
+    font-size: 18px;
+    transition: transform 0.2s ease;
+    cursor: pointer;
+    margin: 0 4px;
+    flex-shrink: 0;
+    min-width: 24px;
+
+    &.rotated {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+// RTL Input styling
+.rtl-input {
+  direction: rtl;
+  text-align: right;
+  --padding-start: 8px;
+  --padding-end: 35px;
+  width: 100%;
+  font-size: 14px;
+
+  input,
+  .native-input {
+    direction: rtl !important;
+    text-align: right !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+    width: 100% !important;
+    padding-right: 8px !important;
+    padding-left: 35px !important;
+  }
+}
+
+// Dropdown container - Like item-selector
+.dropdown-container {
+  position: fixed !important;
+  z-index: 10000;
+  background: white;
+  border: 1px solid var(--ion-color-light);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+  min-width: 200px;
+
+  .dropdown-list {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+
+    .dropdown-item {
+      --background: transparent;
+      --border-color: transparent;
+      --color: var(--ion-color-dark);
+      --padding-start: 12px;
+      --padding-end: 12px;
+      --min-height: 44px;
+      direction: rtl;
+      text-align: right;
+      cursor: pointer;
+
+      &:hover {
+        --background: var(--ion-color-light);
+      }
+
+      &:active {
+        --background: rgba(var(--ion-color-primary-rgb), 0.1);
+      }
+
+      &.highlighted {
+        --background: rgba(var(--ion-color-primary-rgb), 0.1);
+        border-left: 3px solid var(--ion-color-primary);
+      }
+
+      ion-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--ion-color-dark);
+        margin: 0;
+      }
+    }
+
+    .no-results {
+      --color: var(--ion-color-medium);
+      --padding-start: 12px;
+      --padding-end: 12px;
+      text-align: center;
+      font-style: italic;
+
+      ion-label {
+        font-size: 14px;
+        color: var(--ion-color-medium);
+      }
+    }
+  }
+}
+
+// Custom scrollbar for dropdown
+.dropdown-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dropdown-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dropdown-container::-webkit-scrollbar-thumb {
+  background: var(--ion-color-medium-tint);
+  border-radius: 2px;
+}
+
+.dropdown-container::-webkit-scrollbar-thumb:hover {
+  background: var(--ion-color-medium);
+}
+
+.card-header {
+  --background: var(--ion-color-primary);
+  --color: white;
+  padding: 12px 16px;
+
+  ion-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+
+    ion-icon {
+      font-size: 1.2rem;
+    }
+  }
+}
+
+ion-card-content {
+  padding: 16px;
+}
+
+.field-label {
+  display: block;
+  font-weight: 500;
+  color: var(--ion-color-dark);
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+  margin-top: 12px;
+
+  .required {
+    color: var(--ion-color-danger);
+  }
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+.info-card {
+  background: #fff8e1;
+  border: 1px solid #ffcc02;
+
+  ion-card-content {
+    padding: 12px;
+  }
+
+  .info-item {
+    --background: transparent;
+    --padding-start: 0;
+    --inner-padding-end: 0;
+
+    ion-icon {
+      font-size: 1.5rem;
+      margin-inline-end: 12px;
+    }
+
+    ion-label {
+      font-size: 0.9rem;
+      color: var(--ion-color-dark);
+
+      strong {
+        color: #f57c00;
+      }
+    }
+  }
+}
+
+ion-footer {
+  ion-toolbar {
+    --background: var(--ion-color-light);
+    --border-color: var(--ion-color-medium);
+    padding: 8px 16px;
+  }
+
+  ion-button {
+    --border-radius: 8px;
+    font-weight: 500;
+    height: 44px;
+  }
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+  .top-card-row {
+    flex-direction: column;
+
+    ion-col {
+      width: 100%;
+      max-width: 100%;
+      flex: 0 0 100%;
+      margin-bottom: 8px;
+    }
+  }
+
+  ion-card-content ion-row ion-col {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+
+  ion-footer {
+    ion-col {
+      padding: 4px;
+    }
+
+    ion-button {
+      font-size: 0.85rem;
+      height: 40px;
+    }
+  }
+}

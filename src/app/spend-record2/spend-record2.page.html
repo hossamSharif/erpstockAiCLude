@@ -102,24 +102,67 @@
       
       <!-- Records Table Card -->
       <ion-card class="table-card" *ngIf="searchMode == false" color="primary">
-        <ion-card-header class="card-header ion-no-padding">
-          <div class="card-header-with-export">
-            <div class="header-left">
-          
-              <ion-input 
-                [(ngModel)]="searchTerm" 
-                (ionChange)="searchItem($event)" 
-                placeholder="بحث في البيانات..."
-                class="header-search-input">
-                <ion-icon name="search-outline" slot="start"></ion-icon>
-              </ion-input>
+        <ion-card-header class="card-header">
+          <div class="header-content">
+            <ion-card-title class="card-title">سجلات الدفع والقبض</ion-card-title>
+
+            <!-- Filter Buttons Center -->
+            <div class="filter-buttons-center">
+              <!-- Entry Type Filter Buttons -->
+              <ion-button
+                fill="outline"
+                size="small"
+                class="filter-btn"
+                [class.active]="entryTypeFilter === 'all'"
+                (click)="filterByEntryType('all')">
+                <ion-icon name="apps-outline" slot="start"></ion-icon>
+                الكل
+              </ion-button>
+              <ion-button
+                fill="outline"
+                size="small"
+                class="filter-btn"
+                [class.active]="entryTypeFilter === 'سند قبض'"
+                (click)="filterByEntryType('سند قبض')">
+                <ion-icon name="arrow-down-circle-outline" slot="start"></ion-icon>
+                سند قبض
+              </ion-button>
+              <ion-button
+                fill="outline"
+                size="small"
+                class="filter-btn"
+                [class.active]="entryTypeFilter === 'سند دفع'"
+                (click)="filterByEntryType('سند دفع')">
+                <ion-icon name="arrow-up-circle-outline" slot="start"></ion-icon>
+                سند دفع
+              </ion-button>
+
+              <!-- Bulk Actions -->
+              <div class="bulk-actions-inline" *ngIf="getSelectedCount() > 0">
+                <ion-chip color="light" class="selection-chip">
+                  <ion-icon name="checkbox-outline"></ion-icon>
+                  <ion-label>محدد: {{getSelectedCount()}}</ion-label>
+                </ion-chip>
+                <ion-button fill="solid" size="small" color="danger" (click)="bulkDelete()" class="bulk-delete-btn">
+                  <ion-icon name="trash-outline" slot="start"></ion-icon>
+                  حذف
+                </ion-button>
+                <ion-button fill="outline" size="small" color="light" (click)="clearSelection()" class="clear-selection-btn">
+                  <ion-icon name="close-outline" slot="start"></ion-icon>
+                  إلغاء
+                </ion-button>
+              </div>
             </div>
-            <app-export-buttons 
-              [hasData]="payArray && payArray.length > 0"
-              [isLoading]="loading"
-              (exportPDF)="exportToPDF()"
-              (exportExcel)="exportToExcel()">
-            </app-export-buttons>
+
+            <!-- Export Buttons Right -->
+            <div class="export-buttons-left">
+              <app-export-buttons
+                [hasData]="payArray && payArray.length > 0"
+                [isLoading]="loading"
+                (exportPDF)="exportToPDF()"
+                (exportExcel)="exportToExcel()">
+              </app-export-buttons>
+            </div>
           </div>
         </ion-card-header>
         <ion-card-content class="table-content">
@@ -128,6 +171,13 @@
             <table class="glass-table">
               <thead>
                 <tr>
+                  <th class="checkbox-col">
+                    <ion-checkbox
+                      [(ngModel)]="selectAll"
+                      (ionChange)="toggleSelectAll()"
+                      class="select-all-checkbox">
+                    </ion-checkbox>
+                  </th>
                   <th>التسلسل</th>
                   <th class="sortable-header" (click)="sortBy('j_date')">
                     <ion-icon [name]="getSortIcon('j_date')" class="sort-icon"></ion-icon>
@@ -167,15 +217,6 @@
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                </tr>
-                <tr *ngIf="loading" class="loading-row">
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                 </tr>
                 <tr *ngIf="loading" class="loading-row">
@@ -187,10 +228,29 @@
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                 </tr>
-                
+                <tr *ngIf="loading" class="loading-row">
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                </tr>
+
                 <!-- Data Rows -->
-                <tr *ngFor="let pay of sortedPayArray; let i = index" class="data-row">
+                <tr *ngFor="let pay of sortedPayArray; let i = index" class="data-row" [class.selected-row]="isRecordSelected(pay.j_ref)">
+                  <td class="checkbox-col">
+                    <ion-checkbox
+                      [checked]="isRecordSelected(pay.j_ref)"
+                      (ionChange)="toggleRecordSelection(pay.j_ref)">
+                    </ion-checkbox>
+                  </td>
                   <td>{{i+1}}</td>
                   <td>{{pay.j_date}}</td>
                   <td><span class="type-badge" [class.type-receipt]="pay.j_type == 'سند قبض'" [class.type-payment]="pay.j_type == 'سند دفع'">{{pay.j_type}}</span></td>
@@ -226,13 +286,64 @@
         <ion-card-header class="card-header">
           <div class="header-content">
             <ion-card-title class="card-title">نتائج البحث</ion-card-title>
-            <ion-input 
-              [(ngModel)]="searchTerm" 
-              (ionChange)="searchItem($event)" 
-              placeholder="بحث في البيانات..."
-              class="header-search-input">
-              <ion-icon name="search-outline" slot="start"></ion-icon>
-            </ion-input>
+
+            <!-- Filter Buttons Center -->
+            <div class="filter-buttons-center">
+              <!-- Entry Type Filter Buttons -->
+              <ion-button
+                fill="outline"
+                size="small"
+                class="filter-btn"
+                [class.active]="entryTypeFilter === 'all'"
+                (click)="filterByEntryType('all')">
+                <ion-icon name="apps-outline" slot="start"></ion-icon>
+                الكل
+              </ion-button>
+              <ion-button
+                fill="outline"
+                size="small"
+                class="filter-btn"
+                [class.active]="entryTypeFilter === 'سند قبض'"
+                (click)="filterByEntryType('سند قبض')">
+                <ion-icon name="arrow-down-circle-outline" slot="start"></ion-icon>
+                سند قبض
+              </ion-button>
+              <ion-button
+                fill="outline"
+                size="small"
+                class="filter-btn"
+                [class.active]="entryTypeFilter === 'سند دفع'"
+                (click)="filterByEntryType('سند دفع')">
+                <ion-icon name="arrow-up-circle-outline" slot="start"></ion-icon>
+                سند دفع
+              </ion-button>
+
+              <!-- Bulk Actions -->
+              <div class="bulk-actions-inline" *ngIf="getSelectedCount() > 0">
+                <ion-chip color="light" class="selection-chip">
+                  <ion-icon name="checkbox-outline"></ion-icon>
+                  <ion-label>محدد: {{getSelectedCount()}}</ion-label>
+                </ion-chip>
+                <ion-button fill="solid" size="small" color="danger" (click)="bulkDelete()" class="bulk-delete-btn">
+                  <ion-icon name="trash-outline" slot="start"></ion-icon>
+                  حذف
+                </ion-button>
+                <ion-button fill="outline" size="small" color="light" (click)="clearSelection()" class="clear-selection-btn">
+                  <ion-icon name="close-outline" slot="start"></ion-icon>
+                  إلغاء
+                </ion-button>
+              </div>
+            </div>
+
+            <!-- Export Buttons Right -->
+            <div class="export-buttons-left">
+              <app-export-buttons
+                [hasData]="payArray && payArray.length > 0"
+                [isLoading]="loading"
+                (exportPDF)="exportToPDF()"
+                (exportExcel)="exportToExcel()">
+              </app-export-buttons>
+            </div>
           </div>
         </ion-card-header>
         <ion-card-content class="table-content">
@@ -241,6 +352,13 @@
             <table class="glass-table">
               <thead>
                 <tr>
+                  <th class="checkbox-col">
+                    <ion-checkbox
+                      [(ngModel)]="selectAll"
+                      (ionChange)="toggleSelectAll()"
+                      class="select-all-checkbox">
+                    </ion-checkbox>
+                  </th>
                   <th>التسلسل</th>
                   <th class="sortable-header" (click)="sortBy('j_date')">
                     <ion-icon [name]="getSortIcon('j_date')" class="sort-icon"></ion-icon>
@@ -280,10 +398,17 @@
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                 </tr>
-                
+
                 <!-- Search Results Data Rows -->
-                <tr *ngFor="let pay of searchResult; let i = index" class="data-row">
+                <tr *ngFor="let pay of searchResult; let i = index" class="data-row" [class.selected-row]="isRecordSelected(pay.j_ref)">
+                  <td class="checkbox-col">
+                    <ion-checkbox
+                      [checked]="isRecordSelected(pay.j_ref)"
+                      (ionChange)="toggleRecordSelection(pay.j_ref)">
+                    </ion-checkbox>
+                  </td>
                   <td>{{i+1}}</td>
                   <td>{{pay.j_date}}</td>
                   <td><span class="type-badge" [class.type-receipt]="pay.j_type == 'سند قبض'" [class.type-payment]="pay.j_type == 'سند دفع'">{{pay.j_type}}</span></td>

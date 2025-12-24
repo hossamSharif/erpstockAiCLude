@@ -240,6 +240,61 @@ ion-segment {
   }
 }
 
+// Expense category card styling
+.expense-category {
+  border-left: 4px solid var(--ion-color-warning);
+
+  h3 {
+    display: flex;
+    align-items: center;
+
+    ion-icon {
+      margin-left: 8px;
+    }
+  }
+}
+
+// Info card styling
+.info-card {
+  background: #f0f9ff;
+  border: 1px solid var(--ion-color-primary-tint);
+
+  ion-card-content {
+    padding: 12px;
+  }
+
+  ion-item {
+    --background: transparent;
+
+    ion-icon {
+      font-size: 1.5rem;
+      margin-inline-end: 12px;
+    }
+
+    ion-label p {
+      font-size: 0.9rem;
+      margin: 4px 0;
+      color: var(--ion-color-dark);
+    }
+  }
+}
+
+// Header segment styling
+ion-header ion-segment {
+  --background: var(--ion-color-light);
+
+  ion-segment-button {
+    --color: var(--ion-color-dark);
+    --color-checked: white;
+    --background-checked: var(--ion-color-primary);
+    --indicator-color: transparent;
+
+    ion-icon {
+      margin-left: 6px;
+    }
+  }
+}
+
 // Responsive design for mobile
 @media (max-width: 768px) {
   .compact-segment {
@@ -250,11 +305,23 @@ ion-segment {
       }
     }
   }
-  
+
   .default-category-card {
     .category-section {
       .field-label {
         font-size: 13px;
+      }
+    }
+  }
+
+  ion-header ion-segment {
+    ion-segment-button {
+      ion-label {
+        font-size: 11px;
+      }
+
+      ion-icon {
+        font-size: 16px;
       }
     }
   }

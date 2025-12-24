@@ -75,6 +75,9 @@ export class PrintModalPage implements OnInit, OnDestroy {
    exchangeRate: number = 1.0;
    private currencySubscription: Subscription;
 
+   // Print date for reports
+   printDate: string = '';
+
    // Fallback images as base64 (small placeholder images)
    private fallbackLogo: string = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjBmMGYwIiBzdHJva2U9IiNjY2MiLz4KPHRLEHT4PSJHVlMiIHg9IjUwIiB5PSI1NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzY2NiIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE4Ij5HVlM8L3RleHQ+Cjwvc3ZnPg==';
    
@@ -96,6 +99,10 @@ export class PrintModalPage implements OnInit, OnDestroy {
     await this.loadCategoryFromStorage();
     await this.loadImages();
     await this.initializeCurrencyForPrint();
+
+    // Set print date for reports
+    const now = new Date();
+    this.printDate = now.toLocaleDateString('ar-SA') + ' ' + now.toLocaleTimeString('ar-SA');
   }
   
   ngOnDestroy() {

@@ -1268,34 +1268,319 @@ ion-card {
   }
 }
 
-// Export buttons styling
-.card-header-with-export {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  background: var(--liquid-glass-bg);
-  border-bottom: 1px solid var(--liquid-glass-border);
-  backdrop-filter: blur(var(--glass-blur));
+// Table Card Header Styling (matching sub-account2)
+.table-card {
+  .card-header {
+    background: var(--ion-color-primary, #3880ff) !important;
+    color: white;
+    padding: 1rem 1.5rem;
+    position: relative;
+    z-index: 2;
 
-  .header-left {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    flex: 1;
-
-    .card-title {
-      margin: 0;
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--ion-color-dark);
+    .header-content {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 1rem;
+      min-height: 50px;
     }
 
-    .header-search-input {
-      max-width: 300px;
-      --background: rgba(255, 255, 255, 0.1);
-      --color: var(--ion-color-dark);
-      --border-radius: 12px;
+    .card-title {
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 0;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    // Filter Buttons Center (matching sub-account2)
+    .filter-buttons-center {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+
+      .filter-btn {
+        --background: transparent;
+        --color: white;
+        --border-color: rgba(255, 255, 255, 0.4);
+        --border-width: 1px;
+        --border-radius: 20px;
+        --padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        height: 32px;
+        min-width: auto;
+        transition: var(--glass-transition);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+
+        &:hover {
+          --background: rgba(255, 255, 255, 0.15);
+          --border-color: rgba(255, 255, 255, 0.6);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        &.active {
+          --background: rgba(255, 255, 255, 0.2);
+          --border-color: rgba(255, 255, 255, 0.8);
+          --color: white;
+          font-weight: 600;
+
+          ion-icon {
+            color: white;
+          }
+        }
+
+        ion-icon {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.8);
+        }
+      }
+
+      // Inline Bulk Actions - Enhanced Design
+      .bulk-actions-inline {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: 0.75rem;
+        padding-left: 0.75rem;
+        border-left: 2px solid rgba(255, 255, 255, 0.4);
+
+        .selection-chip {
+          --background: rgba(255, 255, 255, 0.25);
+          --color: white;
+          height: 32px;
+          font-size: 0.8rem;
+          font-weight: 700;
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border: 1.5px solid rgba(255, 255, 255, 0.4);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+          ion-icon {
+            font-size: 1rem;
+            margin-right: 0.3rem;
+          }
+
+          ion-label {
+            margin: 0;
+            padding: 0 0.4rem;
+            font-weight: 700;
+          }
+        }
+
+        .bulk-delete-btn {
+          --padding: 0.5rem 1rem;
+          --background: #f04141;
+          --background-hover: #d32f2f;
+          --background-activated: #c62828;
+          --color: white;
+          --border-radius: 20px;
+          height: 36px;
+          min-width: 80px;
+          font-size: 0.8rem;
+          font-weight: 700;
+          transition: var(--glass-transition);
+          box-shadow: 0 3px 10px rgba(244, 67, 54, 0.4);
+
+          ion-icon {
+            font-size: 1.1rem;
+            margin-right: 0.3rem;
+          }
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 67, 54, 0.5);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+
+        .clear-selection-btn {
+          --padding: 0.5rem 1rem;
+          --background: transparent;
+          --color: white;
+          --border-color: rgba(255, 255, 255, 0.6);
+          --border-radius: 20px;
+          height: 36px;
+          min-width: 70px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          transition: var(--glass-transition);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+
+          ion-icon {
+            font-size: 1rem;
+            margin-right: 0.3rem;
+          }
+
+          &:hover {
+            --background: rgba(255, 255, 255, 0.2);
+            --border-color: rgba(255, 255, 255, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+      }
+    }
+
+    // Export Buttons Left
+    .export-buttons-left {
+      display: flex;
+      align-items: center;
+      margin-left: auto;
+    }
+  }
+}
+
+// Checkbox Column Styling
+.checkbox-col {
+  width: 50px;
+  text-align: center !important;
+  padding: 0.5rem !important;
+
+  ion-checkbox {
+    --size: 20px;
+    --checkbox-background-checked: var(--ion-color-primary);
+    --border-color: var(--ion-color-primary);
+    --border-color-checked: var(--ion-color-primary);
+    margin: 0;
+
+    &.select-all-checkbox {
+      --size: 22px;
+    }
+  }
+}
+
+// Selected Row Styling
+.selected-row {
+  background: rgba(var(--ion-color-primary-rgb), 0.1) !important;
+  border-left: 3px solid var(--ion-color-primary);
+  transform: scale(1.005);
+  box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.2);
+}
+
+// Responsive Design for Filter Buttons
+@media (max-width: 1024px) {
+  .table-card .card-header {
+    .header-content {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+
+      .card-title {
+        text-align: center;
+      }
+
+      .filter-buttons-center {
+        justify-content: center;
+      }
+
+      .export-buttons-left {
+        margin-left: 0;
+        justify-content: center;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .table-card .card-header {
+    padding: 0.75rem 1rem;
+
+    .filter-buttons-center {
+      .filter-btn {
+        font-size: 0.7rem;
+        --padding: 0.3rem 0.6rem;
+        height: 28px;
+
+        ion-icon {
+          font-size: 0.8rem;
+        }
+      }
+
+      .bulk-actions-inline {
+        gap: 0.3rem;
+        margin-left: 0.4rem;
+        padding-left: 0.4rem;
+
+        .selection-chip {
+          height: 28px;
+          font-size: 0.7rem;
+
+          ion-icon {
+            font-size: 0.85rem;
+          }
+        }
+
+        .bulk-delete-btn,
+        .clear-selection-btn {
+          height: 30px;
+          min-width: 65px;
+          font-size: 0.7rem;
+
+          ion-icon {
+            font-size: 0.95rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .table-card .card-header {
+    .header-content {
+      gap: 0.5rem;
+    }
+
+    .filter-buttons-center {
+      gap: 0.3rem;
+
+      .filter-btn {
+        font-size: 0.65rem;
+        --padding: 0.25rem 0.5rem;
+        height: 26px;
+
+        ion-icon {
+          display: none; // Hide icons on very small screens
+        }
+      }
+
+      .bulk-actions-inline {
+        gap: 0.25rem;
+
+        .selection-chip {
+          height: 26px;
+          font-size: 0.65rem;
+
+          ion-label {
+            padding: 0 0.2rem;
+          }
+        }
+
+        .bulk-delete-btn,
+        .clear-selection-btn {
+          height: 28px;
+          min-width: 55px;
+          font-size: 0.65rem;
+          --padding: 0.4rem 0.6rem;
+
+          ion-icon {
+            font-size: 0.85rem;
+            margin-right: 0.2rem;
+          }
+        }
+      }
     }
   }
 }

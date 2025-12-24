@@ -1,0 +1,263 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>{{ isEditMode ? 'تعديل مصروف' : 'إضافة مصروف جديد' }}</ion-title>
+    <ion-buttons slot="end" *ngIf="user_info && store_info">
+      <ion-item class="header-date-item">
+        <ion-input type="date" [(ngModel)]="expense.expense_date" class="header-date-input"></ion-input>
+      </ion-item>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- Loading State -->
+  <div *ngIf="!user_info || !store_info" class="loading-container">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>جاري التحميل...</p>
+  </div>
+
+  <!-- Description and Details Card -->
+  <ion-grid *ngIf="user_info && store_info">
+    <ion-row dir="rtl" class="ion-justify-content-center">
+      <ion-col size="11" class="ion-no-padding">
+        <ion-card>
+          <ion-card-header color="primary" class="card-header">
+            <ion-card-title>
+              <ion-icon name="document-text" slot="start"></ion-icon>
+              تفاصيل المصروف
+            </ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-grid>
+              <!-- Top Fields Row -->
+              <ion-row>
+                <!-- Amount -->
+                <ion-col size="4">
+                  <ion-label class="field-label">المبلغ <span class="required">*</span></ion-label>
+                  <ion-item class="custInput">
+                    <ion-input
+                      type="number"
+                      [(ngModel)]="expense.amount"
+                      placeholder="0.00"
+                      inputmode="decimal">
+                    </ion-input>
+                  </ion-item>
+                </ion-col>
+
+                <!-- Category -->
+                <ion-col size="4">
+                  <ion-label class="field-label">التصنيف</ion-label>
+                  <div class="custom-dropdown-wrapper">
+                    <ion-item class="custInput dropdown-input">
+                      <ion-input
+                        [(ngModel)]="categorySearchTerm"
+                        (ionInput)="onCategorySearch($event)"
+                        (ionFocus)="onCategoryInputFocus()"
+                        (click)="onCategoryInputFocus()"
+                        placeholder="اختر التصنيف"
+                        class="rtl-input">
+                      </ion-input>
+                      <ion-icon
+                        name="chevron-down"
+                        slot="end"
+                        class="dropdown-icon"
+                        [class.rotated]="showCategoryDropdown"
+                        (click)="toggleCategoryDropdown()">
+                      </ion-icon>
+                    </ion-item>
+
+                    <!-- Category Dropdown -->
+                    <div class="dropdown-container"
+                         *ngIf="showCategoryDropdown"
+                         [style.top]="categoryDropdownPosition.top"
+                         [style.left]="categoryDropdownPosition.left"
+                         [style.width]="categoryDropdownPosition.width">
+                      <ion-list class="dropdown-list" *ngIf="getFilteredCategories().length > 0">
+                        <ion-item
+                          *ngFor="let cat of getFilteredCategories(); let i = index"
+                          button
+                          class="dropdown-item"
+                          [class.highlighted]="i === highlightedCategoryIndex"
+                          (click)="selectCategory(cat)"
+                          (mouseenter)="highlightedCategoryIndex = i">
+                          <ion-label>{{ cat.category_name }}</ion-label>
+                        </ion-item>
+                      </ion-list>
+
+                      <!-- No Results -->
+                      <ion-list class="dropdown-list" *ngIf="getFilteredCategories().length === 0">
+                        <ion-item class="no-results">
+                          <ion-label>لا توجد نتائج</ion-label>
+                        </ion-item>
+                      </ion-list>
+                    </div>
+                  </div>
+                </ion-col>
+
+                <!-- Payment Method -->
+                <ion-col size="4">
+                  <ion-label class="field-label">طريقة الدفع</ion-label>
+                  <div class="custom-dropdown-wrapper">
+                    <ion-item class="custInput dropdown-input">
+                      <ion-input
+                        [(ngModel)]="paymentSearchTerm"
+                        (ionInput)="onPaymentSearch($event)"
+                        (ionFocus)="onPaymentInputFocus()"
+                        (click)="onPaymentInputFocus()"
+                        placeholder="اختر طريقة الدفع"
+                        class="rtl-input">
+                      </ion-input>
+                      <ion-icon
+                        name="chevron-down"
+                        slot="end"
+                        class="dropdown-icon"
+                        [class.rotated]="showPaymentDropdown"
+                        (click)="togglePaymentDropdown()">
+                      </ion-icon>
+                    </ion-item>
+
+                    <!-- Payment Dropdown -->
+                    <div class="dropdown-container"
+                         *ngIf="showPaymentDropdown"
+                         [style.top]="paymentDropdownPosition.top"
+                         [style.left]="paymentDropdownPosition.left"
+                         [style.width]="paymentDropdownPosition.width">
+                      <ion-list class="dropdown-list" *ngIf="getFilteredPaymentMethods().length > 0">
+                        <ion-item
+                          *ngFor="let method of getFilteredPaymentMethods(); let i = index"
+                          button
+                          class="dropdown-item"
+                          [class.highlighted]="i === highlightedPaymentIndex"
+                          (click)="selectPaymentMethod(method)"
+                          (mouseenter)="highlightedPaymentIndex = i">
+                          <ion-label>{{ method }}</ion-label>
+                        </ion-item>
+                      </ion-list>
+
+                      <!-- No Results -->
+                      <ion-list class="dropdown-list" *ngIf="getFilteredPaymentMethods().length === 0">
+                        <ion-item class="no-results">
+                          <ion-label>لا توجد نتائج</ion-label>
+                        </ion-item>
+                      </ion-list>
+                    </div>
+                  </div>
+                </ion-col>
+              </ion-row>
+
+              <!-- Description -->
+              <ion-row>
+                <ion-col size="12">
+                  <ion-label class="field-label">الوصف <span class="required">*</span></ion-label>
+                  <ion-item class="custInput">
+                    <ion-textarea
+                      [(ngModel)]="expense.description"
+                      placeholder="وصف المصروف..."
+                      rows="2">
+                    </ion-textarea>
+                  </ion-item>
+                </ion-col>
+              </ion-row>
+
+              <!-- Vendor Name - Hidden -->
+              <ion-row>
+                <ion-col size="6" *ngIf="false">
+                  <ion-label class="field-label">اسم المورد / الجهة</ion-label>
+                  <ion-item class="custInput">
+                    <ion-input
+                      [(ngModel)]="expense.vendor_name"
+                      placeholder="اسم المورد أو الجهة">
+                    </ion-input>
+                  </ion-item>
+                </ion-col>
+
+                <!-- Attachment Path - Hidden -->
+                <ion-col size="6" *ngIf="false">
+                  <ion-label class="field-label">مرفق (رابط أو مسار)</ion-label>
+                  <ion-item class="custInput">
+                    <ion-input
+                      [(ngModel)]="expense.attachment_path"
+                      placeholder="رابط المرفق أو مسار الملف">
+                    </ion-input>
+                  </ion-item>
+                </ion-col>
+              </ion-row>
+
+              <!-- Notes - Hidden -->
+              <ion-row *ngIf="false">
+                <ion-col size="12">
+                  <ion-label class="field-label">ملاحظات</ion-label>
+                  <ion-item class="custInput">
+                    <ion-textarea
+                      [(ngModel)]="expense.notes"
+                      placeholder="ملاحظات إضافية..."
+                      rows="2">
+                    </ion-textarea>
+                  </ion-item>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Info Note -->
+        <ion-card class="info-card">
+          <ion-card-content>
+            <ion-item lines="none" class="info-item">
+              <ion-icon name="information-circle" slot="start" color="warning"></ion-icon>
+              <ion-label class="ion-text-wrap">
+                <strong>ملاحظة:</strong> المصروفات المسجلة هنا لا تؤثر على الحسابات مباشرة.
+                يمكنك إضافة قيد محاسبي لهذه المصروفات لاحقاً من صفحة سندات القبض والدفع.
+              </ion-label>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>
+
+<!-- Footer with action buttons -->
+<ion-footer *ngIf="user_info && store_info">
+  <ion-toolbar>
+    <ion-grid class="ion-no-padding">
+      <ion-row class="ion-align-items-center ion-justify-content-end">
+        <ion-col size="3">
+          <ion-button
+            expand="block"
+            color="medium"
+            fill="outline"
+            (click)="goToRecords()"
+            [disabled]="loading">
+            <ion-icon name="list" slot="start"></ion-icon>
+            السجل
+          </ion-button>
+        </ion-col>
+        <ion-col size="3">
+          <ion-button
+            expand="block"
+            color="danger"
+            (click)="confirmClear()"
+            [disabled]="loading">
+            <ion-icon name="refresh" slot="start"></ion-icon>
+            مسح
+          </ion-button>
+        </ion-col>
+        <ion-col size="3">
+          <ion-button
+            expand="block"
+            color="primary"
+            (click)="saveExpense()"
+            [disabled]="loading">
+            <ion-spinner *ngIf="loading" slot="start" name="dots"></ion-spinner>
+            <ion-icon *ngIf="!loading" name="save" slot="start"></ion-icon>
+            {{ isEditMode ? 'تحديث' : 'حفظ' }}
+          </ion-button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </ion-toolbar>
+</ion-footer>
