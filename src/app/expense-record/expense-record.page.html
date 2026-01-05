@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button class="glass-menu-button"></ion-menu-button>
     </ion-buttons>
-    <ion-title class="glass-title">سجل المصروفات</ion-title>
+    <ion-title class="glass-title">{{ 'EXPENSE.RECORD_TITLE' | translate }}</ion-title>
     <ion-buttons slot="end">
       <app-currency-switcher></app-currency-switcher>
     </ion-buttons>
@@ -14,7 +14,7 @@
   <!-- Loading State -->
   <div *ngIf="!user_info || !store_info" class="loading-container">
     <ion-spinner name="crescent"></ion-spinner>
-    <p class="loading-text">جاري التحميل...</p>
+    <p class="loading-text">{{ 'COMMON.MESSAGE.LOADING' | translate }}</p>
   </div>
 
   <!-- Main Content -->
@@ -25,24 +25,24 @@
         <ion-card-content class="compact-content">
           <!-- Filter Type Segment -->
           <div class="field-row">
-            <ion-label class="field-label-right">نوع البحث</ion-label>
+            <ion-label class="field-label-right">{{ 'EXPENSE.LABEL.SEARCH_TYPE' | translate }}</ion-label>
             <ion-segment [(ngModel)]="radioVal" (ionChange)="radioChange($event)" class="filter-segment">
               <ion-segment-button value="0">
                 <div class="segment-content">
                   <ion-icon name="time-outline"></ion-icon>
-                  <span>حديثة</span>
+                  <span>{{ 'EXPENSE.LABEL.RECENT' | translate }}</span>
                 </div>
               </ion-segment-button>
               <ion-segment-button value="1">
                 <div class="segment-content">
                   <ion-icon name="calendar-outline"></ion-icon>
-                  <span>بحث في تاريخ</span>
+                  <span>{{ 'EXPENSE.LABEL.SEARCH_BY_DATE' | translate }}</span>
                 </div>
               </ion-segment-button>
               <ion-segment-button value="2">
                 <div class="segment-content">
                   <ion-icon name="calendar-number-outline"></ion-icon>
-                  <span>بحث في فترة</span>
+                  <span>{{ 'EXPENSE.LABEL.SEARCH_BY_PERIOD' | translate }}</span>
                 </div>
               </ion-segment-button>
             </ion-segment>

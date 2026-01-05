@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ServicesService } from "../stockService/services.service";
 import { AlertController, LoadingController, Platform, ToastController } from '@ionic/angular';
 import { DatePipe } from '@angular/common';

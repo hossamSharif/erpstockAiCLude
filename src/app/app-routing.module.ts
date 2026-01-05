@@ -96,6 +96,11 @@ const routes: Routes = [
     loadChildren: () => import('./settings/settings.module').then( m => m.SettingsPageModule)
   },
   {
+    path: 'folder/profile',
+    loadChildren: () => import('./profile/profile.module').then( m => m.ProfilePageModule),
+    canActivate: [AuthGaurdService]
+  },
+  {
     path: 'folder/items-report',
     loadChildren: () => import('./items-report/items-report.module').then( m => m.ItemsReportPageModule)
   },
@@ -275,6 +280,44 @@ const routes: Routes = [
   {
     path: 'expense',
     loadChildren: () => import('./expense/expense.module').then( m => m.ExpensePageModule)
+  },
+  {
+    path: 'forgot-password',
+    loadChildren: () => import('./forgot-password/forgot-password.module').then( m => m.ForgotPasswordPageModule)
+  },
+  {
+    path: 'reset-password',
+    loadChildren: () => import('./reset-password/reset-password.module').then( m => m.ResetPasswordPageModule)
+  },
+  {
+    path: 'profile',
+    loadChildren: () => import('./profile/profile.module').then( m => m.ProfilePageModule)
+  },
+  {
+    path: 'expense-categories',
+    loadChildren: () => import('./expense-categories/expense-categories.module').then( m => m.ExpenseCategoriesPageModule)
+  },
+  {
+    path: 'folder/sales-report',
+    loadChildren: () => import('./sales-report/sales-report.module').then( m => m.SalesReportPageModule)
+  },
+  {
+    path: 'folder/purchase-report',
+    loadChildren: () => import('./purchase-report/purchase-report.module').then( m => m.PurchaseReportPageModule)
+  },
+  {
+    path: 'folder/ai-assistant',
+    loadChildren: () => import('./ai-assistant/ai-assistant.module').then( m => m.AiAssistantPageModule),
+    canActivate: [AuthGaurdService]
+  },
+  {
+    path: 'folder/update-management',
+    loadChildren: () => import('./update-management/update-management.module').then( m => m.UpdateManagementPageModule),
+    canActivate: [AuthGaurdService]
+  },
+  {
+    path: 'folder/transactions-record',
+    loadChildren: () => import('./transactions-record/transactions-record.module').then( m => m.TransactionsRecordPageModule)
   }
 
 ];

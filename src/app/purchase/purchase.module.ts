@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { PurchasePageRoutingModule } from './purchase-routing.module';
 
@@ -22,6 +23,8 @@ import { FilterPipe3 } from './pipe3';
     ShareModule, 
     IonicModule,
     PurchasePageRoutingModule
+  ,
+    TranslateModule
   ],
   exports: [PurchasePage],
   declarations: [PurchasePage, FilterPipe, FilterPipe2, FilterPipe3]

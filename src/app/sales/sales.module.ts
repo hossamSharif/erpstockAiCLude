@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
 import { FilterPipe } from "./pipe";
 import { FilterPipe2 } from "./pipe2";
 import { FilterPipe3 } from "./pipe3";
@@ -21,6 +22,8 @@ import { InsufficientStockDialogComponent } from '../component/insufficient-stoc
     IonicModule,
     SharedModule, 
     SalesPageRoutingModule 
+  ,
+    TranslateModule
   ],
   declarations: 
   [

@@ -1,4 +1,5 @@
 import { DatePipe, Location } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -169,7 +170,7 @@ currentLoader: HTMLIonLoadingElement | null = null;
 // Data initialization flag to prevent re-initialization from query parameters
 private dataInitialized: boolean = false;
 
-  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private currencyService: CurrencyService, private cdr: ChangeDetectorRef) {
+  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private currencyService: CurrencyService, private cdr: ChangeDetectorRef, private translate: TranslateService) {
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
   this.route.queryParams.subscribe(params => {
     // Only initialize from parameters if data hasn't been loaded yet
@@ -603,9 +604,10 @@ setFocusOnInput(Input) {
  
 
 
-   async presentToast(msg,color?) {
+   async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
      const toast = await this.toast.create({
-       message: msg,
+       message: message,
        duration: 2000,
        color:color,
        cssClass:'cust_Toast',
@@ -1160,12 +1162,12 @@ saveItem(mdata){
      this.firstq = {id:null ,item_id:data['message'] , store_id:this.store_info.id , quantity :mdata[1].quantity ,pay_price:mdata[0].pay_price,perch_price:mdata[0].perch_price ,fq_year:'2022',item_name:mdata[0].item_name }
      this.saveFierstQty(mdata[0].item_name) 
    }else{
-     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
    }
   
  }, (err) => {
    //console.log(err);
-   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
  }) 
 }
 
@@ -1176,7 +1178,7 @@ this.api.saveFirstQty(this.firstq).subscribe(data=>{
 
 
   this.performSyncItem(item_name)
- this.presentToast('تم الحفظ بنجاح' , 'success')
+ this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
 }, (err) => {
  //console.log(err);
  this.presentToast('1لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
@@ -1224,11 +1226,11 @@ saveLogHistoryForInsertItem(){
    this.logHistoryArr = []
    
    }else{
-     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
    }
  }, (err) => {
    //console.log(err);
-   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
  }) 
 }
 
@@ -1288,7 +1290,7 @@ updateInvo(){
 
 private handleUpdateSuccess() {
   // Show success message
-  this.presentToast('تم الحفظ بنجاح', 'success');
+  this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success');
   
   // Update local purchase storage
   this.purchase = this.purchase.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);
@@ -1321,14 +1323,14 @@ private handleUpdateSuccess() {
   if (data['message'] != 'Post Not Deleted') {
     this.saveitemList()    
   }else{
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger').then(()=>{
     this.loadingController.dismiss()
   })
 
   } 
 },(err) => {
   //console.log(err);
-  this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger').then(()=>{
     this.loadingController.dismiss()
   })
   
@@ -1342,7 +1344,7 @@ private handleUpdateSuccess() {
 saveitemList(){  
 this.api.savePerchitemList(this.itemList).subscribe(data=>{ 
   //console.log(data)  
-  this.presentToast('تم الحفظ بنجاح' , 'success')
+  this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
   this.purchase = this.purchase.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);
   this.purchase.push({
     "payInvo": this.payInvo,
@@ -1365,7 +1367,7 @@ this.api.savePerchitemList(this.itemList).subscribe(data=>{
 
 }, (err) => {
   //console.log(err);
-  this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
 }, () => {
   this.loadingController.dismiss()
 }
@@ -1533,11 +1535,11 @@ deleteSalesitemList(){
      
       });
    }else{
-    this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    }
  },(err) => {
    //console.log(err);
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    
   },() => {
     this.loadingController.dismiss()

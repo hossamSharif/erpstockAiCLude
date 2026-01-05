@@ -1,4 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef ,Renderer2,Input} from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ServicesService } from "../stockService/services.service";
 import { from, Observable } from 'rxjs';
 import { AlertController, IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -58,7 +59,7 @@ coloredMsgTo:boolean = false
 coloredMsgTo3:boolean = false
 // new aproch
 
-  constructor(private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) {
+  constructor(private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) {
     this.getAppInfo() 
    }
 

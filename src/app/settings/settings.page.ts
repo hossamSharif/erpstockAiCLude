@@ -1,14 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, LoadingController, ToastController } from '@ionic/angular';
 import { Storage } from '@ionic/storage';
 import { ServicesService } from '../stockService/services.service';
+import { TranslateService } from '@ngx-translate/core';
+import { TranslationServiceCustom } from '../services/translation.service';
+import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-settings',
   templateUrl: './settings.page.html',
   styleUrls: ['./settings.page.scss'],
 })
-export class SettingsPage implements OnInit {
+export class SettingsPage implements OnInit, OnDestroy {
   purchase:Array<any> =[] 
   sales:Array<any> =[] 
   tswia:Array<any> =[] 
@@ -38,18 +41,42 @@ export class SettingsPage implements OnInit {
   color :any ='dark'
   radioVal : any = null
   selectedYear : any = null
-  
-   
+
+  // Language properties
+  selectedLanguage: string = 'ar';
+  availableLanguages: { code: string; name: string; nativeName: string }[] = [];
+  private languageSubscription: Subscription;
+
   afterLoad:any
-  constructor( private route: Router ,private alertController: AlertController,private storage: Storage,private loadingController:LoadingController, private api:ServicesService,private toast :ToastController) {
+  constructor( private route: Router ,private alertController: AlertController,private storage: Storage,private loadingController:LoadingController, private api:ServicesService,private toast :ToastController, private translate: TranslateService, private translationService: TranslationServiceCustom) {
     this.progressVal = .2
    }
 
    ngOnInit() {
     this.getAppInfo()
+    this.initializeLanguage()
     setTimeout(() => {
       this.afterLoad='loaded'
      }, 3000);
+   }
+
+   ngOnDestroy() {
+    if (this.languageSubscription) {
+      this.languageSubscription.unsubscribe();
+    }
+   }
+
+   initializeLanguage() {
+    this.availableLanguages = this.translationService.getAvailableLanguages();
+    this.languageSubscription = this.translationService.getCurrentLanguage().subscribe(lang => {
+      this.selectedLanguage = lang;
+    });
+   }
+
+   async languageChange(event: any) {
+    const newLanguage = event.target.value;
+    await this.translationService.setLanguage(newLanguage);
+    this.presentToast('SETTINGS.MESSAGE.LANGUAGE_CHANGED', 'success');
    }
 
    radioChangeS(ev){
@@ -110,15 +137,15 @@ export class SettingsPage implements OnInit {
     this.getyear() 
   }
 
-  getyear(){ 
+  getyear(){
     this.api.getYear().subscribe(data =>{
      let res = data
-     this.yearArr = res ['data'] 
+     this.yearArr = res ['data']
      this.setCurrentYear()
    }, (err) => {
-    this.presentToast('حدث خطأ ما , الرجاء اعادة المحاولة ', 'danger')
+    this.presentToast('SETTINGS.MESSAGE.SYNC_ERROR', 'danger')
    //console.log(err);
- })   
+ })
  } 
   
  setCurrentYear(){
@@ -139,32 +166,30 @@ export class SettingsPage implements OnInit {
  
   
   async presentAlertConfirm() {
-    let msg:string = 'سيتم اعادة تحميل النظام من جديد , اضغط علي موافق للإستمرار'
-     
     const alert = await this.alertController.create({
       cssClass: 'my-custom-class',
-      header: 'تأكيد!',
+      header: this.translate.instant('COMMON.BUTTON.CONFIRM'),
       mode:'ios' ,
-      message: msg,
+      message: this.translate.instant('SETTINGS.MESSAGE.RELOAD_CONFIRM'),
       buttons: [
         {
-          text: 'إلغاء',
+          text: this.translate.instant('COMMON.BUTTON.CANCEL'),
           role: 'cancel',
           cssClass: 'secondary',
           id: 'cancel-button',
-          handler: (blah) => {  
+          handler: (blah) => {
           }
         }, {
-          text: 'موافق',
+          text: this.translate.instant('COMMON.BUTTON.OK'),
           id: 'confirm-button',
           handler: () => {
             window.location.reload()
-            
+
           }
         }
       ]
     });
-  
+
     await alert.present();
   }
 
@@ -532,14 +557,15 @@ getTswia(){
     //console.log('Loading dismissed with role:', role);
   }
 
-  async presentToast(msg,color?) {
+  async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
     const toast = await this.toast.create({
-      message: msg,
+      message: message,
       duration: 2000,
       color:color,
       cssClass:'cust_Toast',
       mode:'ios',
-      position:'top' 
+      position:'top'
     });
     toast.present();
     }

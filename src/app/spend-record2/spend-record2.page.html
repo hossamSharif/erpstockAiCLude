@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button class="glass-menu-button"></ion-menu-button>
     </ion-buttons>
-    <ion-title class="glass-title">سجل سندات القبض والدفع</ion-title>
+    <ion-title class="glass-title">{{ 'ACCOUNTING.EXPENSE_RECORD.TITLE' | translate }}</ion-title>
     <ion-buttons slot="end">
       <app-currency-switcher></app-currency-switcher>
     </ion-buttons>
@@ -14,7 +14,7 @@
   <!-- Loading State -->
   <div *ngIf="!user_info || !store_info" class="loading-container">
     <ion-spinner name="crescent"></ion-spinner>
-    <p class="loading-text">جاري التحميل...</p>
+    <p class="loading-text">{{ 'ACCOUNTING.EXPENSE_RECORD.MESSAGE.LOADING' | translate }}</p>
   </div>
 
   <!-- Main Content -->
@@ -25,24 +25,24 @@
         <ion-card-content class="compact-content">
           <!-- Filter Type Segment -->
           <div class="field-row">
-            <ion-label class="field-label-right">نوع البحث</ion-label>
+            <ion-label class="field-label-right">{{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.SEARCH_TYPE' | translate }}</ion-label>
             <ion-segment [(ngModel)]="radioVal" (ionChange)="radioChange($event)" class="filter-segment">
               <ion-segment-button value="0">
                 <div class="segment-content">
                   <ion-icon name="time-outline"></ion-icon>
-                  <span>حديثة</span>
+                  <span>{{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.RECENT' | translate }}</span>
                 </div>
               </ion-segment-button>
               <ion-segment-button value="1">
                 <div class="segment-content">
                   <ion-icon name="calendar-outline"></ion-icon>
-                  <span>بحث في تاريخ</span>
+                  <span>{{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.SEARCH_BY_DATE' | translate }}</span>
                 </div>
               </ion-segment-button>
               <ion-segment-button value="2">
                 <div class="segment-content">
                   <ion-icon name="calendar-number-outline"></ion-icon>
-                  <span>بحث في فترة</span>
+                  <span>{{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.SEARCH_BY_PERIOD' | translate }}</span>
                 </div>
               </ion-segment-button>
             </ion-segment>
@@ -56,7 +56,7 @@
               fill="outline"
               class="mini-btn search-btn">
               <ion-icon name="search-outline" slot="start"></ion-icon>
-              بحث
+              {{ 'ACCOUNTING.EXPENSE_RECORD.BUTTON.SEARCH' | translate }}
             </ion-button>
           </div>
           
@@ -72,7 +72,7 @@
               fill="outline"
               class="mini-btn search-btn">
               <ion-icon name="search-outline" slot="start"></ion-icon>
-              بحث
+              {{ 'ACCOUNTING.EXPENSE_RECORD.BUTTON.SEARCH' | translate }}
             </ion-button>
           </div>
           
@@ -93,7 +93,7 @@
               fill="outline"
               class="mini-btn search-btn">
               <ion-icon name="search-outline" slot="start"></ion-icon>
-              بحث
+              {{ 'ACCOUNTING.EXPENSE_RECORD.BUTTON.SEARCH' | translate }}
             </ion-button>
           </div>
         </ion-card-content>
@@ -104,7 +104,7 @@
       <ion-card class="table-card" *ngIf="searchMode == false" color="primary">
         <ion-card-header class="card-header">
           <div class="header-content">
-            <ion-card-title class="card-title">سجلات الدفع والقبض</ion-card-title>
+            <ion-card-title class="card-title">{{ 'ACCOUNTING.EXPENSE_RECORD.TITLE' | translate }}</ion-card-title>
 
             <!-- Filter Buttons Center -->
             <div class="filter-buttons-center">
@@ -116,7 +116,7 @@
                 [class.active]="entryTypeFilter === 'all'"
                 (click)="filterByEntryType('all')">
                 <ion-icon name="apps-outline" slot="start"></ion-icon>
-                الكل
+                {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.ALL' | translate }}
               </ion-button>
               <ion-button
                 fill="outline"
@@ -125,7 +125,7 @@
                 [class.active]="entryTypeFilter === 'سند قبض'"
                 (click)="filterByEntryType('سند قبض')">
                 <ion-icon name="arrow-down-circle-outline" slot="start"></ion-icon>
-                سند قبض
+                {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.RECEIPT_VOUCHER' | translate }}
               </ion-button>
               <ion-button
                 fill="outline"
@@ -134,22 +134,22 @@
                 [class.active]="entryTypeFilter === 'سند دفع'"
                 (click)="filterByEntryType('سند دفع')">
                 <ion-icon name="arrow-up-circle-outline" slot="start"></ion-icon>
-                سند دفع
+                {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.PAYMENT_VOUCHER' | translate }}
               </ion-button>
 
               <!-- Bulk Actions -->
               <div class="bulk-actions-inline" *ngIf="getSelectedCount() > 0">
                 <ion-chip color="light" class="selection-chip">
                   <ion-icon name="checkbox-outline"></ion-icon>
-                  <ion-label>محدد: {{getSelectedCount()}}</ion-label>
+                  <ion-label>{{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.SELECTED' | translate }}: {{getSelectedCount()}}</ion-label>
                 </ion-chip>
                 <ion-button fill="solid" size="small" color="danger" (click)="bulkDelete()" class="bulk-delete-btn">
                   <ion-icon name="trash-outline" slot="start"></ion-icon>
-                  حذف
+                  {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.DELETE' | translate }}
                 </ion-button>
                 <ion-button fill="outline" size="small" color="light" (click)="clearSelection()" class="clear-selection-btn">
                   <ion-icon name="close-outline" slot="start"></ion-icon>
-                  إلغاء
+                  {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.CANCEL' | translate }}
                 </ion-button>
               </div>
             </div>
@@ -178,32 +178,32 @@
                       class="select-all-checkbox">
                     </ion-checkbox>
                   </th>
-                  <th>التسلسل</th>
+                  <th>{{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.SEQUENCE' | translate }}</th>
                   <th class="sortable-header" (click)="sortBy('j_date')">
                     <ion-icon [name]="getSortIcon('j_date')" class="sort-icon"></ion-icon>
-                    التاريخ
+                    {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.DATE' | translate }}
                   </th>
                   <th class="sortable-header" (click)="sortBy('j_type')">
                     <ion-icon [name]="getSortIcon('j_type')" class="sort-icon"></ion-icon>
-                    نوع السند
+                    {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.VOUCHER_TYPE' | translate }}
                   </th>
                   <th class="sortable-header" (click)="sortBy('j_details')">
                     <ion-icon [name]="getSortIcon('j_details')" class="sort-icon"></ion-icon>
-                    البيان
+                    {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.DESCRIPTION' | translate }}
                   </th>
                   <th class="sortable-header" (click)="sortBy('j_pay')">
                     <ion-icon [name]="getSortIcon('j_pay')" class="sort-icon"></ion-icon>
-                    المبلغ ({{ getCurrencySymbol() }})
+                    {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.AMOUNT' | translate }} ({{ getCurrencySymbol() }})
                   </th>
                   <th class="sortable-header" (click)="sortBy('to1')">
                     <ion-icon [name]="getSortIcon('to1')" class="sort-icon"></ion-icon>
-                    من <ion-icon name="arrow-up-outline" color="danger"></ion-icon>
-                  </th>  
+                    {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.FROM' | translate }} <ion-icon name="arrow-up-outline" color="danger"></ion-icon>
+                  </th>
                   <th class="sortable-header" (click)="sortBy('from1')">
                     <ion-icon [name]="getSortIcon('from1')" class="sort-icon"></ion-icon>
-                    إلى <ion-icon name="arrow-down-outline" color="success"></ion-icon>
+                    {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.TO' | translate }} <ion-icon name="arrow-down-outline" color="success"></ion-icon>
                   </th>
-                  <th>العمليات</th>
+                  <th>{{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.ACTIONS' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -260,7 +260,7 @@
                   <td class="account-cell to-account">{{pay.from1}}</td>
                   <td class="actions-cell">
                     <div class="action-buttons">
-                      <ion-button fill="clear" size="small" class="edit-btn" (click)="editJournal(pay.j_id)">
+                      <ion-button fill="clear" size="small" class="edit-btn" (click)="editTransaction(pay)">
                         <ion-icon name="create-outline"></ion-icon>
                       </ion-button>
                       <ion-button fill="clear" size="small" class="delete-btn" (click)="delete(pay.j_ref)">
@@ -297,7 +297,7 @@
                 [class.active]="entryTypeFilter === 'all'"
                 (click)="filterByEntryType('all')">
                 <ion-icon name="apps-outline" slot="start"></ion-icon>
-                الكل
+                {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.ALL' | translate }}
               </ion-button>
               <ion-button
                 fill="outline"
@@ -306,7 +306,7 @@
                 [class.active]="entryTypeFilter === 'سند قبض'"
                 (click)="filterByEntryType('سند قبض')">
                 <ion-icon name="arrow-down-circle-outline" slot="start"></ion-icon>
-                سند قبض
+                {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.RECEIPT_VOUCHER' | translate }}
               </ion-button>
               <ion-button
                 fill="outline"
@@ -315,22 +315,22 @@
                 [class.active]="entryTypeFilter === 'سند دفع'"
                 (click)="filterByEntryType('سند دفع')">
                 <ion-icon name="arrow-up-circle-outline" slot="start"></ion-icon>
-                سند دفع
+                {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.PAYMENT_VOUCHER' | translate }}
               </ion-button>
 
               <!-- Bulk Actions -->
               <div class="bulk-actions-inline" *ngIf="getSelectedCount() > 0">
                 <ion-chip color="light" class="selection-chip">
                   <ion-icon name="checkbox-outline"></ion-icon>
-                  <ion-label>محدد: {{getSelectedCount()}}</ion-label>
+                  <ion-label>{{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.SELECTED' | translate }}: {{getSelectedCount()}}</ion-label>
                 </ion-chip>
                 <ion-button fill="solid" size="small" color="danger" (click)="bulkDelete()" class="bulk-delete-btn">
                   <ion-icon name="trash-outline" slot="start"></ion-icon>
-                  حذف
+                  {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.DELETE' | translate }}
                 </ion-button>
                 <ion-button fill="outline" size="small" color="light" (click)="clearSelection()" class="clear-selection-btn">
                   <ion-icon name="close-outline" slot="start"></ion-icon>
-                  إلغاء
+                  {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.CANCEL' | translate }}
                 </ion-button>
               </div>
             </div>
@@ -359,32 +359,32 @@
                       class="select-all-checkbox">
                     </ion-checkbox>
                   </th>
-                  <th>التسلسل</th>
+                  <th>{{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.SEQUENCE' | translate }}</th>
                   <th class="sortable-header" (click)="sortBy('j_date')">
                     <ion-icon [name]="getSortIcon('j_date')" class="sort-icon"></ion-icon>
-                    التاريخ
+                    {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.DATE' | translate }}
                   </th>
                   <th class="sortable-header" (click)="sortBy('j_type')">
                     <ion-icon [name]="getSortIcon('j_type')" class="sort-icon"></ion-icon>
-                    نوع السند
+                    {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.VOUCHER_TYPE' | translate }}
                   </th>
                   <th class="sortable-header" (click)="sortBy('j_details')">
                     <ion-icon [name]="getSortIcon('j_details')" class="sort-icon"></ion-icon>
-                    البيان
+                    {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.DESCRIPTION' | translate }}
                   </th>
                   <th class="sortable-header" (click)="sortBy('j_pay')">
                     <ion-icon [name]="getSortIcon('j_pay')" class="sort-icon"></ion-icon>
-                    المبلغ ({{ getCurrencySymbol() }})
+                    {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.AMOUNT' | translate }} ({{ getCurrencySymbol() }})
                   </th>
                   <th class="sortable-header" (click)="sortBy('to1')">
                     <ion-icon [name]="getSortIcon('to1')" class="sort-icon"></ion-icon>
-                    من <ion-icon name="arrow-up-outline" color="danger"></ion-icon>
-                  </th>  
+                    {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.FROM' | translate }} <ion-icon name="arrow-up-outline" color="danger"></ion-icon>
+                  </th>
                   <th class="sortable-header" (click)="sortBy('from1')">
                     <ion-icon [name]="getSortIcon('from1')" class="sort-icon"></ion-icon>
-                    إلى <ion-icon name="arrow-down-outline" color="success"></ion-icon>
+                    {{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.TO' | translate }} <ion-icon name="arrow-down-outline" color="success"></ion-icon>
                   </th>
-                  <th>العمليات</th>
+                  <th>{{ 'ACCOUNTING.EXPENSE_RECORD.LABEL.ACTIONS' | translate }}</th>
                 </tr>
               </thead>
               <tbody>

@@ -1,0 +1,787 @@
+{
+  "COMMON": {
+    "BUTTON": {
+      "SAVE": "Save",
+      "CANCEL": "Cancel",
+      "DELETE": "Delete",
+      "EDIT": "Edit",
+      "ADD": "Add",
+      "SEARCH": "Search",
+      "FILTER": "Filter",
+      "PRINT": "Print",
+      "CLOSE": "Close",
+      "CONFIRM": "Confirm",
+      "OK": "OK",
+      "YES": "Yes",
+      "NO": "No",
+      "CLEAR": "Clear"
+    },
+    "MESSAGE": {
+      "SUCCESS": "Operation completed successfully",
+      "ERROR": "An error occurred",
+      "LOADING": "Loading...",
+      "NO_DATA": "No data available",
+      "CONFIRM_DELETE": "Are you sure you want to delete?",
+      "TRY_AGAIN": "Please try again",
+      "SAVING": "Saving...",
+      "SAVED_SUCCESSFULLY": "Saved successfully",
+      "DELETED_SUCCESSFULLY": "Deleted successfully",
+      "UPDATED_SUCCESSFULLY": "Updated successfully",
+      "OPERATION_FAILED": "Operation failed",
+      "CONNECTION_ERROR": "Connection error, please try again"
+    },
+    "LABEL": {
+      "DATE": "Date",
+      "TIME": "Time",
+      "TOTAL": "Total",
+      "DISCOUNT": "Discount",
+      "QUANTITY": "Quantity",
+      "PRICE": "Price",
+      "AMOUNT": "Amount",
+      "DESCRIPTION": "Description",
+      "NOTE": "Note",
+      "NOTES": "Notes",
+      "ACCOUNT": "Account",
+      "TYPE": "Type",
+      "STATUS": "Status",
+      "NAME": "Name"
+    },
+    "VALIDATION": {
+      "REQUIRED": "This field is required",
+      "INVALID_EMAIL": "Invalid email address",
+      "MIN_LENGTH": "Minimum length",
+      "MAX_LENGTH": "Maximum length",
+      "INVALID_NUMBER": "Invalid number",
+      "PLEASE_SELECT": "Please select",
+      "PLEASE_ENTER": "Please enter"
+    },
+    "PLACEHOLDER": {
+      "SEARCH": "Search...",
+      "SELECT": "Select...",
+      "ENTER": "Enter..."
+    }
+  },
+  "AUTH": {
+    "LOGIN": {
+      "TITLE": "Login",
+      "FIELD": {
+        "EMAIL": "Email Address",
+        "PASSWORD": "Password"
+      },
+      "PLACEHOLDER": {
+        "EMAIL": "Email Address",
+        "PASSWORD": "Password"
+      },
+      "BUTTON": {
+        "LOGIN": "Login",
+        "FORGOT_PASSWORD": "Forgot Password?"
+      },
+      "MESSAGE": {
+        "COMPLETE_DATA": "Please complete login information",
+        "INVALID_EMAIL": "Please enter a valid email address",
+        "LOGIN_ERROR": "An error occurred, please try again",
+        "LOGIN_SUCCESS": "Login successful"
+      }
+    },
+    "FORGOT_PASSWORD": {
+      "TITLE": "Forgot Password",
+      "HEADING": {
+        "RESET_PASSWORD": "Reset Password",
+        "EMAIL_SENT": "Email Sent!"
+      },
+      "MESSAGE": {
+        "INSTRUCTION": "Enter your email address and we'll send you a password reset link",
+        "ENTER_EMAIL": "Please enter your email address",
+        "SENDING": "Sending...",
+        "EMAIL_SENT": "Reset link sent successfully",
+        "LINK_SENT": "A password reset link has been sent to your email",
+        "CHECK_EMAIL": "Please check your email and follow the instructions",
+        "LINK_VALIDITY": "The link is valid for one hour only"
+      },
+      "PLACEHOLDER": {
+        "EMAIL": "Email Address"
+      },
+      "BUTTON": {
+        "SEND_LINK": "Send Reset Link",
+        "BACK_TO_LOGIN": "Back to Login",
+        "SEND_AGAIN": "Send Again"
+      }
+    },
+    "RESET_PASSWORD": {
+      "TITLE": "Reset Password",
+      "HEADING": {
+        "SET_NEW_PASSWORD": "Set New Password",
+        "INVALID_LINK": "Invalid Link"
+      },
+      "MESSAGE": {
+        "VERIFYING_LINK": "Verifying link...",
+        "INVALID_LINK": "Invalid link",
+        "LINK_EXPIRED": "The link is invalid or has expired",
+        "VERIFICATION_ERROR": "An error occurred while verifying the link",
+        "WELCOME": "Welcome",
+        "ENTER_NEW_PASSWORD": "Please enter your new password",
+        "ENTER_PASSWORD": "Please enter your new password",
+        "PASSWORD_MIN_LENGTH": "Password must be at least 8 characters",
+        "PASSWORD_MISMATCH": "Passwords do not match",
+        "UPDATING_PASSWORD": "Updating password...",
+        "PASSWORD_UPDATED": "Password updated successfully",
+        "REQUEST_NEW_LINK": "The link may have expired or been used already. Please request a new link.",
+        "PASSWORD_REQUIREMENTS": "Password Requirements:",
+        "REQUIREMENT_MIN_LENGTH": "Must be at least 8 characters long",
+        "REQUIREMENT_MATCH": "Password and confirmation must match"
+      },
+      "PLACEHOLDER": {
+        "NEW_PASSWORD": "New Password (at least 8 characters)",
+        "CONFIRM_PASSWORD": "Confirm Password"
+      },
+      "BUTTON": {
+        "UPDATE_PASSWORD": "Update Password",
+        "BACK_TO_LOGIN": "Back to Login",
+        "REQUEST_NEW_LINK": "Request New Link"
+      }
+    }
+  },
+  "SETTINGS": {
+    "TITLE": "Settings",
+    "SECTION": {
+      "SYNC": "Synchronization & Connection",
+      "LANGUAGE": "Language",
+      "YEAR": "Fiscal Year",
+      "CURRENCY": "Currency Management"
+    },
+    "LABEL": {
+      "SYNC_DATA": "Synchronize Data",
+      "OFFLINE_MODE": "Offline Mode (Work without internet)",
+      "CURRENCY_MANAGEMENT": "Manage Currencies and Exchange Rates",
+      "SELECT_LANGUAGE": "Select Language",
+      "SYSTEM_LANGUAGE": "System Language"
+    },
+    "MESSAGE": {
+      "SYNC_SUCCESS": "Synchronization completed",
+      "SYNC_ERROR": "An error occurred, please try again",
+      "RELOAD_CONFIRM": "The system will be reloaded, press OK to continue",
+      "LANGUAGE_CHANGED": "Language changed successfully"
+    }
+  },
+  "ACCOUNTING": {
+    "CASH": {
+      "TITLE": "Receipts and Payments",
+      "LABEL": {
+        "VOUCHER_TYPE": "Voucher Type",
+        "PAYMENT_VOUCHER": "Payment Voucher",
+        "RECEIPT_VOUCHER": "Receipt Voucher",
+        "SOURCE": "Source",
+        "CASH": "Cash",
+        "BALANCE": "Balance",
+        "NOTIFICATIONS": "Notifications"
+      },
+      "PLACEHOLDER": {
+        "SELECT_SOURCE": "Select Source",
+        "SELECT_ACCOUNT": "Select Account",
+        "TRANSACTION_DESCRIPTION": "Transaction description..."
+      },
+      "MESSAGE": {
+        "SELECT_ACCOUNT": "Please select account",
+        "ENTER_AMOUNT": "Please enter amount",
+        "INPUT_ERROR": "Input error",
+        "SELECT_VOUCHER_TYPE": "Please select voucher type",
+        "ENTER_TRANSACTIONS": "Please enter transactions",
+        "SELECT_ACCOUNT_AGAIN": "Please select account again",
+        "SELECT_CUSTOMER_ACCOUNT": "Please select customer account",
+        "SELECT_SUPPLIER_ACCOUNT": "Please select supplier account",
+        "CANNOT_LOAD_BALANCE": "Cannot load balance",
+        "NO_NEW_NOTIFICATIONS": "No new notifications"
+      }
+    },
+    "STATEMENT": {
+      "TITLE": "Account Statement",
+      "LABEL": {
+        "SEARCH_TYPE": "Search Type",
+        "RECENT_TRANSACTIONS": "Recent Transactions",
+        "SEARCH_BY_DATE": "Search by Date",
+        "SEARCH_BY_PERIOD": "Search by Period"
+      },
+      "PLACEHOLDER": {
+        "SELECT_ACCOUNT": "Select Account"
+      },
+      "MESSAGE": {
+        "ERROR_LOADING_ACCOUNTS": "Error loading accounts",
+        "ERROR_SELECTING_ACCOUNT": "Error selecting account",
+        "SELECT_ACCOUNT_FIRST": "Please select account first",
+        "ERROR_LOADING_DATA": "Error loading data",
+        "NO_DATA_TO_EXPORT": "No data to export"
+      }
+    },
+    "EXPENSE_RECORD": {
+      "TITLE": "Receipt and Payment Voucher Record",
+      "LABEL": {
+        "SEARCH_TYPE": "Search Type",
+        "RECENT": "Recent",
+        "SEARCH_BY_DATE": "Search by Date",
+        "SEARCH_BY_PERIOD": "Search by Period",
+        "ALL": "All",
+        "RECEIPT_VOUCHER": "Receipt Voucher",
+        "PAYMENT_VOUCHER": "Payment Voucher",
+        "SELECTED": "Selected",
+        "DELETE": "Delete",
+        "CANCEL": "Cancel",
+        "SEQUENCE": "Sequence",
+        "DATE": "Date",
+        "VOUCHER_TYPE": "Voucher Type",
+        "DESCRIPTION": "Description",
+        "AMOUNT": "Amount",
+        "FROM": "From",
+        "TO": "To",
+        "ACTIONS": "Actions"
+      },
+      "BUTTON": {
+        "SEARCH": "Search"
+      },
+      "MESSAGE": {
+        "LOADING": "Loading...",
+        "DELETE_FAILED": "Failed to delete data, connection error",
+        "NO_DATA_TO_EXPORT": "No data to export",
+        "SELECT_AT_LEAST_ONE": "Please select at least one record to delete",
+        "BULK_DELETE_SUCCESS": "Records deleted successfully",
+        "BULK_DELETE_FAILED": "Failed to delete records",
+        "BULK_DELETE_ERROR": "An error occurred while deleting records"
+      }
+    },
+    "JOURNAL": {
+      "TITLE": "Edit Accounting Entry",
+      "LABEL": {
+        "VOUCHER_TYPE": "Voucher Type",
+        "PAYMENT_VOUCHER": "Payment Voucher",
+        "RECEIPT_VOUCHER": "Receipt Voucher",
+        "DATE": "Date",
+        "SOURCE": "Source",
+        "LOADING": "Loading..."
+      },
+      "MESSAGE": {
+        "ERROR_LOADING_DATA": "Error loading data",
+        "ERROR_LOADING_DETAILS": "Error loading entry details",
+        "DETAILS_NOT_LOADED": "Entry details not loaded",
+        "SELECT_VOUCHER_TYPE": "Please select voucher type",
+        "ENTER_AMOUNT": "Please enter amount",
+        "SELECT_ACCOUNT": "Please select account",
+        "UPDATE_FAILED": "Failed to update data, connection error",
+        "DELETE_FAILED": "Failed to delete data, connection error"
+      }
+    },
+    "BALANCE_SHEET": {
+      "MESSAGE": {
+        "ERROR_LOADING_DATA": "Error loading data",
+        "NO_DATA_TO_EXPORT": "No data to export"
+      }
+    },
+    "SUB_ACCOUNT": {
+      "MESSAGE": {
+        "ERROR_LOADING_ACCOUNTS": "Error loading accounts",
+        "ERROR_LOADING_DATA": "Error loading data",
+        "NO_DATA_TO_EXPORT": "No data to export"
+      }
+    }
+  },
+  "INVENTORY": {
+    "TITLE": "Items",
+    "STOCK_TITLE": "Stock",
+    "ITEM_STOCK": {
+      "TITLE": "Items",
+      "LABEL": {
+        "SEARCH": "Search",
+        "HIDE_COLUMNS": "Hide Columns",
+        "EDIT_PRICES": "Edit Prices",
+        "NEW_ITEM": "New Item",
+        "STOCK_VALUE": "Stock Value",
+        "STOCK_VALUE_SALES_PRICE": "Stock Value (Sales Price)"
+      },
+      "MESSAGE": {
+        "ITEM_NOT_FOUND": "Selected item not found",
+        "ITEM_ID_NOT_FOUND": "Item ID not found",
+        "CANNOT_DELETE_HAS_STOCK": "Cannot delete item, stock quantity exists",
+        "INPUT_ERROR": "Input error",
+        "FAILED_UPDATE_OPENING_QTY": "Failed to update opening quantity, connection error",
+        "SETTINGS_RESET": "All settings have been reset",
+        "ERROR_LOADING_DATA": "Error loading data",
+        "ERROR_LOADING_TOTALS": "Error loading stock totals",
+        "ERROR_LOADING_FILTERED_DATA": "Error loading filtered data",
+        "STORE_INFO_NOT_AVAILABLE": "Store information not available",
+        "ITEMS_LOADED_SUCCESS": "Successfully loaded {{count}} items",
+        "NO_ITEMS": "No items available",
+        "ERROR_LOADING_ITEMS": "Error loading items",
+        "ITEMS_FOUND": "Found {{count}} items",
+        "NO_SEARCH_RESULTS": "No results found for \"{{term}}\"",
+        "ERROR_SEARCHING": "Error searching",
+        "NO_DATA_TO_EXPORT": "No data to export"
+      }
+    },
+    "ITEMS": {
+      "TITLE": "Items",
+      "LABEL": {
+        "ITEMS": "Items",
+        "NOTIFICATIONS": "Notifications",
+        "SEARCH": "Search",
+        "STOCK_VALUE": "Stock Value",
+        "SEQUENCE": "Sequence",
+        "ITEM_NAME": "Item Name",
+        "ITEM_NAME_ENGLISH": "Item Name (English)",
+        "ALIAS": "Alias",
+        "MODEL": "Model",
+        "PART_NO": "Part No",
+        "BRAND": "Brand",
+        "MIN_QTY": "Min Qty (MSQ)",
+        "UNIT": "Unit",
+        "PURCHASE_PRICE": "Purchase Price",
+        "SELLING_PRICE": "Selling Price",
+        "PROFIT_PERCENTAGE": "Profit Percentage",
+        "IN_STOCK": "In Stock",
+        "TOTAL": "Total",
+        "LAST_SALE": "Last Sale",
+        "OPENING_STOCK": "Opening Stock"
+      },
+      "BUTTON": {
+        "HIDE_COLUMNS": "Hide Columns",
+        "EDIT_PRICES": "Edit Prices",
+        "NEW_ITEM": "New Item",
+        "EXPORT_XLS": "Export XLS",
+        "EXPORT_PDF": "Export PDF"
+      },
+      "PLACEHOLDER": {
+        "SEARCH": "Search..."
+      },
+      "PAGINATION": {
+        "ITEMS_PER_PAGE": "Items per page",
+        "PREVIOUS": "Previous",
+        "NEXT": "Next",
+        "PAGE_INFO": "Page {{current}} of {{total}} (Total Items: {{count}})"
+      },
+      "MESSAGE": {
+        "INPUT_ERROR": "Input error",
+        "FAILED_UPDATE_OPENING_QTY": "Failed to update opening quantity, connection error",
+        "CANNOT_DELETE_HAS_STOCK": "Cannot delete item, stock quantity exists"
+      }
+    },
+    "ITEMS_REPORT": {
+      "MESSAGE": {
+        "SELECT_ITEM_FIRST": "Please select an item first",
+        "NO_DATA_FOR_ITEM": "No data available for selected item"
+      }
+    },
+    "ITEM_ANALYTICS": {
+      "MESSAGE": {
+        "ERROR_LOADING_ANALYTICS": "Error loading analytics data",
+        "NO_DATA_TO_EXPORT": "No data to export"
+      }
+    }
+  },
+  "SALES": {
+    "TITLE": "Sales Invoice",
+    "RECORD_TITLE": "Sales Record",
+    "REPORT_TITLE": "Sales Report",
+    "RETURN_TITLE": "Sales Return",
+    "EDIT_TITLE": "Edit Sales Invoice",
+    "EDIT_RETURN_TITLE": "Edit Sales Return",
+    "POS_TITLE": "POS Sales",
+    "LABEL": {
+      "RETURN_INFO": "Return Information",
+      "RETURN_NUMBER": "Return Number",
+      "ORIGINAL_INVOICE": "Original Invoice",
+      "RETURN_DATE": "Return Date",
+      "RETURN_TYPE": "Return Type",
+      "FULL_RETURN": "Full Return",
+      "PARTIAL_RETURN": "Partial Return",
+      "INVOICE_TYPE": "Invoice Type",
+      "PRELIMINARY": "Preliminary",
+      "FINAL": "Final",
+      "CUSTOMER_ACCOUNT": "Customer Account",
+      "SELECT_CUSTOMER": "Select Customer Account",
+      "COMMENT": "Note",
+      "WRITE_COMMENT": "Write a comment",
+      "INVOICE_ITEMS": "Invoice Items",
+      "RECENT_SALES": "Recent Sales",
+      "SEARCH_BY_DATE": "Search by Date",
+      "SEARCH_BY_PERIOD": "Search by Period",
+      "PRELIMINARY_INVOICES": "Preliminary Invoices",
+      "SALES_RETURNS": "Sales Returns",
+      "USER": "User",
+      "ITEM": "Item",
+      "ALL": "All",
+      "GENERATE_REPORT": "Generate Report",
+      "MIN_AMOUNT": "Min Amount",
+      "MAX_AMOUNT": "Max Amount",
+      "TOTAL_SALES": "Total Sales",
+      "DISCOUNT": "Discount",
+      "NET": "Net",
+      "TOP_CUSTOMERS": "Top 10 Customers",
+      "TOP_ITEMS": "Top Selling Items",
+      "INVOICE_LIST": "Invoice List",
+      "INVOICE_NUMBER": "Invoice Number",
+      "DATE": "Date",
+      "CUSTOMER": "Customer",
+      "AMOUNT": "Amount",
+      "INVOICE": "Invoice",
+      "INVOICES": "Invoices",
+      "QUANTITY": "Quantity",
+      "REVENUE": "Revenue",
+      "NO_DATA": "No data",
+      "NO_INVOICES": "No invoices",
+      "EMPTY_STATE": "Select filters and click search to display the report",
+      "CONNECTED": "Connected",
+      "DISCONNECTED": "Disconnected",
+      "ITEM": "Item",
+      "NET_AMOUNT": "Net Amount",
+      "TAX": "Tax",
+      "NET_AMOUNT_WITH_TAX": "Net Amount with Tax",
+      "CASH_RECEIVED": "Cash Received",
+      "REMAINING": "Remaining",
+      "CHANGE": "Change",
+      "INVOICE_SETUP": "Invoice Setup",
+      "ADD_ITEMS": "Add Items",
+      "ACCOUNTS": "Accounts",
+      "ACCOUNT_LIST": "Account List",
+      "NEW_ACCOUNT": "New Account",
+      "LOADING_ERROR": "Loading error"
+    },
+    "MESSAGE": {
+      "SELECT_CUSTOMER": "Please select a customer",
+      "ADD_ITEMS_TO_INVOICE": "Please add items to the invoice",
+      "INSUFFICIENT_QUANTITY": "Insufficient quantity available",
+      "ENTER_QUANTITY": "Please enter quantity",
+      "ENTER_PRICE": "Please enter price",
+      "NO_DATA_TO_EXPORT": "No data to export"
+    }
+  },
+  "PURCHASE": {
+    "TITLE": "Purchase Invoice",
+    "RECORD_TITLE": "Purchase Record",
+    "REPORT_TITLE": "Purchase Report",
+    "ORDER_TITLE": "Purchase Order",
+    "NEW_ORDER_TITLE": "New Purchase Order",
+    "EDIT_ORDER_TITLE": "Edit Purchase Order",
+    "ORDER_RECORD_TITLE": "Purchase Orders Record",
+    "RETURN_TITLE": "Purchase Return",
+    "EDIT_TITLE": "Edit Purchase Invoice",
+    "EDIT_RETURN_TITLE": "Edit Purchase Return",
+    "LABEL": {
+      "EDIT_MODE": "Edit Mode",
+      "RETURN_NUMBER": "Return Number",
+      "ORIGINAL_INVOICE_INFO": "Original Purchase Invoice Information",
+      "ORIGINAL_INVOICE_NUMBER": "Original Invoice Number",
+      "RETURN_ITEMS": "Return Items",
+      "OPERATIONS": "Operations",
+      "SUPPLIER_ACCOUNT": "Supplier Account",
+      "SELECT_SUPPLIER": "Select Supplier Account",
+      "COMMENT": "Note",
+      "WRITE_COMMENT": "Write a comment",
+      "SELECT_ITEM": "Select Item",
+      "INVOICE_ITEMS": "Invoice Items",
+      "PURCHASE_INVOICES": "Purchase Invoices",
+      "PURCHASE_ORDERS_LABEL": "Purchase Orders",
+      "RECENT_PURCHASES": "Recent Purchases",
+      "SEARCH_BY_DATE": "Search by Date",
+      "SEARCH_BY_PERIOD": "Search by Period",
+      "USER": "User",
+      "ITEM": "Item",
+      "ALL": "All",
+      "GENERATE_REPORT": "Generate Report",
+      "MIN_AMOUNT": "Min Amount",
+      "MAX_AMOUNT": "Max Amount",
+      "TOTAL_PURCHASES": "Total Purchases",
+      "DISCOUNT": "Discount",
+      "NET": "Net",
+      "TOP_SUPPLIERS": "Top 10 Suppliers",
+      "TOP_PURCHASED_ITEMS": "Top Purchased Items",
+      "INVOICE_LIST": "Invoice List",
+      "INVOICE_NUMBER": "Invoice Number",
+      "DATE": "Date",
+      "SUPPLIER": "Supplier",
+      "AMOUNT": "Amount",
+      "INVOICE": "Invoice",
+      "INVOICES": "Invoices",
+      "QUANTITY": "Quantity",
+      "TOTAL": "Total",
+      "NO_DATA": "No data",
+      "NO_INVOICES": "No invoices",
+      "EMPTY_STATE": "Select filters and click search to display the report",
+      "INVOICE_SETUP": "Invoice Setup",
+      "ADD_ITEMS": "Add Items",
+      "ACCOUNTS": "Accounts",
+      "ACCOUNT_LIST": "Account List",
+      "NEW_ACCOUNT": "New Account",
+      "LOADING_ERROR": "Loading error",
+      "PHONE": "Phone",
+      "ADDRESS": "Address",
+      "RECENT_PURCHASE_ORDERS": "Recent Purchase Orders",
+      "ITEMS_LIST": "Items List",
+      "SEARCH_IN_ITEMS": "Search in items...",
+      "ORIGINAL_ORDER": "Original Order",
+      "ALPHABETICAL_ORDER": "Alphabetical Order",
+      "ADJUST_PRICES": "Adjust Prices",
+      "DISCOUNT_PERCENTAGE_LABEL": "Discount Percentage%",
+      "DISCOUNT_AMOUNT_LABEL": "Discount Amount",
+      "TOTAL_AFTER_DISCOUNT": "Total After Discount",
+      "TOTAL_AMOUNT": "Total Amount",
+      "CONVERT_TO_INVOICE": "Convert to Invoice",
+      "CONVERTING": "Converting...",
+      "NEW_ITEM": "New Item",
+      "PURCHASE_PRICE": "Purchase Price",
+      "ITEM_AR": "Item (AR)",
+      "ITEM_EN": "Item (EN)"
+    },
+    "MESSAGE": {
+      "SELECT_SUPPLIER": "Please select a supplier",
+      "ADD_ITEMS_TO_INVOICE": "Please add items to the invoice",
+      "ENTER_QUANTITY": "Please enter quantity",
+      "ENTER_PRICE": "Please enter price",
+      "NO_DATA_TO_EXPORT": "No data to export"
+    }
+  },
+  "TSWIA": {
+    "TITLE": "Inventory Adjustment",
+    "EDIT_TITLE": "Edit Inventory Adjustment",
+    "RECORD_TITLE": "Inventory Adjustments Record",
+    "LABEL": {
+      "SAVE": "Save",
+      "DELETE": "Delete"
+    }
+  },
+  "MENU": {
+    "APP_TITLE": "Inventory Management System",
+    "DASHBOARD": "Dashboard",
+    "SALES_SECTION": "Sales",
+    "SALES_INVOICE": "Sales Invoice",
+    "SALES_RECORD": "Sales Record",
+    "SALES_REPORT": "Sales Report",
+    "PURCHASE_SECTION": "Purchases",
+    "PURCHASE_INVOICE": "Purchase Invoice",
+    "PURCHASE_ORDERS": "Purchase Orders",
+    "PURCHASE_RECORD": "Purchase Record",
+    "PURCHASE_REPORT": "Purchase Report",
+    "INVENTORY_SECTION": "Inventory",
+    "STOCK": "Stock",
+    "ITEM_ANALYTICS": "Item Analytics",
+    "ITEM_MOVEMENT": "Item Movement",
+    "INVENTORY_ADJUSTMENT": "Inventory Adjustment",
+    "ADJUSTMENT_RECORD": "Adjustment Record",
+    "ACCOUNTS_SECTION": "Accounts",
+    "ACCOUNT_MANAGEMENT": "Account Management",
+    "VOUCHERS": "Vouchers",
+    "VOUCHER_RECORD": "Voucher Record",
+    "ACCOUNT_STATEMENT": "Account Statement",
+    "BALANCES": "Balances",
+    "EXPENSES_SECTION": "Expenses",
+    "ADD_EXPENSE": "Add Expense",
+    "EXPENSE_RECORD": "Expense Record",
+    "EXPENSE_CATEGORIES": "Expense Categories",
+    "REPORTS_SECTION": "Reports",
+    "DAILY_REPORT": "Daily Report",
+    "AI_SECTION": "Artificial Intelligence",
+    "AI_ASSISTANT": "AI Assistant",
+    "SETTINGS_SECTION": "Settings",
+    "ITEM_CATEGORIES": "Item Categories",
+    "CURRENCIES": "Currencies",
+    "DATA_VERIFICATION": "Data Verification",
+    "UPDATE_MANAGEMENT": "Update Management",
+    "SYNC_CONNECTION": "Sync & Connection"
+  },
+  "EXPENSE": {
+    "TITLE": "Add Expense",
+    "EDIT_TITLE": "Edit Expense",
+    "NEW_EXPENSE_TITLE": "Add New Expense",
+    "RECORD_TITLE": "Expense Record",
+    "CATEGORIES_TITLE": "Expense Categories",
+    "CATEGORIES_MANAGEMENT": "Expense Categories Management",
+    "LABEL": {
+      "EXPENSE_DATE": "Expense Date",
+      "EXPENSE_CATEGORY": "Expense Category",
+      "EXPENSE_AMOUNT": "Expense Amount",
+      "PAYMENT_METHOD": "Payment Method",
+      "REFERENCE": "Reference",
+      "CATEGORY_NAME": "Category Name",
+      "CATEGORY_DESCRIPTION": "Category Description",
+      "EXPENSE_DETAILS": "Expense Details",
+      "AMOUNT": "Amount",
+      "CATEGORY": "Category",
+      "SEARCH_TYPE": "Search Type",
+      "RECENT": "Recent",
+      "SEARCH_BY_DATE": "Search by Date",
+      "SEARCH_BY_PERIOD": "Search by Period",
+      "ADD_NEW_CATEGORY": "Add New Category",
+      "EDIT_CATEGORY": "Edit Category",
+      "ADD_CATEGORY": "Add Category"
+    },
+    "PLACEHOLDER": {
+      "SELECT_CATEGORY": "Select Category",
+      "ENTER_AMOUNT": "Enter Amount",
+      "ENTER_DESCRIPTION": "Enter Description",
+      "CATEGORY_NAME": "Category Name",
+      "CATEGORY_DESC_OPTIONAL": "Category Description (Optional)"
+    },
+    "MESSAGE": {
+      "SELECT_CATEGORY": "Please select expense category",
+      "ENTER_AMOUNT": "Please enter expense amount",
+      "EXPENSE_SAVED": "Expense saved successfully",
+      "EXPENSE_DELETED": "Expense deleted successfully",
+      "CATEGORY_SAVED": "Category saved successfully",
+      "CATEGORY_DELETED": "Category deleted successfully",
+      "NO_DATA_TO_EXPORT": "No data to export"
+    }
+  },
+  "DAILY_REPORT": {
+    "TITLE": "Daily Report",
+    "LABEL": {
+      "REPORT_DATE": "Report Date",
+      "SALES_SUMMARY": "Sales Summary",
+      "PURCHASE_SUMMARY": "Purchase Summary",
+      "EXPENSE_SUMMARY": "Expense Summary",
+      "CASH_SUMMARY": "Cash Summary",
+      "TOTAL_SALES": "Total Sales",
+      "TOTAL_PURCHASES": "Total Purchases",
+      "TOTAL_EXPENSES": "Total Expenses",
+      "NET_PROFIT": "Net Profit",
+      "SEARCH_TYPE": "Search Type",
+      "SPECIFIC_DATE": "Specific Date",
+      "TIME_PERIOD": "Time Period",
+      "DATE": "Date",
+      "FROM_DATE": "From Date",
+      "TO_DATE": "To Date",
+      "GENERATE_REPORT": "Generate Report"
+    },
+    "BUTTON": {
+      "GENERATE_REPORT": "Generate Report",
+      "PRINT_REPORT": "Print Report"
+    },
+    "MESSAGE": {
+      "ERROR_LOADING_REPORT": "Error loading daily report",
+      "NO_DATA_FOR_DATE": "No data available for selected date",
+      "NO_DATA_TO_EXPORT": "No data to export",
+      "LOADING_DATA": "Loading data...",
+      "EMPTY_STATE": "Select a date and click \"Generate Report\" to view the daily report"
+    }
+  },
+  "CURRENCY": {
+    "TITLE": "Currency Management",
+    "LABEL": {
+      "CURRENCY_NAME": "Currency Name",
+      "CURRENCY_CODE": "Currency Code",
+      "EXCHANGE_RATE": "Exchange Rate",
+      "IS_DEFAULT": "Default Currency",
+      "LAST_UPDATE": "Last Update",
+      "CURRENT_CURRENCY": "Current Currency",
+      "SELECTED_CURRENCY": "Currently selected currency",
+      "ACTIVE": "Active",
+      "EXCHANGE_RATES": "Exchange Rates",
+      "ADD_RATE": "Add Rate",
+      "EXCHANGE_RATES_VS_SDG": "Exchange rates against Sudanese Pound (SDG)",
+      "BASE_CURRENCY": "Base Currency",
+      "BASE_CURRENCY_LABEL": "Base currency",
+      "SUPPORTED_CURRENCIES": "Supported Currencies"
+    },
+    "MESSAGE": {
+      "CURRENCY_SAVED": "Currency saved successfully",
+      "CURRENCY_DELETED": "Currency deleted successfully",
+      "RATE_UPDATED": "Exchange rate updated successfully",
+      "ENTER_CURRENCY_NAME": "Please enter currency name",
+      "ENTER_CURRENCY_CODE": "Please enter currency code",
+      "ENTER_EXCHANGE_RATE": "Please enter exchange rate",
+      "NO_RATES_DEFINED": "No exchange rates defined",
+      "CLICK_ADD_RATE": "Click \"Add Rate\" to add exchange rates"
+    }
+  },
+  "DATA_VERIFICATION": {
+    "TITLE": "Data Verification",
+    "LABEL": {
+      "VERIFICATION_TYPE": "Verification Type",
+      "VERIFICATION_STATUS": "Status",
+      "LAST_VERIFICATION": "Last Verification"
+    },
+    "MESSAGE": {
+      "VERIFICATION_STARTED": "Verification started",
+      "VERIFICATION_COMPLETED": "Verification completed successfully",
+      "ISSUES_FOUND": "Issues found",
+      "NO_ISSUES": "No issues found"
+    }
+  },
+  "AI_ASSISTANT": {
+    "TITLE": "AI Assistant",
+    "LABEL": {
+      "ASK_QUESTION": "Ask a Question",
+      "CHAT_HISTORY": "Chat History"
+    },
+    "PLACEHOLDER": {
+      "TYPE_MESSAGE": "Type your message..."
+    },
+    "MESSAGE": {
+      "AI_THINKING": "AI is thinking...",
+      "ERROR_SENDING_MESSAGE": "Error sending message"
+    }
+  },
+  "ANALYTICS": {
+    "TITLE": "Analytics Dashboard",
+    "DASHBOARD": "Dashboard",
+    "LABEL": {
+      "OVERVIEW": "Overview",
+      "SALES_ANALYTICS": "Sales Analytics",
+      "PURCHASE_ANALYTICS": "Purchase Analytics",
+      "INVENTORY_ANALYTICS": "Inventory Analytics",
+      "FINANCIAL_ANALYTICS": "Financial Analytics",
+      "ANALYTICS": "Analytics",
+      "DAILY_REPORT": "Daily Report",
+      "FROM_DATE": "From Date",
+      "TO_DATE": "To Date",
+      "TO": "To"
+    },
+    "PRESET": {
+      "TODAY": "Today",
+      "YESTERDAY": "Yesterday",
+      "THIS_WEEK": "This Week",
+      "THIS_MONTH": "This Month",
+      "LAST_MONTH": "Last Month",
+      "THIS_YEAR": "This Year",
+      "CUSTOM": "Custom"
+    },
+    "MESSAGE": {
+      "LOADING_DATA": "Loading data...",
+      "LOADING_REPORT": "Loading report...",
+      "SELECT_DATE": "Select a date to view the daily report"
+    }
+  },
+  "CATEGORIES": {
+    "TITLE": "Item Categories",
+    "MANAGEMENT_TITLE": "Item Categories Management",
+    "ADD_TITLE": "Add New Category",
+    "EDIT_TITLE": "Edit Category",
+    "LABEL": {
+      "CATEGORY_NAME": "Category Name",
+      "CATEGORY_CODE": "Category Code",
+      "PARENT_CATEGORY": "Parent Category",
+      "CATEGORY_DESCRIPTION": "Category Description",
+      "CREATED_DATE": "Created Date",
+      "SELECT_CATEGORY": "Select Category",
+      "ENDPOINT_SECTION": "Endpoint Selection",
+      "ACTIVE_ENDPOINT": "Active Endpoint",
+      "CATEGORY_LABEL": "Category",
+      "ADDRESS": "Address"
+    },
+    "PLACEHOLDER": {
+      "CATEGORY_NAME": "Category Name",
+      "CATEGORY_DESCRIPTION": "Category Description (Optional)"
+    },
+    "BUTTON": {
+      "ADD": "Add",
+      "UPDATE": "Update",
+      "CANCEL": "Cancel",
+      "ADD_CATEGORY": "Add Category"
+    },
+    "MESSAGE": {
+      "CATEGORY_SAVED": "Category saved successfully",
+      "CATEGORY_DELETED": "Category deleted successfully",
+      "ENTER_CATEGORY_NAME": "Please enter category name",
+      "NO_CATEGORIES": "No Item Categories",
+      "EMPTY_STATE": "Start by adding the first item category",
+      "NO_ENDPOINT_SELECTED": "No endpoint selected",
+      "DEFAULT_ENDPOINT": "Default endpoint will be used",
+      "ENDPOINT_DESCRIPTION": "Select the category that contains the system endpoint address"
+    }
+  }
+}

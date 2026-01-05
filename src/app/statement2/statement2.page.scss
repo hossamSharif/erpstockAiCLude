@@ -15,6 +15,7 @@
   padding-bottom: 80px; // Extra padding at bottom for scroll visibility
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  overflow: visible !important; // Prevent clipping of dropdowns
 
   &::before {
     content: '';
@@ -76,12 +77,14 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  overflow: visible !important; // Prevent clipping of dropdowns
 }
 
 .form-container {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow: visible !important; // Prevent clipping of dropdowns
 }
 
 /* ======================================
@@ -111,9 +114,11 @@
 
   &.compact-card {
     border-radius: 12px;
+    overflow: visible; // Allow dropdown to extend beyond card boundaries
 
     .compact-content {
       padding: 12px 16px;
+      overflow: visible; // Allow dropdown to extend beyond content area
     }
   }
 }
@@ -157,11 +162,16 @@
   gap: 20px;
   align-items: flex-end;
   margin-bottom: 16px;
+  position: relative; // Create positioning context but don't clip
+  overflow: visible; // Ensure dropdown can extend beyond
 }
 
 .account-section {
   flex: 1;
   width: 50%;
+  position: relative; // Create positioning context but don't clip
+  overflow: visible; // Ensure dropdown can extend beyond
+  z-index: 100; // Ensure dropdown appears above other content
 }
 
 .search-type-section {

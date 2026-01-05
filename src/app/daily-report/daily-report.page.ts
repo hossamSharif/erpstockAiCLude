@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ServicesService } from "../stockService/services.service";
 import { LoadingController, ModalController, Platform, ToastController } from '@ionic/angular';
 import { DatePipe } from '@angular/common';
@@ -69,13 +70,13 @@ export class DailyReportPage implements OnInit, OnDestroy {
     private api: ServicesService,
     private toast: ToastController,
     private currencyService: CurrencyService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private translate: TranslateService
   ) {
     this.checkPlatform();
 
     // Set default date to today
     let d = new Date();
-    this.startingDate = this.datePipe.transform(d, 'yyyy-MM-dd') || '';
     this.endDate = this.datePipe.transform(d, 'yyyy-MM-dd') || '';
   }
 

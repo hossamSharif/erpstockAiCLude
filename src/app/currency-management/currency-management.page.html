@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-back-button (click)="goBack()"></ion-back-button>
     </ion-buttons>
-    <ion-title>إدارة العملات</ion-title>
+    <ion-title>{{ 'CURRENCY.TITLE' | translate }}</ion-title>
     <ion-buttons slot="end">
       <ion-button fill="clear" (click)="refreshRates()">
         <ion-icon name="refresh-outline"></ion-icon>
@@ -19,7 +19,7 @@
     <!-- Current Currency Display -->
     <ion-row dir="rtl" class="ion-justify-content-center">
       <ion-col size="12">
-        <h5>العملة الحالية</h5>
+        <h5>{{ 'CURRENCY.LABEL.CURRENT_CURRENCY' | translate }}</h5>
         <ion-card>
           <ion-card-content>
             <div class="current-currency-display">
@@ -29,10 +29,10 @@
                 </ion-avatar>
                 <ion-label>
                   <h3>{{getCurrencyName(currentCurrency)}}</h3>
-                  <p>العملة المحددة حالياً</p>
+                  <p>{{ 'CURRENCY.LABEL.SELECTED_CURRENCY' | translate }}</p>
                 </ion-label>
                 <ion-chip slot="end" color="primary">
-                  <ion-label>فعال</ion-label>
+                  <ion-label>{{ 'CURRENCY.LABEL.ACTIVE' | translate }}</ion-label>
                 </ion-chip>
               </ion-item>
             </div>
@@ -47,20 +47,20 @@
     <ion-row dir="rtl" class="ion-justify-content-center">
       <ion-col size="12">
         <div class="section-header">
-          <h5>أسعار الصرف</h5>
-          <ion-button 
-            fill="outline" 
-            size="small" 
+          <h5>{{ 'CURRENCY.LABEL.EXCHANGE_RATES' | translate }}</h5>
+          <ion-button
+            fill="outline"
+            size="small"
             (click)="openRateModal()">
             <ion-icon name="add" slot="start"></ion-icon>
-            إضافة سعر
+            {{ 'CURRENCY.LABEL.ADD_RATE' | translate }}
           </ion-button>
         </div>
-        
+
         <ion-card>
           <ion-list class="ion-margin-top ion-margin-bottom">
             <ion-item-divider>
-              <ion-label>أسعار الصرف مقابل الجنيه السوداني (SDG)</ion-label>
+              <ion-label>{{ 'CURRENCY.LABEL.EXCHANGE_RATES_VS_SDG' | translate }}</ion-label>
             </ion-item-divider>
             
             <ion-item *ngFor="let rate of rates" button (click)="openRateModal(rate)">
@@ -101,25 +101,25 @@
               <ion-avatar slot="start">
                 <div class="currency-avatar">SDG</div>
               </ion-avatar>
-              
+
               <ion-label>
-                <h3>جنيه سوداني</h3>
-                <p>العملة الأساسية</p>
+                <h3>{{ 'CURRENCY.LABEL.BASE_CURRENCY' | translate }}</h3>
+                <p>{{ 'CURRENCY.LABEL.BASE_CURRENCY_LABEL' | translate }}</p>
               </ion-label>
-              
+
               <div slot="end" class="rate-display">
                 <ion-chip color="primary">
-                  <ion-label>عملة أساسية</ion-label>
+                  <ion-label>{{ 'CURRENCY.LABEL.BASE_CURRENCY_LABEL' | translate }}</ion-label>
                 </ion-chip>
               </div>
             </ion-item>
-            
+
             <!-- Empty state -->
             <ion-item *ngIf="rates.length === 0" lines="none">
               <div class="empty-state">
                 <ion-icon name="wallet-outline" size="large" color="medium"></ion-icon>
-                <h4>لا توجد أسعار صرف محددة</h4>
-                <p>اضغط على "إضافة سعر" لإضافة أسعار الصرف</p>
+                <h4>{{ 'CURRENCY.MESSAGE.NO_RATES_DEFINED' | translate }}</h4>
+                <p>{{ 'CURRENCY.MESSAGE.CLICK_ADD_RATE' | translate }}</p>
               </div>
             </ion-item>
           </ion-list>
@@ -130,7 +130,7 @@
      <!-- Supported Currencies -->
      <ion-row dir="rtl" class="ion-justify-content-center">
       <ion-col size="12">
-        <h5>العملات المدعومة</h5>
+        <h5>{{ 'CURRENCY.LABEL.SUPPORTED_CURRENCIES' | translate }}</h5>
         <ion-card>
           <ion-list class="ion-margin-top ion-margin-bottom">
             <ion-item *ngFor="let currency of currencies" button>

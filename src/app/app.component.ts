@@ -4,11 +4,14 @@ import { AuthServiceService } from "../app/auth/auth-service.service";
 import { Storage } from '@ionic/storage';
 import { HttpClient, HttpHeaders , HttpParams } from '@angular/common/http';
 import { ServicesService } from './stockService/services.service';
-import { Observable, Observer, timer } from 'rxjs'; 
-import { Platform, PopoverController, MenuController } from '@ionic/angular';
+import { Observable, Observer, timer } from 'rxjs';
+import { Platform, PopoverController, MenuController, ModalController } from '@ionic/angular';
 import { filter } from 'rxjs/operators';
 import { ActionPopoverComponent } from './component/action-popover/action-popover.component';
 import { UserActionsPopoverComponent } from './component/user-actions-popover/user-actions-popover.component';
+import { UpdateService, AppUpdate } from './services/update.service';
+import { UpdateNotificationModalComponent } from './components/update-notification-modal/update-notification-modal.component';
+import { TranslationServiceCustom } from './services/translation.service';
 
 @Component({
   selector: 'app-root',
@@ -20,7 +23,7 @@ export class AppComponent implements AfterViewInit {
   public appPages = [];
 
    store_info : {id:any ,store_ref:any , store_name:any , location :any } 
-   USER_INFO : { id: any , user_name: any, store_id :any, full_name:any, password:any}
+   USER_INFO : { id: any , user_name: any, store_id :any, full_name:any, password:any, user_level:any}
   company : { id: any , phone: any, phone2  :any, address :any, logoUrl:any,engName:any,arName:any ,tradNo:any , vatNo:any};
   sub_accountSalse:Array<any> =[]
   sub_accountPurch:Array<any> =[]
@@ -37,7 +40,8 @@ export class AppComponent implements AfterViewInit {
   selectedEndpointName: string = '' // Selected endpoint category name
   currentUrl: string = '';
   public labels = ['Family', 'Friends', 'Notes', 'Work', 'Travel', 'Reminders'];
-  
+  appVersion: string = '1.0.3'; // App version
+
   // Collapsible sidebar properties
   isSidebarCollapsed = true;
   isSidebarHovered = false;
@@ -49,7 +53,10 @@ export class AppComponent implements AfterViewInit {
     private authenticationService: AuthServiceService,
     private router: Router,
     private popoverController: PopoverController,
-    private menuController: MenuController
+    private menuController: MenuController,
+    private updateService: UpdateService,
+    private modalController: ModalController,
+    private translationService: TranslationServiceCustom
   ) {
    
       // Use matchMedia to check the user preference
@@ -70,7 +77,8 @@ export class AppComponent implements AfterViewInit {
       store_id :"",
       full_name:"",
       password:"",
-  
+      user_level:"",
+
     };
 
     this.store_info  = {id:"" ,store_ref:"" , store_name:"" , location :"" } 
@@ -320,10 +328,14 @@ checkPlatform(){
     //console.log('I am an mobile device!'); 
    }
 }
-  initializeApp() {  
+  async initializeApp() {
     this.getAppInfo();
-    this.checkPlatform()
-    this.auth();  
+    this.checkPlatform();
+
+    // Initialize language before auth
+    await this.translationService.initializeLanguage();
+
+    this.auth();
   }
 
   // Initialize endpoint information
@@ -450,6 +462,44 @@ async navigateWithReplace(route: string) {
   ngAfterViewInit() {
     // Initialize current URL
     this.currentUrl = this.router.url;
+
+    // Check for updates after initialization
+    setTimeout(() => {
+      this.checkForUpdates();
+    }, 1000);
+  }
+
+  /**
+   * Check for app updates
+   */
+  async checkForUpdates() {
+    try {
+      await this.updateService.initialize();
+      const update = await this.updateService.checkForUpdate();
+
+      if (update) {
+        await this.showUpdateModal(update);
+      }
+    } catch (error) {
+      console.error('Error checking for updates:', error);
+    }
+  }
+
+  /**
+   * Show update notification modal
+   * @param update Update data to display
+   */
+  async showUpdateModal(update: AppUpdate) {
+    const modal = await this.modalController.create({
+      component: UpdateNotificationModalComponent,
+      componentProps: {
+        update: update
+      },
+      backdropDismiss: false,
+      cssClass: 'update-notification-modal'
+    });
+
+    return await modal.present();
   }
 
 
@@ -481,8 +531,23 @@ async navigateWithReplace(route: string) {
       translucent: true,
       cssClass: 'user-action-popover'
     });
-    
+
     return await popover.present();
+  }
+
+  // Check if current user is admin (user_level = 1)
+  // If user_level is not set in localStorage, default to admin (1) for backward compatibility
+  isAdmin(): boolean {
+    if (!this.USER_INFO) {
+      return false;
+    }
+
+    // If user_level doesn't exist, default to admin (1)
+    // You can manually set user_level in localStorage:
+    // localStorage.setItem('USER_LEVEL', '2') for normal user
+    // localStorage.setItem('USER_LEVEL', '1') for admin
+    const userLevel = this.USER_INFO.user_level || localStorage.getItem('USER_LEVEL') || '1';
+    return userLevel == '1' || userLevel == 1;
   }
 
 }

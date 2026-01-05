@@ -35,6 +35,8 @@
     "@ionic/pwa-elements": "^3.2.2",
     "@ionic/storage": "^3.0.6",
     "@ionic/storage-angular": "^3.0.6",
+    "@ngx-translate/core": "^14.0.0",
+    "@ngx-translate/http-loader": "^7.0.0",
     "@types/dom-to-image": "^2.6.4",
     "angularx-qrcode": "^13.0.0",
     "chart.js": "^4.5.0",

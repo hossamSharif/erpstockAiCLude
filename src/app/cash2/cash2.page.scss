@@ -413,7 +413,7 @@
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: none;
   border-bottom: 1px solid var(--liquid-glass-border);
-  padding: 0.6rem 1rem;
+  padding: 0.4rem 0.8rem; /* Reduced padding */
   flex-shrink: 0;
   position: relative;
   z-index: 3;
@@ -453,7 +453,7 @@
 }
 
 .card-title {
-  font-size: 1rem;
+  font-size: 0.95rem; /* Reduced font size */
   font-weight: 800;
   margin: 0;
  text-align: right;
@@ -490,37 +490,91 @@
 }
 
 .compact-content {
-  padding: 0.8rem;
+  padding: 0.5rem 0.8rem; /* Reduced vertical padding */
   flex: 1;
   display: flex;
   flex-direction: column;
-  // gap: 0.3rem;
-  overflow-y: visible; /* Remove scrolling */
-  max-height: none; /* Remove height constraint */
+  gap: 0.2rem; /* Reduced gap between fields */
 }
 
 /* Field Rows - Each field in separate row */
 .field-row {
   display: flex;
   align-items: flex-start;
-  gap: 0.8rem;
+  gap: 0.6rem; /* Reduced gap */
   min-height: auto;
-  // padding: 0.4rem 0;
-  // margin-bottom: 0.3rem;
+  padding: 0.2rem 0; /* Reduced padding */
+  margin-bottom: 0.1rem; /* Reduced margin */
+  position: relative;
+  z-index: 1; /* Base z-index */
+
+  // Source field needs higher z-index to show dropdown above account field below it
+  &:has(.source-selector-wrapper) {
+    z-index: 50 !important;
+  }
+
+  // Account field should have lower z-index than source
+  &:has(app-account-selector) {
+    z-index: 5 !important;
+  }
 }
 
 /* Right-aligned Labels */
 .field-label-right {
-  flex: 0 0 100px;
+  flex: 0 0 90px; /* Reduced width */
   text-align: right;
   direction: rtl;
-  font-size: 1rem !important;
+  font-size: 0.9rem !important; /* Reduced font size */
   font-weight: 700;
   color: #000000;
   margin: 0;
-  padding-right: 0.5rem;
-  padding-top: 0.4rem;
+  padding-right: 0.4rem; /* Reduced padding */
+  padding-top: 0.3rem; /* Reduced padding */
   align-self: flex-start;
+}
+
+/* Field Input Section - Contains input and balance side by side */
+.field-input-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  direction: rtl; /* RTL layout - balance will appear on left */
+}
+
+/* Balance Badge on Side - Next to input field, on the LEFT */
+.balance-badge-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.5rem;
+  background: transparent; /* No background */
+  border: none; /* No border */
+  min-height: 2.5rem; /* Match input field height */
+  min-width: 100px;
+  max-width: 130px;
+  direction: rtl;
+  flex-shrink: 0; /* Don't shrink */
+  order: 2; /* Place on left side in RTL layout */
+
+  .balance-spinner-inline {
+    width: 12px;
+    height: 12px;
+  }
+
+  .balance-text-inline {
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+  }
+
+  .balance-error-icon {
+    font-size: 1rem;
+  }
 }
 
 /* Premium Glass Segment Controls */
@@ -531,9 +585,9 @@
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--liquid-glass-border);
   border-radius: var(--glass-border-radius-small);
-  padding: 0.2rem;
-  height: 2.8rem;
-  min-height: 2.8rem;
+  padding: 0.15rem; /* Reduced padding */
+  height: 2.5rem; /* Reduced height */
+  min-height: 2.5rem;
   position: relative;
   overflow: hidden;
   
@@ -564,9 +618,9 @@
   --background: transparent;
   --background-checked: var(--glass-accent-primary);
   border-radius: var(--glass-border-radius-small);
-  margin: 0.1rem;
-  min-height: 2rem;
-  font-size: 0.85rem;
+  margin: 0.08rem; /* Reduced margin */
+  min-height: 1.8rem; /* Reduced height */
+  font-size: 0.8rem; /* Reduced font size */
   font-weight: 600;
   transition: var(--glass-transition);
   position: relative;
@@ -626,17 +680,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.3rem; /* Reduced gap */
     position: relative;
     z-index: 1;
-    
+
     ion-icon {
-      font-size: 1.2rem;
+      font-size: 1rem; /* Reduced icon size */
       filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
     }
-    
+
     span {
-      font-size: 1rem;
+      font-size: 0.85rem; /* Reduced font size */
       font-weight: 700;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
@@ -651,16 +705,16 @@
   -webkit-backdrop-filter: blur(10px);
   --color: rgba(0, 0, 0, 0.9);
   --placeholder-color: rgba(0, 0, 0, 0.5);
-  --padding-start: 0.8rem;
-  --padding-end: 0.8rem;
-  --padding-top: 0.6rem;
-  --padding-bottom: 0.6rem;
+  --padding-start: 0.6rem; /* Reduced padding */
+  --padding-end: 0.6rem;
+  --padding-top: 0.4rem; /* Reduced padding */
+  --padding-bottom: 0.4rem;
   border: 0.5px solid rgba(128, 128, 128, 0.4);
   border-radius: var(--glass-border-radius-small);
-  font-size: 1rem;
+  font-size: 0.9rem; /* Reduced font size */
   font-weight: 500;
-  min-height: 2.8rem;
-  max-height: 2.8rem;
+  min-height: 2.5rem; /* Reduced height */
+  max-height: 2.5rem;
   transition: var(--glass-transition);
   position: relative;
   z-index: 2;
@@ -704,11 +758,11 @@
   }
   
   &.amount-input {
-    font-size: 1.2rem;
+    font-size: 1rem; /* Reduced font size */
     font-weight: 700;
     --color: var(--glass-accent-primary);
     text-align: center;
-    
+
     &:focus-within {
       --color: rgba(0, 122, 255, 1);
       text-shadow: 0 0 10px rgba(0, 122, 255, 0.3);
@@ -761,16 +815,16 @@
   -webkit-backdrop-filter: blur(10px);
   --color: rgba(0, 0, 0, 0.9);
   --placeholder-color: rgba(0, 0, 0, 0.5);
-  --padding-start: 0.8rem;
-  --padding-end: 0.8rem;
-  --padding-top: 0.6rem;
-  --padding-bottom: 0.6rem;
+  --padding-start: 0.6rem; /* Reduced padding */
+  --padding-end: 0.6rem;
+  --padding-top: 0.4rem; /* Reduced padding */
+  --padding-bottom: 0.4rem;
   border: 0.5px solid rgba(128, 128, 128, 0.4);
   border-radius: var(--glass-border-radius-small);
-  font-size: 1rem;
+  font-size: 0.9rem; /* Reduced font size */
   font-weight: 500;
-  min-height: 2.8rem;
-  max-height: 2.8rem;
+  min-height: 2.5rem; /* Reduced height */
+  max-height: 2.5rem;
   resize: none;
   transition: var(--glass-transition);
   
@@ -794,13 +848,148 @@
   z-index: 2;
 }
 
-/* Field with Balance Container */
+/* Field with Balance Container - NO LONGER USED, but keeping for compatibility */
 .field-with-balance {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0;
   position: relative;
+}
+
+/* Source Selector Wrapper */
+.source-selector-wrapper {
+  position: relative;
+  flex: 1; /* Take remaining space */
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  z-index: 100; /* Higher than other fields to show dropdown on top */
+  order: 1; /* Place on right side in RTL layout */
+}
+
+.source-input {
+  cursor: pointer;
+  width: 100%;
+}
+
+/* Source Dropdown Styling */
+.source-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.2rem;
+  background: white;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid var(--liquid-glass-border);
+  border-radius: var(--glass-border-radius-small);
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.15),
+    0 4px 10px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10001;
+
+  ion-list {
+    padding: 0.2rem 0;
+    background: transparent;
+  }
+
+  .source-item {
+    --background: transparent;
+    --color: rgba(0, 0, 0, 0.9);
+    --padding-start: 1rem;
+    --padding-end: 1rem;
+    --min-height: 2.5rem;
+    font-size: 1rem;
+    direction: rtl;
+    text-align: right;
+    transition: var(--glass-transition);
+    cursor: pointer;
+
+    &:hover,
+    &.highlighted {
+      --background: var(--liquid-glass-bg-light);
+      transform: translateX(-2px);
+    }
+
+    &:active {
+      --background: var(--liquid-glass-bg);
+      transform: translateX(0);
+    }
+
+    ion-label {
+      font-weight: 600;
+    }
+  }
+}
+
+/* Compact Balance Display - NO LONGER USED */
+.balance-display-compact {
+  display: none !important; /* Hide old balance displays */
+}
+
+/* Local overrides for account-selector in cash2 page only */
+.field-row {
+  app-account-selector {
+    flex: 1; /* Take remaining space in field-input-section */
+    display: block;
+    order: 1; /* Place on right side in RTL layout */
+
+    // Hide the header with refresh/add buttons and label
+    ::ng-deep .header-container {
+      display: none !important;
+    }
+
+    // Make the account-selector container take full width and set it as relative positioning context
+    ::ng-deep .account-selector-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      position: relative !important;
+    }
+
+    // Hide the balance container from account-selector to save vertical space
+    ::ng-deep .balance-container {
+      display: none !important; /* Hide balance display to prevent adding vertical space */
+    }
+
+    // Ensure input matches other fields
+    ::ng-deep .account-selector-wrapper {
+      margin: 0 !important;
+      width: 100%;
+    }
+
+    // Make the input container full width
+    ::ng-deep .input-container {
+      width: 100%;
+    }
+
+    // Get the actual input wrapper height for positioning
+    ::ng-deep .account-selector-wrapper {
+      position: relative;
+    }
+
+    // CRITICAL: Override dropdown positioning to appear right after the input field
+    // The dropdown is a sibling of input-container, so we position it relative to account-selector-container
+    // Calculate position: input-container is first child, so dropdown should start after it
+    ::ng-deep .dropdown-container {
+      position: absolute !important;
+      // Position it just below the input (header is hidden, so input is at top)
+      // Standard ion-item height (44px) + border (2px) + gap (0.3rem ~5px) = ~51px ≈ 3.2rem
+      top: 3.2rem !important;
+      left: 0 !important;
+      right: 0 !important;
+      width: 100% !important;
+      margin-top: 0 !important;
+      z-index: 10000 !important;
+      max-height: 200px !important;
+      overflow-y: auto !important;
+    }
+  }
 }
 
 /* Floating Glass Balance Displays */
@@ -959,12 +1148,12 @@
 /* Glass Button Row */
 .button-row {
   display: flex;
-  gap: 1rem;
-   
+  gap: 0.8rem; /* Reduced gap */
+  padding: 0.6rem 0.8rem; /* Reduced padding */
   justify-content: center;
   border-top: 1px solid var(--liquid-glass-border);
-  position: relative;
-  
+  margin-top: 0.5rem; /* Reduced margin */
+
   /* Glass divider effect */
   &::before {
     content: '';
@@ -985,12 +1174,12 @@
 
 /* 3D Glass Buttons */
 .mini-btn {
-  flex: 0 0 130px;
+  flex: 0 0 115px; /* Reduced button width */
   border-radius: var(--glass-border-radius-small);
-  font-size: 1rem;
+  font-size: 0.9rem; /* Reduced font size */
   font-weight: 700;
-  min-height: 3.2rem;
-  max-height: 3.2rem;
+  min-height: 2.8rem; /* Reduced height */
+  max-height: 2.8rem;
   transition: var(--glass-transition);
   position: relative;
   overflow: hidden;
@@ -1211,8 +1400,9 @@ ion-action-sheet {
   .compact-content {
     padding: 0.6rem;
     gap: 0.4rem;
-    overflow-y: visible; /* Remove scrolling */
-    max-height: none; /* Remove height constraints */
+    overflow-y: auto; /* Enable scrolling on mobile */
+    max-height: calc(100vh - 180px); /* Adjust for mobile header/buttons */
+    min-height: 300px;
   }
   
   .field-row {
@@ -1355,6 +1545,8 @@ ion-action-sheet {
   .compact-content {
     padding: 1rem;
     gap: 0.8rem;
+    overflow-y: auto;
+    max-height: calc(100vh - 240px);
   }
   
   .field-row {
@@ -1480,7 +1672,8 @@ ion-action-sheet {
   .compact-content {
     gap: 0.4rem;
     padding: 0.8rem;
-    overflow-y: visible;
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
   }
   
   .field-row {
@@ -1519,8 +1712,9 @@ ion-action-sheet {
   .compact-content {
     padding: 0.6rem;
     gap: 0.3rem;
-    overflow-y: visible;
-    max-height: none;
+    overflow-y: auto;
+    max-height: calc(100vh - 160px);
+    min-height: 250px;
   }
   
   .main-container {

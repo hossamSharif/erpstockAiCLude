@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
 import { FilterPipe } from "../sales/pipe";
 import { FilterPipe2 } from "../sales/pipe2";
 import { FilterPipe3 } from "../sales/pipe3";
@@ -19,6 +20,8 @@ import { SharedModule } from '../module/shared/shared.module';
     IonicModule,
     SharedModule, 
     SalesReturnPageRoutingModule 
+  ,
+    TranslateModule
   ],
   declarations: 
   [

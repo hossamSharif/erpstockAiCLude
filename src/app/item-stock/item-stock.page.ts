@@ -20,6 +20,7 @@ import { stat } from 'fs';
 import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
 import { ItemStockPrintPage } from '../item-stock-print/item-stock-print.page';
 import { CurrencyService } from '../services/currency.service';
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-item-stock',
   templateUrl: './item-stock.page.html',
@@ -165,7 +166,8 @@ itemsAll:Array<any> =[]
     private toast: ToastController,
     private exportService: ExportService,
     private currencyService: CurrencyService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private translate: TranslateService
   ) { 
     this.store_info = {id:"" ,store_ref:"" , store_name:"" , location :"" }
     this.selectedItem = {id:null ,item_name:"" ,model:"" ,part_no:""  ,min_qty:0 ,brand:"",pay_price:0,perch_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:""};
@@ -522,7 +524,7 @@ itemsAll:Array<any> =[]
     
     // Check if item exists and has an id
     if (!item) {
-      this.presentToast('لم يتم العثور على العنصر المحدد', 'danger');
+      this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.ITEM_NOT_FOUND', 'danger');
       return;
     }
     
@@ -530,7 +532,7 @@ itemsAll:Array<any> =[]
     
     if (!itemId) {
       console.error('Item ID not found. Item properties:', Object.keys(item));
-      this.presentToast('معرف العنصر غير موجود', 'danger');
+      this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.ITEM_ID_NOT_FOUND', 'danger');
       return;
     }
     
@@ -565,7 +567,7 @@ itemsAll:Array<any> =[]
       //console.log(item)
       this.selectedItem = item
     if (item.salesQuantity > 0 || item.perchQuantity > 0) {
-      this.presentToast('لا يمكن حذف الصنف , توجد كميات في المخزون    ' , 'danger')
+      this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.CANNOT_DELETE_HAS_STOCK', 'danger')
     } else {
       this.delete()
     }
@@ -577,17 +579,17 @@ delete(){
  this.api.deleteItems(this.selectedItem.id).subscribe(data => {
    //console.log(data)
    if (data['message'] != 'Post Not Deleted') {
-    this.presentToast('تم الحذف بنجاح' , 'success')
+    this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success')
     this.updateItemArrays(this.selectedItem.id , 'delete')
     // this.saveLogHistory(this.selectedItem , undefined ,'delete')  
    // this.getAllStockItems() //this.getStockItems() 
    }else{
-    this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
    }
   
  },(err) => {
    //console.log(err);
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    
   },() => {
     this.loadingController.dismiss()
@@ -675,7 +677,7 @@ delete(){
          const foundItem = this.findItemById(id);
          
          if (!foundItem) {
-           this.presentToast('لم يتم العثور على العنصر المحدد', 'danger');
+           this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.ITEM_NOT_FOUND', 'danger');
            return;
          }
          
@@ -776,18 +778,18 @@ delete(){
        this.api.updateItem(updateData).subscribe(data => {
        //console.log(data)
        if (data['message'] != 'Post Not Updated') {
-        this.presentToast('تم التعديل بنجاح' , 'success')
+        this.presentToast('COMMON.MESSAGE.UPDATED_SUCCESSFULLY', 'success')
         this.saveLogHistory(mdata[0] , undefined ,'update') 
 
             this.resetPaginationAndReload() 
          
        }else{
-       this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
        }
       
      }, (err) => {
        //console.log(err);
-       this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
      },() => {
       this.loadingController.dismiss()
     }) 
@@ -824,15 +826,15 @@ delete(){
           if (data['message'] != 'Post Not Updated') { 
             this.updateFirstq(item) 
             this.loadingController.dismiss()
-            this.presentToast('تم التعديل بنجاح' , 'success') 
+            this.presentToast('COMMON.MESSAGE.UPDATED_SUCCESSFULLY', 'success') 
           }else{ 
-            this.presentToast('لم يتم  تعديل البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+            this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
             this.loadingController.dismiss()
           }
           this.hideMe(i)
         }, (err) => {
         //console.log(err);
-        this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+        this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
         this.loadingController.dismiss()
         this.hideMe(i)
       } ,
@@ -842,7 +844,7 @@ delete(){
       }
         )   
       }else{
-        this.presentToast("خطأ في الإدخال ", "danger")
+        this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.INPUT_ERROR', 'danger')
         this.loadingController.dismiss()
       } 
     }
@@ -861,13 +863,13 @@ updateFirstq(item){
   if (data['message'] != 'Post Not Updated') { 
     this.updateItemArrays(item.id);
   }else{
-  this.presentToast('لم يتم تعديل الكمية الإفتتاحية , خطا في الإتصال حاول مرة اخري' , 'danger') 
+  this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.FAILED_UPDATE_OPENING_QTY', 'danger') 
   this.loadingController.dismiss()
   }
  // this.getAllStockItems() //this.getStockItems() 
 }, (err) => {
   //console.log(err);
-  this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
 },() => {
  this.loadingController.dismiss()
 })  
@@ -1477,7 +1479,7 @@ refreshToInitialState() {
   this.resetPaginationAndReloadWithTotals();
   
   // Show success message
-  this.presentToast('تم إعادة تعيين جميع الإعدادات', 'success');
+  this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.SETTINGS_RESET', 'success');
 }
 
 
@@ -1888,14 +1890,15 @@ setColSetting(data?){
       this.searcResult = []
     }
 
-   async presentToast(msg,color?) {
+   async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
     const toast = await this.toast.create({
-      message: msg,
+      message: message,
       duration: 2000,
       color:color,
       cssClass:'cust_Toast',
       mode:'ios',
-      position:'top' 
+      position:'top'
     });
     toast.present();
    }
@@ -1912,12 +1915,12 @@ setColSetting(data?){
           this.firstq = {id:null ,item_id:data['message'] , store_id:this.store_info.id , quantity :mdata[1].quantity ,pay_price:mdata[0].pay_price,perch_price:mdata[0].perch_price ,fq_year:'2022'}
           this.saveFierstQty(mdata[0])
         }else{
-          this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+          this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
         }
        
       }, (err) => {
         //console.log(err);
-        this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+        this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
       }) 
    }
 
@@ -1928,11 +1931,11 @@ setColSetting(data?){
         this.firstq.id = data['message']
       }
       this.saveLogHistory(itemData , this.firstq ,'insert')
-      this.presentToast('تم الحفظ','success')
+      this.presentToast('COMMON.MESSAGE.SUCCESS', 'success')
 
     }, (err) => {
       //console.log(err);
-      this.presentToast('1لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
      
       this.loadingController.dismiss()
    
@@ -2031,11 +2034,11 @@ setColSetting(data?){
        this.resetPaginationAndReload()
        this.logHistoryArr =[]
      }else{
-       this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
      } 
    }, (err) => {
      //console.log(err);
-     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    }) 
    }
 
@@ -2044,10 +2047,10 @@ setColSetting(data?){
     this.api.saveItemStock(this.itemSstock).subscribe(data=>{ 
       //console.log(data)  
      // this.getAllStockItems() //this.getStockItems()
-      this.presentToast('تم الحفظ بنجاح' , 'success')
+      this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
     }, (err) => {
       //console.log(err);
-      this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
     }, () => {
       this.loadingController.dismiss()
     }
@@ -2063,15 +2066,15 @@ incresePrice(data){
  this.api.increasePrice(data.payval,data.perchval).subscribe(data => {
    //console.log(data)
    if (data['message'] != 'Post Not Updated') {
-    this.presentToast('تم التعديل بنجاح' , 'success') 
+    this.presentToast('COMMON.MESSAGE.UPDATED_SUCCESSFULLY', 'success') 
     //this.getAllStockItems() //this.getStockItems()
    }else{
-   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
 
    } 
  }, (err) => {
    //console.log(err);
-   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
  },() => {
   this.loadingController.dismiss()
 }) 
@@ -2082,15 +2085,15 @@ incresePrice(data){
   this.api.decreasePrice(data.payval,data.perchval).subscribe(data => {
     //console.log(data)
     if (data['message'] != 'Post Not Updated') {
-      this.presentToast('تم التعديل بنجاح' , 'success') 
+      this.presentToast('COMMON.MESSAGE.UPDATED_SUCCESSFULLY', 'success') 
       this.resetPaginationAndReload()
     }else{
-    this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
 
     }
   }, (err) => {
     //console.log(err);
-    this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   },() => {
     this.loadingController.dismiss()
   }) 
@@ -2150,7 +2153,7 @@ incresePrice(data){
       },
       error => {
         console.error('Error loading paginated items:', error);
-        this.presentToast('خطأ في تحميل البيانات', 'danger');
+        this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.ERROR_LOADING_DATA', 'danger');
         this.paginationLoading = false;
       }
     );
@@ -2231,7 +2234,7 @@ incresePrice(data){
       },
       error => {
         console.error('Error loading stock totals:', error);
-        this.presentToast('خطأ في تحميل إجمالي المخزون', 'danger');
+        this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.ERROR_LOADING_TOTALS', 'danger');
         this.loadingStockTotals = false;
         this.stockValuePayPrice = 0;
         this.stockValuePerchPrice = 0;
@@ -2287,7 +2290,7 @@ incresePrice(data){
       },
       error => {
         console.error('Error loading filtered items:', error);
-        this.presentToast('خطأ في تحميل البيانات المفلترة', 'danger');
+        this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.ERROR_LOADING_FILTERED_DATA', 'danger');
         this.loading = false;
         this.filterArray = [];
         this.store_tot = 0;
@@ -2453,7 +2456,7 @@ incresePrice(data){
 
   loadAllItems() {
     if (!this.store_info?.id) {
-      this.presentToast('معلومات المتجر غير متوفرة', 'danger');
+      this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.STORE_INFO_NOT_AVAILABLE', 'danger');
       return;
     }
 
@@ -2487,11 +2490,11 @@ incresePrice(data){
             this.allItemsData = this.sortArray([...this.allItemsData], this.currentSort.column, this.currentSort.direction);
           }
           
-          this.presentToast(`تم تحميل ${this.allItemsData.length} صنف بنجاح`, 'success');
+          this.toast.create({ message: this.translate.instant('INVENTORY.ITEM_STOCK.MESSAGE.ITEMS_LOADED_SUCCESS', { count: this.allItemsData.length }), duration: 2000, color: 'success', cssClass: 'cust_Toast', mode: 'ios', position: 'top' }).then(t => t.present());
         } else {
           this.allItemsData = [];
           this.allItemsStockTotals = { store_tot: 0, cost_tot: 0, items_count: 0 };
-          this.presentToast('لا توجد أصناف', 'warning');
+          this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.NO_ITEMS', 'warning');
         }
         
         this.loadingAllItems = false;
@@ -2499,7 +2502,7 @@ incresePrice(data){
       error: (err) => {
         console.error('Error loading all items:', err);
         this.loadingAllItems = false;
-        this.presentToast('خطأ في تحميل الأصناف', 'danger');
+        this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.ERROR_LOADING_ITEMS', 'danger');
       }
     });
   }
@@ -2577,14 +2580,14 @@ incresePrice(data){
           }
           
           if (this.searchData.length > 0) {
-            this.presentToast(`تم العثور على ${this.searchData.length} صنف`, 'success');
+            this.toast.create({ message: this.translate.instant('INVENTORY.ITEM_STOCK.MESSAGE.ITEMS_FOUND', { count: this.searchData.length }), duration: 2000, color: 'success', cssClass: 'cust_Toast', mode: 'ios', position: 'top' }).then(t => t.present());
           } else {
-            this.presentToast(`لا توجد نتائج للبحث عن "${searchTerm}"`, 'warning');
+            this.toast.create({ message: this.translate.instant('INVENTORY.ITEM_STOCK.MESSAGE.NO_SEARCH_RESULTS', { term: searchTerm }), duration: 2000, color: 'warning', cssClass: 'cust_Toast', mode: 'ios', position: 'top' }).then(t => t.present());
           }
         } else {
           this.searchData = [];
           this.searchStockTotals = { store_tot: 0, cost_tot: 0, items_count: 0 };
-          this.presentToast(`لا توجد نتائج للبحث عن "${searchTerm}"`, 'warning');
+          this.toast.create({ message: this.translate.instant('INVENTORY.ITEM_STOCK.MESSAGE.NO_SEARCH_RESULTS', { term: searchTerm }), duration: 2000, color: 'warning', cssClass: 'cust_Toast', mode: 'ios', position: 'top' }).then(t => t.present());
         }
         
         this.loadingSearch = false;
@@ -2597,7 +2600,7 @@ incresePrice(data){
       error: (err) => {
         console.error('Error searching items:', err);
         this.loadingSearch = false;
-        this.presentToast('خطأ في البحث', 'danger');
+        this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.ERROR_SEARCHING', 'danger');
       }
     });
   }
@@ -2676,7 +2679,7 @@ incresePrice(data){
   async exportToPDF(): Promise<void> {
     const currentData = this.getDataForExport();
     if (!currentData || currentData.length === 0) {
-      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      await this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
       return;
     }
 
@@ -2712,7 +2715,7 @@ incresePrice(data){
   async exportToExcel(): Promise<void> {
     const currentData = this.getDataForExport();
     if (!currentData || currentData.length === 0) {
-      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      await this.presentToast('INVENTORY.ITEM_STOCK.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
       return;
     }
 

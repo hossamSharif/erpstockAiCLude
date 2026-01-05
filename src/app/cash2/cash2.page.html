@@ -4,7 +4,7 @@
   <!-- Loading State -->
   <div *ngIf="!user_info || !store_info || !journal" class="loading-container">
     <ion-spinner name="crescent"></ion-spinner>
-    <p class="loading-text">جاري التحميل...</p>
+    <p class="loading-text">{{ 'COMMON.MESSAGE.LOADING' | translate }}</p>
   </div>
 
   <!-- Main Content -->
@@ -13,7 +13,7 @@
       <ion-card class="form-card">
         <ion-card-header class="card-header">
           <div class="header-row">
-            <ion-card-title class="card-title">سندات القبض والدفع</ion-card-title>
+            <ion-card-title class="card-title">{{ 'ACCOUNTING.CASH.TITLE' | translate }}</ion-card-title>
             <div class="currency-switcher-container">
               <app-currency-switcher></app-currency-switcher>
             </div>
@@ -24,18 +24,18 @@
           
           <!-- Row 1: Transaction Type -->
           <div class="field-row">
-            <ion-label class="field-label-right">نوع السند</ion-label>
+            <ion-label class="field-label-right">{{ 'ACCOUNTING.CASH.LABEL.VOUCHER_TYPE' | translate }}</ion-label>
             <ion-segment [(ngModel)]="jType" (ionChange)="radioChange($event)" class="mini-segment">
               <ion-segment-button value="1">
                 <div class="segment-content">
                   <ion-icon name="arrow-up-outline"></ion-icon>
-                  <span>سند دفع</span>
+                  <span>{{ 'ACCOUNTING.CASH.LABEL.PAYMENT_VOUCHER' | translate }}</span>
                 </div>
               </ion-segment-button>
               <ion-segment-button value="2">
                 <div class="segment-content">
                   <ion-icon name="arrow-down-outline"></ion-icon>
-                  <span>سند قبض</span>
+                  <span>{{ 'ACCOUNTING.CASH.LABEL.RECEIPT_VOUCHER' | translate }}</span>
                 </div>
               </ion-segment-button>
             </ion-segment>
@@ -43,86 +43,107 @@
 
           <!-- Row 2: Date -->
           <div class="field-row">
-            <ion-label class="field-label-right">التاريخ</ion-label>
-            <ion-input 
-              type="date" 
+            <ion-label class="field-label-right">{{ 'COMMON.LABEL.DATE' | translate }}</ion-label>
+            <ion-input
+              type="date"
               [(ngModel)]="journal.j_date"
               class="mini-input">
             </ion-input>
           </div>
 
-          <!-- Row 3: Source -->
+          <!-- Row 3: Source (Searchable Dropdown) -->
           <div class="field-row">
-            <ion-label class="field-label-right">المصدر</ion-label>
-            <div class="field-with-balance">
-              <ion-select 
-                [(ngModel)]="radioVal" 
-                (ionChange)="pickAccountBank($event)" 
-                placeholder="اختر المصدر"
-                interface="action-sheet"
-                class="mini-select">
-                <ion-select-option value="1">الخزينة</ion-select-option>
-                <ion-select-option *ngFor="let bank of banksAccountArray" [value]="bank.id">
-                  {{ bank.sub_name }}
-                </ion-select-option>
-              </ion-select>
-              
-              <!-- Source Balance Display -->
-              <div class="balance-display" *ngIf="selectedBankAccount && selectedBankAccount.sub_name">
-                <div class="balance-label">الرصيد:</div>
-                <div class="balance-amount" *ngIf="!loadingSourceBalance && sourceAccountBalance" 
-                     [style.color]="getBalanceColor(sourceAccountBalance) === 'success' ? '#10dc60' : '#f04141'">
+            <ion-label class="field-label-right">{{ 'ACCOUNTING.CASH.LABEL.SOURCE' | translate }}</ion-label>
+            <div class="field-input-section">
+              <!-- Searchable Source Input -->
+              <div class="source-selector-wrapper">
+                <ion-input
+                  [(ngModel)]="sourceSearchTerm"
+                  [placeholder]="'ACCOUNTING.CASH.PLACEHOLDER.SELECT_SOURCE' | translate"
+                  class="mini-input source-input"
+                  (ionInput)="onSourceSearchInput($event)"
+                  (ionFocus)="onSourceInputFocus()"
+                  (ionBlur)="onSourceInputBlur()"
+                  (click)="onSourceInputFocus()"
+                  (keydown)="onSourceKeyDown($event)">
+                </ion-input>
+
+                <!-- Source Dropdown -->
+                <div class="source-dropdown" *ngIf="showSourceDropdown && filteredSources.length > 0">
+                  <ion-list>
+                    <ion-item
+                      *ngFor="let source of filteredSources; let i = index"
+                      button
+                      class="source-item"
+                      [class.highlighted]="i === sourceHighlightedIndex"
+                      (click)="selectSource(source)"
+                      (mousedown)="$event.preventDefault()"
+                      (mouseenter)="sourceHighlightedIndex = i">
+                      <ion-label>{{ source.name }}</ion-label>
+                    </ion-item>
+                  </ion-list>
+                </div>
+              </div>
+
+              <!-- Balance Badge on same line as input -->
+              <div class="balance-badge-side" *ngIf="selectedBankAccount && selectedBankAccount.sub_name">
+                <ion-spinner *ngIf="loadingSourceBalance" name="dots" class="balance-spinner-inline"></ion-spinner>
+                <span *ngIf="!loadingSourceBalance && sourceAccountBalance"
+                      class="balance-text-inline"
+                      [style.color]="getBalanceColor(sourceAccountBalance) === 'success' ? '#10dc60' : '#f04141'">
                   {{ sourceAccountBalance.current_balance | currencyDisplay }}
-                </div>
-                <div class="balance-loading" *ngIf="loadingSourceBalance">
-                  <ion-spinner name="dots" color="primary"></ion-spinner>
-                  <span>جاري التحميل...</span>
-                </div>
-                <div class="balance-error" *ngIf="!loadingSourceBalance && !sourceAccountBalance && selectedBankAccount.sub_name">
-                  لا يمكن تحميل الرصيد
-                </div>
+                </span>
+                <ion-icon *ngIf="!loadingSourceBalance && !sourceAccountBalance"
+                          name="alert-circle-outline"
+                          class="balance-error-icon"
+                          color="danger">
+                </ion-icon>
               </div>
             </div>
           </div>
 
           <!-- Row 4: Account -->
           <div class="field-row">
-            <ion-label class="field-label-right">الحساب</ion-label>
-            <div class="field-with-balance">
-              <div class="input-with-icon" (click)="presentAccountPopover($event)">
-                <ion-input 
-                  readonly="true" 
-                  [(ngModel)]="selectedFromAccount.sub_name" 
-                  placeholder="اختر الحساب"
-                  class="mini-input readonly-input">
-                </ion-input>
-                <ion-icon name="chevron-down-outline" class="dropdown-icon"></ion-icon>
-              </div>
-              
-              <!-- Account Balance Display -->
-              <div class="balance-display" *ngIf="selectedFromAccount && selectedFromAccount.sub_name">
-                <div class="balance-label">الرصيد:</div>
-                <div class="balance-amount" *ngIf="!loadingAccountBalance && selectedAccountBalance" 
-                     [style.color]="getBalanceColor(selectedAccountBalance) === 'success' ? '#10dc60' : '#f04141'">
-                  {{ selectedAccountBalance.current_balance | currencyDisplay }}
-                </div>
-                <div class="balance-loading" *ngIf="loadingAccountBalance">
-                  <ion-spinner name="dots" color="primary"></ion-spinner>
-                  <span>جاري التحميل...</span>
-                </div>
-                <div class="balance-error" *ngIf="!loadingAccountBalance && !selectedAccountBalance && selectedFromAccount.sub_name">
-                  لا يمكن تحميل الرصيد
-                </div>
+            <ion-label class="field-label-right">{{ 'COMMON.LABEL.ACCOUNT' | translate }}</ion-label>
+            <div class="field-input-section">
+              <app-account-selector
+                [store_info]="store_info"
+                [year]="year"
+                [placeholder]="translate.instant('ACCOUNTING.CASH.PLACEHOLDER.SELECT_ACCOUNT')"
+                [showAddButton]="false"
+                (accountSelected)="onAccountSelected($event)"
+                (balanceLoaded)="onBalanceLoaded($event)">
+              </app-account-selector>
+
+              <!-- Balance Badge on same line as input -->
+              <div class="balance-badge-side" *ngIf="selectedAccount && selectedAccount.id">
+                <ion-spinner *ngIf="loadingAccountBalance" name="dots" class="balance-spinner-inline"></ion-spinner>
+                <!-- Show balance from account object if available, otherwise from separate API call -->
+                <span *ngIf="!loadingAccountBalance && (selectedAccount.current_balance && selectedAccount.balance_status)"
+                      class="balance-text-inline"
+                      [style.color]="getAccountBalanceColor(selectedAccount) === 'success' ? '#10dc60' : '#f04141'">
+                  {{ formatAccountBalance(selectedAccount) }}
+                </span>
+                <span *ngIf="!loadingAccountBalance && accountBalance && (!selectedAccount.current_balance || !selectedAccount.balance_status)"
+                      class="balance-text-inline"
+                      [style.color]="getBalanceColor(accountBalance) === 'success' ? '#10dc60' : '#f04141'">
+                  {{ formatBalance(accountBalance) }}
+                </span>
+                <ion-icon *ngIf="!loadingAccountBalance && !accountBalance && (!selectedAccount.current_balance || !selectedAccount.balance_status)"
+                          name="alert-circle-outline"
+                          class="balance-error-icon"
+                          color="danger">
+                </ion-icon>
               </div>
             </div>
           </div>
 
           <!-- Row 5: Amount -->
           <div class="field-row">
-            <ion-label class="field-label-right">المبلغ</ion-label>
-            <ion-input 
-              type="number" 
-              placeholder="0.00" 
+            <ion-label class="field-label-right">{{ 'COMMON.LABEL.AMOUNT' | translate }}</ion-label>
+            <ion-input
+              type="number"
+              placeholder="0.00"
               [(ngModel)]="pay"
               class="mini-input amount-input">
             </ion-input>
@@ -130,30 +151,30 @@
 
           <!-- Row 6: Description -->
           <div class="field-row">
-            <ion-label class="field-label-right">البيان</ion-label>
-            <ion-textarea 
-              rows="1" 
+            <ion-label class="field-label-right">{{ 'COMMON.LABEL.DESCRIPTION' | translate }}</ion-label>
+            <ion-textarea
+              rows="1"
               [(ngModel)]="journal.j_details"
-              placeholder="وصف المعاملة..."
+              [placeholder]="'ACCOUNTING.CASH.PLACEHOLDER.TRANSACTION_DESCRIPTION' | translate"
               class="mini-textarea">
             </ion-textarea>
           </div>
 
           <!-- Action Buttons -->
           <div class="button-row">
-            <ion-button 
+            <ion-button
               (click)="save()"
               class="mini-btn save-btn"
               [disabled]="!isFormValid()">
               <ion-icon name="checkmark-outline" slot="start"></ion-icon>
-              حفـظ
+              {{ 'COMMON.BUTTON.SAVE' | translate }}
             </ion-button>
-            <ion-button 
-              fill="outline" 
+            <ion-button
+              fill="outline"
               (click)="clearForm()"
               class="mini-btn clear-btn">
               <ion-icon name="refresh-outline" slot="start"></ion-icon>
-              مسح
+              {{ 'COMMON.BUTTON.CLEAR' | translate }}
             </ion-button>
           </div>
         </ion-card-content>
@@ -162,31 +183,15 @@
   </div>
 </ion-content>
 
-<ion-popover #accountPopover [isOpen]="isAccountPopoverOpen" (didDismiss)="isAccountPopoverOpen = false"  side="bottom" alignment="start">
-  <ng-template>
-    <ion-header>
-      <ion-toolbar dir="rtl">
-        <ion-searchbar [(ngModel)]="searchTerm" (ionInput)="searchAccount($event)" placeholder="بحث عن حساب" dir="rtl"></ion-searchbar>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content dir="rtl">
-      <ion-list>
-        <ion-item *ngFor="let acc of searchedAccounts" (click)="selectAccount(acc)" button dir="rtl">
-          <ion-label>{{acc.sub_name}}</ion-label>
-        </ion-item>
-      </ion-list>
-    </ion-content>
-  </ng-template>
-</ion-popover>
 
 <ion-popover #popoverNotif22 [isOpen]="isOpenNotif" (didDismiss)="didDissmisNotif()">
   <ng-template>
     <ion-header>
-      <ion-toolbar dir="rtl" class="ion-text-center">
-        <ion-title>الإشعارات</ion-title>
+      <ion-toolbar class="ion-text-center">
+        <ion-title>{{ 'ACCOUNTING.CASH.LABEL.NOTIFICATIONS' | translate }}</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content dir="rtl">
+    <ion-content>
       <ion-list class="ion-text-center" *ngIf="LogHistoryLocalArr.length > 0">
         <ion-item *ngFor="let log of LogHistoryLocalArr">
           <ion-grid>
@@ -202,7 +207,7 @@
         </ion-item>
       </ion-list>
       <div *ngIf="LogHistoryLocalArr.length === 0" class="ion-text-center ion-padding">
-        <ion-label>لا توجد إشعارات جديدة</ion-label>
+        <ion-label>{{ 'ACCOUNTING.CASH.MESSAGE.NO_NEW_NOTIFICATIONS' | translate }}</ion-label>
       </div>
     </ion-content>
   </ng-template>

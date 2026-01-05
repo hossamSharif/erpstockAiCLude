@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable } from 'rxjs';
 import {  AlertController, LoadingController, ModalController, Platform, ToastController } from '@ionic/angular';
@@ -34,7 +35,7 @@ export class SpendsRecodPage implements OnInit {
   device:any = ''
   year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
 
-  constructor(private platform :Platform ,private alertController: AlertController,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) { 
+  constructor(private platform :Platform ,private alertController: AlertController,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) { 
     this.checkPlatform()
     this.getAppInfo()
     let d = new Date

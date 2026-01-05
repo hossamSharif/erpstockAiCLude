@@ -16,9 +16,11 @@ export class AuthServiceService {
    USER_INFO : {
     id: any ,
     user_name: any,
+    email: any,
     store_id :any,
     full_name:any,
-     password:any
+     password:any,
+    user_level:any
   };
   constructor(private toast:ToastController ,private loadingController:LoadingController,private api:ServicesService,   private router: Router,private storage: Storage,private platform: Platform,public toastController: ToastController) { 
     this.platform.ready().then(() => {
@@ -73,7 +75,7 @@ export class AuthServiceService {
   }
 
 
- async login(user) { 
+ async login(user) {
    await this.presentLoadingWithOptions('جاري تسجيل الدخول' , 'login')
     //console.log(user)
     this.api.login(user).subscribe(data =>{
@@ -83,30 +85,32 @@ export class AuthServiceService {
       this.USER_INFO ={
         id :res['id'],
         user_name:res['user_name'],
+        email:res['email'],
         full_name:res['full_name'],
         password:res['password'],
-        store_id:res['store_id'] 
-      } 
+        store_id:res['store_id'],
+        user_level:res['user_level'] || null
+      }
         //console.log(  'sdlijlf' ,  this.USER_INFO)
         this.storage.set('USER_INFO', this.USER_INFO).then(async (response) => {
           // Dismiss loading first
           await this.loadingController.dismiss();
-          
+
           // Set auth state - login page will handle navigation
           this.authState.next(true);
         });
       }else{
         this.loadingController.dismiss()
-        this.presentToast('خطأ في اسم المستخدم او كلمة المرور' ,'danger')
-      }  
+        this.presentToast('خطأ في البريد الإلكتروني او كلمة المرور' ,'danger')
+      }
     }, (err) => {
        //console.log(err);
        this.loadingController.dismiss()
-       this.presentToast('خطأ في اسم المستخدم او كلمة المرور' ,'danger')
-        
+       this.presentToast('خطأ في البريد الإلكتروني او كلمة المرور' ,'danger')
+
       },()=>{ }
-    )      
-   
+    )
+
   }
 
  

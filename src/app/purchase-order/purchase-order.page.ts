@@ -3,6 +3,7 @@ import { ServicesService } from "../stockService/services.service";
 import { Subscription } from 'rxjs';
 import { AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { DatePipe, Location } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { Storage } from '@ionic/storage';
 import { ActivatedRoute } from '@angular/router';
 import { CurrencyService } from '../services/currency.service';
@@ -577,7 +578,7 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
   }
 
   private handleSaveSuccess() {
-    this.presentToast('تم الحفظ بنجاح', 'success');
+    this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success');
     this.itemList = [];
     this.prepareInvo();
     this.selectedAccount = { id: "", ac_id: "", sub_name: "", sub_type: "", sub_code: "", sub_balance: "", store_id: "", cat_name: "", cat_id: "", currentCustumerStatus: 0 };

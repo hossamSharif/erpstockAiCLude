@@ -1,5 +1,6 @@
 
 import { Component, OnInit, ViewChild, ElementRef ,Renderer2,Input} from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable, Subscription } from 'rxjs';
 import { AlertController, Platform ,IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -74,7 +75,7 @@ export class SalesMobPage implements OnInit {
   showNotif = false
   device :any = ""
   segmentVal = 'first'
-  constructor(private platform:Platform,private behavApi:StockServiceService ,private _location: Location, private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) {
+  constructor(private platform:Platform,private behavApi:StockServiceService ,private _location: Location, private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) {
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",phone:"",address:"",currentCustumerStatus:0};
     this.route.queryParams.subscribe(params => {
       //console.log(params.payInvo,'jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj')

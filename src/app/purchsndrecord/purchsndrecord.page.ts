@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable } from 'rxjs';
 import {  LoadingController,Platform, ModalController, ToastController } from '@ionic/angular';
@@ -49,7 +50,7 @@ export class PurchsndrecordPage implements OnInit {
   color :any ='dark'
   sums : {pay:any ,change:any,discount:any,tot:any,totAfterDiscout:any}
   year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
-  constructor(private platform :Platform ,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) { 
+  constructor(private platform :Platform ,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) { 
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
    
     this.sums = {pay:0 ,change:0,discount:0,tot:0,totAfterDiscout:0}

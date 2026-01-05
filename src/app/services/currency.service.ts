@@ -276,6 +276,11 @@ export class CurrencyService {
     return symbols[currentCurrency] || currentCurrency;
   }
 
+  // Alias for getCurrentCurrencySymbol (for backward compatibility)
+  getCurrencySymbol(): string {
+    return this.getCurrentCurrencySymbol();
+  }
+
   // Get currency symbol for header display
   getCurrentCurrencySymbolForHeader(labelText: string): string {
     const symbol = this.getCurrentCurrencySymbol();

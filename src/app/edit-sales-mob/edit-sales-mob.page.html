@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar> 
-    <ion-title > تعديل فاتورة مبيعات</ion-title> 
+    <ion-title > {{ 'SALES.EDIT_TITLE' | translate }}</ion-title> 
     <ion-buttons  slot="end"> 
       <div class="poRel">
         <div class="posAb noti">
@@ -13,7 +13,7 @@
        </div>
      </div> 
      <ion-button fill="clear" (click)="presentPopoverNotif($event)">
-      <ion-label><ion-text color="dark" >الإشعارات</ion-text></ion-label>  
+      <ion-label><ion-text color="dark" >{{ 'ITEMS.LABEL.NOTIFICATIONS' | translate }}</ion-text></ion-label>
      </ion-button>
 
     <!-- <ion-button fill="clear" class="ion-margin"  (click)="changeMode()"  > 
@@ -30,7 +30,7 @@
    <ng-template>
      <ion-header>
        <ion-toolbar dir="rtl" class="ion-text-center">
-         الإشعارات
+         {{ 'ITEMS.LABEL.NOTIFICATIONS' | translate }}
        </ion-toolbar>
      </ion-header>
      <ion-content  dir="rtl">  
@@ -57,14 +57,14 @@
 <ion-content>
   <!-- skeleton -->
   <ion-segment [(ngModel)]="segmentVal" (ionChange)="segmentChange($event)" >
-    <ion-segment-button value="first"> 
-      <ion-label>تهيئة الفاتورة</ion-label>
+    <ion-segment-button value="first">
+      <ion-label>{{ 'SALES.LABEL.INVOICE_SETUP' | translate }}</ion-label>
     </ion-segment-button>
-    <ion-segment-button value="second"> 
-      <ion-label>إضافة الأصناف</ion-label>
+    <ion-segment-button value="second">
+      <ion-label>{{ 'SALES.LABEL.ADD_ITEMS' | translate }}</ion-label>
     </ion-segment-button>
-    <ion-segment-button value="third"> 
-      <ion-label> الحسابات</ion-label>
+    <ion-segment-button value="third">
+      <ion-label> {{ 'SALES.LABEL.ACCOUNTS' | translate }}</ion-label>
     </ion-segment-button>
   </ion-segment>
 

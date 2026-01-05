@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>فاتورة مبيعات</ion-title>
+    <ion-title>{{ 'SALES.TITLE' | translate }}</ion-title>
     <!-- <ion-buttons  slot="end">  
     >
 
@@ -30,13 +30,13 @@
                     <ion-col class="ion-no-padding ion-no-margin">
                       <ion-item lines="none" >
                         <ion-radio [value]="0" class="ion-margin-end"></ion-radio>
-                        <ion-label>قائمة الحسابات </ion-label> 
+                        <ion-label>{{ 'SALES.LABEL.ACCOUNT_LIST' | translate }}</ion-label>
                       </ion-item>
                     </ion-col>
                     <ion-col class="ion-no-padding ion-no-margin">
                       <ion-item lines="none" >
                         <ion-radio [value]="1" class="ion-margin-end"></ion-radio>
-                        <ion-label>حساب جديد</ion-label> 
+                        <ion-label>{{ 'SALES.LABEL.NEW_ACCOUNT' | translate }}</ion-label> 
                       </ion-item>
                     </ion-col> 
                   </ion-row>
@@ -58,14 +58,14 @@
             </ion-col>
           </ion-row>  
           <ion-row>
-            <ion-col size="3" offset="1" *ngIf="radioVal == 0 "> 
+            <ion-col size="3" offset="1" *ngIf="radioVal == 0 ">
               <ion-item class="custInput">
-                <input  *ngIf="sub_account" class="bnone" placeholder="اختر  حساب العميل" list="accountsSales" id="accountSales" [(ngModel)]="selectedAccount.sub_name"  (change)="pickAccount($event)">
+                <input  *ngIf="sub_account" class="bnone" [placeholder]="'SALES.LABEL.SELECT_CUSTOMER' | translate" list="accountsSales" id="accountSales" [(ngModel)]="selectedAccount.sub_name"  (change)="pickAccount($event)">
                 <datalist *ngIf="sub_account" style="border: none;" id="accountsSales" style="height: auto;max-height: 20px;">
                   <option *ngFor="let ac of sub_account ; let i = index"   [value]="ac.sub_name"></option>
                 </datalist>
                 <ion-label *ngIf="!sub_account">
-                  <ion-text color="danger" >خطأ في التحميل </ion-text>
+                  <ion-text color="danger">{{ 'SALES.LABEL.LOADING_ERROR' | translate }}</ion-text>
                  </ion-label>
                 <ion-button  *ngIf="!sub_account" fill="clear" size="small" slot="end" (click)="refresh('account')">
                   <ion-icon name="refresh" color="success"></ion-icon>
@@ -102,9 +102,9 @@
             </ion-col> -->
           
             <ion-col size="3" class="ion-text-start">
-              <ion-item class="custInput"> 
-                <ion-input placeholder="أكتب تعليقا" [(ngModel)]="payInvo.payComment"></ion-input>
-               </ion-item>   
+              <ion-item class="custInput">
+                <ion-input [placeholder]="'SALES.LABEL.WRITE_COMMENT' | translate" [(ngModel)]="payInvo.payComment"></ion-input>
+               </ion-item>
             </ion-col>
           </ion-row>
          </ion-grid> 
@@ -120,8 +120,8 @@
         <ion-grid>
           <ion-row class="ion-justify-content-center">
             <ion-col size="9">
-              <ion-label class="ion-padding"><strong>اجمالي المبلغ</strong></ion-label>
-              <ion-item class="custInput"> 
+              <ion-label class="ion-padding"><strong>{{ 'SALES.LABEL.TOTAL_AMOUNT' | translate }}</strong></ion-label>
+              <ion-item class="custInput">
                 <ion-input [(ngModel)]="payInvo.tot_pr"  ></ion-input>
               </ion-item>
             </ion-col>
@@ -138,15 +138,15 @@
               </ion-item>
             </ion-col> -->
             <ion-col size="9">
-              <ion-label class="ion-padding"><strong> المدفوع نقدا</strong></ion-label>
-              <ion-item class="custInput"> 
+              <ion-label class="ion-padding"><strong>{{ 'SALES.LABEL.CASH_PAID' | translate }}</strong></ion-label>
+              <ion-item class="custInput">
                 <ion-input [(ngModel)]="payInvo.pay" (ionChange)="payChange($event)"></ion-input>
               </ion-item>
             </ion-col>
             <ion-col size="9">
-              <ion-label class="ion-padding"><strong>المتبقي</strong></ion-label>
-              <ion-item class="custInput"> 
-                <ion-input  [(ngModel)]="payInvo.changee" [readonly]="true"></ion-input> 
+              <ion-label class="ion-padding"><strong>{{ 'SALES.LABEL.REMAINING' | translate }}</strong></ion-label>
+              <ion-item class="custInput">
+                <ion-input  [(ngModel)]="payInvo.changee" [readonly]="true"></ion-input>
               </ion-item>
             </ion-col> 
             <!-- <ion-col size="9">
@@ -161,7 +161,7 @@
           <ion-row class="ion-justify-content-center">
             <ion-col size="5" >
               <ion-button expand="block" routerDirection="root" color="success"  (click)="save()" >
-                <ion-label class="ion-text-center"> حفــظ</ion-label>
+                <ion-label class="ion-text-center">{{ 'COMMON.BUTTON.SAVE' | translate }}</ion-label>
               </ion-button>
             </ion-col>
             <!-- <ion-col size="5"  *ngIf="status == 'initial' || status == 'toFinal'">

@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from '../stockService/services.service';
+import { TranslateService } from '@ngx-translate/core';
 import { LoadingController, ToastController } from '@ionic/angular';
 import { DatePipe } from '@angular/common';
 import { Storage } from '@ionic/storage';
@@ -139,7 +140,8 @@ export class AnalyticsDashboardPage implements OnInit, OnDestroy, AfterViewInit 
     private datePipe: DatePipe,
     private storage: Storage,
     private currencyService: CurrencyService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private translate: TranslateService
   ) { 
     this.initializeDateRange();
   }
@@ -382,7 +384,7 @@ export class AnalyticsDashboardPage implements OnInit, OnDestroy, AfterViewInit 
 
     } catch (error) {
       console.error('Error loading dashboard data:', error);
-      this.presentToast('خطأ في تحميل بيانات لوحة التحكم', 'danger');
+      this.presentToast('COMMON.MESSAGE.ERROR_LOADING_DATA', 'danger');
       this.cardsLoading = false;
       this.chartsLoading = false;
     }
@@ -578,7 +580,7 @@ export class AnalyticsDashboardPage implements OnInit, OnDestroy, AfterViewInit 
       }
     } catch (error) {
       console.error('Error loading daily report:', error);
-      this.presentToast('خطأ في تحميل التقرير اليومي', 'danger');
+      this.presentToast('COMMON.MESSAGE.ERROR_LOADING_DATA', 'danger');
     } finally {
       this.dailyReportLoading = false;
     }
@@ -1148,7 +1150,8 @@ export class AnalyticsDashboardPage implements OnInit, OnDestroy, AfterViewInit 
     this.loadDashboardData();
   }
 
-  async presentToast(message: string, color: string = 'primary') {
+  async presentToast(translationKey: string, color: string = 'primary') {
+    const message = this.translate.instant(translationKey);
     const toast = await this.toast.create({
       message: message,
       duration: 2000,

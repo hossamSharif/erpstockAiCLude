@@ -1,0 +1,73 @@
+.category-card {
+  margin-bottom: 12px;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.category-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.category-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.category-header p {
+  margin: 0 0 8px 0;
+  color: var(--ion-color-medium);
+}
+
+ion-card-content {
+  padding: 16px;
+}
+
+ion-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+}
+
+// Expense category card styling
+.expense-category {
+  border-left: 4px solid var(--ion-color-warning);
+
+  h3 {
+    display: flex;
+    align-items: center;
+
+    ion-icon {
+      margin-left: 8px;
+    }
+  }
+}
+
+// Info card styling
+.info-card {
+  background: #f0f9ff;
+  border: 1px solid var(--ion-color-primary-tint);
+
+  ion-card-content {
+    padding: 12px;
+  }
+
+  ion-item {
+    --background: transparent;
+
+    ion-icon {
+      font-size: 1.5rem;
+      margin-inline-end: 12px;
+    }
+
+    ion-label p {
+      font-size: 0.9rem;
+      margin: 4px 0;
+      color: var(--ion-color-dark);
+    }
+  }
+}

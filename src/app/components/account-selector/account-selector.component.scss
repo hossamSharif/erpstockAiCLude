@@ -2,7 +2,8 @@
 .custInput {
   border: 1px solid #ccc;
   border-radius: 4px;
-//margin: 5px 0;
+  margin: 0 !important; // Force remove any margin that creates gap
+  padding: 0;
 }
 
 .account-selector-container {
@@ -104,11 +105,13 @@
     align-items: center;
     gap: 8px;
     position: relative;
+    margin: 0; // Remove any default margin
+    padding: 0; // Remove any default padding
 
     // Account Selector Enhanced Styles - Match item-selector
     .account-selector-wrapper {
       width: 100%;
-     // margin: 5px 0; // Same as other custInput fields
+      margin: 0; // Remove margin to eliminate gap
       border: 1px solid #ccc;
       border-radius: 4px;
       
@@ -141,16 +144,30 @@
   }
 
   .dropdown-container {
-    position: fixed;
-    z-index: 10000;
+    position: fixed !important;
+    z-index: 99999 !important; // Very high z-index to ensure it's above everything
     background: white;
-    border: 1px solid var(--ion-color-light);
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    max-height: 200px;
+    border: 1px solid #ccc;
+    border-top: none; // No top border for seamless connection
+    border-radius: 0 0 4px 4px; // Match input border radius
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-height: 300px; // Increased to show more items
     overflow-y: auto;
-    margin-top: 4px;
+    overflow-x: hidden;
+    margin: 0 !important;
+    padding: 0;
     min-width: 250px;
+
+    // Prevent any parent clipping
+    clip-path: none !important;
+
+    // Ensure visibility
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    // Smooth scrolling
+    -webkit-overflow-scrolling: touch;
 
     .account-dropdown {
       margin: 0;
@@ -217,7 +234,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-     
+    margin: 0; // Remove margin to prevent gap
+    padding: 8px 12px; // Keep padding for content spacing
     background: var(--ion-color-light-tint);
     border-radius: 6px;
     direction: rtl;

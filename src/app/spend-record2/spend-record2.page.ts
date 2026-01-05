@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable } from 'rxjs';
 import {  AlertController, LoadingController, ModalController, Platform, ToastController } from '@ionic/angular';
-import { DatePipe } from '@angular/common'; 
+import { DatePipe } from '@angular/common';
 import { Storage } from '@ionic/storage';
 import { NavigationExtras, Router } from '@angular/router'
 import { PrintModalPage } from '../print-modal/print-modal.page';
@@ -11,6 +11,8 @@ import { SortingService, SortConfig } from '../services/sorting.service';
 import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
 import { CurrencyService } from '../services/currency.service';
 import { Subscription } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
+import { TransactionModalComponent } from '../components/transaction-modal/transaction-modal.component';
 
 @Component({
   selector: 'app-spend-record2',
@@ -52,7 +54,7 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
 
     // Entry type filter
     entryTypeFilter: string = 'all'; // 'all', 'سند قبض', 'سند دفع'
-    constructor(private platform :Platform  ,private alertController: AlertController,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private exportService: ExportService, private currencyService: CurrencyService, private cdr: ChangeDetectorRef) { 
+    constructor(private platform :Platform  ,private alertController: AlertController,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private exportService: ExportService, private currencyService: CurrencyService, private cdr: ChangeDetectorRef, private translate: TranslateService) { 
      this.searchTerm =""
      this.checkPlatform()
      this.getAppInfo()
@@ -143,7 +145,7 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
        this.presentModal(this.printArr , 'sales_record')
         }, (err) => {
          //console.log(err);
-         this.presentToast('خطا في الإتصال حاول مرة اخري' , 'danger')
+         this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR' , 'danger')
         },()=>{ 
         })     
      }
@@ -261,82 +263,18 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
      }
   
      prepareArray(){
+      // Get account names from jdetailsFrom and jdetailsTo arrays (not from string parsing)
+      console.log('=== prepareArray DEBUG START ===');
+      console.log('jdetailsFrom length:', this.jdetailsFrom.length);
+      console.log('jdetailsTo length:', this.jdetailsTo.length);
+      if(this.jdetailsFrom.length > 0) {
+        console.log('Sample jdetailsFrom[0]:', this.jdetailsFrom[0]);
+      }
+      if(this.jdetailsTo.length > 0) {
+        console.log('Sample jdetailsTo[0]:', this.jdetailsTo[0]);
+      }
+
       this.payArray.forEach((element)=>{
-        let std = element.standard_details
-        let fromMainInd = std.indexOf("الي")
-        let fromMain = std.substring(0,fromMainInd) 
-        //console.log( "fromMain" ,fromMainInd ,fromMain,)
-        let toMain = std.substring(fromMainInd, element.standard_details.length)
-        //console.log( "toMain" ,toMain)
-        element.from1 = fromMain.substring(3,fromMain.lenght)
-        element.to1 = toMain.substring(3,toMain.lenght)
-  
-        // fromMain = fromMain.substring(4,fromMain.lenght)
-        // toMain = toMain.substring(3,toMain.lenght)
-  
-        //from1
-        // let from1Ind = fromMain.indexOf(",")
-        // if(from1Ind == -1){
-        //   element.from1 = fromMain
-        // }else{
-        //    element.from1 = fromMain.substring(0,from1Ind)
-        //    //console.log( "from1" ,element.from1)
-  
-        //    let newstr =  element.from1.substring(from1Ind , element.from1.length)
-        //    let from2Ind = newstr.indexOf(",")
-        //    if(from2Ind == -1){
-        //     element.from2 = fromMain.substring(element.from1.length, fromMain.length)
-        //     //console.log( "from2" ,element.from2)
-        //    }else{
-        //     element.from2 = newstr.substring(0,from2Ind)
-        //     //console.log( "newstr" ,element.from2)
-           
-        //     let from3Ind = newstr.indexOf(",")
-        //     if(from3Ind == -1){
-              
-        //     }else{
-        //       element.from3 =  element.newstr.substring(element.from2.length , newstr.length)
-        //       //console.log( "newstr2" ,element.from3)
-        //     }
-           
-            
-        //    }
-        // }
-  
-        // to
-         //to
-        //  let to1Ind = toMain.indexOf(",")
-        //  if(to1Ind == -1){
-        //    element.to1 = toMain
-        //    //console.log( "to1" ,element.to1)
-        //  }else{
-        //     element.to1 = toMain.substring(0,to1Ind)
-        //     //console.log( "to1" ,element.to1)
-   
-        //     let newstr =  element.to1.substring(to1Ind , element.to1.length)
-        //     let to2Ind = newstr.indexOf(",")
-        //     if(to2Ind == -1){
-        //      element.to2 = toMain.substring(element.to1.length, toMain.length)
-        //      //console.log( "to2" ,element.to2)
-        //     }else{
-        //      element.to2 = newstr.substring(0,to2Ind)
-        //      //console.log( "newstrto" ,element.to2)
-            
-        //      let to3Ind = newstr.indexOf(",")
-        //      if(to3Ind == -1){
-               
-        //      }else{
-        //        element.from3 =  element.newstr.substring(element.from2.length , newstr.length)
-        //        //console.log( "newstr2to" ,element.from3)
-        //      }
-            
-             
-        //     }
-        //  } 
-      })
-  
-  
-      this.payArray.forEach((element)=>{ 
         let fltFrom :Array<any> = []
         fltFrom =  this.jdetailsFrom.filter(x=>x.j_ref == element.j_ref)
         //console.log('fltFrom' ,fltFrom)
@@ -347,13 +285,17 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
             const element2 = fltFrom[i];
             if(i==0){
               element.debit= element2.debit
-  
+              element.from1 = element2.sub_name || ''
+              console.log('  j_ref:', element.j_ref, 'from1 set to:', element.from1, 'element2.sub_name:', element2.sub_name);
+
             }else if(i==1){
               element.debit2= element2.debit
-  
+              element.from2 = element2.sub_name || ''
+
             }else if(i == 2){
               element.debit3= element2.debit
-  
+              element.from3 = element2.sub_name || ''
+
             }
             
           }
@@ -368,18 +310,25 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
             const element3 = fltTo[i];
             if(i == 0){
               element.credit= element3.credit
-  
+              element.to1 = element3.sub_name || ''
+              console.log('  j_ref:', element.j_ref, 'to1 set to:', element.to1, 'element3.sub_name:', element3.sub_name);
+
             }else if(i ==  1){
               element.credit2= element3.credit
-  
+              element.to2 = element3.sub_name || ''
+
             }else if(i == 2){
               element.credit3= element3.credit
+              element.to3 = element3.sub_name || ''
             }
             
           }
         }  
   
       })
+
+      console.log('=== prepareArray DEBUG END ===');
+      console.log('Final payArray sample:', this.payArray.length > 0 ? this.payArray[0] : 'empty');
 
       // Apply sorting and filtering after preparing data
       this.applyFilters();
@@ -472,12 +421,13 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
       this.jdetailsTo=[]
       this.loading = true
       this.api.getTopJTo(this.store_info.id , this.year.id).subscribe(data =>{
-         //console.log(data)
+         console.log('=== getTopJTo API Response ===', data);
          let res = data
          if(res['message'] != 'No record Found'){
-          this.jdetailsTo = res['data'] 
+          this.jdetailsTo = res['data']
+          console.log('jdetailsTo first item:', this.jdetailsTo.length > 0 ? this.jdetailsTo[0] : 'empty');
        //   this.jdetailsTo = this.jdetailsTo.filter(x=>x.ac_id == this.selectedAccount.id)
-        } 
+        }
         this.getTopJfrom() 
         //console.log(this.jdetailsTo)
        }, (err) => {
@@ -487,15 +437,16 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
      }
   
      getTopJfrom(){
-      this.jdetailsFrom=[] 
+      this.jdetailsFrom=[]
       this.api.getTopJfrom(this.store_info.id , this.year.id).subscribe(data =>{
-         //console.log(data)
+         console.log('=== getTopJfrom API Response ===', data);
          let res = data
          if(res['message'] != 'No record Found'){
           this.jdetailsFrom = res['data']
+          console.log('jdetailsFrom first item:', this.jdetailsFrom.length > 0 ? this.jdetailsFrom[0] : 'empty');
         //  this.jdetailsFrom = this.jdetailsFrom.filter(x=>x.ac_id == this.selectedAccount.id)
           //console.log('flt' ,this.jdetailsFrom)
-        } 
+        }
          this.prepareArray() 
        }, (err) => {
        //console.log(err);
@@ -662,14 +613,15 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
      }
   
    
-    async presentToast(msg,color?) {
+    async presentToast(translationKey: string, color?) {
+      const message = this.translate.instant(translationKey);
       const toast = await this.toast.create({
-        message: msg,
+        message: message,
         duration: 2000,
         color:color,
         cssClass:'cust_Toast',
         mode:'ios',
-        position:'top' 
+        position:'top'
       });
       toast.present();
     }
@@ -723,10 +675,31 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
     this.presentAlertConfirm(j_ref)
   }
 
-  editJournal(journalId) {
-    this.rout.navigate(['/edit-journal'], {
-      queryParams: { journalId: journalId }
+  async editTransaction(record: any) {
+    // Guard check - ensure required data is available
+    if (!this.store_info || !this.year || !this.user_info) {
+      await this.presentToast('COMMON.MESSAGE.WAIT_FOR_DATA_LOAD', 'warning');
+      return;
+    }
+
+    const modal = await this.modalController.create({
+      component: TransactionModalComponent,
+      componentProps: {
+        transaction: record,
+        store_id: this.store_info.id,
+        year_id: this.year.id,
+        user_id: this.user_info.id,
+        selectedDate: record.j_date
+      }
     });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    if (data && data.refresh) {
+      // Refresh the current view
+      this.search();
+    }
   }
   
     deleteSalesInvo(j_ref){ 
@@ -736,12 +709,12 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
        if (data['message'] != 'Post Not Deleted') {
        this.deleteJfrom(j_ref)
        }else{
-        this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+        this.presentToast('ACCOUNTING.EXPENSE_RECORD.MESSAGE.DELETE_FAILED' , 'danger')
         this.loadingController.dismiss()
        }
      },(err) => {
        //console.log(err);
-       this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+       this.presentToast('ACCOUNTING.EXPENSE_RECORD.MESSAGE.DELETE_FAILED' , 'danger')
        this.loadingController.dismiss()
       }) 
     }
@@ -755,7 +728,7 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
   
         
       }else{
-       this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+       this.presentToast('ACCOUNTING.EXPENSE_RECORD.MESSAGE.DELETE_FAILED' , 'danger')
        this.loadingController.dismiss()
       }
     },(err) => {
@@ -771,7 +744,7 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
     //console.log(data)
     if (data['message'] != 'Post Not Deleted') { 
         //console.log(' case ffff ' ,this.sales)
-        this.presentToast('تم الحذف بنجاح' , 'success')
+        this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY' , 'success')
         
         // Remove the deleted record from the payArray immediately
         this.payArray = this.payArray.filter(item => item.j_ref !== j_ref);
@@ -826,7 +799,7 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
   // Export functionality
   async exportToPDF(): Promise<void> {
     if (!this.payArray || this.payArray.length === 0) {
-      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      await this.presentToast('ACCOUNTING.EXPENSE_RECORD.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
       return;
     }
 
@@ -846,7 +819,7 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
 
   async exportToExcel(): Promise<void> {
     if (!this.payArray || this.payArray.length === 0) {
-      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      await this.presentToast('ACCOUNTING.EXPENSE_RECORD.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
       return;
     }
 
@@ -952,7 +925,7 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
   // Bulk delete confirmation and execution
   async bulkDelete() {
     if (this.selectedRecords.size === 0) {
-      this.presentToast('الرجاء اختيار سجل واحد على الأقل للحذف', 'warning');
+      this.presentToast('ACCOUNTING.EXPENSE_RECORD.MESSAGE.SELECT_AT_LEAST_ONE', 'warning');
       return;
     }
 
@@ -1016,15 +989,15 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
           // Force change detection
           this.cdr.detectChanges();
 
-          this.presentToast(`تم حذف ${response.deleted_count} سجل بنجاح`, 'success');
+          this.presentToast('ACCOUNTING.EXPENSE_RECORD.MESSAGE.BULK_DELETE_SUCCESS', 'success');
         } else {
-          this.presentToast(`فشل حذف السجلات: ${response.message}`, 'danger');
+          this.presentToast('ACCOUNTING.EXPENSE_RECORD.MESSAGE.BULK_DELETE_FAILED', 'danger');
         }
       },
       (error) => {
         this.loadingController.dismiss();
         console.error('Bulk delete error:', error);
-        this.presentToast('حدث خطأ أثناء حذف السجلات', 'danger');
+        this.presentToast('ACCOUNTING.EXPENSE_RECORD.MESSAGE.BULK_DELETE_ERROR', 'danger');
       }
     );
   }

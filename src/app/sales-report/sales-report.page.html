@@ -1,0 +1,341 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>{{ 'SALES.REPORT_TITLE' | translate }}</ion-title>
+    <ion-buttons slot="end">
+      <app-currency-switcher></app-currency-switcher>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" dir="rtl">
+  <ion-grid *ngIf="user_info && store_info" class="report-container">
+    <ion-row dir="rtl">
+      <ion-col size="12">
+        <!-- Filters Card -->
+        <ion-card class="ion-no-padding ion-no-margin">
+          <ion-grid class="ion-no-padding ion-no-margin">
+            <ion-row>
+              <ion-col size="12">
+                <ion-grid class="ion-no-padding ion-no-margin">
+                  <!-- First Row: Account Selector + Date Type Selection -->
+                  <ion-row dir="rtl">
+                    <ion-radio-group [(ngModel)]="radioVal" (ionChange)="radioChange($event)">
+                      <ion-grid class="ion-no-padding ion-no-margin">
+                        <ion-row>
+                          <!-- Customer Account Selector -->
+                          <ion-col size="4" dir="rtl">
+                            <app-account-selector
+                              accountType="customer"
+                              [placeholder]="'SALES.LABEL.SELECT_CUSTOMER' | translate"
+                              [label]="'SALES.LABEL.CUSTOMER_ACCOUNT' | translate"
+                              [store_info]="store_info"
+                              [year]="year"
+                              [showAddButton]="false"
+                              [(ngModel)]="selectedAccount"
+                              (accountSelected)="onAccountSelected($event)"
+                              (balanceLoaded)="onAccountBalanceLoaded($event)">
+                            </app-account-selector>
+                          </ion-col>
+
+                          <!-- Radio Options -->
+                          <ion-col class="ion-no-padding ion-no-margin">
+                            <ion-item lines="none">
+                              <ion-radio [value]="0" class="ion-margin-end"></ion-radio>
+                              <ion-label>{{ 'SALES.LABEL.RECENT_SALES' | translate }}</ion-label>
+                            </ion-item>
+                          </ion-col>
+                          <ion-col class="ion-no-padding ion-no-margin">
+                            <ion-item lines="none">
+                              <ion-radio [value]="1" class="ion-margin-end"></ion-radio>
+                              <ion-label>{{ 'SALES.LABEL.SEARCH_BY_DATE' | translate }}</ion-label>
+                            </ion-item>
+                          </ion-col>
+                          <ion-col class="ion-no-padding ion-no-margin">
+                            <ion-item lines="none">
+                              <ion-radio [value]="2" class="ion-margin-end"></ion-radio>
+                              <ion-label>{{ 'SALES.LABEL.SEARCH_BY_PERIOD' | translate }}</ion-label>
+                            </ion-item>
+                          </ion-col>
+                        </ion-row>
+                      </ion-grid>
+                    </ion-radio-group>
+                  </ion-row>
+
+                  <!-- Second Row: Date Inputs -->
+                  <ion-row dir="rtl">
+                    <ion-col size="4">
+                      <ion-item class="custInput" *ngIf="radioVal != 0">
+                        <input style="width:100%" [(ngModel)]="filters.dateFrom" type="date" id="startingDate" name="startingDate" />
+                      </ion-item>
+                    </ion-col>
+                    <ion-col size="4" *ngIf="radioVal == 2">
+                      <ion-item class="custInput">
+                        <input style="width:100%" [(ngModel)]="filters.dateTo" type="date" id="endDate" name="endDate" />
+                      </ion-item>
+                    </ion-col>
+                  </ion-row>
+
+                  <!-- Third Row: Additional Filters -->
+                  <ion-row dir="rtl">
+                    <!-- User Filter -->
+                    <ion-col size="3">
+                      <ion-item class="custInput">
+                        <ion-label position="floating">{{ 'SALES.LABEL.USER' | translate }}</ion-label>
+                        <ion-select [(ngModel)]="filters.userId" interface="popover">
+                          <ion-select-option [value]="null">{{ 'SALES.LABEL.ALL' | translate }}</ion-select-option>
+                          <ion-select-option *ngFor="let user of users" [value]="user.id">
+                            {{ user.full_name }}
+                          </ion-select-option>
+                        </ion-select>
+                      </ion-item>
+                    </ion-col>
+
+                    <!-- Item Filter -->
+                    <ion-col size="3">
+                      <ion-item class="custInput">
+                        <ion-label position="floating">{{ 'SALES.LABEL.ITEM' | translate }}</ion-label>
+                        <ion-select [(ngModel)]="filters.itemId" interface="popover">
+                          <ion-select-option [value]="null">{{ 'SALES.LABEL.ALL' | translate }}</ion-select-option>
+                          <ion-select-option *ngFor="let item of items" [value]="item.id">
+                            {{ item.item_name }}
+                          </ion-select-option>
+                        </ion-select>
+                      </ion-item>
+                    </ion-col>
+
+                    <!-- Amount Range -->
+                    <ion-col size="2">
+                      <ion-item class="custInput">
+                        <ion-label position="floating">{{ 'SALES.LABEL.MIN_AMOUNT' | translate }}</ion-label>
+                        <ion-input type="number" [(ngModel)]="filters.amountMin"></ion-input>
+                      </ion-item>
+                    </ion-col>
+
+                    <ion-col size="2">
+                      <ion-item class="custInput">
+                        <ion-label position="floating">{{ 'SALES.LABEL.MAX_AMOUNT' | translate }}</ion-label>
+                        <ion-input type="number" [(ngModel)]="filters.amountMax"></ion-input>
+                      </ion-item>
+                    </ion-col>
+
+                    <!-- Search Button -->
+                    <ion-col size="2" class="ion-text-end">
+                      <ion-item lines="none">
+                        <ion-buttons slot="end">
+                          <ion-button fill="outline" color="success" (click)="generateReport()" [disabled]="loading">
+                            <ion-icon name="search-outline" color="success"></ion-icon>
+                            <ion-label><ion-text color="dark">{{ 'SALES.LABEL.GENERATE_REPORT' | translate }}</ion-text></ion-label>
+                          </ion-button>
+                        </ion-buttons>
+                      </ion-item>
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-card>
+
+    <!-- Report Content (shown after generation) -->
+    <div *ngIf="reportGenerated" class="report-content">
+
+      <!-- Summary Cards -->
+      <ion-grid class="summary-section">
+        <ion-row>
+          <ion-col size="12" size-md="4">
+            <ion-card class="summary-card total-card">
+              <ion-card-header>
+                <div class="card-icon">
+                  <ion-icon name="cash-outline" color="success"></ion-icon>
+                </div>
+                <ion-card-subtitle>{{ 'SALES.LABEL.TOTAL_SALES' | translate }}</ion-card-subtitle>
+              </ion-card-header>
+              <ion-card-content>
+                <h2>{{ reportData.summary.total | currency:getCurrencySymbol() }}</h2>
+                <p>{{ reportData.summary.count }} {{ 'SALES.LABEL.INVOICE' | translate }}</p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <ion-col size="12" size-md="4">
+            <ion-card class="summary-card discount-card">
+              <ion-card-header>
+                <div class="card-icon">
+                  <ion-icon name="pricetag-outline" color="warning"></ion-icon>
+                </div>
+                <ion-card-subtitle>{{ 'SALES.LABEL.DISCOUNT' | translate }}</ion-card-subtitle>
+              </ion-card-header>
+              <ion-card-content>
+                <h2>{{ reportData.summary.discount | currency:getCurrencySymbol() }}</h2>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <ion-col size="12" size-md="4">
+            <ion-card class="summary-card net-card">
+              <ion-card-header>
+                <div class="card-icon">
+                  <ion-icon name="checkmark-circle-outline" color="primary"></ion-icon>
+                </div>
+                <ion-card-subtitle>{{ 'SALES.LABEL.NET' | translate }}</ion-card-subtitle>
+              </ion-card-header>
+              <ion-card-content>
+                <h2>{{ reportData.summary.net | currency:getCurrencySymbol() }}</h2>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+
+      <!-- Top Customers and Item Analytics Row -->
+      <ion-grid>
+        <ion-row>
+          <!-- Top Customers -->
+          <ion-col size="12" size-md="6">
+            <ion-card class="top-customers-card">
+              <ion-card-header>
+                <ion-card-title>
+                  <ion-icon name="podium-outline"></ion-icon>
+                  {{ 'SALES.LABEL.TOP_CUSTOMERS' | translate }}
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <ion-list *ngIf="reportData.topCustomers.length > 0">
+                  <ion-item *ngFor="let customer of reportData.topCustomers; let i = index">
+                    <ion-badge slot="start" [color]="i < 3 ? 'warning' : 'medium'">
+                      {{ i + 1 }}
+                    </ion-badge>
+                    <ion-label>
+                      <h2>{{ customer.customer_name }}</h2>
+                      <p>{{ customer.invoice_count }} {{ 'SALES.LABEL.INVOICE' | translate }}</p>
+                    </ion-label>
+                    <ion-note slot="end" class="amount-note">
+                      {{ customer.total_amount | currency:getCurrencySymbol() }}
+                    </ion-note>
+                  </ion-item>
+                </ion-list>
+                <p *ngIf="reportData.topCustomers.length === 0" class="empty-message">
+                  {{ 'SALES.LABEL.NO_DATA' | translate }}
+                </p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <!-- Item Analytics -->
+          <ion-col size="12" size-md="6">
+            <ion-card class="item-analytics-card">
+              <ion-card-header>
+                <ion-card-title>
+                  <ion-icon name="analytics-outline"></ion-icon>
+                  {{ 'SALES.LABEL.TOP_ITEMS' | translate }}
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <div class="table-responsive" *ngIf="reportData.itemAnalytics.length > 0">
+                  <table class="analytics-table">
+                    <thead>
+                      <tr>
+                        <th>{{ 'SALES.LABEL.ITEM' | translate }}</th>
+                        <th>{{ 'SALES.LABEL.QUANTITY' | translate }}</th>
+                        <th>{{ 'SALES.LABEL.REVENUE' | translate }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let item of reportData.itemAnalytics.slice(0, 10)">
+                        <td>{{ item.item_name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.revenue | currency:getCurrencySymbol() }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p *ngIf="reportData.itemAnalytics.length === 0" class="empty-message">
+                  {{ 'SALES.LABEL.NO_DATA' | translate }}
+                </p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+
+      <!-- Invoice List -->
+      <ion-card class="invoices-table-card">
+        <ion-card-header>
+          <div class="card-header-with-export">
+            <ion-card-title>
+              <ion-icon name="list-outline"></ion-icon>
+              {{ 'SALES.LABEL.INVOICE_LIST' | translate }} ({{ sortedInvoices.length }})
+            </ion-card-title>
+            <app-export-buttons
+              [disabled]="sortedInvoices.length === 0"
+              (exportPdf)="exportToPDF()"
+              (exportExcel)="exportToExcel()">
+            </app-export-buttons>
+          </div>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="table-responsive" *ngIf="sortedInvoices.length > 0">
+            <table class="invoices-table">
+              <thead>
+                <tr>
+                  <th (click)="sortBy('pay_ref')">
+                    {{ 'SALES.LABEL.INVOICE_NUMBER' | translate }}
+                    <ion-icon [name]="getSortIcon('pay_ref')"></ion-icon>
+                  </th>
+                  <th (click)="sortBy('pay_date')">
+                    {{ 'SALES.LABEL.DATE' | translate }}
+                    <ion-icon [name]="getSortIcon('pay_date')"></ion-icon>
+                  </th>
+                  <th (click)="sortBy('sub_name')">
+                    {{ 'SALES.LABEL.CUSTOMER' | translate }}
+                    <ion-icon [name]="getSortIcon('sub_name')"></ion-icon>
+                  </th>
+                  <th (click)="sortBy('tot_pr')">
+                    {{ 'SALES.LABEL.AMOUNT' | translate }}
+                    <ion-icon [name]="getSortIcon('tot_pr')"></ion-icon>
+                  </th>
+                  <th (click)="sortBy('discount')">
+                    {{ 'SALES.LABEL.DISCOUNT' | translate }}
+                    <ion-icon [name]="getSortIcon('discount')"></ion-icon>
+                  </th>
+                  <th>{{ 'SALES.LABEL.NET' | translate }}</th>
+                  <th (click)="sortBy('user_name')">
+                    {{ 'SALES.LABEL.USER' | translate }}
+                    <ion-icon [name]="getSortIcon('user_name')"></ion-icon>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let invoice of sortedInvoices">
+                  <td>{{ invoice.pay_ref }}</td>
+                  <td>{{ invoice.pay_date }}</td>
+                  <td>{{ invoice.sub_name }}</td>
+                  <td>{{ invoice.tot_pr | currency:getCurrencySymbol() }}</td>
+                  <td>{{ invoice.discount | currency:getCurrencySymbol() }}</td>
+                  <td>{{ invoice.net_amount | currency:getCurrencySymbol() }}</td>
+                  <td>{{ invoice.user_name }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p *ngIf="sortedInvoices.length === 0" class="empty-message">
+            {{ 'SALES.LABEL.NO_INVOICES' | translate }}
+          </p>
+        </ion-card-content>
+      </ion-card>
+
+    </div>
+
+      <!-- Empty State (before report generation) -->
+      <div *ngIf="!reportGenerated && !loading" class="empty-state">
+        <ion-icon name="document-text-outline"></ion-icon>
+        <h2>{{ 'SALES.LABEL.EMPTY_STATE' | translate }}</h2>
+      </div>
+
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

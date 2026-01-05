@@ -3,6 +3,7 @@ import { ServicesService } from "../stockService/services.service";
 import { Observable, Subscription } from 'rxjs';
 import { AlertController, Platform ,IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { DatePipe ,Location} from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { Storage } from '@ionic/storage';
 import { AuthServiceService } from '../auth/auth-service.service';
 import { PrintModalPage } from '../print-modal/print-modal.page';
@@ -119,7 +120,7 @@ export class SalesPage implements OnInit, OnDestroy {
   isUpdating: boolean = false;
   currentLoadingMessage: string = '';
   private currentLoader: any = null;
-  constructor(private rout : Router ,private platform:Platform,private behavApi:StockServiceService ,private _location: Location, private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private accountCommunicationService: AccountCommunicationService, private cdr: ChangeDetectorRef, private currencyService: CurrencyService) {
+  constructor(private rout : Router ,private platform:Platform,private behavApi:StockServiceService ,private _location: Location, private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private accountCommunicationService: AccountCommunicationService, private cdr: ChangeDetectorRef, private currencyService: CurrencyService, private translate: TranslateService) {
   this.selectedAccount = {id:"",ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",phone:"",address:"",currentCustumerStatus:0};
     this.route.queryParams.subscribe(params => {
       
@@ -932,9 +933,10 @@ this.getTotal()
 this.updateSortedList()
 }
 
-async presentToast(msg,color?) {
+async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
   const toast = await this.toast.create({
-    message: msg,
+    message: message,
     duration: 2000,
     color:color,
     cssClass:'cust_Toast',
@@ -1106,7 +1108,7 @@ saveIntial(){
     }) 
       //console.log(this.printArr)
       this.presentAlertConfirm()
-      this.presentToast('تم الحفظ بنجاح', 'success')
+      this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
       // Use the new reset method for consistency
       // Note: resetPageAfterInvoice will be called after print dialog
       // No need to call it here as it will be handled by presentAlertConfirm
@@ -1158,7 +1160,7 @@ deleteInitial(){
      this.initialInvoices = this.initialInvoices.filter(x=>x['payInvo'].pay_ref != this.payInvo.pay_ref) 
     } 
      this.storage.set('initialInvoices', this.initialInvoices).then((response) => { 
-      this.presentToast('تم الحذف بنجاح' , 'success') 
+      this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success') 
       this.status = 'new'
       this.prepareInvo()
       });    
@@ -1193,7 +1195,7 @@ async deleteSalesInvoInit(invoiceData?: { pay_id: any, pay_ref: any }){
           await this.hideLoading();
           
           // Show success message for all cases
-          this.presentToast('تم الحذف بنجاح' , 'success');
+          this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success');
           
           if(this.status != 'toFinal'){
             this.prepareInvo();
@@ -1204,13 +1206,13 @@ async deleteSalesInvoInit(invoiceData?: { pay_id: any, pay_ref: any }){
           } 
         } else {
           await this.hideLoading();
-          this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger');
+          this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger');
         }
       },
       async (err) => {
         console.log('Delete error:', err);
         await this.hideLoading();
-        this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger');
+        this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger');
       }
     );
   } catch (error) {
@@ -1226,15 +1228,15 @@ deleteSalesitemListInit(){
   //console.log(data)
   if (data['message'] != 'Post Not Deleted') { 
     if(this.status != 'toFinal'){
-      this.presentToast('تم الحذف بنجاح' , 'success') 
+      this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success') 
      this.prepareInvo()
     } 
   }else{
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   }
 },(err) => {
   //console.log(err);
-  this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   
  },() => {
    this.loadingController.dismiss()
@@ -1355,7 +1357,7 @@ deleteSalesitemListInit(){
          if (data['message'] != 'Post Not Created') { 
           this.logHistoryArr = []
           this.presentAlertConfirm() 
-          this.presentToast('تم الحفظ بنجاح', 'success')
+          this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
           // this.getStockItems()
          }else{
            this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري', 'danger') 
@@ -1641,7 +1643,7 @@ deleteSalesitemListInit(){
 
   // Shared success handler for optimized save process
   private handleSaveSuccess() {
-    this.presentToast('تم الحفظ بنجاح', 'success');
+    this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success');
 
     // IMPORTANT: Save original invoice data BEFORE any operations that might reset payInvo
     // This ensures we have the correct pay_id and pay_ref for deleting the initial invoice
@@ -1693,7 +1695,7 @@ deleteSalesitemListInit(){
   saveitemList(){  
     this.api.saveSalesitemList(this.itemList).subscribe(data=>{ 
       //console.log(data)  
-      this.presentToast('تم الحفظ بنجاح' , 'success') 
+      this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success') 
       this.printArr = []
       
       this.printArr.push({
@@ -1707,13 +1709,13 @@ deleteSalesitemListInit(){
       }) 
         //console.log(this.printArr)
         this.presentAlertConfirm()
-        this.presentToast('تم الحفظ بنجاح', 'success')
+        this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
         this.prepareInvo()
         this.status = 'new'
  
     }, (err) => {
       //console.log(err);
-      this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
     }, () => {
       this.loadingController.dismiss()
     }
@@ -1749,7 +1751,7 @@ deleteSalesitemListInit(){
        async (err) => {
          console.log('Save items error:', err);
          await this.hideLoading();
-         this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger');
+         this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger');
        }
      );
    } catch (error) {

@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>فاتورة مبيعات</ion-title>
+    <ion-title>{{ 'SALES.POS_TITLE' | translate }}</ion-title>
     <ion-buttons  slot="end">  
       <div class="poRel">
         <div class="posAb noti">
@@ -20,8 +20,8 @@
 
     <ion-button fill="clear" class="ion-margin"  (click)="changeMode()"  > 
       <ion-label><ion-icon name="wifi-outline" [color]="color" style="font-size:20px"></ion-icon></ion-label> 
-      <ion-label><ion-text color="dark"  *ngIf="color == 'primary'">متصل</ion-text></ion-label>   
-      <ion-label><ion-text  color="dark" *ngIf="color == 'dark'">غير متصل</ion-text></ion-label>
+      <ion-label><ion-text color="dark"  *ngIf="color == 'primary'">{{ 'SALES.LABEL.CONNECTED' | translate }}</ion-text></ion-label>
+      <ion-label><ion-text  color="dark" *ngIf="color == 'dark'">{{ 'SALES.LABEL.DISCONNECTED' | translate }}</ion-text></ion-label>
     </ion-button> 
     </ion-buttons> 
   
@@ -161,12 +161,12 @@
           <ion-col size="5">
             <ion-card class="items-container2">
               <table class="table">
-                <tr>  
+                <tr>
                   <th></th>
-                  <th>الصنف</th>
-                  <th>الكمية</th>
-                  <th>سعر </th>
-                  <th>المجموع</th>
+                  <th>{{ 'SALES.LABEL.ITEM' | translate }}</th>
+                  <th>{{ 'COMMON.LABEL.QUANTITY' | translate }}</th>
+                  <th>{{ 'COMMON.LABEL.PRICE' | translate }}</th>
+                  <th>{{ 'COMMON.LABEL.TOTAL' | translate }}</th>
                 </tr>
                 <tr *ngFor="let item of itemList ; let i = index" (dblclick)="qtyClick(i)">
                   <td>
@@ -207,24 +207,24 @@
               <ion-grid>
                 <ion-row>
                   <ion-col size="12" class="ion-margin-top">
-                    <ion-label class="ion-padding"><strong>صافي المبلغ  :</strong>  <ion-text>{{payInvo.tot_pr}} </ion-text></ion-label>
-                  
+                    <ion-label class="ion-padding"><strong>{{ 'SALES.LABEL.NET_AMOUNT' | translate }}  :</strong>  <ion-text>{{payInvo.tot_pr}} </ion-text></ion-label>
+
                   </ion-col>
-                  
+
                   <ion-col size="12" class="ion-margin-top">
-                    <ion-label class="ion-padding"><strong>الخصــم :</strong>  <ion-text>{{payInvo.discount}} </ion-text></ion-label>
-                    
+                    <ion-label class="ion-padding"><strong>{{ 'COMMON.LABEL.DISCOUNT' | translate }} :</strong>  <ion-text>{{payInvo.discount}} </ion-text></ion-label>
+
                   </ion-col>
 
                   <ion-col size="12"  class="ion-margin-top">
-                    <ion-label class="ion-padding"><strong>الضريبة : </strong>  <ion-text>{{payInvo.taxTot}} </ion-text></ion-label>
-                    
+                    <ion-label class="ion-padding"><strong>{{ 'SALES.LABEL.TAX' | translate }} : </strong>  <ion-text>{{payInvo.taxTot}} </ion-text></ion-label>
+
                   </ion-col>
 
-                 
+
                   <ion-col size="12"   class="ion-margin-top">
-                    <ion-label class="ion-padding"><strong>  صافي المبلغ مع الضريبة  :</strong> <ion-text>{{taxAll}} </ion-text></ion-label>
-                    
+                    <ion-label class="ion-padding"><strong>  {{ 'SALES.LABEL.NET_AMOUNT_WITH_TAX' | translate }}  :</strong> <ion-text>{{taxAll}} </ion-text></ion-label>
+
                   </ion-col>
                 </ion-row>
               </ion-grid>
@@ -242,19 +242,19 @@
         <ion-grid>
           <ion-row class="ion-justify-content-center">
             <ion-col size="2">
-              <ion-label class="ion-padding"><strong>   الخصــم:</strong></ion-label>
+              <ion-label class="ion-padding"><strong>   {{ 'COMMON.LABEL.DISCOUNT' | translate }}:</strong></ion-label>
               <ion-item class="custInput">
                 <ion-input [(ngModel)]="payInvo.discount" (ionChange)="discountChange($event)"></ion-input>
               </ion-item>
             </ion-col>
             <ion-col size="2">
-              <ion-label class="ion-padding"><strong> المستلم نقدا </strong></ion-label>
+              <ion-label class="ion-padding"><strong> {{ 'SALES.LABEL.CASH_RECEIVED' | translate }} </strong></ion-label>
               <ion-item class="custInput">
                 <ion-input [(ngModel)]="payInvo.pay" (ionChange)="payChange($event)"></ion-input>
               </ion-item>
             </ion-col>
             <ion-col size="2">
-              <ion-label class="ion-padding"><strong>المتبقي </strong></ion-label>
+              <ion-label class="ion-padding"><strong>{{ 'SALES.LABEL.REMAINING' | translate }} </strong></ion-label>
               <ion-item class="custInput">
                 <ion-input [(ngModel)]="payInvo.changee" [readonly]="true"></ion-input>
               </ion-item>
@@ -263,7 +263,7 @@
           <ion-row class="ion-justify-content-center">
             <ion-col size="5">
               <ion-button expand="block" routerDirection="root" color="success" (click)="save()">
-                <ion-label class="ion-text-center"> حفــظ</ion-label>
+                <ion-label class="ion-text-center"> {{ 'COMMON.BUTTON.SAVE' | translate }}</ion-label>
               </ion-button>
             </ion-col> 
             <ion-col size="5">

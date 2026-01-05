@@ -3,11 +3,11 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>سجل اوامر الشراء</ion-title>
-    <ion-button fill="clear" class="ion-margin"  (click)="changeMode()" slot="end"> 
-      <ion-label><ion-icon name="wifi-outline" [color]="color" style="font-size:20px"></ion-icon></ion-label> 
-      <ion-label><ion-text color="dark"  *ngIf="color == 'primary'">متصل</ion-text></ion-label>   
-      <ion-label><ion-text  color="dark" *ngIf="color == 'dark'">غير متصل</ion-text></ion-label>   
+    <ion-title>{{ 'PURCHASE.ORDER_RECORD_TITLE' | translate }}</ion-title>
+    <ion-button fill="clear" class="ion-margin"  (click)="changeMode()" slot="end">
+      <ion-label><ion-icon name="wifi-outline" [color]="color" style="font-size:20px"></ion-icon></ion-label>
+      <ion-label><ion-text color="dark"  *ngIf="color == 'primary'">{{ 'SALES.LABEL.CONNECTED' | translate }}</ion-text></ion-label>
+      <ion-label><ion-text  color="dark" *ngIf="color == 'dark'">{{ 'SALES.LABEL.DISCONNECTED' | translate }}</ion-text></ion-label>
   </ion-button>
   </ion-toolbar>
 </ion-header>
@@ -45,7 +45,7 @@
                             <ion-col class="ion-no-padding ion-no-margin">
                               <ion-item lines="none" >
                                 <ion-radio [value]="0" class="ion-margin-end"></ion-radio>
-                                <ion-label>طلبات شراء حديثة</ion-label> 
+                                <ion-label>{{ 'PURCHASE.LABEL.RECENT_PURCHASE_ORDERS' | translate }}</ion-label>
                               </ion-item>
                             </ion-col>
                             <!-- <ion-col class="ion-no-padding ion-no-margin">

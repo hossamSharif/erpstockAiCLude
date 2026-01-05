@@ -3,32 +3,19 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>إدارة التصنيفات</ion-title>
+    <ion-title>{{ 'CATEGORIES.MANAGEMENT_TITLE' | translate }}</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="toggleAddForm()">
         <ion-icon name="add"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-  <!-- Category Type Segment -->
-  <ion-toolbar>
-    <ion-segment [(ngModel)]="categoryType" (ionChange)="onCategoryTypeChange($event)">
-      <ion-segment-button value="items">
-        <ion-icon name="cube-outline"></ion-icon>
-        <ion-label>تصنيفات الأصناف</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="expenses">
-        <ion-icon name="wallet-outline"></ion-icon>
-        <ion-label>تصنيفات المصروفات</ion-label>
-      </ion-segment-button>
-    </ion-segment>
-  </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">إدارة التصنيفات</ion-title>
+      <ion-title size="large">{{ 'CATEGORIES.MANAGEMENT_TITLE' | translate }}</ion-title>
     </ion-toolbar>
   </ion-header>
 
@@ -36,37 +23,34 @@
   <ion-card *ngIf="showAddForm">
     <ion-card-header>
       <ion-card-title>
-        {{ editingCategory ? 'تعديل التصنيف' : 'إضافة تصنيف جديد' }}
-        <ion-badge [color]="categoryType === 'items' ? 'primary' : 'warning'" style="margin-right: 8px;">
-          {{ categoryType === 'items' ? 'أصناف' : 'مصروفات' }}
-        </ion-badge>
+        {{ editingCategory ? ('CATEGORIES.EDIT_TITLE' | translate) : ('CATEGORIES.ADD_TITLE' | translate) }}
       </ion-card-title>
     </ion-card-header>
     <ion-card-content>
       <ion-item>
-        <ion-label position="stacked">اسم التصنيف *</ion-label>
-        <ion-input [(ngModel)]="newCategory.category_name" placeholder="اسم التصنيف"></ion-input>
+        <ion-label position="stacked">{{ 'CATEGORIES.LABEL.CATEGORY_NAME' | translate }} *</ion-label>
+        <ion-input [(ngModel)]="newCategory.category_name" [placeholder]="'CATEGORIES.PLACEHOLDER.CATEGORY_NAME' | translate"></ion-input>
       </ion-item>
 
       <ion-item>
-        <ion-label position="stacked">وصف التصنيف</ion-label>
-        <ion-textarea [(ngModel)]="newCategory.category_desc" placeholder="وصف التصنيف (اختياري)"></ion-textarea>
+        <ion-label position="stacked">{{ 'CATEGORIES.LABEL.CATEGORY_DESCRIPTION' | translate }}</ion-label>
+        <ion-textarea [(ngModel)]="newCategory.category_desc" [placeholder]="'CATEGORIES.PLACEHOLDER.CATEGORY_DESCRIPTION' | translate"></ion-textarea>
       </ion-item>
 
       <div class="ion-padding-top">
         <ion-button
           expand="block"
-          [color]="categoryType === 'items' ? 'primary' : 'warning'"
+          color="primary"
           (click)="editingCategory ? updateCategory() : addCategory()"
           [disabled]="!newCategory.category_name?.trim()">
-          {{ editingCategory ? 'تحديث' : 'إضافة' }}
+          {{ editingCategory ? ('CATEGORIES.BUTTON.UPDATE' | translate) : ('CATEGORIES.BUTTON.ADD' | translate) }}
         </ion-button>
 
         <ion-button
           expand="block"
           fill="outline"
           (click)="resetForm()">
-          إلغاء
+          {{ 'CATEGORIES.BUTTON.CANCEL' | translate }}
         </ion-button>
       </div>
     </ion-card-content>
@@ -74,16 +58,14 @@
 
   <!-- Categories List -->
   <div class="ion-padding">
-    <!-- Item Categories Section -->
-    <ng-container *ngIf="categoryType === 'items'">
-      <ion-card *ngFor="let category of categories" class="category-card">
+    <ion-card *ngFor="let category of categories" class="category-card">
         <ion-card-content>
           <div class="category-header">
             <div>
               <h3>{{ category.category_name }}</h3>
               <p *ngIf="category.category_desc">{{ category.category_desc }}</p>
               <ion-text color="medium">
-                <small>تاريخ الإنشاء: {{ category.created_at | date:'short':'ar' }}</small>
+                <small>{{ 'CATEGORIES.LABEL.CREATED_DATE' | translate }}: {{ category.created_at | date:'short':'ar' }}</small>
               </ion-text>
             </div>
 
@@ -112,11 +94,11 @@
       <ion-card *ngIf="categories.length === 0">
         <ion-card-content class="ion-text-center">
           <ion-icon name="folder-open-outline" style="font-size: 64px; color: var(--ion-color-medium);"></ion-icon>
-          <h3>لا توجد تصنيفات للأصناف</h3>
-          <p>ابدأ بإضافة التصنيف الأول للأصناف</p>
+          <h3>{{ 'CATEGORIES.MESSAGE.NO_CATEGORIES' | translate }}</h3>
+          <p>{{ 'CATEGORIES.MESSAGE.EMPTY_STATE' | translate }}</p>
           <ion-button fill="outline" (click)="toggleAddForm()">
             <ion-icon name="add" slot="start"></ion-icon>
-            إضافة تصنيف
+            {{ 'CATEGORIES.BUTTON.ADD_CATEGORY' | translate }}
           </ion-button>
         </ion-card-content>
       </ion-card>
@@ -126,14 +108,14 @@
         <ion-card-header>
           <ion-card-title>
             <ion-icon name="globe-outline" slot="start"></ion-icon>
-            تحديد القسم
+            {{ 'CATEGORIES.LABEL.ENDPOINT_SECTION' | translate }}
           </ion-card-title>
           <ion-card-subtitle>
-            اختر التصنيف الذي يحتوي على عنوان نقطة الاتصال للنظام
+            {{ 'CATEGORIES.MESSAGE.ENDPOINT_DESCRIPTION' | translate }}
           </ion-card-subtitle>
         </ion-card-header>
         <ion-card-content>
-          <ion-label class="column-label">اختر التصنيف</ion-label>
+          <ion-label class="column-label">{{ 'CATEGORIES.LABEL.SELECT_CATEGORY' | translate }}</ion-label>
           <div class="category-section">
             <ion-segment
               [(ngModel)]="selectedEndpointCategoryId"
@@ -151,17 +133,17 @@
           <ion-item *ngIf="selectedEndpointCategoryId && currentEndpoint">
             <ion-label color="success">
               <ion-icon name="checkmark-circle" slot="start" color="success"></ion-icon>
-              <h3>نقطة الاتصال النشطة</h3>
-              <p><strong>التصنيف:</strong> {{ getSelectedEndpointName() }}</p>
-              <p><strong>العنوان:</strong> {{ getCurrentEndpoint() }}</p>
+              <h3>{{ 'CATEGORIES.LABEL.ACTIVE_ENDPOINT' | translate }}</h3>
+              <p><strong>{{ 'CATEGORIES.LABEL.CATEGORY_LABEL' | translate }}:</strong> {{ getSelectedEndpointName() }}</p>
+              <p><strong>{{ 'CATEGORIES.LABEL.ADDRESS' | translate }}:</strong> {{ getCurrentEndpoint() }}</p>
             </ion-label>
           </ion-item>
 
           <ion-item *ngIf="!selectedEndpointCategoryId">
             <ion-label color="warning">
               <ion-icon name="warning" slot="start" color="warning"></ion-icon>
-              <h3>لم يتم تحديد نقطة اتصال</h3>
-              <p>سيتم استخدام نقطة الاتصال الافتراضية</p>
+              <h3>{{ 'CATEGORIES.MESSAGE.NO_ENDPOINT_SELECTED' | translate }}</h3>
+              <p>{{ 'CATEGORIES.MESSAGE.DEFAULT_ENDPOINT' | translate }}</p>
             </ion-label>
           </ion-item>
 
@@ -180,70 +162,5 @@
           </ion-note>
         </ion-card-content>
       </ion-card>
-    </ng-container>
-
-    <!-- Expense Categories Section -->
-    <ng-container *ngIf="categoryType === 'expenses'">
-      <ion-card *ngFor="let category of expenseCategories" class="category-card expense-category">
-        <ion-card-content>
-          <div class="category-header">
-            <div>
-              <h3>
-                <ion-icon name="wallet-outline" color="warning" style="margin-left: 8px;"></ion-icon>
-                {{ category.category_name }}
-              </h3>
-              <p *ngIf="category.category_desc">{{ category.category_desc }}</p>
-              <ion-text color="medium">
-                <small>تاريخ الإنشاء: {{ category.dateCreated | date:'short':'ar' }}</small>
-              </ion-text>
-            </div>
-
-            <div class="category-actions">
-              <ion-button
-                fill="clear"
-                size="small"
-                color="warning"
-                (click)="editExpenseCategory(category)">
-                <ion-icon name="create"></ion-icon>
-              </ion-button>
-
-              <ion-button
-                fill="clear"
-                size="small"
-                color="danger"
-                (click)="deleteExpenseCategory(category)">
-                <ion-icon name="trash"></ion-icon>
-              </ion-button>
-            </div>
-          </div>
-        </ion-card-content>
-      </ion-card>
-
-      <!-- Empty State for Expenses -->
-      <ion-card *ngIf="expenseCategories.length === 0">
-        <ion-card-content class="ion-text-center">
-          <ion-icon name="wallet-outline" style="font-size: 64px; color: var(--ion-color-warning);"></ion-icon>
-          <h3>لا توجد تصنيفات للمصروفات</h3>
-          <p>ابدأ بإضافة تصنيف للمصروفات (مثل: إيجار، رواتب، صيانة، الخ)</p>
-          <ion-button fill="outline" color="warning" (click)="toggleAddForm()">
-            <ion-icon name="add" slot="start"></ion-icon>
-            إضافة تصنيف مصروفات
-          </ion-button>
-        </ion-card-content>
-      </ion-card>
-
-      <!-- Expense Categories Info -->
-      <ion-card class="info-card" *ngIf="expenseCategories.length > 0">
-        <ion-card-content>
-          <ion-item lines="none">
-            <ion-icon name="information-circle" slot="start" color="primary"></ion-icon>
-            <ion-label class="ion-text-wrap">
-              <p><strong>تصنيفات المصروفات</strong> تستخدم لتنظيم وتصنيف المصروفات في صفحة إضافة المصروفات.</p>
-              <p>أمثلة: إيجارات، رواتب، مصاريف تشغيل، صيانة، مواصلات، الخ.</p>
-            </ion-label>
-          </ion-item>
-        </ion-card-content>
-      </ion-card>
-    </ng-container>
   </div>
 </ion-content>

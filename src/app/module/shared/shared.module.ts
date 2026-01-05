@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
@@ -14,7 +15,8 @@ import { InvoiceJournalEntryComponent } from 'src/app/component/invoice-journal-
 import { ExportButtonsComponent } from '../../component/export-buttons/export-buttons.component';
 import { CurrencySwitcherComponent } from '../../components/currency-switcher/currency-switcher.component';
 import { CurrencyRateModalComponent } from '../../components/currency-rate-modal/currency-rate-modal.component';
-import { CurrencyDisplayPipe } from '../../pipes/currency-display.pipe';
+import { TransactionModalComponent } from '../../components/transaction-modal/transaction-modal.component';
+import { PipesModule } from '../../pipes/pipes.module';
 
 
 @NgModule({
@@ -30,19 +32,21 @@ import { CurrencyDisplayPipe } from '../../pipes/currency-display.pipe';
     ExportButtonsComponent,
     CurrencySwitcherComponent,
     CurrencyRateModalComponent,
-    CurrencyDisplayPipe
+    TransactionModalComponent
   ],
   imports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     IonicModule,
-    IonicStorageModule
+    IonicStorageModule,
+    PipesModule
   ],
   providers: [
     DatePipe
   ],
   exports: [
+    TranslateModule,
     ItemSelectorComponent,
     FilterPipe,
     EnhancedItemSelectorComponent,
@@ -54,7 +58,8 @@ import { CurrencyDisplayPipe } from '../../pipes/currency-display.pipe';
     ExportButtonsComponent,
     CurrencySwitcherComponent,
     CurrencyRateModalComponent,
-    CurrencyDisplayPipe
+    TransactionModalComponent,
+    PipesModule
 
   ]
 })

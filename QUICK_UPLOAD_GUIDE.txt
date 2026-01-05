@@ -1,0 +1,192 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    🚀 QUICK UPLOAD GUIDE - AI BACKEND                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ERROR YOU'RE SEEING:                                                        │
+│ "Failed to open stream: No such file or directory"                         │
+│ "../../utils/Encryption.php"                                                │
+│                                                                             │
+│ CAUSE: Missing backend folders on server                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ WHAT YOU NEED TO UPLOAD (3 FOLDERS + 1 FILE)                                ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📁 SERVER PATH: /home/gvstechn/erp.gvstech.net/myapiAi/
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ FOLDER 1: utils/ (4 files) 🔴 CRITICAL                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+   LOCAL:  myapi/myapi/utils/
+   SERVER: /home/gvstechn/erp.gvstech.net/myapiAi/utils/
+
+   Upload these files:
+   ✓ Encryption.php      (4.8 KB)
+   ✓ PDFProcessor.php    (10 KB)
+   ✓ DataMatcher.php     (11 KB)
+   ✓ QueryBuilder.php    (18.8 KB)
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ FOLDER 2: models/ (4 NEW files) 🔴 CRITICAL                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+   LOCAL:  myapi/myapi/models/
+   SERVER: /home/gvstechn/erp.gvstech.net/myapiAi/models/
+
+   Upload ONLY these NEW files (don't replace existing models):
+   ✓ AiInvoice.php       (12.8 KB)
+   ✓ AiChatHistory.php   (7.6 KB)
+   ✓ AiChatSession.php   (9.7 KB)
+   ✓ OpenAIService.php   (21.4 KB)
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ FOLDER 3: api/ai_invoices/ (1 file) 🔴 CRITICAL                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+   LOCAL:  myapi/myapi/api/ai_invoices/
+   SERVER: /home/gvstechn/erp.gvstech.net/myapiAi/api/ai_invoices/
+
+   Upload this file:
+   ✓ read.php
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ FILE: config/encryption_key.php 🔴 SECURITY CRITICAL                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+   ⚠️  DO NOT UPLOAD THE CURRENT FILE! It contains API key in plain text!
+
+   Instead:
+   1. Generate encryption key:
+      php -r "echo base64_encode(openssl_random_pseudo_bytes(32));"
+
+   2. Create new file on server with generated key:
+      /home/gvstechn/erp.gvstech.net/myapiAi/config/encryption_key.php
+
+      Content:
+      <?php
+      return 'YOUR_GENERATED_KEY_HERE';
+      ?>
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ STEP-BY-STEP UPLOAD (cPanel File Manager)                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+1. Login to cPanel → Click "File Manager"
+
+2. Navigate to: /home/gvstechn/erp.gvstech.net/myapiAi/
+
+3. Create folders (if they don't exist):
+   - Click "New Folder" → Name: "utils"
+   - Check if "models" folder exists (it should)
+   - Navigate to "api" folder → Create "ai_invoices" subfolder
+   - Navigate back to myapiAi → Create "uploads" → Create "ai_invoices" inside
+
+4. Upload files:
+
+   A. Upload to utils/:
+      - Click "Upload" button
+      - Select all 4 files from myapi/myapi/utils/ on your computer
+      - Upload them into /myapiAi/utils/
+
+   B. Upload to models/:
+      - Navigate to /myapiAi/models/
+      - Upload the 4 AI model files (AiInvoice, AiChatHistory, etc.)
+      - Leave existing model files untouched
+
+   C. Upload to api/ai_invoices/:
+      - Navigate to /myapiAi/api/ai_invoices/
+      - Upload read.php
+
+5. Create encryption_key.php:
+   - Navigate to /myapiAi/config/
+   - Click "New File" → Name: "encryption_key.php"
+   - Right-click file → "Edit"
+   - Paste the content with your generated key
+   - Save
+
+6. Set permissions:
+   - Right-click encryption_key.php → "Change Permissions" → Set to 600
+   - Right-click uploads folder → "Change Permissions" → Set to 755
+   - Right-click uploads/ai_invoices → "Change Permissions" → Set to 755
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ VERIFICATION (After Upload)                                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Check your server structure looks like this:
+
+/home/gvstechn/erp.gvstech.net/myapiAi/
+├── api/
+│   ├── ai_assistant/
+│   │   ├── chat.php
+│   │   ├── createSession.php
+│   │   ├── extractPDF.php
+│   │   ├── getHistory.php
+│   │   ├── getSessions.php
+│   │   └── uploadPDF.php
+│   └── ai_invoices/
+│       └── read.php ⬅️ NEW
+├── config/
+│   ├── Database.php
+│   └── encryption_key.php ⬅️ NEW
+├── models/
+│   ├── AiChatHistory.php ⬅️ NEW
+│   ├── AiChatSession.php ⬅️ NEW
+│   ├── AiInvoice.php ⬅️ NEW
+│   ├── OpenAIService.php ⬅️ NEW
+│   └── [other existing models...]
+├── utils/
+│   ├── DataMatcher.php ⬅️ NEW
+│   ├── Encryption.php ⬅️ NEW
+│   ├── PDFProcessor.php ⬅️ NEW
+│   └── QueryBuilder.php ⬅️ NEW
+└── uploads/
+    └── ai_invoices/ ⬅️ NEW
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TEST AFTER UPLOAD                                                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Open browser and test:
+https://erp.gvstech.net/myapiAi/api/ai_assistant/createSession.php
+
+Or use curl:
+curl -X POST https://erp.gvstech.net/myapiAi/api/ai_assistant/createSession.php \
+  -H "Content-Type: application/json" \
+  -d '{"store_id": 1, "user_id": 1, "year_id": 3, "session_title": "Test"}'
+
+✅ SUCCESS Response:
+{
+  "success": true,
+  "message": "Session created successfully",
+  "data": {
+    "session_id": "sess_...",
+    "session_title": "Test"
+  }
+}
+
+❌ If still failing:
+- Check error log: /home/gvstechn/erp.gvstech.net/logs/error_log
+- Verify all folders/files are in correct locations
+- Check file permissions (PHP files: 644, folders: 755)
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ FILES TO UPLOAD SUMMARY                                                     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Total: 9 PHP files + 1 config file + 2 folders
+
+✓ utils/Encryption.php
+✓ utils/PDFProcessor.php
+✓ utils/DataMatcher.php
+✓ utils/QueryBuilder.php
+✓ models/AiInvoice.php
+✓ models/AiChatHistory.php
+✓ models/AiChatSession.php
+✓ models/OpenAIService.php
+✓ api/ai_invoices/read.php
+✓ config/encryption_key.php (CREATE NEW, don't upload existing!)
+✓ uploads/ai_invoices/ (empty folder)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Need help? Check UPLOAD_INSTRUCTIONS.md for detailed steps.

@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button class="glass-menu-button"></ion-menu-button>
     </ion-buttons>
-    <ion-title class="glass-title">كشف حساب</ion-title>
+    <ion-title class="glass-title">{{ 'ACCOUNTING.STATEMENT.TITLE' | translate }}</ion-title>
     <ion-buttons slot="end">
       <app-currency-switcher></app-currency-switcher>
       <ion-button fill="clear" (click)="refresh()">
@@ -17,7 +17,7 @@
   <!-- Loading State -->
   <div *ngIf="!user_info || !store_info" class="loading-container">
     <ion-spinner name="crescent"></ion-spinner>
-    <p class="loading-text">جاري التحميل...</p>
+    <p class="loading-text">{{ 'COMMON.MESSAGE.LOADING' | translate }}</p>
   </div>
 
   <!-- Main Content -->
@@ -31,30 +31,28 @@
           <div class="main-row">
             <!-- Account Selection -->
             <div class="account-section">
-              <ion-label class="field-label">الحساب</ion-label>
-              <div class="input-with-icon" (click)="presentAccountPopover($event)">
-                <ion-input 
-                  readonly="true" 
-                  [value]="selectedAccount.sub_name || 'اختر الحساب'" 
-                  placeholder="اختر الحساب"
-                  class="mini-input readonly-input">
-                </ion-input>
-                <ion-icon name="chevron-down-outline" class="dropdown-icon"></ion-icon>
-              </div>
+              <app-account-selector
+                [store_info]="store_info"
+                [year]="year"
+                [label]="translate.instant('COMMON.LABEL.ACCOUNT')"
+                [placeholder]="translate.instant('ACCOUNTING.STATEMENT.PLACEHOLDER.SELECT_ACCOUNT')"
+                [showAddButton]="true"
+                (accountSelected)="onAccountSelected($event)">
+              </app-account-selector>
             </div>
 
             <!-- Search Type -->
             <div class="search-type-section">
-              <ion-label class="field-label">نوع البحث</ion-label>
+              <ion-label class="field-label">{{ 'ACCOUNTING.STATEMENT.LABEL.SEARCH_TYPE' | translate }}</ion-label>
               <ion-segment [(ngModel)]="radioVal" (ionChange)="radioChange($event)" class="compact-segment">
                 <ion-segment-button value="0">
-                  <span>العمليات الحديثة</span>
+                  <span>{{ 'ACCOUNTING.STATEMENT.LABEL.RECENT_TRANSACTIONS' | translate }}</span>
                 </ion-segment-button>
                 <ion-segment-button value="1">
-                  <span>بحث في تاريخ محدد</span>
+                  <span>{{ 'ACCOUNTING.STATEMENT.LABEL.SEARCH_BY_DATE' | translate }}</span>
                 </ion-segment-button>
                 <ion-segment-button value="2">
-                  <span>بحث في فترة زمنية</span>
+                  <span>{{ 'ACCOUNTING.STATEMENT.LABEL.SEARCH_BY_PERIOD' | translate }}</span>
                 </ion-segment-button>
               </ion-segment>
             </div>
@@ -70,19 +68,19 @@
               class="mini-input date-input">
             </ion-input>
             
-            <ion-input 
+            <ion-input
               *ngIf="radioVal == 2"
-              type="date" 
+              type="date"
               [(ngModel)]="startingDate"
-              placeholder="من تاريخ"
+              [placeholder]="'COMMON.LABEL.FROM_DATE' | translate"
               class="mini-input date-input">
             </ion-input>
-            
-            <ion-input 
+
+            <ion-input
               *ngIf="radioVal == 2"
-              type="date" 
+              type="date"
               [(ngModel)]="endDate"
-              placeholder="إلى تاريخ"
+              [placeholder]="'COMMON.LABEL.TO_DATE' | translate"
               class="mini-input date-input">
             </ion-input>
             
@@ -92,7 +90,7 @@
               fill="outline"
               class="mini-btn search-btn">
               <ion-icon name="search-outline" slot="start"></ion-icon>
-              بحث
+              {{ 'COMMON.BUTTON.SEARCH' | translate }}
             </ion-button>
           </div>
         </ion-card-content>
@@ -355,39 +353,3 @@
     </div>
   </div>
 </ion-content>
-
-
-<!-- Account Selection Popover -->
-<ion-popover #accountPopover [isOpen]="isAccountPopoverOpen" (didDismiss)="isAccountPopoverOpen = false" size="auto" side="bottom" alignment="start">
-  <ng-template>
-    <ion-header>
-      <ion-toolbar dir="rtl">
-        <ion-searchbar 
-          [(ngModel)]="searchTerm" 
-          (ionInput)="searchAccount($event)" 
-          placeholder="بحث عن حساب" 
-          dir="rtl"
-          show-clear-button="focus">
-        </ion-searchbar>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content dir="rtl" class="popover-content">
-      <ion-list>
-        <ion-item 
-          *ngFor="let acc of searchedAccounts" 
-          (click)="selectAccount(acc)" 
-          button 
-          dir="rtl">
-          <ion-label>{{ acc.sub_name }}</ion-label>
-        </ion-item>
-        
-        <!-- No results message -->
-        <ion-item *ngIf="searchedAccounts.length === 0" dir="rtl">
-          <ion-label>
-            <p>لا توجد حسابات تطابق البحث</p>
-          </ion-label>
-        </ion-item>
-      </ion-list>
-    </ion-content>
-  </ng-template>
-</ion-popover>

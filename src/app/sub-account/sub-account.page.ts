@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable } from 'rxjs';
 import { AlertController, IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -30,7 +31,7 @@ export class SubAccountPage implements OnInit {
  sklton:boolean = false
  year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
   
-  constructor(private storage: Storage,private alertController: AlertController,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) { 
+  constructor(private storage: Storage,private alertController: AlertController,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) { 
     this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_id:"",cat_name:"",ac_behavior:"",phone:"",address:""};
     this.selectedCategory = {id:"" ,cat_name:""};
    

@@ -2,8 +2,9 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FilterPipe } from "./pipe";
-import { IonicModule } from '@ionic/angular'; 
-import { SpendRecord2PageRoutingModule } from './spend-record2-routing.module'; 
+import { IonicModule } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
+import { SpendRecord2PageRoutingModule } from './spend-record2-routing.module';
 import { SpendRecord2Page } from './spend-record2.page';
 import { SharedModule } from '../module/shared/shared.module';
 
@@ -13,7 +14,8 @@ import { SharedModule } from '../module/shared/shared.module';
     FormsModule,
     IonicModule,
     SpendRecord2PageRoutingModule,
-    SharedModule
+    SharedModule,
+    TranslateModule
   ],
   declarations: [SpendRecord2Page,  FilterPipe],
   exports:[FilterPipe]

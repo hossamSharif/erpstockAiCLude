@@ -1,0 +1,787 @@
+{
+  "COMMON": {
+    "BUTTON": {
+      "SAVE": "حفظ",
+      "CANCEL": "إلغاء",
+      "DELETE": "حذف",
+      "EDIT": "تعديل",
+      "ADD": "إضافة",
+      "SEARCH": "بحث",
+      "FILTER": "تصفية",
+      "PRINT": "طباعة",
+      "CLOSE": "إغلاق",
+      "CONFIRM": "تأكيد",
+      "OK": "موافق",
+      "YES": "نعم",
+      "NO": "لا",
+      "CLEAR": "مسح"
+    },
+    "MESSAGE": {
+      "SUCCESS": "تمت العملية بنجاح",
+      "ERROR": "حدث خطأ ما",
+      "LOADING": "جاري التحميل...",
+      "NO_DATA": "لا توجد بيانات",
+      "CONFIRM_DELETE": "هل أنت متأكد من الحذف؟",
+      "TRY_AGAIN": "الرجاء إعادة المحاولة",
+      "SAVING": "جاري الحفظ...",
+      "SAVED_SUCCESSFULLY": "تم الحفظ بنجاح",
+      "DELETED_SUCCESSFULLY": "تم الحذف بنجاح",
+      "UPDATED_SUCCESSFULLY": "تم التحديث بنجاح",
+      "OPERATION_FAILED": "فشلت العملية",
+      "CONNECTION_ERROR": "خطأ في الإتصال , حاول مرة أخرى"
+    },
+    "LABEL": {
+      "DATE": "التاريخ",
+      "TIME": "الوقت",
+      "TOTAL": "الإجمالي",
+      "DISCOUNT": "الخصم",
+      "QUANTITY": "الكمية",
+      "PRICE": "السعر",
+      "AMOUNT": "المبلغ",
+      "DESCRIPTION": "البيان",
+      "NOTE": "ملاحظة",
+      "NOTES": "ملاحظات",
+      "ACCOUNT": "الحساب",
+      "TYPE": "النوع",
+      "STATUS": "الحالة",
+      "NAME": "الإسم"
+    },
+    "VALIDATION": {
+      "REQUIRED": "هذا الحقل مطلوب",
+      "INVALID_EMAIL": "البريد الإلكتروني غير صحيح",
+      "MIN_LENGTH": "الحد الأدنى للطول",
+      "MAX_LENGTH": "الحد الأقصى للطول",
+      "INVALID_NUMBER": "رقم غير صحيح",
+      "PLEASE_SELECT": "الرجاء الاختيار",
+      "PLEASE_ENTER": "الرجاء الإدخال"
+    },
+    "PLACEHOLDER": {
+      "SEARCH": "البحث...",
+      "SELECT": "اختر...",
+      "ENTER": "أدخل..."
+    }
+  },
+  "AUTH": {
+    "LOGIN": {
+      "TITLE": "تسجيل دخول",
+      "FIELD": {
+        "EMAIL": "البريد الإلكتروني",
+        "PASSWORD": "كلمة المرور"
+      },
+      "PLACEHOLDER": {
+        "EMAIL": "البريد الإلكتروني",
+        "PASSWORD": "كلمة المرور"
+      },
+      "BUTTON": {
+        "LOGIN": "دخول",
+        "FORGOT_PASSWORD": "نسيت كلمة المرور؟"
+      },
+      "MESSAGE": {
+        "COMPLETE_DATA": "الرجاء إكمال بيانات تسجيل الدخول",
+        "INVALID_EMAIL": "الرجاء إدخال بريد إلكتروني صحيح",
+        "LOGIN_ERROR": "حدث خطأ ما , الرجاء اعادة المحاولة",
+        "LOGIN_SUCCESS": "تم تسجيل الدخول بنجاح"
+      }
+    },
+    "FORGOT_PASSWORD": {
+      "TITLE": "نسيت كلمة المرور",
+      "HEADING": {
+        "RESET_PASSWORD": "إعادة تعيين كلمة المرور",
+        "EMAIL_SENT": "تم إرسال البريد!"
+      },
+      "MESSAGE": {
+        "INSTRUCTION": "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور",
+        "ENTER_EMAIL": "الرجاء إدخال البريد الإلكتروني",
+        "SENDING": "جاري الإرسال...",
+        "EMAIL_SENT": "تم إرسال رابط إعادة التعيين بنجاح",
+        "LINK_SENT": "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني",
+        "CHECK_EMAIL": "يرجى التحقق من بريدك الإلكتروني واتباع التعليمات",
+        "LINK_VALIDITY": "الرابط صالح لمدة ساعة واحدة فقط"
+      },
+      "PLACEHOLDER": {
+        "EMAIL": "البريد الإلكتروني"
+      },
+      "BUTTON": {
+        "SEND_LINK": "إرسال رابط إعادة التعيين",
+        "BACK_TO_LOGIN": "العودة لتسجيل الدخول",
+        "SEND_AGAIN": "إرسال مرة أخرى"
+      }
+    },
+    "RESET_PASSWORD": {
+      "TITLE": "إعادة تعيين كلمة المرور",
+      "HEADING": {
+        "SET_NEW_PASSWORD": "تعيين كلمة مرور جديدة",
+        "INVALID_LINK": "رابط غير صالح"
+      },
+      "MESSAGE": {
+        "VERIFYING_LINK": "جاري التحقق من الرابط...",
+        "INVALID_LINK": "رابط غير صالح",
+        "LINK_EXPIRED": "الرابط غير صالح أو منتهي الصلاحية",
+        "VERIFICATION_ERROR": "حدث خطأ في التحقق من الرابط",
+        "WELCOME": "مرحباً",
+        "ENTER_NEW_PASSWORD": "يرجى إدخال كلمة المرور الجديدة",
+        "ENTER_PASSWORD": "الرجاء إدخال كلمة المرور الجديدة",
+        "PASSWORD_MIN_LENGTH": "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+        "PASSWORD_MISMATCH": "كلمات المرور غير متطابقة",
+        "UPDATING_PASSWORD": "جاري تحديث كلمة المرور...",
+        "PASSWORD_UPDATED": "تم تحديث كلمة المرور بنجاح",
+        "REQUEST_NEW_LINK": "قد يكون الرابط منتهي الصلاحية أو تم استخدامه بالفعل. يرجى طلب رابط جديد.",
+        "PASSWORD_REQUIREMENTS": "متطلبات كلمة المرور:",
+        "REQUIREMENT_MIN_LENGTH": "يجب أن تحتوي على 8 أحرف على الأقل",
+        "REQUIREMENT_MATCH": "يجب أن تتطابق كلمة المرور مع تأكيد كلمة المرور"
+      },
+      "PLACEHOLDER": {
+        "NEW_PASSWORD": "كلمة المرور الجديدة (8 أحرف على الأقل)",
+        "CONFIRM_PASSWORD": "تأكيد كلمة المرور"
+      },
+      "BUTTON": {
+        "UPDATE_PASSWORD": "تحديث كلمة المرور",
+        "BACK_TO_LOGIN": "العودة لتسجيل الدخول",
+        "REQUEST_NEW_LINK": "طلب رابط جديد"
+      }
+    }
+  },
+  "SETTINGS": {
+    "TITLE": "الإعدادات والضبط",
+    "SECTION": {
+      "SYNC": "المزامنة والإتصال",
+      "LANGUAGE": "اللغة",
+      "YEAR": "السنة المالية",
+      "CURRENCY": "إدارة العملات"
+    },
+    "LABEL": {
+      "SYNC_DATA": "مزامنة البيانات",
+      "OFFLINE_MODE": "وضع عدم الإتصال (العمل بدون انترنت)",
+      "CURRENCY_MANAGEMENT": "إدارة العملات وأسعار الصرف",
+      "SELECT_LANGUAGE": "اختر اللغة",
+      "SYSTEM_LANGUAGE": "لغة النظام"
+    },
+    "MESSAGE": {
+      "SYNC_SUCCESS": "تمت المزامنة",
+      "SYNC_ERROR": "حدث خطأ ما , الرجاء اعادة المحاولة",
+      "RELOAD_CONFIRM": "سيتم اعادة تحميل النظام من جديد , اضغط علي موافق للإستمرار",
+      "LANGUAGE_CHANGED": "تم تغيير اللغة بنجاح"
+    }
+  },
+  "ACCOUNTING": {
+    "CASH": {
+      "TITLE": "سندات القبض والدفع",
+      "LABEL": {
+        "VOUCHER_TYPE": "نوع السند",
+        "PAYMENT_VOUCHER": "سند دفع",
+        "RECEIPT_VOUCHER": "سند قبض",
+        "SOURCE": "المصدر",
+        "CASH": "الخزينة",
+        "BALANCE": "الرصيد",
+        "NOTIFICATIONS": "الإشعارات"
+      },
+      "PLACEHOLDER": {
+        "SELECT_SOURCE": "اختر المصدر",
+        "SELECT_ACCOUNT": "اختر الحساب",
+        "TRANSACTION_DESCRIPTION": "وصف المعاملة..."
+      },
+      "MESSAGE": {
+        "SELECT_ACCOUNT": "الرجاء اختيار الحساب",
+        "ENTER_AMOUNT": "الرجاء ادخال المبلغ",
+        "INPUT_ERROR": "خطأ في الإدخال",
+        "SELECT_VOUCHER_TYPE": "الرجاء اختيار نوع السند",
+        "ENTER_TRANSACTIONS": "الرجاء ادخال معاملات",
+        "SELECT_ACCOUNT_AGAIN": "الرجاء إختيار الحساب مرة اخري",
+        "SELECT_CUSTOMER_ACCOUNT": "الرجاء اختيار حساب العميل",
+        "SELECT_SUPPLIER_ACCOUNT": "الرجاء اختيار حساب المورد",
+        "CANNOT_LOAD_BALANCE": "لا يمكن تحميل الرصيد",
+        "NO_NEW_NOTIFICATIONS": "لا توجد إشعارات جديدة"
+      }
+    },
+    "STATEMENT": {
+      "TITLE": "كشف حساب",
+      "LABEL": {
+        "SEARCH_TYPE": "نوع البحث",
+        "RECENT_TRANSACTIONS": "العمليات الحديثة",
+        "SEARCH_BY_DATE": "بحث في تاريخ محدد",
+        "SEARCH_BY_PERIOD": "بحث في فترة زمنية"
+      },
+      "PLACEHOLDER": {
+        "SELECT_ACCOUNT": "اختر الحساب"
+      },
+      "MESSAGE": {
+        "ERROR_LOADING_ACCOUNTS": "خطأ في تحميل الحسابات",
+        "ERROR_SELECTING_ACCOUNT": "خطأ في اختيار الحساب",
+        "SELECT_ACCOUNT_FIRST": "الرجاء اختيار حساب أولاً",
+        "ERROR_LOADING_DATA": "خطأ في تحميل البيانات",
+        "NO_DATA_TO_EXPORT": "لا توجد بيانات للتصدير"
+      }
+    },
+    "EXPENSE_RECORD": {
+      "TITLE": "سجل سندات القبض والدفع",
+      "LABEL": {
+        "SEARCH_TYPE": "نوع البحث",
+        "RECENT": "حديثة",
+        "SEARCH_BY_DATE": "بحث في تاريخ",
+        "SEARCH_BY_PERIOD": "بحث في فترة",
+        "ALL": "الكل",
+        "RECEIPT_VOUCHER": "سند قبض",
+        "PAYMENT_VOUCHER": "سند دفع",
+        "SELECTED": "محدد",
+        "DELETE": "حذف",
+        "CANCEL": "إلغاء",
+        "SEQUENCE": "التسلسل",
+        "DATE": "التاريخ",
+        "VOUCHER_TYPE": "نوع السند",
+        "DESCRIPTION": "البيان",
+        "AMOUNT": "المبلغ",
+        "FROM": "من",
+        "TO": "إلى",
+        "ACTIONS": "العمليات"
+      },
+      "BUTTON": {
+        "SEARCH": "بحث"
+      },
+      "MESSAGE": {
+        "LOADING": "جاري التحميل...",
+        "DELETE_FAILED": "لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري",
+        "NO_DATA_TO_EXPORT": "لا توجد بيانات للتصدير",
+        "SELECT_AT_LEAST_ONE": "الرجاء اختيار سجل واحد على الأقل للحذف",
+        "BULK_DELETE_SUCCESS": "تم حذف السجلات بنجاح",
+        "BULK_DELETE_FAILED": "فشل حذف السجلات",
+        "BULK_DELETE_ERROR": "حدث خطأ أثناء حذف السجلات"
+      }
+    },
+    "JOURNAL": {
+      "TITLE": "تعديل القيد المحاسبي",
+      "LABEL": {
+        "VOUCHER_TYPE": "نوع السند",
+        "PAYMENT_VOUCHER": "سند دفع",
+        "RECEIPT_VOUCHER": "سند قبض",
+        "DATE": "التاريخ",
+        "SOURCE": "المصدر",
+        "LOADING": "جاري التحميل..."
+      },
+      "MESSAGE": {
+        "ERROR_LOADING_DATA": "خطأ في تحميل البيانات",
+        "ERROR_LOADING_DETAILS": "خطأ في تحميل تفاصيل القيد",
+        "DETAILS_NOT_LOADED": "لم يتم تحميل تفاصيل القيد",
+        "SELECT_VOUCHER_TYPE": "الرجاء اختيار نوع السند",
+        "ENTER_AMOUNT": "الرجاء ادخال المبلغ",
+        "SELECT_ACCOUNT": "الرجاء إختيار الحساب",
+        "UPDATE_FAILED": "لم يتم تحديث البيانات , خطا في الإتصال حاول مرة اخري",
+        "DELETE_FAILED": "لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري"
+      }
+    },
+    "BALANCE_SHEET": {
+      "MESSAGE": {
+        "ERROR_LOADING_DATA": "خطأ في تحميل البيانات",
+        "NO_DATA_TO_EXPORT": "لا توجد بيانات للتصدير"
+      }
+    },
+    "SUB_ACCOUNT": {
+      "MESSAGE": {
+        "ERROR_LOADING_ACCOUNTS": "خطأ في تحميل الحسابات",
+        "ERROR_LOADING_DATA": "خطأ في تحميل البيانات",
+        "NO_DATA_TO_EXPORT": "لا توجد بيانات للتصدير"
+      }
+    }
+  },
+  "INVENTORY": {
+    "TITLE": "الأصنــاف",
+    "STOCK_TITLE": "المخزن",
+    "ITEM_STOCK": {
+      "TITLE": "الأصنــاف",
+      "LABEL": {
+        "SEARCH": "بحــث",
+        "HIDE_COLUMNS": "إخفاء الأعمدة",
+        "EDIT_PRICES": "تعديل الأسعار",
+        "NEW_ITEM": "صنف جديد",
+        "STOCK_VALUE": "قيمة المخزون",
+        "STOCK_VALUE_SALES_PRICE": "قيمة المخزون بسعر المبيع"
+      },
+      "MESSAGE": {
+        "ITEM_NOT_FOUND": "لم يتم العثور على العنصر المحدد",
+        "ITEM_ID_NOT_FOUND": "معرف العنصر غير موجود",
+        "CANNOT_DELETE_HAS_STOCK": "لا يمكن حذف الصنف , توجد كميات في المخزون",
+        "INPUT_ERROR": "خطأ في الإدخال",
+        "FAILED_UPDATE_OPENING_QTY": "لم يتم تعديل الكمية الإفتتاحية , خطا في الإتصال حاول مرة اخري",
+        "SETTINGS_RESET": "تم إعادة تعيين جميع الإعدادات",
+        "ERROR_LOADING_DATA": "خطأ في تحميل البيانات",
+        "ERROR_LOADING_TOTALS": "خطأ في تحميل إجمالي المخزون",
+        "ERROR_LOADING_FILTERED_DATA": "خطأ في تحميل البيانات المفلترة",
+        "STORE_INFO_NOT_AVAILABLE": "معلومات المتجر غير متوفرة",
+        "ITEMS_LOADED_SUCCESS": "تم تحميل {{count}} صنف بنجاح",
+        "NO_ITEMS": "لا توجد أصناف",
+        "ERROR_LOADING_ITEMS": "خطأ في تحميل الأصناف",
+        "ITEMS_FOUND": "تم العثور على {{count}} صنف",
+        "NO_SEARCH_RESULTS": "لا توجد نتائج للبحث عن \"{{term}}\"",
+        "ERROR_SEARCHING": "خطأ في البحث",
+        "NO_DATA_TO_EXPORT": "لا توجد بيانات للتصدير"
+      }
+    },
+    "ITEMS": {
+      "TITLE": "الأصناف",
+      "LABEL": {
+        "ITEMS": "الأصناف",
+        "NOTIFICATIONS": "الإشعارات",
+        "SEARCH": "البحث",
+        "STOCK_VALUE": "قيمة المخزون",
+        "SEQUENCE": "التسلسل",
+        "ITEM_NAME": "الصنف",
+        "ITEM_NAME_ENGLISH": "اسم الصنف (English)",
+        "ALIAS": "اسم مستعار (Alias)",
+        "MODEL": "الموديل (model)",
+        "PART_NO": "الكود (part no)",
+        "BRAND": "الماركة (brand)",
+        "MIN_QTY": "اقل كمية (MSQ)",
+        "UNIT": "الوحده (unit)",
+        "PURCHASE_PRICE": "سعر الشراء (purch price)",
+        "SELLING_PRICE": "سعر الوحده (selling price)",
+        "PROFIT_PERCENTAGE": "نسبة الفائدة (profit perc)",
+        "IN_STOCK": "المخزون (in stock)",
+        "TOTAL": "المجموع",
+        "LAST_SALE": "اخر عملية بيع",
+        "OPENING_STOCK": "المخزون الإفتتاحي"
+      },
+      "BUTTON": {
+        "HIDE_COLUMNS": "إخفاء الأعمدة",
+        "EDIT_PRICES": "تعديل الأسعار",
+        "NEW_ITEM": "صنف جديد",
+        "EXPORT_XLS": "تصدير XLS",
+        "EXPORT_PDF": "تصدير PDF"
+      },
+      "PLACEHOLDER": {
+        "SEARCH": "بحــث"
+      },
+      "PAGINATION": {
+        "ITEMS_PER_PAGE": "عناصر لكل صفحة",
+        "PREVIOUS": "السابق",
+        "NEXT": "التالي",
+        "PAGE_INFO": "صفحة {{current}} من {{total}} (إجمالي العناصر: {{count}})"
+      },
+      "MESSAGE": {
+        "INPUT_ERROR": "خطأ في الإدخال",
+        "FAILED_UPDATE_OPENING_QTY": "لم يتم تعديل الكمية الإفتتاحية , خطا في الإتصال حاول مرة اخري",
+        "CANNOT_DELETE_HAS_STOCK": "لا يمكن حذف الصنف , توجد كميات في المخزون"
+      }
+    },
+    "ITEMS_REPORT": {
+      "MESSAGE": {
+        "SELECT_ITEM_FIRST": "يرجى اختيار صنف أولاً",
+        "NO_DATA_FOR_ITEM": "لا توجد بيانات للصنف المحدد"
+      }
+    },
+    "ITEM_ANALYTICS": {
+      "MESSAGE": {
+        "ERROR_LOADING_ANALYTICS": "خطأ في تحميل البيانات التحليلية",
+        "NO_DATA_TO_EXPORT": "لا توجد بيانات للتصدير"
+      }
+    }
+  },
+  "SALES": {
+    "TITLE": "فاتورة مبيعات",
+    "RECORD_TITLE": "سجل المبيعات",
+    "REPORT_TITLE": "تقرير المبيعات",
+    "RETURN_TITLE": "مرتجع مبيعات",
+    "EDIT_TITLE": "تعديل فاتورة مبيعات",
+    "EDIT_RETURN_TITLE": "تعديل مرتجعة المبيعات",
+    "POS_TITLE": "نقطة البيع",
+    "LABEL": {
+      "RETURN_INFO": "معلومات المرتجعة",
+      "RETURN_NUMBER": "رقم المرتجعة",
+      "ORIGINAL_INVOICE": "الفاتورة الأصلية",
+      "RETURN_DATE": "تاريخ المرتجعة",
+      "RETURN_TYPE": "نوع المرتجعة",
+      "FULL_RETURN": "مرتجعة كاملة",
+      "PARTIAL_RETURN": "مرتجعة جزئية",
+      "INVOICE_TYPE": "نوع الفاتورة",
+      "PRELIMINARY": "مبدئية",
+      "FINAL": "نهائية",
+      "CUSTOMER_ACCOUNT": "حساب العميل",
+      "SELECT_CUSTOMER": "اختر حساب العميل",
+      "COMMENT": "ملاحظة",
+      "WRITE_COMMENT": "أكتب تعليقا",
+      "INVOICE_ITEMS": "أصناف الفاتورة",
+      "RECENT_SALES": "مبيعات حديثة",
+      "SEARCH_BY_DATE": "بحث في تاريخ",
+      "SEARCH_BY_PERIOD": "بحث في فترة",
+      "PRELIMINARY_INVOICES": "فواتير مبدئية",
+      "SALES_RETURNS": "مرتجعات المبيعات",
+      "USER": "المستخدم",
+      "ITEM": "الصنف",
+      "ALL": "الكل",
+      "GENERATE_REPORT": "توليد التقرير",
+      "MIN_AMOUNT": "الحد الأدنى",
+      "MAX_AMOUNT": "الحد الأقصى",
+      "TOTAL_SALES": "إجمالي المبيعات",
+      "DISCOUNT": "الخصم",
+      "NET": "الصافي",
+      "TOP_CUSTOMERS": "أفضل 10 عملاء",
+      "TOP_ITEMS": "أكثر الأصناف مبيعاً",
+      "INVOICE_LIST": "قائمة الفواتير",
+      "INVOICE_NUMBER": "رقم الفاتورة",
+      "DATE": "التاريخ",
+      "CUSTOMER": "العميل",
+      "AMOUNT": "المبلغ",
+      "INVOICE": "فاتورة",
+      "INVOICES": "فواتير",
+      "QUANTITY": "الكمية",
+      "REVENUE": "الإيراد",
+      "NO_DATA": "لا توجد بيانات",
+      "NO_INVOICES": "لا توجد فواتير",
+      "EMPTY_STATE": "قم بتحديد الفلاتر ثم اضغط على زر البحث لعرض التقرير",
+      "CONNECTED": "متصل",
+      "DISCONNECTED": "غير متصل",
+      "ITEM": "الصنف",
+      "NET_AMOUNT": "صافي المبلغ",
+      "TAX": "الضريبة",
+      "NET_AMOUNT_WITH_TAX": "صافي المبلغ مع الضريبة",
+      "CASH_RECEIVED": "المستلم نقدا",
+      "REMAINING": "المتبقي",
+      "CHANGE": "الباقي",
+      "INVOICE_SETUP": "تهيئة الفاتورة",
+      "ADD_ITEMS": "إضافة الأصناف",
+      "ACCOUNTS": "الحسابات",
+      "ACCOUNT_LIST": "قائمة الحسابات",
+      "NEW_ACCOUNT": "حساب جديد",
+      "LOADING_ERROR": "خطأ في التحميل"
+    },
+    "MESSAGE": {
+      "SELECT_CUSTOMER": "الرجاء اختيار العميل",
+      "ADD_ITEMS_TO_INVOICE": "الرجاء إضافة أصناف للفاتورة",
+      "INSUFFICIENT_QUANTITY": "الكمية المتاحة غير كافية",
+      "ENTER_QUANTITY": "الرجاء إدخال الكمية",
+      "ENTER_PRICE": "الرجاء إدخال السعر",
+      "NO_DATA_TO_EXPORT": "لا توجد بيانات للتصدير"
+    }
+  },
+  "PURCHASE": {
+    "TITLE": "فاتورة مشتريات",
+    "RECORD_TITLE": "سجل المشتريات",
+    "REPORT_TITLE": "تقرير المشتريات",
+    "ORDER_TITLE": "أمر شراء",
+    "NEW_ORDER_TITLE": "طلب شراء جديد",
+    "EDIT_ORDER_TITLE": "تعديل طلب شراء",
+    "ORDER_RECORD_TITLE": "سجل اوامر الشراء",
+    "RETURN_TITLE": "مرتجع مشتريات",
+    "EDIT_TITLE": "تعديل فاتورة مشتريات",
+    "EDIT_RETURN_TITLE": "تعديل فاتورة مرتجعات الشراء",
+    "LABEL": {
+      "EDIT_MODE": "وضع التعديل",
+      "RETURN_NUMBER": "رقم المرتجعة",
+      "ORIGINAL_INVOICE_INFO": "معلومات فاتورة الشراء الأصلية",
+      "ORIGINAL_INVOICE_NUMBER": "رقم الفاتورة الأصلية",
+      "RETURN_ITEMS": "أصناف الإرجاع",
+      "OPERATIONS": "عمليات",
+      "SUPPLIER_ACCOUNT": "حساب المورد",
+      "SELECT_SUPPLIER": "اختر حساب المورد",
+      "COMMENT": "ملاحظة",
+      "WRITE_COMMENT": "أكتب تعليقا",
+      "SELECT_ITEM": "اختر الصنف",
+      "INVOICE_ITEMS": "أصناف الفاتورة",
+      "PURCHASE_INVOICES": "فواتير الشراء",
+      "PURCHASE_ORDERS_LABEL": "طلبات الشراء",
+      "RECENT_PURCHASES": "مشتريات حديثة",
+      "SEARCH_BY_DATE": "بحث في تاريخ",
+      "SEARCH_BY_PERIOD": "بحث في فترة",
+      "USER": "المستخدم",
+      "ITEM": "الصنف",
+      "ALL": "الكل",
+      "GENERATE_REPORT": "توليد التقرير",
+      "MIN_AMOUNT": "الحد الأدنى",
+      "MAX_AMOUNT": "الحد الأقصى",
+      "TOTAL_PURCHASES": "إجمالي المشتريات",
+      "DISCOUNT": "الخصم",
+      "NET": "الصافي",
+      "TOP_SUPPLIERS": "أفضل 10 موردين",
+      "TOP_PURCHASED_ITEMS": "أكثر الأصناف شراءً",
+      "INVOICE_LIST": "قائمة الفواتير",
+      "INVOICE_NUMBER": "رقم الفاتورة",
+      "DATE": "التاريخ",
+      "SUPPLIER": "المورد",
+      "AMOUNT": "المبلغ",
+      "INVOICE": "فاتورة",
+      "INVOICES": "فواتير",
+      "QUANTITY": "الكمية",
+      "TOTAL": "الإجمالي",
+      "NO_DATA": "لا توجد بيانات",
+      "NO_INVOICES": "لا توجد فواتير",
+      "EMPTY_STATE": "قم بتحديد الفلاتر ثم اضغط على زر البحث لعرض التقرير",
+      "INVOICE_SETUP": "تهيئة الفاتورة",
+      "ADD_ITEMS": "إضافة الأصناف",
+      "ACCOUNTS": "الحسابات",
+      "ACCOUNT_LIST": "قائمة الحسابات",
+      "NEW_ACCOUNT": "حساب جديد",
+      "LOADING_ERROR": "خطأ في التحميل",
+      "PHONE": "الجوال",
+      "ADDRESS": "العنوان",
+      "RECENT_PURCHASE_ORDERS": "طلبات شراء حديثة",
+      "ITEMS_LIST": "قائمة الأصناف",
+      "SEARCH_IN_ITEMS": "البحث في الأصناف...",
+      "ORIGINAL_ORDER": "ترتيب أصلي",
+      "ALPHABETICAL_ORDER": "ترتيب أبجدي",
+      "ADJUST_PRICES": "تعديل الأسعار",
+      "DISCOUNT_PERCENTAGE_LABEL": "نسبة الخصم%",
+      "DISCOUNT_AMOUNT_LABEL": "مبلغ الخصم",
+      "TOTAL_AFTER_DISCOUNT": "المجموع بعد الخصم",
+      "TOTAL_AMOUNT": "إجمالي المبلغ",
+      "CONVERT_TO_INVOICE": "تحويل لفاتورة",
+      "CONVERTING": "جاري التحويل...",
+      "NEW_ITEM": "صنف جديد",
+      "PURCHASE_PRICE": "سعر الشراء",
+      "ITEM_AR": "الصنف (عربي)",
+      "ITEM_EN": "الصنف (إنجليزي)"
+    },
+    "MESSAGE": {
+      "SELECT_SUPPLIER": "الرجاء اختيار المورد",
+      "ADD_ITEMS_TO_INVOICE": "الرجاء إضافة أصناف للفاتورة",
+      "ENTER_QUANTITY": "الرجاء إدخال الكمية",
+      "ENTER_PRICE": "الرجاء إدخال السعر",
+      "NO_DATA_TO_EXPORT": "لا توجد بيانات للتصدير"
+    }
+  },
+  "TSWIA": {
+    "TITLE": "جرد وتسوية",
+    "EDIT_TITLE": "تعديل جرد وتسوية",
+    "RECORD_TITLE": "سجل الجرد والتسوية",
+    "LABEL": {
+      "SAVE": "حفظ",
+      "DELETE": "حذف"
+    }
+  },
+  "MENU": {
+    "APP_TITLE": "نظام إدارة المخازن",
+    "DASHBOARD": "الرئيسية",
+    "SALES_SECTION": "المبيعات",
+    "SALES_INVOICE": "فاتورة مبيعات",
+    "SALES_RECORD": "سجل المبيعات",
+    "SALES_REPORT": "تقرير المبيعات",
+    "PURCHASE_SECTION": "المشتريات",
+    "PURCHASE_INVOICE": "فاتورة مشتريات",
+    "PURCHASE_ORDERS": "طلبات الشراء",
+    "PURCHASE_RECORD": "سجل المشتريات",
+    "PURCHASE_REPORT": "تقرير المشتريات",
+    "INVENTORY_SECTION": "المخزن",
+    "STOCK": "المخزن",
+    "ITEM_ANALYTICS": "تحليل الأصناف",
+    "ITEM_MOVEMENT": "حركة الأصناف",
+    "INVENTORY_ADJUSTMENT": "التسوية الجردية",
+    "ADJUSTMENT_RECORD": "سجل التسويات الجردية",
+    "ACCOUNTS_SECTION": "الحسابات",
+    "ACCOUNT_MANAGEMENT": "إدارة الحسابات",
+    "VOUCHERS": "السندات",
+    "VOUCHER_RECORD": "سجل السندات",
+    "ACCOUNT_STATEMENT": "كشف حساب",
+    "BALANCES": "الأرصدة",
+    "EXPENSES_SECTION": "المصروفات",
+    "ADD_EXPENSE": "إضافة مصروف",
+    "EXPENSE_RECORD": "سجل المصروفات",
+    "EXPENSE_CATEGORIES": "تصنيفات المصروفات",
+    "REPORTS_SECTION": "التقارير",
+    "DAILY_REPORT": "التقرير اليومي",
+    "AI_SECTION": "الذكاء الاصطناعي",
+    "AI_ASSISTANT": "المساعد الذكي",
+    "SETTINGS_SECTION": "الإعدادات والضبط",
+    "ITEM_CATEGORIES": "تصنيفات الأصناف",
+    "CURRENCIES": "العملات",
+    "DATA_VERIFICATION": "التحقق من البيانات",
+    "UPDATE_MANAGEMENT": "إدارة التحديثات",
+    "SYNC_CONNECTION": "المزامنة والإتصال"
+  },
+  "EXPENSE": {
+    "TITLE": "إضافة مصروف",
+    "EDIT_TITLE": "تعديل مصروف",
+    "NEW_EXPENSE_TITLE": "إضافة مصروف جديد",
+    "RECORD_TITLE": "سجل المصروفات",
+    "CATEGORIES_TITLE": "تصنيفات المصروفات",
+    "CATEGORIES_MANAGEMENT": "إدارة تصنيفات المصروفات",
+    "LABEL": {
+      "EXPENSE_DATE": "تاريخ المصروف",
+      "EXPENSE_CATEGORY": "تصنيف المصروف",
+      "EXPENSE_AMOUNT": "مبلغ المصروف",
+      "PAYMENT_METHOD": "طريقة الدفع",
+      "REFERENCE": "المرجع",
+      "CATEGORY_NAME": "اسم التصنيف",
+      "CATEGORY_DESCRIPTION": "وصف التصنيف",
+      "EXPENSE_DETAILS": "تفاصيل المصروف",
+      "AMOUNT": "المبلغ",
+      "CATEGORY": "التصنيف",
+      "SEARCH_TYPE": "نوع البحث",
+      "RECENT": "حديثة",
+      "SEARCH_BY_DATE": "بحث في تاريخ",
+      "SEARCH_BY_PERIOD": "بحث في فترة",
+      "ADD_NEW_CATEGORY": "إضافة تصنيف جديد",
+      "EDIT_CATEGORY": "تعديل التصنيف",
+      "ADD_CATEGORY": "إضافة تصنيف جديد"
+    },
+    "PLACEHOLDER": {
+      "SELECT_CATEGORY": "اختر التصنيف",
+      "ENTER_AMOUNT": "أدخل المبلغ",
+      "ENTER_DESCRIPTION": "أدخل الوصف",
+      "CATEGORY_NAME": "اسم التصنيف",
+      "CATEGORY_DESC_OPTIONAL": "وصف التصنيف (اختياري)"
+    },
+    "MESSAGE": {
+      "SELECT_CATEGORY": "الرجاء اختيار تصنيف المصروف",
+      "ENTER_AMOUNT": "الرجاء إدخال مبلغ المصروف",
+      "EXPENSE_SAVED": "تم حفظ المصروف بنجاح",
+      "EXPENSE_DELETED": "تم حذف المصروف بنجاح",
+      "CATEGORY_SAVED": "تم حفظ التصنيف بنجاح",
+      "CATEGORY_DELETED": "تم حذف التصنيف بنجاح",
+      "NO_DATA_TO_EXPORT": "لا توجد بيانات للتصدير"
+    }
+  },
+  "DAILY_REPORT": {
+    "TITLE": "التقرير اليومي",
+    "LABEL": {
+      "REPORT_DATE": "تاريخ التقرير",
+      "SALES_SUMMARY": "ملخص المبيعات",
+      "PURCHASE_SUMMARY": "ملخص المشتريات",
+      "EXPENSE_SUMMARY": "ملخص المصروفات",
+      "CASH_SUMMARY": "ملخص النقدية",
+      "TOTAL_SALES": "إجمالي المبيعات",
+      "TOTAL_PURCHASES": "إجمالي المشتريات",
+      "TOTAL_EXPENSES": "إجمالي المصروفات",
+      "NET_PROFIT": "صافي الربح",
+      "SEARCH_TYPE": "نوع البحث",
+      "SPECIFIC_DATE": "تاريخ محدد",
+      "TIME_PERIOD": "فترة زمنية",
+      "DATE": "التاريخ",
+      "FROM_DATE": "من تاريخ",
+      "TO_DATE": "إلى تاريخ",
+      "GENERATE_REPORT": "إنشاء التقرير"
+    },
+    "BUTTON": {
+      "GENERATE_REPORT": "توليد التقرير",
+      "PRINT_REPORT": "طباعة التقرير"
+    },
+    "MESSAGE": {
+      "ERROR_LOADING_REPORT": "خطأ في تحميل التقرير اليومي",
+      "NO_DATA_FOR_DATE": "لا توجد بيانات للتاريخ المحدد",
+      "NO_DATA_TO_EXPORT": "لا توجد بيانات للتصدير",
+      "LOADING_DATA": "جاري تحميل البيانات...",
+      "EMPTY_STATE": "حدد التاريخ واضغط على \"توليد التقرير\" لعرض التقرير اليومي"
+    }
+  },
+  "CURRENCY": {
+    "TITLE": "إدارة العملات",
+    "LABEL": {
+      "CURRENCY_NAME": "اسم العملة",
+      "CURRENCY_CODE": "رمز العملة",
+      "EXCHANGE_RATE": "سعر الصرف",
+      "IS_DEFAULT": "العملة الافتراضية",
+      "LAST_UPDATE": "آخر تحديث",
+      "CURRENT_CURRENCY": "العملة الحالية",
+      "SELECTED_CURRENCY": "العملة المحددة حالياً",
+      "ACTIVE": "فعال",
+      "EXCHANGE_RATES": "أسعار الصرف",
+      "ADD_RATE": "إضافة سعر",
+      "EXCHANGE_RATES_VS_SDG": "أسعار الصرف مقابل الجنيه السوداني (SDG)",
+      "BASE_CURRENCY": "جنيه سوداني",
+      "BASE_CURRENCY_LABEL": "العملة الأساسية",
+      "SUPPORTED_CURRENCIES": "العملات المدعومة"
+    },
+    "MESSAGE": {
+      "CURRENCY_SAVED": "تم حفظ العملة بنجاح",
+      "CURRENCY_DELETED": "تم حذف العملة بنجاح",
+      "RATE_UPDATED": "تم تحديث سعر الصرف بنجاح",
+      "ENTER_CURRENCY_NAME": "الرجاء إدخال اسم العملة",
+      "ENTER_CURRENCY_CODE": "الرجاء إدخال رمز العملة",
+      "ENTER_EXCHANGE_RATE": "الرجاء إدخال سعر الصرف",
+      "NO_RATES_DEFINED": "لا توجد أسعار صرف محددة",
+      "CLICK_ADD_RATE": "اضغط على \"إضافة سعر\" لإضافة أسعار الصرف"
+    }
+  },
+  "DATA_VERIFICATION": {
+    "TITLE": "التحقق من البيانات",
+    "LABEL": {
+      "VERIFICATION_TYPE": "نوع التحقق",
+      "VERIFICATION_STATUS": "الحالة",
+      "LAST_VERIFICATION": "آخر تحقق"
+    },
+    "MESSAGE": {
+      "VERIFICATION_STARTED": "بدأ التحقق",
+      "VERIFICATION_COMPLETED": "اكتمل التحقق بنجاح",
+      "ISSUES_FOUND": "تم العثور على مشاكل",
+      "NO_ISSUES": "لم يتم العثور على مشاكل"
+    }
+  },
+  "AI_ASSISTANT": {
+    "TITLE": "المساعد الذكي",
+    "LABEL": {
+      "ASK_QUESTION": "اطرح سؤالاً",
+      "CHAT_HISTORY": "سجل المحادثات"
+    },
+    "PLACEHOLDER": {
+      "TYPE_MESSAGE": "اكتب رسالتك..."
+    },
+    "MESSAGE": {
+      "AI_THINKING": "الذكاء الاصطناعي يفكر...",
+      "ERROR_SENDING_MESSAGE": "خطأ في إرسال الرسالة"
+    }
+  },
+  "ANALYTICS": {
+    "TITLE": "لوحة التحليلات",
+    "DASHBOARD": "الرئيسية",
+    "LABEL": {
+      "OVERVIEW": "نظرة عامة",
+      "SALES_ANALYTICS": "تحليلات المبيعات",
+      "PURCHASE_ANALYTICS": "تحليلات المشتريات",
+      "INVENTORY_ANALYTICS": "تحليلات المخزون",
+      "FINANCIAL_ANALYTICS": "التحليلات المالية",
+      "ANALYTICS": "التحليلات",
+      "DAILY_REPORT": "التقرير اليومي",
+      "FROM_DATE": "من تاريخ",
+      "TO_DATE": "إلى تاريخ",
+      "TO": "إلى"
+    },
+    "PRESET": {
+      "TODAY": "اليوم",
+      "YESTERDAY": "أمس",
+      "THIS_WEEK": "هذا الأسبوع",
+      "THIS_MONTH": "هذا الشهر",
+      "LAST_MONTH": "الشهر الماضي",
+      "THIS_YEAR": "هذه السنة",
+      "CUSTOM": "مخصص"
+    },
+    "MESSAGE": {
+      "LOADING_DATA": "جاري تحميل البيانات...",
+      "LOADING_REPORT": "جاري تحميل التقرير...",
+      "SELECT_DATE": "حدد التاريخ لعرض التقرير اليومي"
+    }
+  },
+  "CATEGORIES": {
+    "TITLE": "تصنيفات الأصناف",
+    "MANAGEMENT_TITLE": "إدارة تصنيفات الأصناف",
+    "ADD_TITLE": "إضافة تصنيف جديد",
+    "EDIT_TITLE": "تعديل التصنيف",
+    "LABEL": {
+      "CATEGORY_NAME": "اسم التصنيف",
+      "CATEGORY_CODE": "رمز التصنيف",
+      "PARENT_CATEGORY": "التصنيف الرئيسي",
+      "CATEGORY_DESCRIPTION": "وصف التصنيف",
+      "CREATED_DATE": "تاريخ الإنشاء",
+      "SELECT_CATEGORY": "اختر التصنيف",
+      "ENDPOINT_SECTION": "تحديد القسم",
+      "ACTIVE_ENDPOINT": "نقطة الاتصال النشطة",
+      "CATEGORY_LABEL": "التصنيف",
+      "ADDRESS": "العنوان"
+    },
+    "PLACEHOLDER": {
+      "CATEGORY_NAME": "اسم التصنيف",
+      "CATEGORY_DESCRIPTION": "وصف التصنيف (اختياري)"
+    },
+    "BUTTON": {
+      "ADD": "إضافة",
+      "UPDATE": "تحديث",
+      "CANCEL": "إلغاء",
+      "ADD_CATEGORY": "إضافة تصنيف"
+    },
+    "MESSAGE": {
+      "CATEGORY_SAVED": "تم حفظ التصنيف بنجاح",
+      "CATEGORY_DELETED": "تم حذف التصنيف بنجاح",
+      "ENTER_CATEGORY_NAME": "الرجاء إدخال اسم التصنيف",
+      "NO_CATEGORIES": "لا توجد تصنيفات للأصناف",
+      "EMPTY_STATE": "ابدأ بإضافة التصنيف الأول للأصناف",
+      "NO_ENDPOINT_SELECTED": "لم يتم تحديد نقطة اتصال",
+      "DEFAULT_ENDPOINT": "سيتم استخدام نقطة الاتصال الافتراضية",
+      "ENDPOINT_DESCRIPTION": "اختر التصنيف الذي يحتوي على عنوان نقطة الاتصال للنظام"
+    }
+  }
+}

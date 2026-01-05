@@ -134,31 +134,39 @@ export class AccountSelectorComponent implements OnInit, OnChanges, OnDestroy, C
   loadAccounts() {
     if (!this.store_info || !this.year) {
       console.warn('Account Selector: store_info or year not provided');
+      console.warn('store_info:', this.store_info);
+      console.warn('year:', this.year);
       return;
     }
 
     this.loadingAccounts = true;
-    console.log('Loading accounts for store:', this.store_info.id, 'year:', this.year.id);
-    
+    console.log('=== LOADING ACCOUNTS ===');
+    console.log('Store ID:', this.store_info.id, 'Year ID:', this.year.id);
+
     // Load all accounts with ac_id = 1 (customers) and ac_id = 2 (suppliers)
     this.api.getAllCustomerSupplierAccounts(this.store_info.id, this.year.id).subscribe(
       (response: any) => {
         this.loadingAccounts = false;
-        console.log('Accounts response:', response);
-        
+        console.log('=== ACCOUNTS API RESPONSE ===');
+        console.log('Full response:', response);
+
         if (response && response.data) {
           this.accounts = response.data;
           this.filteredAccounts = [...this.accounts];
-          console.log('Loaded', this.accounts.length, 'accounts');
+          console.log('✓ Successfully loaded', this.accounts.length, 'accounts');
+          console.log('First 3 accounts:', this.accounts.slice(0, 3));
         } else {
-          console.warn('No accounts data in response');
+          console.error('✗ No accounts data in response');
+          console.error('Response structure:', Object.keys(response || {}));
           this.accounts = [];
           this.filteredAccounts = [];
         }
       },
       (error) => {
         this.loadingAccounts = false;
+        console.error('=== ACCOUNTS API ERROR ===');
         console.error('Error loading accounts:', error);
+        console.error('Error details:', error.message, error.status);
         this.accounts = [];
         this.filteredAccounts = [];
       }
@@ -170,7 +178,7 @@ export class AccountSelectorComponent implements OnInit, OnChanges, OnDestroy, C
     this.searchTerm = event.target.value; // Keep original case
     console.log('Search term:', this.searchTerm);
     console.log('Total accounts:', this.accounts.length);
-    
+
     // Clear selected account if user is typing something different
     if (this.selectedAccount && this.searchTerm !== this.selectedAccount.sub_name) {
       console.log('Clearing selectedAccount because search term changed');
@@ -180,16 +188,14 @@ export class AccountSelectorComponent implements OnInit, OnChanges, OnDestroy, C
       // Force change detection
       this.cdr.detectChanges();
     }
-    
+
     this.filterAccounts();
     this.highlightedIndex = -1; // Reset highlight when user types
-    
+
     // Show dropdown when user starts typing or when there are accounts
     if (this.searchTerm.length > 0 || this.accounts.length > 0) {
-      // Calculate position if dropdown is not already shown
-      if (!this.showDropdown) {
-        this.calculateDropdownPosition();
-      }
+      // CRITICAL FIX: Always recalculate position when user types to ensure dropdown stays aligned
+      this.calculateDropdownPosition();
       this.showDropdown = true;
       console.log('Showing dropdown with', this.filteredAccounts.length, 'filtered accounts');
     } else {
@@ -212,20 +218,16 @@ export class AccountSelectorComponent implements OnInit, OnChanges, OnDestroy, C
 
   // Handle input focus
   onInputFocus() {
-    console.log('Input focused, accounts:', this.accounts.length);
+    console.log('=== INPUT FOCUS EVENT ===');
+    console.log('Total accounts loaded:', this.accounts.length);
     console.log('Current searchTerm:', this.searchTerm);
     console.log('Selected account:', this.selectedAccount);
-    
+    console.log('Current filteredAccounts:', this.filteredAccounts.length);
+
     this.highlightedIndex = -1; // Reset highlight on focus
-    
+
     // Show dropdown when focused if we have accounts
     if (this.accounts.length > 0) {
-      // Calculate position before showing
-      setTimeout(() => {
-        this.calculateDropdownPosition();
-        this.showDropdown = true;
-      }, 10);
-      
       // If the current search term matches selected account name exactly, show all accounts
       // This handles the case where user clicks on input after selecting an account
       if (this.selectedAccount && this.searchTerm === this.selectedAccount.sub_name) {
@@ -240,6 +242,21 @@ export class AccountSelectorComponent implements OnInit, OnChanges, OnDestroy, C
           (account.sub_code && account.sub_code.toLowerCase().includes(this.searchTerm.toLowerCase()))
         );
       }
+
+      console.log('Filtered accounts after focus:', this.filteredAccounts.length);
+
+      // Calculate position before showing
+      setTimeout(() => {
+        this.calculateDropdownPosition();
+        this.showDropdown = true;
+        console.log('Dropdown should now be visible. showDropdown =', this.showDropdown);
+        console.log('Dropdown position:', this.dropdownPosition);
+
+        // Force change detection
+        this.cdr.detectChanges();
+      }, 10);
+    } else {
+      console.warn('NO ACCOUNTS LOADED - Cannot show dropdown');
     }
   }
 
@@ -326,26 +343,56 @@ export class AccountSelectorComponent implements OnInit, OnChanges, OnDestroy, C
 
   // Calculate dropdown position
   calculateDropdownPosition() {
-    // Try to use the input wrapper first, fallback to search input
-    const elementToUse = this.inputWrapper?.nativeElement || this.searchInput?.nativeElement;
-    
+    // CRITICAL: Must use the ION-ITEM element, which is the actual visible input boundary
+    // This ensures we position right after the input field, NOT after the balance container
+    let elementToUse = this.inputWrapper?.nativeElement || this.searchInput?.nativeElement;
+
     if (elementToUse) {
+      // Find the ion-item that wraps the input - this is the ACTUAL visual boundary
+      const ionItem = elementToUse.closest('ion-item.account-selector-wrapper');
+      if (ionItem) {
+        elementToUse = ionItem;
+        console.log('✓ Using ion-item.account-selector-wrapper for positioning');
+      } else {
+        console.warn('Could not find ion-item, falling back to input element');
+      }
+
       const rect = elementToUse.getBoundingClientRect();
-      
-      console.log('Dropdown position calculation:');
-      console.log('Element used:', elementToUse.tagName, elementToUse.className);
-      console.log('Element rect:', rect);
-      console.log('Viewport size:', window.innerWidth, window.innerHeight);
-      
+
+      console.log('=== DROPDOWN POSITION CALCULATION ===');
+      console.log('Element:', elementToUse.tagName, elementToUse.className);
+      console.log('Rect top:', rect.top, 'bottom:', rect.bottom, 'height:', rect.height);
+      console.log('Viewport size:', window.innerWidth, 'x', window.innerHeight);
+
+      // Calculate dropdown position relative to viewport (for position: fixed)
+      const viewportHeight = window.innerHeight;
+      const dropdownMaxHeight = 200; // matches max-height in CSS
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      console.log('Space below input:', spaceBelow, 'Space above input:', spaceAbove);
+
+      // Determine if dropdown should open upward or downward
+      let top: number;
+      if (spaceBelow >= dropdownMaxHeight || spaceBelow >= spaceAbove) {
+        // Open downward (default)
+        // Position with 2px overlap to ensure NO visible gap
+        top = rect.bottom - 2; // Overlap to eliminate any gap
+      } else {
+        // Open upward if not enough space below
+        top = rect.top - Math.min(dropdownMaxHeight, spaceAbove) + 2;
+      }
+
       this.dropdownPosition = {
-        top: (rect.bottom + 2) + 'px',
+        top: top + 'px',
         left: rect.left + 'px',
         width: rect.width + 'px'
       };
-      
-      console.log('Calculated dropdown position:', this.dropdownPosition);
+
+      console.log('✓ Final dropdown position:', this.dropdownPosition);
+      console.log('---');
     } else {
-      console.warn('Could not find element for dropdown positioning');
+      console.error('✗ Could not find element for dropdown positioning');
     }
   }
 

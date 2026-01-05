@@ -1,0 +1,216 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>AI Assistant</ion-title>
+    <ion-buttons slot="end">
+      <!-- Session sidebar toggle -->
+      <ion-button (click)="toggleSessionSidebar()">
+        <ion-icon name="chatbubbles-outline"></ion-icon>
+      </ion-button>
+      <!-- New conversation -->
+      <ion-button (click)="createNewSession()">
+        <ion-icon name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <!-- View mode selector -->
+  <ion-toolbar>
+    <ion-segment [(ngModel)]="viewMode" (ionChange)="switchView(viewMode)">
+      <ion-segment-button value="chat">
+        <ion-label>Chat</ion-label>
+        <ion-icon name="chatbubble-ellipses"></ion-icon>
+      </ion-segment-button>
+      <ion-segment-button value="invoices">
+        <ion-label>AI Invoices</ion-label>
+        <ion-icon name="document-text"></ion-icon>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- Session Sidebar -->
+  <div class="session-sidebar" [class.show]="showSessionSidebar">
+    <div class="sidebar-header">
+      <h3>Conversations</h3>
+      <ion-icon name="close" (click)="toggleSessionSidebar()"></ion-icon>
+    </div>
+    <ion-list>
+      <ion-item
+        *ngFor="let session of sessions"
+        [class.active]="session.session_id === currentSessionId"
+        (click)="switchSession(session)"
+        button
+      >
+        <ion-label>
+          <h3>{{ session.session_title }}</h3>
+          <p>{{ session.message_count }} messages · {{ session.total_tokens }} tokens</p>
+          <p class="timestamp">{{ session.last_activity | date:'short' }}</p>
+        </ion-label>
+      </ion-item>
+      <ion-item *ngIf="sessions.length === 0">
+        <ion-label class="ion-text-center">
+          <p>No conversations yet</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <!-- Chat View -->
+  <div class="chat-container" *ngIf="viewMode === 'chat'">
+    <!-- Messages List -->
+    <div class="messages-container">
+      <div
+        *ngFor="let message of messages"
+        class="message-wrapper"
+        [class.user-message]="message.role === 'user'"
+        [class.assistant-message]="message.role === 'assistant'"
+      >
+        <div class="message-bubble">
+          <div class="message-header">
+            <ion-icon
+              [name]="message.role === 'user' ? 'person-circle' : 'sparkles'"
+            ></ion-icon>
+            <span class="message-sender">
+              {{ message.role === 'user' ? 'You' : 'AI Assistant' }}
+            </span>
+            <span class="message-time">
+              {{ message.timestamp | date:'shortTime' }}
+            </span>
+          </div>
+          <div class="message-content" [innerHTML]="message.content | nl2br"></div>
+        </div>
+      </div>
+
+      <!-- Streaming indicator -->
+      <div class="message-wrapper assistant-message" *ngIf="isStreaming">
+        <div class="message-bubble streaming">
+          <div class="message-header">
+            <ion-icon name="sparkles"></ion-icon>
+            <span class="message-sender">AI Assistant</span>
+            <span class="typing-indicator">
+              <span></span><span></span><span></span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" *ngIf="messages.length === 0 && !isStreaming">
+        <ion-icon name="chatbubble-ellipses-outline" class="empty-icon"></ion-icon>
+        <h2>Welcome to AI Assistant</h2>
+        <p>Ask me anything about your invoices, sales, purchases, inventory, or customers!</p>
+        <div class="suggestion-chips">
+          <ion-chip (click)="currentMessage = 'How much did we sell yesterday?'; sendMessage()">
+            <ion-label>Sales yesterday?</ion-label>
+          </ion-chip>
+          <ion-chip (click)="currentMessage = 'Show top 5 selling items'; sendMessage()">
+            <ion-label>Top selling items?</ion-label>
+          </ion-chip>
+          <ion-chip (click)="currentMessage = 'Who owes us money?'; sendMessage()">
+            <ion-label>Outstanding balances?</ion-label>
+          </ion-chip>
+          <ion-chip (click)="currentMessage = 'What items are low in stock?'; sendMessage()">
+            <ion-label>Low stock items?</ion-label>
+          </ion-chip>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+      <!-- PDF Upload Button -->
+      <input
+        type="file"
+        #fileInput
+        accept="application/pdf"
+        (change)="onFileSelected($event)"
+        style="display: none"
+      />
+      <ion-button
+        fill="clear"
+        size="large"
+        (click)="triggerFileInput()"
+        [disabled]="isUploading || isExtracting"
+      >
+        <ion-icon name="attach-outline"></ion-icon>
+      </ion-button>
+
+      <!-- Message Input -->
+      <ion-textarea
+        [(ngModel)]="currentMessage"
+        placeholder="Ask me anything..."
+        rows="1"
+        autoGrow="true"
+        class="message-input"
+        (keydown.enter)="$event.preventDefault(); sendMessage()"
+        [disabled]="isStreaming"
+      ></ion-textarea>
+
+      <!-- Send Button -->
+      <ion-button
+        fill="solid"
+        color="primary"
+        (click)="sendMessage()"
+        [disabled]="!currentMessage.trim() || isStreaming"
+        size="large"
+      >
+        <ion-icon name="send" slot="icon-only"></ion-icon>
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- AI Invoices View -->
+  <div class="invoices-container" *ngIf="viewMode === 'invoices'">
+    <ion-list>
+      <ion-item *ngFor="let invoice of aiInvoices">
+        <ion-label>
+          <h2>
+            {{ invoice.invoice_ref }}
+            <ion-badge [color]="getStatusColor(invoice.extraction_status)">
+              {{ invoice.extraction_status }}
+            </ion-badge>
+          </h2>
+          <p>
+            <strong>{{ invoice.customer_supplier_name || 'Unknown' }}</strong>
+          </p>
+          <p>
+            Date: {{ invoice.invoice_date || 'N/A' }} ·
+            Total: {{ invoice.invoice_total || 'N/A' }} ·
+            Items: {{ invoice.items_count }}
+          </p>
+          <p *ngIf="invoice.confidence_score">
+            <ion-badge [color]="getConfidenceColor(invoice.confidence_score)">
+              Confidence: {{ formatConfidence(invoice.confidence_score) }}
+            </ion-badge>
+          </p>
+          <p class="timestamp">
+            Uploaded: {{ invoice.created_at | date:'short' }}
+          </p>
+        </ion-label>
+        <ion-icon
+          slot="end"
+          [name]="getStatusIcon(invoice.extraction_status)"
+          [color]="getStatusColor(invoice.extraction_status)"
+        ></ion-icon>
+      </ion-item>
+
+      <ion-item *ngIf="aiInvoices.length === 0">
+        <ion-label class="ion-text-center">
+          <div class="empty-state">
+            <ion-icon name="document-text-outline" class="empty-icon"></ion-icon>
+            <h3>No AI Invoices Yet</h3>
+            <p>Upload a PDF invoice to get started</p>
+            <ion-button (click)="triggerFileInput()" expand="block">
+              <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
+              Upload Invoice PDF
+            </ion-button>
+          </div>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
+</ion-content>

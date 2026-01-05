@@ -1,13 +1,14 @@
 import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { AlertController, LoadingController, ModalController, Platform, ToastController, IonPopover } from '@ionic/angular';
-import { DatePipe } from '@angular/common'; 
+import { DatePipe } from '@angular/common';
 import { Storage } from '@ionic/storage';
 import { NavigationExtras, Router } from '@angular/router';
 import { SortingService, SortConfig } from '../services/sorting.service';
 import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
 import { CurrencyService } from '../services/currency.service';
 import { Subscription } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-statement2',
@@ -15,8 +16,6 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./statement2.page.scss'], 
 })
 export class Statement2Page implements OnInit, OnDestroy {
-  @ViewChild('accountPopover') accountPopover: IonPopover;
-
   // Core data
   sub_account: Array<any> = [];
   searchedAccounts: Array<any> = [];
@@ -24,10 +23,6 @@ export class Statement2Page implements OnInit, OnDestroy {
   displayedTransactions: Array<any> = [];
   sortedTransactions: Array<any> = [];
   currentSort: SortConfig | null = null;
-  
-  // Account selection
-  isAccountPopoverOpen: boolean = false;
-  searchTerm: string = '';
   
   // App info
   store_info: {id: any, location: any, store_name: any, store_ref: any} | null = null;
@@ -109,7 +104,8 @@ export class Statement2Page implements OnInit, OnDestroy {
     private sortingService: SortingService,
     private exportService: ExportService,
     private currencyService: CurrencyService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public translate: TranslateService
   ) {
     this.initializeData();
     this.checkPlatform();
@@ -216,34 +212,16 @@ export class Statement2Page implements OnInit, OnDestroy {
         this.searchedAccounts = this.sub_account;
       },
       error => {
-        this.presentToast('خطأ في تحميل الحسابات', 'danger');
+        this.presentToast('ACCOUNTING.STATEMENT.MESSAGE.ERROR_LOADING_ACCOUNTS', 'danger');
       }
     );
   }
 
-  // Present account popover
-  presentAccountPopover(event: any) {
-    this.searchedAccounts = this.sub_account;
-    this.searchTerm = '';
-    this.isAccountPopoverOpen = true;
-  }
-
-  // Search accounts
-  searchAccount(event: any) {
-    const searchTerm = event.target.value.toLowerCase();
-    if (searchTerm && searchTerm.trim() !== '') {
-      this.searchedAccounts = this.sub_account.filter((acc) => {
-        return acc.sub_name.toLowerCase().indexOf(searchTerm) > -1;
-      });
-    } else {
-      this.searchedAccounts = this.sub_account;
+  // Handle account selection from account-selector component
+  onAccountSelected(account: any) {
+    if (account) {
+      this.pickAccount(account);
     }
-  }
-
-  // Select account from popover
-  selectAccount(account: any) {
-    this.pickAccount(account);
-    this.isAccountPopoverOpen = false;
   }
 
   pickAccount(account: any) {
@@ -269,7 +247,7 @@ export class Statement2Page implements OnInit, OnDestroy {
       this.resetPagination();
       this.loadTransactions();
     } else {
-      this.presentToast('خطأ في اختيار الحساب', 'danger');
+      this.presentToast('ACCOUNTING.STATEMENT.MESSAGE.ERROR_SELECTING_ACCOUNT', 'danger');
     }
   }
 
@@ -280,7 +258,7 @@ export class Statement2Page implements OnInit, OnDestroy {
   // Load transactions with pagination
   loadTransactions(loadMore = false) {
     if (!this.selectedAccount.id) {
-      this.presentToast('الرجاء اختيار حساب أولاً', 'warning');
+      this.presentToast('ACCOUNTING.STATEMENT.MESSAGE.SELECT_ACCOUNT_FIRST', 'warning');
       return;
     }
 
@@ -345,7 +323,7 @@ export class Statement2Page implements OnInit, OnDestroy {
           this.currentPage--; // Revert page increment on error
         }
         
-        this.presentToast('خطأ في تحميل البيانات', 'danger');
+        this.presentToast('ACCOUNTING.STATEMENT.MESSAGE.ERROR_LOADING_DATA', 'danger');
       }
     );
   }
@@ -377,7 +355,7 @@ export class Statement2Page implements OnInit, OnDestroy {
 
   search() {
     if (!this.selectedAccount.id) {
-      this.presentToast('الرجاء اختيار حساب أولاً', 'warning');
+      this.presentToast('ACCOUNTING.STATEMENT.MESSAGE.SELECT_ACCOUNT_FIRST', 'warning');
       return;
     }
     
@@ -418,7 +396,8 @@ export class Statement2Page implements OnInit, OnDestroy {
     }
   }
 
-  async presentToast(message: string, color: string = 'primary') {
+  async presentToast(translationKey: string, color: string = 'primary') {
+    const message = this.translate.instant(translationKey);
     const toast = await this.toast.create({
       message: message,
       duration: 2000,
@@ -467,7 +446,7 @@ export class Statement2Page implements OnInit, OnDestroy {
   // Export functionality
   async exportToPDF(): Promise<void> {
     if (!this.displayedTransactions || this.displayedTransactions.length === 0) {
-      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      await this.presentToast('ACCOUNTING.STATEMENT.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
       return;
     }
 
@@ -487,7 +466,7 @@ export class Statement2Page implements OnInit, OnDestroy {
 
   async exportToExcel(): Promise<void> {
     if (!this.displayedTransactions || this.displayedTransactions.length === 0) {
-      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      await this.presentToast('ACCOUNTING.STATEMENT.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
       return;
     }
 

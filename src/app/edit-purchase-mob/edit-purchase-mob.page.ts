@@ -1,6 +1,7 @@
 
 
 import { DatePipe, Location } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { Component, OnInit , ViewChild, ElementRef} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -69,7 +70,7 @@ searchResult :Array<any> =[]
 aliasResult :Array<any> =[]
 year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any} 
 
-  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) {
+  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private translate: TranslateService) {
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:""};
   this.route.queryParams.subscribe(params => {
     if (params && params.payInvo) {
@@ -569,9 +570,10 @@ setFocusOnInput(Input) {
  
 
 
-   async presentToast(msg,color?) {
+   async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
      const toast = await this.toast.create({
-       message: msg,
+       message: message,
        duration: 2000,
        color:color,
        cssClass:'cust_Toast',
@@ -1003,12 +1005,12 @@ saveItem(mdata){
      this.firstq = {id:null ,item_id:data['message'] , store_id:this.store_info.id , quantity :mdata[1].quantity ,pay_price:mdata[0].pay_price,perch_price:mdata[0].perch_price ,fq_year:'2022',item_name:mdata[0].item_name }
      this.saveFierstQty(mdata[0].item_name) 
    }else{
-     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
    }
   
  }, (err) => {
    //console.log(err);
-   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
  }) 
 }
 
@@ -1019,7 +1021,7 @@ this.api.saveFirstQty(this.firstq).subscribe(data=>{
 
 
   this.performSyncItem(item_name)
- this.presentToast('تم الحفظ بنجاح' , 'success')
+ this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
 }, (err) => {
  //console.log(err);
  this.presentToast('1لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
@@ -1067,11 +1069,11 @@ saveLogHistoryForInsertItem(){
    this.logHistoryArr = []
    
    }else{
-     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
    }
  }, (err) => {
    //console.log(err);
-   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
  }) 
 }
 
@@ -1134,7 +1136,7 @@ this.api.updatePerchInvo(this.payInvo).subscribe(data => {
  this.deleteSalesitemList4update()
   }, (err) => {
   //console.log(err);
-  this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger').then(()=>{
     this.loadingController.dismiss()
   })
  })
@@ -1188,14 +1190,14 @@ saveSubAccount(){
   if (data['message'] != 'Post Not Deleted') {
     this.saveitemList()    
   }else{
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger').then(()=>{
     this.loadingController.dismiss()
   })
 
   } 
 },(err) => {
   //console.log(err);
-  this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger').then(()=>{
     this.loadingController.dismiss()
   })
   
@@ -1274,7 +1276,7 @@ saveSubAccountlocal(){
 
   this.storage.set('purchLocal', this.purchLocal).then((response) => {
     //console.log('resoponse set', response)
-    this.presentToast('تم الحفظ بنجاح', 'success')
+    this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
     this.back()
   });
 }
@@ -1285,7 +1287,7 @@ saveSubAccountlocal(){
 saveitemList(){  
 this.api.savePerchitemList(this.itemList).subscribe(data=>{ 
   //console.log(data)  
-  this.presentToast('تم الحفظ بنجاح' , 'success')
+  this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
   this.purchase = this.purchase.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);
   this.purchase.push({
     "payInvo": this.payInvo,
@@ -1320,7 +1322,7 @@ this.api.savePerchitemList(this.itemList).subscribe(data=>{
 
 }, (err) => {
   //console.log(err);
-  this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
 }, () => {
   this.loadingController.dismiss()
 }
@@ -1348,19 +1350,19 @@ saveLogHistory(role2?){
   
     if(role2 == 'delete'){
     
-      this.presentToast('تم الحذف بنجاح' , 'success') 
+      this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success') 
      
     }else{
-    this.presentToast('تم الحفظ بنجاح' , 'success')
+    this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
 
     }
     // this.getStockItems()
    }else{
-     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
    }
  }, (err) => {
    //console.log(err);
-   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
  }) 
 }
 
@@ -1426,11 +1428,11 @@ deleteSalesInvo(){
    if (data['message'] != 'Post Not Deleted') {
    this.deleteSalesitemList()
    }else{
-    this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    }
  },(err) => {
    //console.log(err);
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   }) 
 }
 
@@ -1449,7 +1451,7 @@ deleteSalesInvoLocal(){
    //console.log('case undefined' , this.purchLocal)
    this.storage.set('purchLocal', this.purchLocal).then((response) => {
     //console.log('resoponse set', response) 
-    this.presentToast('تم الحذف بنجاح' , 'success') 
+    this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success') 
     this.back()
   });
   }else{
@@ -1463,7 +1465,7 @@ deleteSalesInvoLocal(){
     })
     this.storage.set('purchLocalDelete', this.purchLocalDelete).then((response) => {
       //console.log('resoponse set', response) 
-      this.presentToast('تم الحذف بنجاح' , 'success') 
+      this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success') 
       this.back()
     }); 
   });
@@ -1485,11 +1487,11 @@ deleteSalesitemList(){
      
       });
    }else{
-    this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    }
  },(err) => {
    //console.log(err);
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    
   },() => {
     this.loadingController.dismiss()

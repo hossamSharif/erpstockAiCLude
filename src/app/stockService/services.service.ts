@@ -929,19 +929,86 @@ getTswiaByDate(store_id,from ,yearId){
     return this.http.get(fullUrl, {params: params})
   }
 
-  getYear( ){  
+  // Get all users for a store
+  getUsers(store_id: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    return this.http.get(this.api + 'users/read.php', {params: params})
+  }
+
+  // Get items by store and year
+  getItemsByStore(store_id: any, yearId: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    if (yearId) {
+      params = params.append('yearId', yearId)
+    }
+    return this.http.get(this.api + 'items/read.php', {params: params})
+  }
+
+  // Get accounts by type (customer or supplier)
+  getNewAccByType(type: string, store_id: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    if (type === 'customer') {
+      params = params.append('ac_id', '1')
+    } else if (type === 'supplier') {
+      params = params.append('ac_id', '2')
+    }
+    return this.http.get(this.api + 'sub_accounts/readByStore.php', {params: params})
+  }
+
+  getYear( ){
     return this.http.get(this.api+'year/readByStoreByRef.php')
   }
 
 
-  login(user){ 
+  login(user){
     //console.log(user)
-    let params = new HttpParams() 
-    params= params.append('user_name' , user.user_name )
+    let params = new HttpParams()
+    params= params.append('email' , user.email )
     params= params.append('password' , user.password)
     params=params.append('store_id' , user.store_id)
     params=params.append('level' , 'user')
     return this.http.get(this.api+'users/login.php',{params: params})
+  }
+
+  // Forgot password - send reset email
+  forgotPassword(email: string) {
+    return this.http.post(this.api + 'users/forgot-password.php', { email });
+  }
+
+  // Verify reset token validity
+  verifyResetToken(token: string) {
+    let params = new HttpParams().append('token', token);
+    return this.http.get(this.api + 'users/verify-reset-token.php', {params: params});
+  }
+
+  // Reset password with token
+  resetPassword(token: string, newPassword: string) {
+    return this.http.post(this.api + 'users/reset-password.php', {
+      token: token,
+      new_password: newPassword
+    });
+  }
+
+  // Change password in profile
+  changePassword(userId: string, currentPassword: string, newPassword: string) {
+    return this.http.post(this.api + 'users/update-profile.php', {
+      id: userId,
+      action: 'change_password',
+      current_password: currentPassword,
+      new_password: newPassword
+    });
+  }
+
+  // Change username in profile
+  changeUsername(userId: string, newUsername: string) {
+    return this.http.post(this.api + 'users/update-profile.php', {
+      id: userId,
+      action: 'change_username',
+      new_username: newUsername
+    });
   }
 
   saveTswiaInvo(payInvo){
@@ -1994,6 +2061,60 @@ getTswiaByDate(store_id,from ,yearId){
     return this.http.get(this.api + 'reports/getDailyReport.php', { params: params });
   }
 
+  // Sales Report - Advanced sales report with filters
+  getSalesReport(store_id: any, year_id: any, filters: any): Observable<any> {
+    let params = new HttpParams()
+      .append('store_id', store_id)
+      .append('year_id', year_id)
+      .append('date_from', filters.dateFrom)
+      .append('date_to', filters.dateTo);
+
+    if (filters.amountMin !== null && filters.amountMin !== undefined) {
+      params = params.append('amount_min', filters.amountMin);
+    }
+    if (filters.amountMax !== null && filters.amountMax !== undefined) {
+      params = params.append('amount_max', filters.amountMax);
+    }
+    if (filters.userId !== null && filters.userId !== undefined) {
+      params = params.append('user_id', filters.userId);
+    }
+    if (filters.itemId !== null && filters.itemId !== undefined) {
+      params = params.append('item_id', filters.itemId);
+    }
+    if (filters.customerId !== null && filters.customerId !== undefined) {
+      params = params.append('customer_id', filters.customerId);
+    }
+
+    return this.http.get(this.api + 'reports/getSalesReport.php', { params: params });
+  }
+
+  // Purchase Report - Advanced purchase report with filters
+  getPurchaseReport(store_id: any, year_id: any, filters: any): Observable<any> {
+    let params = new HttpParams()
+      .append('store_id', store_id)
+      .append('year_id', year_id)
+      .append('date_from', filters.dateFrom)
+      .append('date_to', filters.dateTo);
+
+    if (filters.amountMin !== null && filters.amountMin !== undefined) {
+      params = params.append('amount_min', filters.amountMin);
+    }
+    if (filters.amountMax !== null && filters.amountMax !== undefined) {
+      params = params.append('amount_max', filters.amountMax);
+    }
+    if (filters.userId !== null && filters.userId !== undefined) {
+      params = params.append('user_id', filters.userId);
+    }
+    if (filters.itemId !== null && filters.itemId !== undefined) {
+      params = params.append('item_id', filters.itemId);
+    }
+    if (filters.supplierId !== null && filters.supplierId !== undefined) {
+      params = params.append('supplier_id', filters.supplierId);
+    }
+
+    return this.http.get(this.api + 'reports/getPurchaseReport.php', { params: params });
+  }
+
   // ============== Expense Categories Methods ==============
 
   getExpenseCategories(store_id: any) {
@@ -2054,6 +2175,32 @@ getTswiaByDate(store_id,from ,yearId){
     let params = new HttpParams()
     params = params.append('id', id)
     return this.http.delete(this.api + 'expenses/delete.php', {params: params})
+  }
+
+  // ============== App Updates Methods ==============
+
+  getLatestAppUpdate() {
+    return this.http.get(this.api + 'app_updates/get-latest.php')
+  }
+
+  getAllAppUpdates() {
+    return this.http.get(this.api + 'app_updates/read.php')
+  }
+
+  createAppUpdate(updateData: any) {
+    return this.http.post(this.api + 'app_updates/create.php', updateData)
+  }
+
+  updateAppUpdate(id: any, updateData: any) {
+    let params = new HttpParams()
+    params = params.append('id', id)
+    return this.http.put(this.api + 'app_updates/update.php', updateData, {params: params})
+  }
+
+  deleteAppUpdate(id: any) {
+    let params = new HttpParams()
+    params = params.append('id', id)
+    return this.http.delete(this.api + 'app_updates/delete.php', {params: params})
   }
 
 }

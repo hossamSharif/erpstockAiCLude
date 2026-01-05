@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title> تعديل عملية تسوية جردية</ion-title>
+    <ion-title>{{ 'TSWIA.EDIT_TITLE' | translate }}</ion-title>
     <ion-buttons  slot="end">  
       <div class="poRel">
         <div class="posAb noti">
@@ -13,7 +13,7 @@
        </div>
      </div> 
      <ion-button fill="clear" (click)="presentPopoverNotif($event)">
-      <ion-label><ion-text color="dark" >الإشعارات</ion-text></ion-label>  
+      <ion-label><ion-text color="dark">{{ 'ITEMS.LABEL.NOTIFICATIONS' | translate }}</ion-text></ion-label>
      </ion-button>
      <ion-button fill="clear" (click)="back()">
       <ion-icon name="arrow-back-sharp"></ion-icon>
@@ -23,7 +23,7 @@
    <ng-template>
      <ion-header>
        <ion-toolbar dir="rtl" class="ion-text-center">
-         الإشعارات
+         {{ 'ITEMS.LABEL.NOTIFICATIONS' | translate }}
        </ion-toolbar>
      </ion-header>
      <ion-content  dir="rtl">  

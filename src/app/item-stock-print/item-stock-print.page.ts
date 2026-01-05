@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, Input, ChangeDetectorRef } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ModalController, ToastController } from '@ionic/angular';
 import { CurrencyService } from '../services/currency.service';
 import { Subscription } from 'rxjs';

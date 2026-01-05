@@ -1,0 +1,347 @@
+.report-container {
+  padding: 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+// Custom input styling to match purchase-record
+.custInput {
+  border-style: solid;
+  border-color: var(--ion-color-light);
+  border-radius: 5px;
+}
+
+// Summary Cards Section
+.summary-section {
+  margin: 0 0 16px 0;
+
+  .summary-card {
+    margin: 0;
+    text-align: center;
+
+    ion-card-header {
+      padding-bottom: 8px;
+
+      .card-icon {
+        ion-icon {
+          font-size: 3rem;
+          margin-bottom: 8px;
+        }
+      }
+
+      ion-card-subtitle {
+        font-size: 0.9rem;
+        color: var(--ion-color-medium);
+        margin-top: 4px;
+      }
+    }
+
+    ion-card-content {
+      padding-top: 4px;
+
+      h2 {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin: 8px 0;
+        color: var(--ion-color-primary);
+      }
+
+      p {
+        font-size: 0.9rem;
+        color: var(--ion-color-medium-shade);
+        margin: 4px 0;
+      }
+    }
+
+    &.total-card {
+      ion-card-content h2 {
+        color: var(--ion-color-success);
+      }
+    }
+
+    &.discount-card {
+      ion-card-content h2 {
+        color: var(--ion-color-warning);
+      }
+    }
+
+    &.net-card {
+      ion-card-content h2 {
+        color: var(--ion-color-primary);
+      }
+    }
+  }
+}
+
+// Top Customers Card
+.top-customers-card {
+  margin: 0;
+
+  ion-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+
+    ion-icon {
+      font-size: 1.3rem;
+    }
+  }
+
+  ion-list {
+    padding: 0;
+  }
+
+  ion-item {
+    --padding-start: 12px;
+    --padding-end: 12px;
+
+    ion-badge {
+      font-size: 0.9rem;
+      padding: 6px 10px;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    ion-label {
+      h2 {
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+
+      p {
+        font-size: 0.85rem;
+        color: var(--ion-color-medium);
+      }
+    }
+
+    .amount-note {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ion-color-success);
+    }
+  }
+}
+
+// Item Analytics Card
+.item-analytics-card {
+  margin: 0;
+
+  ion-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+
+    ion-icon {
+      font-size: 1.3rem;
+    }
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .analytics-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+
+    thead {
+      background: var(--ion-color-light);
+
+      th {
+        padding: 12px 8px;
+        text-align: right;
+        font-weight: 600;
+        border-bottom: 2px solid var(--ion-color-medium-tint);
+      }
+    }
+
+    tbody {
+      tr {
+        border-bottom: 1px solid var(--ion-color-light-shade);
+
+        &:hover {
+          background: var(--ion-color-light);
+        }
+
+        td {
+          padding: 10px 8px;
+          text-align: right;
+        }
+      }
+    }
+  }
+}
+
+// Invoice List Table Card
+.invoices-table-card {
+  margin-bottom: 16px;
+
+  .card-header-with-export {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    ion-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.1rem;
+      margin: 0;
+
+      ion-icon {
+        font-size: 1.3rem;
+      }
+    }
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+    margin-top: 8px;
+  }
+
+  .invoices-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    min-width: 800px;
+
+    thead {
+      background: var(--ion-color-primary);
+      color: white;
+
+      th {
+        padding: 12px 8px;
+        text-align: right;
+        font-weight: 600;
+        cursor: pointer;
+        position: relative;
+        user-select: none;
+
+        &:hover {
+          background: var(--ion-color-primary-shade);
+        }
+
+        ion-icon {
+          margin-right: 4px;
+          font-size: 0.9rem;
+          vertical-align: middle;
+        }
+      }
+    }
+
+    tbody {
+      tr {
+        border-bottom: 1px solid var(--ion-color-light-shade);
+
+        &:hover {
+          background: var(--ion-color-light);
+        }
+
+        &:nth-child(even) {
+          background: var(--ion-color-light-tint);
+        }
+
+        td {
+          padding: 10px 8px;
+          text-align: right;
+        }
+      }
+    }
+  }
+}
+
+// Empty States
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ion-color-medium);
+
+  ion-icon {
+    font-size: 6rem;
+    color: var(--ion-color-light-shade);
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--ion-color-medium-shade);
+  }
+}
+
+.empty-message {
+  text-align: center;
+  padding: 20px;
+  color: var(--ion-color-medium);
+  font-size: 0.95rem;
+}
+
+// Mobile Responsiveness
+@media (max-width: 768px) {
+  .report-container {
+    padding: 8px;
+  }
+
+  .summary-section .summary-card {
+    ion-card-content h2 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .invoices-table {
+    font-size: 0.8rem;
+
+    thead th,
+    tbody td {
+      padding: 8px 4px;
+    }
+  }
+
+  .card-header-with-export {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .analytics-table {
+    font-size: 0.85rem;
+
+    thead th,
+    tbody td {
+      padding: 8px 6px;
+    }
+  }
+}
+
+// RTL Adjustments
+[dir="rtl"] {
+  .invoices-table,
+  .analytics-table {
+    thead th,
+    tbody td {
+      text-align: right;
+    }
+
+    thead th ion-icon {
+      margin-right: 0;
+      margin-left: 4px;
+    }
+  }
+
+  .top-customers-card {
+    ion-item {
+      .amount-note {
+        text-align: left;
+      }
+    }
+  }
+}

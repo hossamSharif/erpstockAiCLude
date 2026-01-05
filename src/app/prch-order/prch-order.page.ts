@@ -1,4 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef ,Renderer2,Input} from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable } from 'rxjs';
 import { AlertController, IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -59,7 +60,7 @@ aliasResult :Array<any> =[]
 year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
 
 // اي طريقة دفع ح يكون في حساب مقابل ليها مثلا الكاش ح يتورد في حساب الخزينة وبنكك في حساب بنك الخرطوم اما الشيك فحيكون بالاجل و ح ينزل في  سجل الشيكات ويتحول الي حساب المعين سواء كان اتورد في حساب بنكي او اتسحب كاش واتورد فيحساب الخزينة 
-constructor(private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) {
+constructor(private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) {
   this.printArr.push({
     'payInvo': "",
     'itemList':"",

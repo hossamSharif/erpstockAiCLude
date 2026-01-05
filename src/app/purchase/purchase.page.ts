@@ -3,6 +3,7 @@ import { ServicesService } from "../stockService/services.service";
 import { Observable, Subscription } from 'rxjs';
 import { AlertController, IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { DatePipe, Location } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { Storage } from '@ionic/storage';
 import { AuthServiceService } from '../auth/auth-service.service';
 import { PrintModalPage } from '../print-modal/print-modal.page';
@@ -111,7 +112,7 @@ currentLoadingMessage: string = '';
 currentLoader: HTMLIonLoadingElement | null = null;
 
 // اي طريقة دفع ح يكون في حساب مقابل ليها مثلا الكاش ح يتورد في حساب الخزينة وبنكك في حساب بنك الخرطوم اما الشيك فحيكون بالاجل و ح ينزل في  سجل الشيكات ويتحول الي حساب المعين سواء كان اتورد في حساب بنكي او اتسحب كاش واتورد فيحساب الخزينة 
-constructor( private behavApi:StockServiceService ,private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private _location: Location, private cdr: ChangeDetectorRef, private currencyService: CurrencyService) {
+constructor( private behavApi:StockServiceService ,private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private _location: Location, private cdr: ChangeDetectorRef, private currencyService: CurrencyService, private translate: TranslateService) {
  
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",phone:"",address:""};
 
@@ -307,7 +308,7 @@ async updateItemDetail(){
   this.api.updateItem(this.selectedItem).subscribe(data => {
     this.hideLoading();
     if (data['message'] != 'Post Not Updated') {
-      this.presentToast('تم التعديل بنجاح', 'success');
+      this.presentToast('COMMON.MESSAGE.UPDATED_SUCCESSFULLY', 'success');
       this.performSync2();
     } else {
       this.presentToast('لم يتم حفظ البيانات، خطأ في الاتصال حاول مرة أخرى', 'danger');
@@ -1538,9 +1539,10 @@ this.updateSortedList()
 }
 
 
-async presentToast(msg,color?) {
+async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
 const toast = await this.toast.create({
-  message: msg,
+  message: message,
   duration: 2000,
   color:color,
   cssClass:'cust_Toast',
@@ -1856,7 +1858,7 @@ if (!this.sub_account) {
   }) 
   //console.log(this.printArr)
     this.presentAlertConfirm()
-    this.presentToast('تم الحفظ بنجاح', 'success')
+    this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
   });
 }
 
@@ -1919,7 +1921,7 @@ private handleSaveSuccess() {
     "store_id": this.store_info.id
   });
 
-  this.presentToast('تم الحفظ بنجاح', 'success');
+  this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success');
   
   // Show journal entry confirmation for all purchase invoices
   this.presentJournalEntryConfirmation();
@@ -1966,7 +1968,7 @@ this.api.savePerchitemList(this.itemList).subscribe(data=>{
         }
         )
       this.presentAlertConfirm() 
-      this.presentToast('تم الحفظ بنجاح' , 'success')
+      this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
       
       // Navigate back if coming from items page
       if (this.showBackButton) {
@@ -1976,7 +1978,7 @@ this.api.savePerchitemList(this.itemList).subscribe(data=>{
       }
 }, (err) => {
   //console.log(err);
-  this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
 }, () => {
   this.loadingController.dismiss()
 }
@@ -2013,13 +2015,13 @@ generateRandom2(role):any{
      if (data['message'] != 'Post Not Created') { 
       this.logHistoryArr = []
       this.presentAlertConfirm() 
-      this.presentToast('تم الحفظ بنجاح' , 'success') 
+      this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success') 
      }else{
-       this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
      }
    }, (err) => {
      //console.log(err);
-     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    }) 
   }
 
@@ -2040,11 +2042,11 @@ generateRandom2(role):any{
      this.logHistoryArr = []
      
      }else{
-       this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
      }
    }, (err) => {
      //console.log(err);
-     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    }) 
   }
 
@@ -2060,11 +2062,11 @@ generateRandom2(role):any{
      if (data['message'] != 'Post Not Created') { 
      this.logHistoryArr = []
      }else{
-       this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
      }
    }, (err) => {
      //console.log(err);
-     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    }) 
   }
 
@@ -2135,12 +2137,12 @@ saveItem(mdata){
      this.firstq = {id:null ,item_id:item_id, store_id:this.store_info.id , quantity :mdata[1].quantity ,pay_price:mdata[0].pay_price,perch_price:mdata[0].perch_price ,fq_year:'2022' ,item_name:mdata[0].item_name}
      this.saveFierstQty(mdata ) 
    }else{
-     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
    }
   
  }, (err) => {
    //console.log(err);
-   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
  }) 
 }
 

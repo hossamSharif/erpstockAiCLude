@@ -3,6 +3,7 @@ import { ServicesService } from "../stockService/services.service";
 import { Observable, Subscription } from 'rxjs';
 import { AlertController, IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { DatePipe } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { ItemModalPage } from '../item-modal/item-modal.page';
 import { Storage } from '@ionic/storage';
 import * as XLSX from 'xlsx'; 
@@ -76,7 +77,7 @@ itemsAll:Array<any> =[]
   totalPages: number = 0;
   pageSizeOptions: number[] = [10, 20, 50, 100];
   
-  constructor(private file: File, private fileOpener: FileOpener,private behavApi:StockServiceService,private storage: Storage,private alertController: AlertController,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) { 
+  constructor(private file: File, private fileOpener: FileOpener,private behavApi:StockServiceService,private storage: Storage,private alertController: AlertController,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private translate: TranslateService) { 
     this.store_info = {id:"" ,store_ref:"" , store_name:"" , location :"" }
     this.selectedItem2 = {id:null ,item_name:"" ,model:"" ,part_no:""  ,min_qty:0 ,brand:"",pay_price:0,perch_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:""};
     this.colSetting = {id:true ,item_name:true ,model:true ,part_no:true  ,min_qty:true ,brand:true,pay_price:true,perch_price:true,item_unit:true,item_desc:true,item_parcode:true,profit:true,instock:true,total:true,lastSold:true,edit:true,delete:true,aliasEn:true};
@@ -161,18 +162,18 @@ itemsAll:Array<any> =[]
        this.api.updateItem(mdata[0]).subscribe(data => {
        //console.log(data)
        if (data['message'] != 'Post Not Updated') {
-        this.presentToast('تم التعديل بنجاح' , 'success')
+        this.presentToast('COMMON.MESSAGE.UPDATED_SUCCESSFULLY', 'success')
         this.saveLogHistory(mdata[0] , undefined ,'update') 
 
             this.getStockItems() 
          
        }else{
-       this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
        }
       
      }, (err) => {
        //console.log(err);
-       this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
      },() => {
       this.loadingController.dismiss()
     }) 
@@ -198,15 +199,15 @@ itemsAll:Array<any> =[]
           if (data['message'] != 'Post Not Updated') { 
             this.updateFirstq(item) 
             this.loadingController.dismiss()
-            this.presentToast('تم التعديل بنجاح' , 'success') 
+            this.presentToast('COMMON.MESSAGE.UPDATED_SUCCESSFULLY', 'success') 
           }else{ 
-            this.presentToast('لم يتم  تعديل البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+            this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
             this.loadingController.dismiss()
           }
           this.hideMe(i)
         }, (err) => {
         //console.log(err);
-        this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+        this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
       } ,
         ()=>{
         this.hideMe(i)
@@ -214,7 +215,7 @@ itemsAll:Array<any> =[]
       }
         )   
       }else{
-        this.presentToast("خطأ في الإدخال ", "danger")
+        this.presentToast('INVENTORY.ITEMS.MESSAGE.INPUT_ERROR', 'danger')
       } 
     }
 
@@ -232,13 +233,13 @@ updateFirstq(item){
   if (data['message'] != 'Post Not Updated') { 
     this.updateItemArrays(item.id);
   }else{
-  this.presentToast('لم يتم تعديل الكمية الإفتتاحية , خطا في الإتصال حاول مرة اخري' , 'danger') 
+  this.presentToast('INVENTORY.ITEMS.MESSAGE.FAILED_UPDATE_OPENING_QTY', 'danger') 
   this.loadingController.dismiss()
   }
  // this.getStockItems() 
 }, (err) => {
   //console.log(err);
-  this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
 },() => {
  this.loadingController.dismiss()
 })  
@@ -1354,9 +1355,10 @@ setColSetting(data?){
       this.searcResult = []
     }
 
-   async presentToast(msg,color?) {
+   async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
     const toast = await this.toast.create({
-      message: msg,
+      message: message,
       duration: 2000,
       color:color,
       cssClass:'cust_Toast',
@@ -1374,12 +1376,12 @@ setColSetting(data?){
           this.firstq = {id:null ,item_id:data['message'] , store_id:this.store_info.id , quantity :mdata[1].quantity ,pay_price:mdata[0].pay_price,perch_price:mdata[0].perch_price ,fq_year:'2022'}
           this.saveFierstQty(mdata[0])
         }else{
-          this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+          this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
         }
        
       }, (err) => {
         //console.log(err);
-        this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+        this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
       }) 
   }
 
@@ -1390,11 +1392,11 @@ setColSetting(data?){
         this.firstq.id = data['message']
       }
       this.saveLogHistory(itemData , this.firstq ,'insert')
-      this.presentToast('تم الحفظ','success')
+      this.presentToast('COMMON.MESSAGE.SUCCESS', 'success')
 
     }, (err) => {
       //console.log(err);
-      this.presentToast('1لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
      
       this.loadingController.dismiss()
    
@@ -1493,11 +1495,11 @@ setColSetting(data?){
        this.getStockItems()
        this.logHistoryArr =[]
      }else{
-       this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
      } 
    }, (err) => {
      //console.log(err);
-     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    }) 
    }
 
@@ -1506,10 +1508,10 @@ setColSetting(data?){
     this.api.saveItemStock(this.itemSstock).subscribe(data=>{ 
       //console.log(data)  
      // this.getStockItems()
-      this.presentToast('تم الحفظ بنجاح' , 'success')
+      this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
     }, (err) => {
       //console.log(err);
-      this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
     }, () => {
       this.loadingController.dismiss()
     }
@@ -1525,15 +1527,15 @@ incresePrice(data){
  this.api.increasePrice(data.payval,data.perchval).subscribe(data => {
    //console.log(data)
    if (data['message'] != 'Post Not Updated') {
-    this.presentToast('تم التعديل بنجاح' , 'success') 
+    this.presentToast('COMMON.MESSAGE.UPDATED_SUCCESSFULLY', 'success') 
     //this.getStockItems()
    }else{
-   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
 
    } 
  }, (err) => {
    //console.log(err);
-   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
  },() => {
   this.loadingController.dismiss()
 }) 
@@ -1544,15 +1546,15 @@ decreasePrice(data){
  this.api.decreasePrice(data.payval,data.perchval).subscribe(data => {
    //console.log(data)
    if (data['message'] != 'Post Not Updated') {
-    this.presentToast('تم التعديل بنجاح' , 'success') 
+    this.presentToast('COMMON.MESSAGE.UPDATED_SUCCESSFULLY', 'success') 
     this.getStockItems()
    }else{
-   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
 
    }
  }, (err) => {
    //console.log(err);
-   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
  },() => {
   this.loadingController.dismiss()
 }) 
@@ -1591,7 +1593,7 @@ deleteItem(item) {
   //console.log(item)
   this.selectedItem = item
 if (item.salesQuantity > 0 || item.perchQuantity > 0) {
-  this.presentToast('لا يمكن حذف الصنف , توجد كميات في المخزون    ' , 'danger')
+  this.presentToast('INVENTORY.ITEMS.MESSAGE.CANNOT_DELETE_HAS_STOCK', 'danger')
 } else {
   this.presentAlertConfirm()
 }
@@ -1602,16 +1604,16 @@ delete(){
  this.api.deleteItems(this.selectedItem.id).subscribe(data => {
    //console.log(data)
    if (data['message'] != 'Post Not Deleted') {
-    this.presentToast('تم الحذف بنجاح' , 'success')
+    this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success')
     this.saveLogHistory(this.selectedItem , undefined ,'delete')  
    // this.getStockItems() 
    }else{
-    this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
    }
   
  },(err) => {
    //console.log(err);
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    
   },() => {
     this.loadingController.dismiss()

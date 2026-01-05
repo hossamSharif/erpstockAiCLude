@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { SubAccount2PageRoutingModule } from './sub-account2-routing.module';
 
@@ -15,7 +16,8 @@ import { SharedModule } from '../module/shared/shared.module';
     FormsModule,
     IonicModule,
     SubAccount2PageRoutingModule,
-    SharedModule
+    SharedModule,
+    TranslateModule
   ],
   declarations: [SubAccount2Page]
 })

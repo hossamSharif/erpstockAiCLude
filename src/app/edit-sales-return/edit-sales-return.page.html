@@ -5,9 +5,9 @@
         <ion-icon name="arrow-back"></ion-icon>
       </ion-button>
     </ion-buttons>
-    
-    <ion-title>تعديل مرتجعة المبيعات</ion-title>
-    
+
+    <ion-title>{{ 'SALES.EDIT_RETURN_TITLE' | translate }}</ion-title>
+
     <ion-buttons slot="end">
       <app-currency-switcher></app-currency-switcher>
     </ion-buttons>
@@ -16,31 +16,31 @@
 
 <ion-content>
   <div class="container" *ngIf="returnInvo && returnInvo.return_ref">
-    
+
     <!-- Return Information Section -->
     <ion-card>
       <ion-card-header>
-        <ion-card-title class="section-title">معلومات المرتجعة</ion-card-title>
+        <ion-card-title class="section-title">{{ 'SALES.LABEL.RETURN_INFO' | translate }}</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <ion-grid>
           <ion-row>
             <ion-col size="6">
               <ion-item>
-                <ion-label position="stacked">رقم المرتجعة</ion-label>
-                <ion-input 
-                  type="text" 
-                  [(ngModel)]="returnInvo.return_ref" 
+                <ion-label position="stacked">{{ 'SALES.LABEL.RETURN_NUMBER' | translate }}</ion-label>
+                <ion-input
+                  type="text"
+                  [(ngModel)]="returnInvo.return_ref"
                   readonly>
                 </ion-input>
               </ion-item>
             </ion-col>
             <ion-col size="6">
               <ion-item>
-                <ion-label position="stacked">الفاتورة الأصلية</ion-label>
-                <ion-input 
-                  type="text" 
-                  [(ngModel)]="returnInvo.original_pay_ref" 
+                <ion-label position="stacked">{{ 'SALES.LABEL.ORIGINAL_INVOICE' | translate }}</ion-label>
+                <ion-input
+                  type="text"
+                  [(ngModel)]="returnInvo.original_pay_ref"
                   readonly>
                 </ion-input>
               </ion-item>
@@ -49,18 +49,18 @@
           <ion-row>
             <ion-col size="6">
               <ion-item>
-                <ion-label position="stacked">تاريخ المرتجعة</ion-label>
-                <ion-input 
-                  type="date" 
+                <ion-label position="stacked">{{ 'SALES.LABEL.RETURN_DATE' | translate }}</ion-label>
+                <ion-input
+                  type="date"
                   [(ngModel)]="returnInvo.return_date">
                 </ion-input>
               </ion-item>
             </ion-col>
             <ion-col size="6">
               <ion-item>
-                <ion-label position="stacked">نوع المرتجعة</ion-label>
+                <ion-label position="stacked">{{ 'SALES.LABEL.RETURN_TYPE' | translate }}</ion-label>
                 <ion-chip [color]="isReturnAllItems ? 'success' : 'warning'">
-                  {{ isReturnAllItems ? 'مرتجعة كاملة' : 'مرتجعة جزئية' }}
+                  {{ isReturnAllItems ? ('SALES.LABEL.FULL_RETURN' | translate) : ('SALES.LABEL.PARTIAL_RETURN' | translate) }}
                 </ion-chip>
               </ion-item>
             </ion-col>

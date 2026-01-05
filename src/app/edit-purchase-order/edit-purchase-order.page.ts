@@ -1,4 +1,5 @@
 import { DatePipe, Location } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -998,7 +999,7 @@ export class EditPurchaseOrderPage implements OnInit, OnDestroy {
   async saveFierstQty(item_name) {
     this.api.saveFirstQty(this.firstq).subscribe(data => {
       this.performSyncItem(item_name);
-      this.presentToast('تم الحفظ بنجاح', 'success');
+      this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success');
     }, (err) => {
       this.presentToast('1لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري', 'danger');
       this.loadingController.dismiss();
@@ -1094,7 +1095,7 @@ export class EditPurchaseOrderPage implements OnInit, OnDestroy {
 
   private handleUpdateSuccess() {
     // Show success message
-    this.presentToast('تم الحفظ بنجاح', 'success');
+    this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success');
 
     // Update local purchase orders storage
     this.purchaseOrders = this.purchaseOrders.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);

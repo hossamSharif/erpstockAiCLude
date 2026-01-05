@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title> الرئيسية    </ion-title>
+    <ion-title>{{ 'ANALYTICS.DASHBOARD' | translate }}</ion-title>
     <ion-buttons slot="end">
       <app-currency-switcher></app-currency-switcher>
       <ion-button (click)="refresh()" [disabled]="loading">
@@ -17,7 +17,7 @@
   <!-- Loading Spinner -->
   <div *ngIf="loading" class="loading-container">
     <ion-spinner name="bubbles"></ion-spinner>
-    <p>جاري تحميل البيانات...</p>
+    <p>{{ 'ANALYTICS.MESSAGE.LOADING_DATA' | translate }}</p>
   </div>
 
   <!-- Dashboard Content -->
@@ -47,13 +47,13 @@
                 type="date"
                 [(ngModel)]="startDate"
                 (ngModelChange)="onStartDateChange($event)"
-                placeholder="من تاريخ">
-              <span class="date-separator">إلى</span>
+                [placeholder]="'ANALYTICS.LABEL.FROM_DATE' | translate">
+              <span class="date-separator">{{ 'ANALYTICS.LABEL.TO' | translate }}</span>
               <input
                 type="date"
                 [(ngModel)]="endDate"
                 (ngModelChange)="onEndDateChange($event)"
-                placeholder="إلى تاريخ">
+                [placeholder]="'ANALYTICS.LABEL.TO_DATE' | translate">
             </div>
           </div>
         </div>
@@ -64,11 +64,11 @@
     <ion-segment [(ngModel)]="selectedTab" (ionChange)="onTabChange($event)" class="dashboard-tabs">
       <ion-segment-button value="analytics">
         <ion-icon name="analytics-outline"></ion-icon>
-        <ion-label>التحليلات</ion-label>
+        <ion-label>{{ 'ANALYTICS.LABEL.ANALYTICS' | translate }}</ion-label>
       </ion-segment-button>
       <ion-segment-button value="dailyReport">
         <ion-icon name="document-text-outline"></ion-icon>
-        <ion-label>التقرير اليومي</ion-label>
+        <ion-label>{{ 'ANALYTICS.LABEL.DAILY_REPORT' | translate }}</ion-label>
       </ion-segment-button>
     </ion-segment>
 
@@ -361,7 +361,7 @@
       <!-- Loading State -->
       <div *ngIf="dailyReportLoading" class="loading-container">
         <ion-spinner name="crescent"></ion-spinner>
-        <p>جاري تحميل التقرير...</p>
+        <p>{{ 'ANALYTICS.MESSAGE.LOADING_REPORT' | translate }}</p>
       </div>
 
       <!-- Report Content -->
@@ -706,7 +706,7 @@
       <!-- Empty State -->
       <div *ngIf="!dailyReportLoading && !dailyReportGenerated" class="empty-state">
         <ion-icon name="document-text-outline"></ion-icon>
-        <p>حدد التاريخ لعرض التقرير اليومي</p>
+        <p>{{ 'ANALYTICS.MESSAGE.SELECT_DATE' | translate }}</p>
       </div>
 
     </div>

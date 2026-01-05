@@ -1,4 +1,5 @@
 import { Component, OnInit,Input } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { LoadingController, ModalController, ToastController } from '@ionic/angular';
  
 import { ServicesService } from '../stockService/services.service';
@@ -22,7 +23,7 @@ segment :any ='xls'
 store_info : {id:any , location :any ,store_name:any , store_ref:any }
 user_info : {id:any ,user_name:any ,store_id :any,full_name:any,password:any}
 price : {payval:any,perchval:any ,type:any, status:any} 
-constructor(private storage: Storage,private loadingController:LoadingController,private api:ServicesService,private modalController: ModalController,private toast :ToastController) {
+constructor(private storage: Storage,private loadingController:LoadingController,private api:ServicesService,private modalController: ModalController,private toast :ToastController, private translate: TranslateService) {
   this.selectedItem = {id:"" ,item_name:"",pay_price:"",perch_price:"",item_unit:"",item_desc:"",item_parcode:""};   
   this.price = {payval:0,perchval:0 ,type: 'pay', status:'plus'}  
 }
@@ -172,7 +173,8 @@ constructor(private storage: Storage,private loadingController:LoadingController
      await this.modalController.dismiss(this.price , this.status);
    }
  
-   async presentToast(msg,color?) {
+   async presentToast(translationKey: string,color?) {
+   const msg = this.translate.instant(translationKey);
      const toast = await this.toast.create({
        message: msg,
        duration: 2000,

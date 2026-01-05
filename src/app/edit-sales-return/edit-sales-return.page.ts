@@ -3,6 +3,7 @@ import { ServicesService } from "../stockService/services.service";
 import { Observable, Subscription } from 'rxjs';
 import { AlertController, Platform, IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { DatePipe, Location } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { Storage } from '@ionic/storage';
 import { AuthServiceService } from '../auth/auth-service.service';
 import { PrintModalPage } from '../print-modal/print-modal.page';

@@ -1,19 +1,19 @@
 
 
 <ion-content>
-<ion-grid class="custRow" dir="rtl">
+<ion-grid class="custRow">
   <ion-row class="ion-justify-content-center">
     <ion-col size="11" >
       <ion-card class="cust-card">
         <ion-card-header class="ion-text-center">
-          <h3> تسجيل دخول </h3>
-        </ion-card-header> 
+          <h3>{{ 'AUTH.LOGIN.TITLE' | translate }}</h3>
+        </ion-card-header>
         <ion-grid>
           <ion-row class=" ion-justify-content-center">
             <ion-col size="12">
               <!-- <ion-item class="custInput">
               <input  list="browsers2" id="browser2" [(ngModel)]="store_info.store_name"  (change)="pickDetail($event)">
-                       
+
               <datalist style="border: none;" id="browsers2" style="height: auto;max-height: 20px;">
                 <option *ngFor="let store of stores ; let i = index"   [value]="store.store_name"></option>
               </datalist>
@@ -25,21 +25,26 @@
             </ion-col>
             <ion-col size="9" >
               <ion-item class="custInput">
-                <ion-icon name="lock-closed-outline" slot="end" ></ion-icon>
-              <ion-input [(ngModel)]="USER_INFO.user_name" placeholder="اسم المستخدم" ></ion-input>
+                <ion-icon name="mail-outline" slot="end" ></ion-icon>
+              <ion-input type="email" [(ngModel)]="USER_INFO.email" [placeholder]="'AUTH.LOGIN.PLACEHOLDER.EMAIL' | translate" ></ion-input>
               </ion-item>
             </ion-col>
             <ion-col size="9" >
               <ion-item class="custInput">
                  <ion-icon name="eye-outline" slot="end" ></ion-icon>
-                  <ion-input type="password"  [(ngModel)]="USER_INFO.password" placeholder="كلمة المرور" ></ion-input>
-              </ion-item> 
+                  <ion-input type="password"  [(ngModel)]="USER_INFO.password" [placeholder]="'AUTH.LOGIN.PLACEHOLDER.PASSWORD' | translate" ></ion-input>
+              </ion-item>
+            </ion-col>
+            <ion-col size="9" class="ion-text-end" >
+              <ion-button fill="clear" size="small" color="primary" (click)="navigateToForgotPassword()">
+                {{ 'AUTH.LOGIN.BUTTON.FORGOT_PASSWORD' | translate }}
+              </ion-button>
             </ion-col>
           </ion-row>
           <ion-row class="ion-justify-content-center">
             <ion-col size="8" >
               <ion-button expand="block" routerDirection="root" color="success"  (click)="loginUser()">
-                <ion-label class="ion-text-center" > دخـــول</ion-label>
+                <ion-label class="ion-text-center">{{ 'AUTH.LOGIN.BUTTON.LOGIN' | translate }}</ion-label>
               </ion-button>
             </ion-col>
           </ion-row>

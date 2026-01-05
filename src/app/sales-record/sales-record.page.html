@@ -5,9 +5,12 @@
     </ion-buttons>
     <!-- sh605579887 -->
    
-    <ion-title>سجل المبيعات</ion-title>
-    
+    <ion-title>{{ 'SALES.RECORD_TITLE' | translate }}</ion-title>
+
     <ion-buttons slot="end">
+      <ion-button fill="clear" [routerLink]="['/folder/ai-assistant']" [title]="'AI_ASSISTANT.TITLE' | translate">
+        <ion-icon name="sparkles" color="primary"></ion-icon>
+      </ion-button>
       <app-currency-switcher></app-currency-switcher>
     </ion-buttons>
    
@@ -30,8 +33,8 @@
                             <ion-col size="4" dir="rtl"> 
                               <app-account-selector
                                 accountType="customer"
-                                placeholder="اختر حساب العميل"
-                                label="حساب العميل"
+                                [placeholder]="'SALES.LABEL.SELECT_CUSTOMER' | translate"
+                                [label]="'SALES.LABEL.CUSTOMER_ACCOUNT' | translate"
                                 [store_info]="store_info"
                                 [year]="year"
                                 [showAddButton]="false"
@@ -43,31 +46,31 @@
                             <ion-col class="ion-no-padding ion-no-margin">
                               <ion-item lines="none" >
                                 <ion-radio [value]="0" class="ion-margin-end"></ion-radio>
-                                <ion-label>مبيعات حديثة</ion-label> 
+                                <ion-label>{{ 'SALES.LABEL.RECENT_SALES' | translate }}</ion-label>
                               </ion-item>
                             </ion-col>
                             <ion-col class="ion-no-padding ion-no-margin">
                               <ion-item lines="none" >
                                 <ion-radio [value]="1" class="ion-margin-end"></ion-radio>
-                                <ion-label>بحث  في تاريخ</ion-label> 
+                                <ion-label>{{ 'SALES.LABEL.SEARCH_BY_DATE' | translate }}</ion-label>
                               </ion-item>
                             </ion-col>
                             <ion-col class="ion-no-padding ion-no-margin">
                               <ion-item lines="none">
                                 <ion-radio [value]="2" class="ion-margin-end"></ion-radio>
-                                <ion-label>بحث في فترة</ion-label> 
+                                <ion-label>{{ 'SALES.LABEL.SEARCH_BY_PERIOD' | translate }}</ion-label>
                               </ion-item>
                             </ion-col>
                             <ion-col class="ion-no-padding ion-no-margin">
                               <ion-item lines="none">
                                 <ion-radio [value]="3" class="ion-margin-end"></ion-radio>
-                                <ion-label> فواتير  مبدئية </ion-label> 
+                                <ion-label>{{ 'SALES.LABEL.PRELIMINARY_INVOICES' | translate }}</ion-label>
                               </ion-item>
                             </ion-col>
                             <ion-col class="ion-no-padding ion-no-margin">
                               <ion-item lines="none">
                                 <ion-radio [value]="4" class="ion-margin-end"></ion-radio>
-                                <ion-label>مرتجعات المبيعات</ion-label> 
+                                <ion-label>{{ 'SALES.LABEL.SALES_RETURNS' | translate }}</ion-label>
                               </ion-item>
                             </ion-col> 
                           </ion-row>
@@ -93,7 +96,7 @@
                           <ion-buttons slot="end"> 
                             <ion-button  fill="outline" color="success"  (click)="search()"  > 
                               <ion-icon name="search-outline" color="success"></ion-icon>
-                              <ion-label><ion-text color="dark">بحــث</ion-text></ion-label> 
+                              <ion-label><ion-text color="dark">{{ 'COMMON.BUTTON.SEARCH' | translate }}</ion-text></ion-label> 
                             </ion-button>
                           </ion-buttons>
                         </ion-item>
@@ -405,8 +408,8 @@
                             <ion-col size="12"> 
                               <app-account-selector
                                 accountType="customer"
-                                placeholder="اختر حساب العميل"
-                                label="حساب العميل"
+                                [placeholder]="'SALES.LABEL.SELECT_CUSTOMER' | translate"
+                                [label]="'SALES.LABEL.CUSTOMER_ACCOUNT' | translate"
                                 [store_info]="store_info"
                                 [year]="year"
                                 [showAddButton]="false"
@@ -464,7 +467,7 @@
                           <ion-buttons slot="end"> 
                             <ion-button  fill="outline" color="success"  (click)="search()"  > 
                               <ion-icon name="search-outline" color="success"></ion-icon>
-                              <ion-label><ion-text color="dark">بحــث</ion-text></ion-label> 
+                              <ion-label><ion-text color="dark">{{ 'COMMON.BUTTON.SEARCH' | translate }}</ion-text></ion-label> 
                             </ion-button>
                           </ion-buttons>
                         </ion-item>

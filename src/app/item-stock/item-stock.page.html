@@ -9,7 +9,7 @@
         <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>  
-    <ion-title>الأصنــاف</ion-title>
+    <ion-title>{{ 'INVENTORY.ITEM_STOCK.TITLE' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -28,24 +28,24 @@
                     <option *ngFor="let ac of sub_account ; let i = index"   [value]="ac.sub_name"></option>
                 </datalist> -->
                 <!-- <ion-input [(ngModel)]="searchTerm" placeholder="بحــث"></ion-input> -->
-                <ion-searchbar  [(ngModel)]="searchTerm" (ionChange)="onSearchChange($event)" showCancelButton="never" placeholder="بحــث" ></ion-searchbar>
+                <ion-searchbar  [(ngModel)]="searchTerm" (ionChange)="onSearchChange($event)" showCancelButton="never" [placeholder]="'INVENTORY.ITEM_STOCK.LABEL.SEARCH' | translate" ></ion-searchbar>
                 </ion-item>  
   
               </ion-col>
               <ion-col size="7" >
                 <ion-item lines="none">
                   <ion-buttons slot="end">
-                    <ion-button  fill="outline" color="primary" shape="round"  (click)="presentModal('null', 'settings')"  > 
+                    <ion-button  fill="outline" color="primary" shape="round"  (click)="presentModal('null', 'settings')"  >
                       <ion-icon name="settings-outline" color="primary"></ion-icon>
-                     <ion-label><ion-text color="dark"> إخفاء الأعمدة</ion-text></ion-label> 
+                     <ion-label><ion-text color="dark">{{ 'INVENTORY.ITEM_STOCK.LABEL.HIDE_COLUMNS' | translate }}</ion-text></ion-label>
                     </ion-button>
-                    <ion-button  fill="outline" color="primary" shape="round"   (click)="presentModal('null', 'price')"  > 
+                    <ion-button  fill="outline" color="primary" shape="round"   (click)="presentModal('null', 'price')"  >
                       <ion-icon name="create-outline" color="primary"></ion-icon>
-                      <ion-label><ion-text color="dark">تعديل الأسعار</ion-text></ion-label> 
+                      <ion-label><ion-text color="dark">{{ 'INVENTORY.ITEM_STOCK.LABEL.EDIT_PRICES' | translate }}</ion-text></ion-label>
                     </ion-button>
-                    <ion-button  fill="outline" color="primary" shape="round"  (click)="presentModal('null', 'save')"  > 
+                    <ion-button  fill="outline" color="primary" shape="round"  (click)="presentModal('null', 'save')"  >
                       <ion-icon name="add-circle-outline" color="primary"></ion-icon>
-                     <ion-label><ion-text color="dark">صنف جديد</ion-text></ion-label> 
+                     <ion-label><ion-text color="dark">{{ 'INVENTORY.ITEM_STOCK.LABEL.NEW_ITEM' | translate }}</ion-text></ion-label>
                     </ion-button>
                    
                    
@@ -64,7 +64,7 @@
     <ion-row dir="rtl"> 
       <ion-col size="3" class="ion-text-end"> 
           <ion-label *ngIf = "filterMode == false">
-            <ion-text><strong >قيمة المخزون :  </strong> </ion-text>
+            <ion-text><strong >{{ 'INVENTORY.ITEM_STOCK.LABEL.STOCK_VALUE' | translate }} :  </strong> </ion-text>
           </ion-label> 
       </ion-col>
 

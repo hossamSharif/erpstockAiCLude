@@ -1,4 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef ,Renderer2,Input} from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ServicesService } from "../stockService/services.service";
 import { from, Observable } from 'rxjs';
 import { AlertController, IonInput, LoadingController, ModalController, Platform, ToastController } from '@ionic/angular';
@@ -72,7 +73,7 @@ coloredMsgTo:boolean = false
 coloredMsgTo3:boolean = false
 // new aproch
 year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
-  constructor(private platform :Platform ,private behavApi:StockServiceService ,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) {
+  constructor(private platform :Platform ,private behavApi:StockServiceService ,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) {
     this.checkPlatform()
     this.getAppInfo() 
    }

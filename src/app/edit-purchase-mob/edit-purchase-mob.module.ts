@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { EditPurchaseMobPageRoutingModule } from './edit-purchase-mob-routing.module';
 
@@ -15,6 +16,8 @@ import { ShareModule } from '../shareModule/share-module/share-module.module';
     ShareModule,
     IonicModule,
     EditPurchaseMobPageRoutingModule
+  ,
+    TranslateModule
   ],
   declarations: [EditPurchaseMobPage]
 })

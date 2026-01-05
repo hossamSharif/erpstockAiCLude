@@ -1,0 +1,89 @@
+<!-- Floating AI Chat Widget -->
+<div class="ai-chat-widget">
+  <!-- Minimized Button -->
+  <div class="ai-chat-button" *ngIf="isMinimized" (click)="toggleWidget()">
+    <ion-icon name="sparkles"></ion-icon>
+    <div class="pulse-ring"></div>
+  </div>
+
+  <!-- Expanded Chat Window -->
+  <div class="ai-chat-window" *ngIf="isExpanded">
+    <!-- Header -->
+    <div class="chat-header">
+      <div class="header-content">
+        <ion-icon name="sparkles" class="ai-icon"></ion-icon>
+        <div class="header-text">
+          <h3>AI Assistant</h3>
+          <p>Quick Chat</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <ion-button fill="clear" size="small" (click)="openFullPage()">
+          <ion-icon name="expand-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+        <ion-button fill="clear" size="small" (click)="clearChat()">
+          <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+        <ion-button fill="clear" size="small" (click)="closeWidget()">
+          <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Messages Content -->
+    <ion-content class="chat-content">
+      <div class="messages-container">
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="messages.length === 0 && !isStreaming">
+          <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+          <h4>Ask me anything!</h4>
+          <p>Quick answers about your business</p>
+        </div>
+
+        <!-- Messages -->
+        <div
+          *ngFor="let message of messages"
+          class="message-wrapper"
+          [class.user-message]="message.role === 'user'"
+          [class.assistant-message]="message.role === 'assistant'"
+        >
+          <div class="message-bubble">
+            <div class="message-content" [innerHTML]="message.content | nl2br"></div>
+          </div>
+        </div>
+
+        <!-- Streaming Indicator -->
+        <div class="message-wrapper assistant-message" *ngIf="isStreaming">
+          <div class="message-bubble streaming">
+            <div class="typing-indicator">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ion-content>
+
+    <!-- Input Area -->
+    <div class="chat-footer">
+      <ion-textarea
+        [(ngModel)]="currentMessage"
+        placeholder="Ask me anything..."
+        rows="1"
+        autoGrow="true"
+        class="message-input"
+        (keydown.enter)="$event.preventDefault(); sendMessage()"
+        [disabled]="isStreaming"
+      ></ion-textarea>
+
+      <ion-button
+        fill="solid"
+        color="primary"
+        (click)="sendMessage()"
+        [disabled]="!currentMessage.trim() || isStreaming"
+        class="send-button"
+      >
+        <ion-icon name="send" slot="icon-only"></ion-icon>
+      </ion-button>
+    </div>
+  </div>
+</div>

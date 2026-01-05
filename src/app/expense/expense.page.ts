@@ -1,9 +1,11 @@
 import { Component, OnInit, HostListener, ElementRef } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ServicesService } from "../stockService/services.service";
-import { AlertController, LoadingController, Platform, ToastController } from '@ionic/angular';
+import { AlertController, LoadingController, Platform, ToastController, ModalController } from '@ionic/angular';
 import { DatePipe } from '@angular/common';
 import { Storage } from '@ionic/storage';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AddExpenseCategoryModalComponent } from '../components/add-expense-category-modal/add-expense-category-modal.component';
 
 @Component({
   selector: 'app-expense',
@@ -64,7 +66,8 @@ export class ExpensePage implements OnInit {
     private datePipe: DatePipe,
     private api: ServicesService,
     private toast: ToastController,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private modalController: ModalController
   ) {
     this.checkPlatform()
     let d = new Date()
@@ -167,6 +170,30 @@ export class ExpensePage implements OnInit {
       console.error('Error loading expense categories:', err);
       this.expenseCategories = []
     })
+  }
+
+  async openAddCategoryModal() {
+    const modal = await this.modalController.create({
+      component: AddExpenseCategoryModalComponent,
+      componentProps: { store_info: this.store_info },
+      cssClass: 'add-category-modal'
+    });
+
+    await modal.present();
+    const { data } = await modal.onWillDismiss();
+
+    if (data && data.created) {
+      this.loadExpenseCategories();
+
+      // Auto-select new category
+      setTimeout(() => {
+        this.expense.category_id = data.category.id;
+        this.selectedCategory = data.category;
+        this.categorySearchTerm = data.category.category_name;
+      }, 300);
+
+      this.presentToast('تم إضافة التصنيف بنجاح', 'success');
+    }
   }
 
   generateExpenseRef() {

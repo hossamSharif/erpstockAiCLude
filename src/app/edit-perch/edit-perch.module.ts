@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { EditPerchPageRoutingModule } from './edit-perch-routing.module';
 
@@ -18,6 +19,8 @@ import { SharedModule } from '../module/shared/shared.module';
     SharedModule,
     IonicModule,
     EditPerchPageRoutingModule
+  ,
+    TranslateModule
   ],
   declarations: [EditPerchPage]
 })

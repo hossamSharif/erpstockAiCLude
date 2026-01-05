@@ -1,4 +1,5 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ModalController, ToastController, LoadingController, AlertController } from '@ionic/angular';
 import { CurrencyService } from '../../services/currency.service';
@@ -38,7 +39,8 @@ export class CurrencyRateModalComponent implements OnInit, OnDestroy {
     private alertController: AlertController,
     private servicesService: ServicesService,
     private storage: Storage,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private translate: TranslateService
   ) {
     this.initForm();
   }
@@ -241,7 +243,8 @@ export class CurrencyRateModalComponent implements OnInit, OnDestroy {
     await confirmAlert.present();
   }
   
-  async presentToast(message: string, color: string) {
+  async presentToast(translationKey: string, color: string) {
+    const message = this.translate.instant(translationKey);
     const toast = await this.toastController.create({
       message: message,
       duration: 3000,

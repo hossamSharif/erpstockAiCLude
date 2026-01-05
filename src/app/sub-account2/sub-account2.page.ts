@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 import { AlertController, IonInput, LoadingController, ModalController, ToastController, IonPopover } from '@ionic/angular';
 import { DatePipe } from '@angular/common';
 import { ItemModalPage } from '../item-modal/item-modal.page';
@@ -403,7 +404,7 @@ export class SubAccount2Page implements OnInit, OnDestroy {
         if (loadMore) {
           this.currentPage--;
         }
-        this.presentToast('خطأ في تحميل الحسابات', 'danger');
+        this.presentToast('ACCOUNTING.SUB_ACCOUNT.MESSAGE.ERROR_LOADING_ACCOUNTS', 'danger');
       }
     );
   }
@@ -775,7 +776,7 @@ getAccountCategory () {
   // Export functionality
   async exportToPDF(): Promise<void> {
     if (!this.filteredAccounts || this.filteredAccounts.length === 0) {
-      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      await this.presentToast('ACCOUNTING.SUB_ACCOUNT.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
       return;
     }
 
@@ -795,7 +796,7 @@ getAccountCategory () {
 
   async exportToExcel(): Promise<void> {
     if (!this.filteredAccounts || this.filteredAccounts.length === 0) {
-      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      await this.presentToast('ACCOUNTING.SUB_ACCOUNT.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
       return;
     }
 

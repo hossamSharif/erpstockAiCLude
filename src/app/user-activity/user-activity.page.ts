@@ -1,5 +1,6 @@
 import { DatePipe, Location } from '@angular/common';
 import { Component, OnInit ,ViewChild, ElementRef} from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { ServicesService } from '../stockService/services.service';
@@ -31,7 +32,7 @@ export class UserActivityPage implements OnInit {
   store_info : {id:any , location :any ,store_name:any , store_ref:any }
   user_info : {id:any ,user_name:any ,store_id :any,full_name:any,password:any}
   year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any} 
-  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) { 
+  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) { 
     this.getAppInfo()
   }
 

@@ -1,4 +1,5 @@
 import { Component, OnInit,Input } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { LoadingController, ModalController, ToastController, AlertController } from '@ionic/angular';
  
 import { ServicesService } from '../stockService/services.service';
@@ -43,7 +44,7 @@ export class ItemModalPage implements OnInit {
   }
   customPercentage: number = null
   lastAppliedPercentage: number = null 
-  constructor(private loadingController:LoadingController,private api:ServicesService,private modalController: ModalController,private toast :ToastController, private alertController: AlertController) {
+  constructor(private loadingController:LoadingController,private api:ServicesService,private modalController: ModalController,private toast :ToastController, private translate: TranslateService, private alertController: AlertController) {
     this.selectedItem = {id:"" ,item_name:"",model:"",part_no:""  ,min_qty:0 ,brand:"",pay_price:"",perch_price:"",retail_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:"",category_id:""};   
     this.firstqObj = {id:"" ,item_id:"" , store_id:"" , quantity :0 ,	fq_year:"" ,	pay_price:"" ,	perch_price:"" }
     this.colSettingpr = {id:true ,item_name:true ,model:true ,part_no:true  ,min_qty:true ,brand:true,pay_price:true,perch_price:true,item_unit:true,item_desc:true,item_parcode:true,profit:true,instock:true,total:true,lastSold:true,lastPurch:true,aliasEn:true};
@@ -287,7 +288,8 @@ modelChange(ev){
     await this.modalController.dismiss(this.price , this.status);
   }
 
-  async presentToast(msg,color?) {
+  async presentToast(translationKey: string,color?) {
+    const msg = this.translate.instant(translationKey);
     const toast = await this.toast.create({
       message: msg,
       duration: 2000,

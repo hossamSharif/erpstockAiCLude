@@ -3,6 +3,7 @@ import { ServicesService } from "../stockService/services.service";
 import { Observable } from 'rxjs';
 import { AlertController, IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { DatePipe } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { Storage } from '@ionic/storage';
 import { FilterPipe } from '../sales/pipe';
 import { AuthServiceService } from '../auth/auth-service.service';
@@ -103,7 +104,7 @@ export class ItemsReportPage implements OnInit {
    totPurch:any 
    }
 
-  constructor( private route: ActivatedRoute,private rout : Router,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private cdr: ChangeDetectorRef) {
+  constructor( private route: ActivatedRoute,private rout : Router,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private cdr: ChangeDetectorRef, private translate: TranslateService) {
     this.selectedItem = {
       id:undefined,
       dateCreated:"",
@@ -264,7 +265,7 @@ readItemByIdQty(){
      }
    }, (err) => {
      console.log(err);
-     this.presentToast('خطأ في الإتصال حاول مرة أخرى' , 'danger')
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    },
    () => {
    })  
@@ -621,9 +622,10 @@ radioChange(ev){
   //console.log(ev.target.value) 
  }
  
- async presentToast(msg,color?) {
-  const toast = await this.toast.create({
-    message: msg,
+  async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
+    const toast = await this.toast.create({
+      message: message,
     duration: 2000,
     color:color,
     cssClass:'cust_Toast',
@@ -844,7 +846,7 @@ this.selectedItem = {
         this.rout.navigate(['folder/edit-sales'], navigationExtras); 
        }, (err) => {
        //console.log(err);
-       this.presentToast('خطا في الإتصال حاول مرة اخري' , 'danger')
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
      })   
      }else if(pay.type == "مشتريات"){
       this.api.getPerchInvoDetail(this.store_info.id , pay.pay_ref,this.year.id).subscribe(data =>{
@@ -865,7 +867,7 @@ this.selectedItem = {
         this.rout.navigate(['folder/edit-perch'], navigationExtras); 
        }, (err) => {
        //console.log(err);
-       this.presentToast('خطا في الإتصال حاول مرة اخري' , 'danger')
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
      })  
      }else if(pay.type == "تسوية جردية"){
       this.api.getTswiaInvoDetail(this.store_info.id , pay.pay_ref,this.year.id).subscribe(data =>{
@@ -885,7 +887,7 @@ this.selectedItem = {
         this.rout.navigate(['folder/edit-tswia'], navigationExtras); 
        }, (err) => {
        //console.log(err);
-       this.presentToast('خطا في الإتصال حاول مرة اخري' , 'danger')
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
      })  
      }
      
@@ -910,7 +912,7 @@ getItemPaysByItemIdBydate(){
      // this.store_tot = this.items.reduce( (acc, obj)=> { return acc + +(obj.perch_price * obj.quantity ); }, 0);
    }, (err) => {
    //console.log(err);
-   this.presentToast('  خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
 
  },
  ()=>{
@@ -936,7 +938,7 @@ getItemPaysByItemIdBydate(){
       // this.store_tot = this.items.reduce( (acc, obj)=> { return acc + +(obj.perch_price * obj.quantity ); }, 0);
     }, (err) => {
     //console.log(err);
-    this.presentToast('  خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
  
   },
   ()=>{
@@ -962,7 +964,7 @@ getItemPaysByItemIdBydate(){
       // this.store_tot = this.items.reduce( (acc, obj)=> { return acc + +(obj.perch_price * obj.quantity ); }, 0);
     }, (err) => {
     //console.log(err);
-    this.presentToast('1خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
     this.loading = false
   },
   ()=>{})  
@@ -988,7 +990,7 @@ getItemPaysByItemIdBy2date(){
     }, (err) => {
     //console.log(err);
     this.loading = false
-    this.presentToast('  خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
 
   },
   ()=>{
@@ -1017,7 +1019,7 @@ getItemPaysByItemIdBy2date(){
       }, (err) => {
       //console.log(err);
       this.loading = false
-      this.presentToast('  خطا في الإتصال حاول مرة اخري' , 'danger')
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   
     },
     ()=>{
@@ -1045,7 +1047,7 @@ getItemPaysByItemIdBy2date(){
         }, (err) => {
         //console.log(err);
         this.loading = false
-        this.presentToast('  خطا في الإتصال حاول مرة اخري' , 'danger')
+        this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
 
       },
 
@@ -1083,7 +1085,7 @@ getItemPaysByItemIdBy2date(){
       }, (err) => {
       //console.log(err);
       this.loading = false
-      this.presentToast('  خطا في الإتصال حاول مرة اخري' , 'danger')
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   
     },
     ()=>{
@@ -1119,7 +1121,7 @@ getItemPaysByItemIdBy2date(){
         }, (err) => {
         //console.log(err);
         this.loading = false
-        this.presentToast('  خطا في الإتصال حاول مرة اخري' , 'danger')
+        this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
     
       },
       ()=>{
@@ -1147,7 +1149,7 @@ getItemPaysByItemIdBy2date(){
      
      }, (err) => {
      //console.log(err);
-     this.presentToast('  خطا في الإتصال حاول مرة اخري' , 'danger')
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    },
    ()=>{
     this.loading = false
@@ -1183,7 +1185,7 @@ getItemPaysByItemIdBy2date(){
      
      }, (err) => {
      //console.log(err);
-     this.presentToast('  خطا في الإتصال حاول مرة اخري' , 'danger')
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    },
    ()=>{
     this.loading = false
@@ -1208,7 +1210,7 @@ getItemPaysByItemIdBy2date(){
        
      }, (err) => {
      //console.log(err);
-     this.presentToast('  خطا في الإتصال حاول مرة اخري' , 'danger')
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
      this.loading=false
    },
    ()=>{
@@ -1238,7 +1240,7 @@ getItemPaysByItemIdBy2date(){
          //console.log(this.payArray) 
       }, (err) => {
       //console.log(err);
-      this.presentToast('  خطا في الإتصال حاول مرة اخري' , 'danger')
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
       this.loading=false
     },
     ()=>{
@@ -1467,7 +1469,7 @@ onRefreshRequested() {
 }
 
 refresh() {
-  this.presentToast('تم تحديث البيانات', 'success');
+  this.presentToast('COMMON.MESSAGE.UPDATED_SUCCESSFULLY', 'success');
   window.location.reload();
 }
 
@@ -1517,7 +1519,7 @@ clearItemSelection() {
 
 search(){
   if (!this.selectedItem?.id) {
-    this.presentToast('يرجى اختيار صنف أولاً', 'warning');
+    this.presentToast('INVENTORY.ITEMS_REPORT.MESSAGE.SELECT_ITEM_FIRST', 'warning');
     return;
   }
 
@@ -1680,7 +1682,7 @@ search(){
       } else {
         // No data found
         this.showEmpty = true;
-        this.presentToast('لا توجد بيانات للصنف المحدد', 'warning');
+        this.presentToast('INVENTORY.ITEMS_REPORT.MESSAGE.NO_DATA_FOR_ITEM', 'warning');
       }
     },
     (err) => {

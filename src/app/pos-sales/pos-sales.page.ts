@@ -3,6 +3,7 @@ import { ServicesService } from "../stockService/services.service";
 import { Observable, Subscription } from 'rxjs';
 import { AlertController, Platform ,IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { DatePipe ,Location} from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { Storage } from '@ionic/storage';
 import { AuthServiceService } from '../auth/auth-service.service';
 import { PrintModalPage } from '../print-modal/print-modal.page';
@@ -14,7 +15,7 @@ import { FilterPipe3  } from '../sales/pipe3';
 import { StockServiceService } from '../syncService/stock-service.service';
 import * as momentObj from 'moment';
 import { DomSanitizer } from '@angular/platform-browser'; 
-import { formatDate } from '@angular/common'; 
+import { formatDate } from '@angular/common';
 //import { toHex } from 'utils';
 
 @Component({
@@ -92,7 +93,7 @@ export class PosSalesPage implements OnInit {
 
  qrcodedata: string = null;
 
-  constructor(private sanitizer : DomSanitizer,  private rout : Router ,private platform:Platform,private behavApi:StockServiceService ,private _location: Location, private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) {
+  constructor(private sanitizer : DomSanitizer,  private rout : Router ,private platform:Platform,private behavApi:StockServiceService ,private _location: Location, private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private translate: TranslateService) {
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",phone:"",address:"",currentCustumerStatus:0};
     this.route.queryParams.subscribe(params => {
       //console.log(params.payInvo,'jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj')
@@ -1351,9 +1352,10 @@ this.taxAll=0
 this.getTotal()
 }
 
-async presentToast(msg,color?) {
+async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
   const toast = await this.toast.create({
-    message: msg,
+    message: message,
     duration: 2000,
     color:color,
     cssClass:'cust_Toast',
@@ -1604,7 +1606,7 @@ saveIntial(){
     }) 
       //console.log(this.printArr)
       this.presentAlertConfirm()
-      this.presentToast('تم الحفظ بنجاح', 'success')
+      this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
       this.prepareInvo()
       this.status = 'new'
     });  
@@ -1630,7 +1632,7 @@ deleteInitial(){
      this.initialInvoices = this.initialInvoices.filter(x=>x['payInvo'].pay_ref != this.payInvo.pay_ref) 
     } 
      this.storage.set('initialInvoices', this.initialInvoices).then((response) => { 
-      this.presentToast('تم الحذف بنجاح' , 'success') 
+      this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success') 
       this.status = 'new'
       this.prepareInvo()
       });    
@@ -1647,11 +1649,11 @@ deleteSalesInvoInit(){
    if (data['message'] != 'Post Not Deleted') {
    this.deleteSalesitemListInit()
    }else{
-    this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    }
  },(err) => {
    //console.log(err);
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   }) 
 }
 
@@ -1661,15 +1663,15 @@ deleteSalesitemListInit(){
   //console.log(data)
   if (data['message'] != 'Post Not Deleted') { 
     if(this.status != 'toFinal'){
-      this.presentToast('تم الحذف بنجاح' , 'success') 
+      this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success') 
      this.prepareInvo()
     } 
   }else{
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   }
 },(err) => {
   //console.log(err);
-  this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   
  },() => {
    this.loadingController.dismiss()
@@ -1822,14 +1824,14 @@ deleteSalesitemListInit(){
          if (data['message'] != 'Post Not Created') { 
           this.logHistoryArr = []
           this.presentAlertConfirm() 
-          this.presentToast('تم الحفظ بنجاح' , 'success')
+          this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
           // this.getStockItems()
          }else{
-           this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+           this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
          }
        }, (err) => {
          //console.log(err);
-         this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+         this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
        }) 
       }
 
@@ -1851,7 +1853,7 @@ deleteSalesitemListInit(){
      this.deleteSalesitemListInit4update()
       }, (err) => {
       //console.log(err);
-      this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger').then(()=>{
         this.loadingController.dismiss()
       })
      })
@@ -1864,13 +1866,13 @@ deleteSalesitemListInit(){
       if (data['message'] != 'Post Not Deleted') { 
         this.saveitemListinit()   
       }else{
-       this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger').then(()=>{
         this.loadingController.dismiss()
       })
       } 
     },(err) => {
       //console.log(err);
-      this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger').then(()=>{
         this.loadingController.dismiss()
       })
       
@@ -2015,7 +2017,7 @@ if (!this.sub_account) {
     }) 
     //console.log(this.printArr)
       this.presentAlertConfirm()
-      this.presentToast('تم الحفظ بنجاح', 'success')
+      this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
       if(this.initialInvoices.length > 0){ 
         this.initialInvoices = this.initialInvoices.filter(x=>x['payInvo'].pay_ref != this.payInvo.pay_ref) 
         this.storage.set('initialInvoices', this.initialInvoices).then((response) => {
@@ -2046,12 +2048,12 @@ if (!this.sub_account) {
     }) 
       //console.log(this.printArr)
       this.presentAlertConfirm()
-      this.presentToast('تم الحفظ بنجاح', 'success')
+      this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
       this.prepareInvo()
       this.status = 'new'
   }, (err) => {
     //console.log(err);
-    this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   }, () => {
     this.loadingController.dismiss()
   }
@@ -2123,7 +2125,7 @@ async saveitemList(){
   this.performSync()    
   }, (err) => {
     //console.log(err);
-    this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   }, () => {
     this.loadingController.dismiss()
   }

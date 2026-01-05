@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { ItemsPageRoutingModule } from './items-routing.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
@@ -17,6 +18,7 @@ import { ShareModule } from '../shareModule/share-module/share-module.module';
     Ng2SearchPipeModule,
     ShareModule,
     ItemsPageRoutingModule
+    ,TranslateModule
   ],
   declarations: [ItemsPage]
 })

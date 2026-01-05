@@ -1,4 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { LoadingController, ToastController, NavController, AlertController } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import { ServicesService } from '../stockService/services.service';
@@ -64,7 +65,8 @@ export class AccountModalPage implements OnInit {
     private api: ServicesService,
     private storage: Storage,
     private accountCommunicationService: AccountCommunicationService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private translate: TranslateService
   ) {
     this.initializeData();
   }
@@ -432,7 +434,8 @@ export class AccountModalPage implements OnInit {
     return true;
   }
 
-  async presentToast(message: string, color: string) {
+  async presentToast(translationKey: string, color: string) {
+    const message = this.translate.instant(translationKey);
     const toast = await this.toastController.create({
       message: message,
       duration: 2000,

@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button class="glass-menu-button"></ion-menu-button>
     </ion-buttons>
-    <ion-title class="glass-title">التقرير اليومي</ion-title>
+    <ion-title class="glass-title">{{ 'DAILY_REPORT.TITLE' | translate }}</ion-title>
     <ion-buttons slot="end">
       <app-currency-switcher></app-currency-switcher>
       <ion-button fill="clear" (click)="refresh()" *ngIf="reportGenerated">
@@ -17,7 +17,7 @@
   <!-- Loading State -->
   <div *ngIf="!user_info || !store_info" class="loading-container">
     <ion-spinner name="crescent"></ion-spinner>
-    <p class="loading-text">جاري التحميل...</p>
+    <p class="loading-text">{{ 'DAILY_REPORT.MESSAGE.LOADING_DATA' | translate }}</p>
   </div>
 
   <!-- Main Content -->
@@ -30,13 +30,13 @@
           <!-- Main Row: Search Type -->
           <div class="main-row">
             <div class="search-type-section full-width">
-              <ion-label class="field-label">نوع البحث</ion-label>
+              <ion-label class="field-label">{{ 'DAILY_REPORT.LABEL.SEARCH_TYPE' | translate }}</ion-label>
               <ion-segment [(ngModel)]="radioVal" class="compact-segment">
                 <ion-segment-button value="1">
-                  <span>تاريخ محدد</span>
+                  <span>{{ 'DAILY_REPORT.LABEL.SPECIFIC_DATE' | translate }}</span>
                 </ion-segment-button>
                 <ion-segment-button value="2">
-                  <span>فترة زمنية</span>
+                  <span>{{ 'DAILY_REPORT.LABEL.TIME_PERIOD' | translate }}</span>
                 </ion-segment-button>
               </ion-segment>
             </div>
@@ -46,7 +46,7 @@
           <div class="search-row">
             <!-- Single Date -->
             <div class="date-field" *ngIf="radioVal == 1">
-              <ion-label class="field-label">التاريخ</ion-label>
+              <ion-label class="field-label">{{ 'DAILY_REPORT.LABEL.DATE' | translate }}</ion-label>
               <ion-input
                 type="date"
                 [(ngModel)]="startingDate"
@@ -56,7 +56,7 @@
 
             <!-- Date Range -->
             <div class="date-field" *ngIf="radioVal == 2">
-              <ion-label class="field-label">من تاريخ</ion-label>
+              <ion-label class="field-label">{{ 'DAILY_REPORT.LABEL.FROM_DATE' | translate }}</ion-label>
               <ion-input
                 type="date"
                 [(ngModel)]="startingDate"
@@ -65,7 +65,7 @@
             </div>
 
             <div class="date-field" *ngIf="radioVal == 2">
-              <ion-label class="field-label">إلى تاريخ</ion-label>
+              <ion-label class="field-label">{{ 'DAILY_REPORT.LABEL.TO_DATE' | translate }}</ion-label>
               <ion-input
                 type="date"
                 [(ngModel)]="endDate"
@@ -80,7 +80,7 @@
               class="generate-btn"
               [disabled]="loading">
               <ion-icon name="document-text-outline" slot="start"></ion-icon>
-              توليد التقرير
+              {{ 'DAILY_REPORT.BUTTON.GENERATE_REPORT' | translate }}
             </ion-button>
           </div>
         </ion-card-content>
@@ -405,7 +405,7 @@
         <div class="action-buttons">
           <ion-button (click)="printReport()" fill="solid" class="print-btn">
             <ion-icon name="print-outline" slot="start"></ion-icon>
-            طباعة التقرير
+            {{ 'DAILY_REPORT.BUTTON.PRINT_REPORT' | translate }}
           </ion-button>
         </div>
 
@@ -414,7 +414,7 @@
       <!-- Empty State -->
       <div *ngIf="!reportGenerated && !loading" class="empty-state">
         <ion-icon name="document-text-outline"></ion-icon>
-        <p>حدد التاريخ واضغط على "توليد التقرير" لعرض التقرير اليومي</p>
+        <p>{{ 'DAILY_REPORT.MESSAGE.EMPTY_STATE' | translate }}</p>
       </div>
 
     </div>

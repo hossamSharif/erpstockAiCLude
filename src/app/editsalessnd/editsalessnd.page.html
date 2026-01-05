@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar> 
-    <ion-title > تعديل فاتورة مبيعات</ion-title> 
+    <ion-title>{{ 'SALES.EDIT_TITLE' | translate }}</ion-title> 
     <ion-buttons  slot="end"> 
       
     <ion-button fill="clear" (click)="back()">
@@ -27,7 +27,7 @@
                     <ion-col class="ion-no-padding ion-no-margin">
                       <ion-item lines="none" >
                         <ion-radio [value]="0" class="ion-margin-end"></ion-radio>
-                        <ion-label>قائمة الحسابات </ion-label> 
+                        <ion-label>{{ 'SALES.LABEL.ACCOUNT_LIST' | translate }}</ion-label> 
                       </ion-item>
                     </ion-col>
                     <ion-col class="ion-no-padding ion-no-margin">

@@ -1,0 +1,56 @@
+<ion-header>
+  <ion-toolbar color="warning">
+    <ion-title>إضافة تصنيف مصروفات</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="modal-content">
+    <ion-card>
+      <ion-card-content>
+        <ion-item class="input-item">
+          <ion-label position="stacked">اسم التصنيف *</ion-label>
+          <ion-input
+            [(ngModel)]="newCategory.category_name"
+            placeholder="مثل: رواتب، إيجار، صيانة"
+            autofocus>
+          </ion-input>
+        </ion-item>
+
+        <ion-item class="input-item">
+          <ion-label position="stacked">وصف التصنيف (اختياري)</ion-label>
+          <ion-textarea
+            [(ngModel)]="newCategory.category_desc"
+            placeholder="وصف مختصر عن التصنيف"
+            rows="3">
+          </ion-textarea>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="button-container">
+      <ion-button
+        expand="block"
+        color="warning"
+        (click)="saveCategory()"
+        [disabled]="!newCategory.category_name?.trim() || isSaving">
+        <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+        {{ isSaving ? 'جاري الحفظ...' : 'حفظ التصنيف' }}
+      </ion-button>
+
+      <ion-button
+        expand="block"
+        fill="outline"
+        color="medium"
+        (click)="cancel()"
+        [disabled]="isSaving">
+        إلغاء
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { SalesRecordPageRoutingModule } from './sales-record-routing.module';
 
@@ -17,6 +18,8 @@ import { SharedModule } from '../module/shared/shared.module';
     IonicModule,
     SalesRecordPageRoutingModule,
     SharedModule
+  ,
+    TranslateModule
   ],
   declarations: [SalesRecordPage ]
 })

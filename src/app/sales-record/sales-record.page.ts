@@ -3,6 +3,7 @@ import { ServicesService } from "../stockService/services.service";
 import { Observable, Subscription } from 'rxjs';
 import {  LoadingController, ModalController,Platform , PopoverController, ToastController, AlertController } from '@ionic/angular';
 import { DatePipe } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { Storage } from '@ionic/storage';
 import { NavigationExtras, Router } from '@angular/router'
 import { PrintModalPage } from '../print-modal/print-modal.page';
@@ -292,7 +293,7 @@ export class SalesRecordPage implements OnInit, OnDestroy {
   currentCurrency$ = this.currencyService.getCurrentCurrency();
   private subscription: Subscription = new Subscription();
 
-  constructor(private popoverController: PopoverController , private platform :Platform,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private exportService: ExportService, private currencyService: CurrencyService, private cdr: ChangeDetectorRef, private verificationService: DataVerificationService, private alertController: AlertController) { 
+  constructor(private popoverController: PopoverController , private platform :Platform,private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private sortingService: SortingService, private exportService: ExportService, private currencyService: CurrencyService, private cdr: ChangeDetectorRef, private verificationService: DataVerificationService, private alertController: AlertController, private translate: TranslateService) { 
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
    
    this.checkPlatform()
@@ -1567,9 +1568,10 @@ export class SalesRecordPage implements OnInit, OnDestroy {
     
   }
 
-  async presentToast(msg,color?) {
+  async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
     const toast = await this.toast.create({
-      message: msg,
+      message: message,
       duration: 2000,
       color:color,
       cssClass:'cust_Toast',
@@ -2039,7 +2041,7 @@ async createPurchaseOrderFromSelectedInvoices() {
 // Export functionality
 async exportToPDF(): Promise<void> {
   if (!this.sortedPayArray || this.sortedPayArray.length === 0) {
-    await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+    await this.presentToast('SALES.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
     return;
   }
 
@@ -2059,7 +2061,7 @@ async exportToPDF(): Promise<void> {
 
 async exportToExcel(): Promise<void> {
   if (!this.sortedPayArray || this.sortedPayArray.length === 0) {
-    await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+    await this.presentToast('SALES.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
     return;
   }
 

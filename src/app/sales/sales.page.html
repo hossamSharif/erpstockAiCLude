@@ -4,7 +4,7 @@
       <ion-back-button *ngIf="showBackButton" (click)="goBack()" defaultHref="/"></ion-back-button>
       <ion-menu-button *ngIf="!showBackButton"></ion-menu-button>
     </ion-buttons>
-    <ion-title>فاتورة مبيعات</ion-title>
+    <ion-title>{{ 'SALES.TITLE' | translate }}</ion-title>
     <!-- Date in header -->
     <ion-buttons slot="end" *ngIf="user_info && store_info" >
       <app-currency-switcher></app-currency-switcher>
@@ -24,8 +24,8 @@
           <ion-col size="4" class="account-column">
             <app-account-selector
               accountType="customer"
-              placeholder="اختر حساب العميل"
-              label="حساب العميل"
+              [placeholder]="'SALES.LABEL.SELECT_CUSTOMER' | translate"
+              [label]="'SALES.LABEL.CUSTOMER_ACCOUNT' | translate"
               [store_info]="store_info"
               [year]="year"
               [showAddButton]="true"
@@ -37,7 +37,7 @@
           
           <!-- Second Column: Invoice Type -->
           <ion-col size="3" class="invoice-type-column">
-            <ion-label class="column-label">نوع الفاتورة</ion-label>
+            <ion-label class="column-label">{{ 'SALES.LABEL.INVOICE_TYPE' | translate }}</ion-label>
             <div class="invoice-type-section">
               <ion-segment 
                 [(ngModel)]="radioVal2" 
@@ -45,10 +45,10 @@
                 class="compact-segment"
                 [disabled]="isLoading()">
                 <ion-segment-button [value]="0">
-                  <span>مبدئية</span>
+                  <span>{{ 'SALES.LABEL.PRELIMINARY' | translate }}</span>
                 </ion-segment-button>
                 <ion-segment-button [value]="1">
-                  <span>نهائية</span>
+                  <span>{{ 'SALES.LABEL.FINAL' | translate }}</span>
                 </ion-segment-button>
               </ion-segment>
             </div>
@@ -56,10 +56,10 @@
           
           <!-- Comment Column: Note field in same row -->
           <ion-col size="4" class="date-comment-column">
-            <ion-label class="column-label">ملاحظــة</ion-label>
-            <ion-item class="custInput comment-input"> 
-              <ion-input 
-                placeholder="أكتب تعليقا" 
+            <ion-label class="column-label">{{ 'SALES.LABEL.COMMENT' | translate }}</ion-label>
+            <ion-item class="custInput comment-input">
+              <ion-input
+                [placeholder]="'SALES.LABEL.WRITE_COMMENT' | translate" 
                 [(ngModel)]="payInvo.payComment"
                 [disabled]="isLoading()"></ion-input>
             </ion-item>

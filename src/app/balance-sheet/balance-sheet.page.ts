@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable } from 'rxjs';
 import {  LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -19,7 +20,7 @@ export class BalanceSheetPage implements OnInit {
   user_info : {id:any ,user_name:any ,store_id :any,full_name:any,password:any}
   debitSum:any=0
   creditSum:any=0
-  constructor(private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) { 
+  constructor(private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) { 
     this.getAppInfo()
   }
 

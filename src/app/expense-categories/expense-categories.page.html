@@ -1,0 +1,122 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>{{ 'EXPENSE.CATEGORIES_MANAGEMENT' | translate }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleAddForm()">
+        <ion-icon name="add"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">{{ 'EXPENSE.CATEGORIES_MANAGEMENT' | translate }}</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <!-- Add/Edit Form -->
+  <ion-card *ngIf="showAddForm">
+    <ion-card-header>
+      <ion-card-title>
+        {{ editingCategory ? ('EXPENSE.LABEL.EDIT_CATEGORY' | translate) : ('EXPENSE.LABEL.ADD_CATEGORY' | translate) }}
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="stacked">{{ 'EXPENSE.LABEL.CATEGORY_NAME' | translate }} *</ion-label>
+        <ion-input [(ngModel)]="newCategory.category_name" [placeholder]="'EXPENSE.PLACEHOLDER.CATEGORY_NAME' | translate"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">{{ 'EXPENSE.LABEL.CATEGORY_DESCRIPTION' | translate }}</ion-label>
+        <ion-textarea [(ngModel)]="newCategory.category_desc" [placeholder]="'EXPENSE.PLACEHOLDER.CATEGORY_DESC_OPTIONAL' | translate"></ion-textarea>
+      </ion-item>
+
+      <div class="ion-padding-top">
+        <ion-button
+          expand="block"
+          color="warning"
+          (click)="editingCategory ? updateExpenseCategory() : addExpenseCategory()"
+          [disabled]="!newCategory.category_name?.trim()">
+          {{ editingCategory ? ('COMMON.BUTTON.EDIT' | translate) : ('COMMON.BUTTON.ADD' | translate) }}
+        </ion-button>
+
+        <ion-button
+          expand="block"
+          fill="outline"
+          (click)="resetForm()">
+          إلغاء
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Categories List -->
+  <div class="ion-padding">
+    <ion-card *ngFor="let category of expenseCategories" class="category-card expense-category">
+      <ion-card-content>
+        <div class="category-header">
+          <div>
+            <h3>
+              <ion-icon name="wallet-outline" color="warning" style="margin-left: 8px;"></ion-icon>
+              {{ category.category_name }}
+            </h3>
+            <p *ngIf="category.category_desc">{{ category.category_desc }}</p>
+            <ion-text color="medium">
+              <small>تاريخ الإنشاء: {{ category.dateCreated | date:'short':'ar' }}</small>
+            </ion-text>
+          </div>
+
+          <div class="category-actions">
+            <ion-button
+              fill="clear"
+              size="small"
+              color="warning"
+              (click)="editExpenseCategory(category)">
+              <ion-icon name="create"></ion-icon>
+            </ion-button>
+
+            <ion-button
+              fill="clear"
+              size="small"
+              color="danger"
+              (click)="deleteExpenseCategory(category)">
+              <ion-icon name="trash"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Empty State for Expenses -->
+    <ion-card *ngIf="expenseCategories.length === 0">
+      <ion-card-content class="ion-text-center">
+        <ion-icon name="wallet-outline" style="font-size: 64px; color: var(--ion-color-warning);"></ion-icon>
+        <h3>لا توجد تصنيفات للمصروفات</h3>
+        <p>ابدأ بإضافة تصنيف للمصروفات (مثل: إيجار، رواتب، صيانة، الخ)</p>
+        <ion-button fill="outline" color="warning" (click)="toggleAddForm()">
+          <ion-icon name="add" slot="start"></ion-icon>
+          إضافة تصنيف مصروفات
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Expense Categories Info -->
+    <ion-card class="info-card" *ngIf="expenseCategories.length > 0">
+      <ion-card-content>
+        <ion-item lines="none">
+          <ion-icon name="information-circle" slot="start" color="primary"></ion-icon>
+          <ion-label class="ion-text-wrap">
+            <p><strong>تصنيفات المصروفات</strong> تستخدم لتنظيم وتصنيف المصروفات في صفحة إضافة المصروفات.</p>
+            <p>أمثلة: إيجارات، رواتب، مصاريف تشغيل، صيانة، مواصلات، الخ.</p>
+          </ion-label>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

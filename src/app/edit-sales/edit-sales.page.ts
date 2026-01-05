@@ -1,4 +1,5 @@
 import { DatePipe, Location } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { Component, OnInit ,ViewChild, ElementRef, OnDestroy, ChangeDetectorRef} from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -102,7 +103,7 @@ calculatedDiscountAmount: number = 0;
   // Data initialization flag to prevent re-initialization from query parameters
   private dataInitialized: boolean = false;
   
-  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private cdr: ChangeDetectorRef, private currencyService: CurrencyService) {
+  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private cdr: ChangeDetectorRef, private currencyService: CurrencyService, private translate: TranslateService) {
     this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
     this.route.queryParams.subscribe(params => {
       // Only initialize from parameters if data hasn't been loaded yet
@@ -341,7 +342,7 @@ async saveInvoInit() {
 
 private handleSaveInitSuccess() {
   // Show success message
-  this.presentToast('تم الحفظ بنجاح', 'success');
+  this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success');
   
   // Update local sales storage - remove the invoice entry since it's now initial
   this.sales = this.sales.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);
@@ -358,11 +359,11 @@ private handleSaveInitSuccess() {
  // This method is used in complex multi-step processes - loading managed by parent methods
  saveitemListinit(){  
   this.api.saveSalesitemListInit(this.itemList).subscribe(data=>{  
-      this.presentToast('تم الحفظ بنجاح', 'success')
+      this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
       this.deleteSalesInvo()
   }, (err) => {
     //console.log(err);
-    this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   }, () => {
     // Loading dismissal managed by parent method
   }
@@ -485,14 +486,15 @@ async  performSync(){
     async  performSyncDelInitialMode(){
      // Ensure all loading is dismissed before navigation
      await this.hideLoading();
-     this.presentToast('تم الحفظ بنجاح' , 'success')
+     this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
     this.back()
     }
  
 
-   async presentToast(msg,color?) {
+   async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
      const toast = await this.toast.create({
-       message: msg,
+       message: message,
        duration: 2000,
        color:color,
        cssClass:'cust_Toast',
@@ -1191,9 +1193,9 @@ async updateItemDetail(item){
         //console.log(data)
         await this.hideLoading();
         if (data['message'] != 'Post Not Updated') {
-         this.presentToast('تم التعديل بنجاح' , 'success') 
+         this.presentToast('COMMON.MESSAGE.UPDATED_SUCCESSFULLY', 'success') 
         }else{
-        this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+        this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
         } 
       }, 
       async (err) => {
@@ -1262,7 +1264,7 @@ async updateItemDetail(item){
 
   private handleUpdateSuccess() {
     // Show success message
-    this.presentToast('تم الحفظ بنجاح', 'success');
+    this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success');
     
     // Update local sales storage
     this.sales = this.sales.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);
@@ -1293,14 +1295,14 @@ async updateItemDetail(item){
   if (data['message'] != 'Post Not Deleted') {
     this.saveitemList()    
   }else{
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger').then(()=>{
     this.hideLoading()
   })
 
   } 
 },(err) => {
   //console.log(err);
-  this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger').then(()=>{
     this.hideLoading()
   })
   
@@ -1321,7 +1323,7 @@ async updateItemDetail(item){
 saveitemList(){  
 this.api.saveSalesitemList(this.itemList).subscribe(data=>{ 
   //console.log(data)  
-  this.presentToast('تم الحفظ بنجاح' , 'success')
+  this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
   this.sales = this.sales.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);
   this.sales.push({
     "payInvo": this.payInvo,
@@ -1339,7 +1341,7 @@ this.api.saveSalesitemList(this.itemList).subscribe(data=>{
   });
 }, (err) => {
   //console.log(err);
-  this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   this.hideLoading()
 }, () => {
   this.hideLoading()
@@ -1422,7 +1424,7 @@ async deleteSalesInvo(){
         //console.log(data)
         if (data['success']) {
           await this.hideLoading();
-          this.presentToast('تم الحذف بنجاح', 'success');
+          this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success');
           
           this.sales = this.sales.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);
           //console.log(' case ffff ' ,this.sales)
@@ -1437,7 +1439,7 @@ async deleteSalesInvo(){
           });
         }else{
           await this.hideLoading();
-          this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+          this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
         }
       },
       async (err) => {
@@ -1469,7 +1471,7 @@ deleteSalesInvoLocal(){
    //console.log('case undefined' , this.salesLocal)
    this.storage.set('salesLocal', this.salesLocal).then((response) => {
     //console.log('resoponse set', response) 
-    this.presentToast('تم الحذف بنجاح' , 'success') 
+    this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success') 
     this.back()
   });
   }else{
@@ -1483,7 +1485,7 @@ deleteSalesInvoLocal(){
     })
     this.storage.set('salesLocalDelete', this.salesLocalDelete).then((response) => {
       //console.log('resoponse set', response) 
-      this.presentToast('تم الحذف بنجاح' , 'success') 
+      this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success') 
       this.back()
     }); 
   });
@@ -1512,11 +1514,11 @@ deleteSalesitemList(){
       
       });
    }else{
-    this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    }
  },(err) => {
    //console.log(err);
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    this.hideLoading()
   },() => {
     this.hideLoading()

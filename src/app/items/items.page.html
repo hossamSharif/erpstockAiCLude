@@ -15,16 +15,16 @@
        </div>
      </div> 
      <ion-button fill="clear" (click)="presentPopover($event)">
-      <ion-label><ion-text color="dark" >الإشعارات</ion-text></ion-label>  
+      <ion-label><ion-text color="dark" >{{ 'ITEMS.LABEL.NOTIFICATIONS' | translate }}</ion-text></ion-label>
      </ion-button>
-    </ion-buttons>  
-    <ion-title>الأصنــاف</ion-title>
+    </ion-buttons>
+    <ion-title>{{ 'ITEMS.TITLE' | translate }}</ion-title>
   </ion-toolbar>
   <ion-popover  #popoverNotif33 [isOpen]="isOpenNotif" (didDismiss)="didDissmis()">
     <ng-template>
       <ion-header>
         <ion-toolbar dir="rtl" class="ion-text-center">
-          الإشعارات
+          {{ 'ITEMS.LABEL.NOTIFICATIONS' | translate }}
         </ion-toolbar>
       </ion-header>
       <ion-content  dir="rtl">  
@@ -62,34 +62,34 @@
                     <option *ngFor="let ac of sub_account ; let i = index"   [value]="ac.sub_name"></option>
                 </datalist> -->
                 <!-- <ion-input [(ngModel)]="searchTerm" placeholder="بحــث"></ion-input> -->
-                <ion-searchbar  [(ngModel)]="searchTerm" (ionChange)="searching($event)" showCancelButton="never" placeholder="بحــث" ></ion-searchbar>
+                <ion-searchbar  [(ngModel)]="searchTerm" (ionChange)="searching($event)" showCancelButton="never" [placeholder]="'ITEMS.PLACEHOLDER.SEARCH' | translate" ></ion-searchbar>
                 </ion-item>  
   
               </ion-col>
               <ion-col size="7" >
                 <ion-item lines="none">
                   <ion-buttons slot="end">
-                    <ion-button  fill="outline" color="success" shape="round"  (click)="presentModal('null', 'settings')"  > 
+                    <ion-button  fill="outline" color="success" shape="round"  (click)="presentModal('null', 'settings')"  >
                       <ion-icon name="settings-outline" color="success"></ion-icon>
-                     <ion-label><ion-text color="dark"> إخفاء الأعمدة</ion-text></ion-label> 
+                     <ion-label><ion-text color="dark"> {{ 'ITEMS.BUTTON.HIDE_COLUMNS' | translate }}</ion-text></ion-label>
                     </ion-button>
-                    <ion-button  fill="outline" color="success" shape="round"   (click)="presentModal('null', 'price')"  > 
+                    <ion-button  fill="outline" color="success" shape="round"   (click)="presentModal('null', 'price')"  >
                       <ion-icon name="create-outline" color="success"></ion-icon>
-                      <ion-label><ion-text color="dark">تعديل الأسعار</ion-text></ion-label> 
+                      <ion-label><ion-text color="dark">{{ 'ITEMS.BUTTON.EDIT_PRICES' | translate }}</ion-text></ion-label>
                     </ion-button>
-                    <ion-button  fill="outline" color="success" shape="round"  (click)="presentModal('null', 'save')"  > 
+                    <ion-button  fill="outline" color="success" shape="round"  (click)="presentModal('null', 'save')"  >
                       <ion-icon name="add-circle-outline" color="success"></ion-icon>
-                     <ion-label><ion-text color="dark">صنف جديد</ion-text></ion-label> 
+                     <ion-label><ion-text color="dark">{{ 'ITEMS.BUTTON.NEW_ITEM' | translate }}</ion-text></ion-label>
                     </ion-button>
-                    <ion-button  fill="outline" color="success"  shape="round"  (click)="exportexcel()"  > 
-                     
+                    <ion-button  fill="outline" color="success"  shape="round"  (click)="exportexcel()"  >
+
                       <ion-icon name="document-outline" color="success"></ion-icon>
-                     <ion-label class="ion-margin-start ion-margin-end"><ion-text color="dark"> تصدير XLS </ion-text></ion-label> 
+                     <ion-label class="ion-margin-start ion-margin-end"><ion-text color="dark"> {{ 'ITEMS.BUTTON.EXPORT_XLS' | translate }} </ion-text></ion-label>
                     </ion-button>
-                    <ion-button  fill="outline" color="success"  shape="round"  (click)="openPDF()"  > 
-                     
+                    <ion-button  fill="outline" color="success"  shape="round"  (click)="openPDF()"  >
+
                       <ion-icon name="document-outline" color="success"></ion-icon>
-                     <ion-label class="ion-margin-start ion-margin-end"><ion-text color="dark"> تصدير PDF </ion-text></ion-label> 
+                     <ion-label class="ion-margin-start ion-margin-end"><ion-text color="dark"> {{ 'ITEMS.BUTTON.EXPORT_PDF' | translate }} </ion-text></ion-label>
                     </ion-button>
                   </ion-buttons>
                 </ion-item>
@@ -114,7 +114,7 @@
           <strong >قيمة المخزون :</strong> {{store_fltTot.toFixed(2)}} 
           </ion-label> -->
           <ion-label *ngIf = "filterMode == false">
-            <ion-text><strong >قيمة المخزون :  </strong> </ion-text>
+            <ion-text><strong >{{ 'ITEMS.LABEL.STOCK_VALUE' | translate }} :  </strong> </ion-text>
           </ion-label> 
       </ion-col>
       <ion-col size="3" class="ion-text-start">
@@ -234,11 +234,11 @@
             <ion-col size="12" >
                <table  class="table"  *ngIf="searchMode == false && filterMode == false && searchTerm == ''" >
                 <ion-item>
-                <ion-label class="ion-padding"><strong>الاصناف</strong></ion-label>
+                <ion-label class="ion-padding"><strong>{{ 'ITEMS.LABEL.ITEMS' | translate }}</strong></ion-label>
                 </ion-item>
                  <tr *ngIf="colSetting">
-                  <th> 
-                    التسلسل
+                  <th>
+                    {{ 'ITEMS.LABEL.SEQUENCE' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('id', sortStatus[0].type,'items')">
                       <ion-icon *ngIf="sortStatus[0].type == 'asc' || sortStatus[0].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[0].type == 'desc'" name="chevron-up-outline"></ion-icon>
@@ -266,76 +266,76 @@
                       <ion-icon *ngIf="sortStatus[2].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.model == false , 'showMe': colSetting.model == true }">الموديل (model)
+                  <th  [ngClass]="{'hideMe': colSetting.model == false , 'showMe': colSetting.model == true }">{{ 'ITEMS.LABEL.MODEL' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('model', sortStatus[3].type,'items')">
                       <ion-icon *ngIf="sortStatus[3].type == 'asc' || sortStatus[3].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[3].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>
                  
-                  <th  [ngClass]="{'hideMe': colSetting.part_no == false , 'showMe': colSetting.part_no == true }">الكود (part no)
+                  <th  [ngClass]="{'hideMe': colSetting.part_no == false , 'showMe': colSetting.part_no == true }">{{ 'ITEMS.LABEL.PART_NO' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('part_no', sortStatus[4].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[4].type == 'asc' || sortStatus[4].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[4].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.brand == false , 'showMe': colSetting.brand == true }">الماركة (brand) 
+                  <th  [ngClass]="{'hideMe': colSetting.brand == false , 'showMe': colSetting.brand == true }">{{ 'ITEMS.LABEL.BRAND' | translate }} 
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('brand', sortStatus[5].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[5].type == 'asc' || sortStatus[5].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[5].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th> 
-                  <th  [ngClass]="{'hideMe': colSetting.min_qty == false , 'showMe': colSetting.min_qty == true }">اقل كمية (MSQ)
+                  <th  [ngClass]="{'hideMe': colSetting.min_qty == false , 'showMe': colSetting.min_qty == true }">{{ 'ITEMS.LABEL.MIN_QTY' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('min_qty', sortStatus[6].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[6].type == 'asc' || sortStatus[6].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[6].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.item_unit== false , 'showMe': colSetting.item_unit== true }">الوحده (unit)
+                  <th  [ngClass]="{'hideMe': colSetting.item_unit== false , 'showMe': colSetting.item_unit== true }">{{ 'ITEMS.LABEL.UNIT' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('item_unit', sortStatus[7].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[7].type == 'asc' || sortStatus[7].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[7].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th> 
-                  <th  [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">سعر الشراء (purch price)
+                  <th  [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">{{ 'ITEMS.LABEL.PURCHASE_PRICE' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('perch_price', sortStatus[8].type,'items')">
                       <ion-icon *ngIf="sortStatus[8].type == 'asc' || sortStatus[8].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[8].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">سعر الوحده (selling price)
+                  <th  [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">{{ 'ITEMS.LABEL.SELLING_PRICE' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('pay_price', sortStatus[9].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[9].type == 'asc' || sortStatus[9].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[9].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th> 
-                  <th  [ngClass]="{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }">نسبة الفائدة (profit perc)
+                  <th  [ngClass]="{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }">{{ 'ITEMS.LABEL.PROFIT_PERCENTAGE' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('profit', sortStatus[10].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[10].type == 'asc' || sortStatus[10].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[10].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>  
-                  <th  [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">المخزون (in stock)
+                  <th  [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">{{ 'ITEMS.LABEL.IN_STOCK' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('quantity', sortStatus[11].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[11].type == 'asc' || sortStatus[11].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[11].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">المجموع
+                  <th  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">{{ 'ITEMS.LABEL.TOTAL' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('total', sortStatus[12].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[12].type == 'asc' || sortStatus[12].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[12].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">اخر عملية بيع
+                  <th  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">{{ 'ITEMS.LABEL.LAST_SALE' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('lastSold', sortStatus[13].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[13].type == 'asc' || sortStatus[13].type == null" name="chevron-down-outline"></ion-icon>
@@ -346,9 +346,9 @@
                   <th>sales29</th>
                   <th>purch28</th>
                   <th>purch29</th>-->
-                  <th>المخزون الإفتتاحي</th> 
-                  <th  [ngClass]="{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }"><strong>تعديل</strong>  </th> 
-                  <th  [ngClass]="{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }"><strong>حذف</strong>  </th> 
+                  <th>{{ 'ITEMS.LABEL.OPENING_STOCK' | translate }}</th> 
+                  <th  [ngClass]="{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }"><strong>{{ 'COMMON.BUTTON.EDIT' | translate }}</strong>  </th> 
+                  <th  [ngClass]="{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }"><strong>{{ 'COMMON.BUTTON.DELETE' | translate }}</strong>  </th> 
                  </tr>
                  <tr *ngFor="let item of items ; let i = index"   (dblclick)="prClick(i , item)">
                   <!-- <td>{{i+1}}</td> -->
@@ -495,26 +495,26 @@
                   <tr *ngIf="colSetting">
                    <th>التسلسل</th>
                    <th  [ngClass]="{'hideMe': colSetting.item_name == false , 'showMe': colSetting.item_name == true }">
-                     الصنف
+                     {{ 'ITEMS.LABEL.ITEM_NAME' | translate }}
                    </th>
-                   <th  [ngClass]="{'hideMe': colSetting.item_desc== false , 'showMe': colSetting.item_desc== true }">اسم الصنف  (English)</th>
-                   <th  [ngClass]="{'hideMe': colSetting.aliasEn== false , 'showMe': colSetting.aliasEn== true }">اسم مستعار   (Alias) </th>  
-                   <th  [ngClass]="{'hideMe': colSetting.model == false , 'showMe': colSetting.model == true }">الموديل (model)</th>
+                   <th  [ngClass]="{'hideMe': colSetting.item_desc== false , 'showMe': colSetting.item_desc== true }">{{ 'ITEMS.LABEL.ITEM_NAME_ENGLISH' | translate }}</th>
+                   <th  [ngClass]="{'hideMe': colSetting.aliasEn== false , 'showMe': colSetting.aliasEn== true }">{{ 'ITEMS.LABEL.ALIAS' | translate }} </th>  
+                   <th  [ngClass]="{'hideMe': colSetting.model == false , 'showMe': colSetting.model == true }">{{ 'ITEMS.LABEL.MODEL' | translate }}</th>
                   
-                   <th  [ngClass]="{'hideMe': colSetting.part_no == false , 'showMe': colSetting.part_no == true }">الكود (part no)</th>
-                   <th  [ngClass]="{'hideMe': colSetting.brand == false , 'showMe': colSetting.brand == true }">الماركة (brand) </th> 
-                   <th  [ngClass]="{'hideMe': colSetting.min_qty == false , 'showMe': colSetting.min_qty == true }">اقل كمية (MSQ)</th>
-                   <th  [ngClass]="{'hideMe': colSetting.item_unit== false , 'showMe': colSetting.item_unit== true }">الوحده (unit)</th> 
-                   <th  [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">سعر الشراء (purch price)</th>
-                   <th  [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">سعر الوحده (selling price)</th> 
-                   <th  [ngClass]="{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }">نسبة الفائدة (profit perc)</th>  
-                   <th  [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">المخزون (in stock)</th>
-                   <th  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">اخر عملية بيع
+                   <th  [ngClass]="{'hideMe': colSetting.part_no == false , 'showMe': colSetting.part_no == true }">{{ 'ITEMS.LABEL.PART_NO' | translate }}</th>
+                   <th  [ngClass]="{'hideMe': colSetting.brand == false , 'showMe': colSetting.brand == true }">{{ 'ITEMS.LABEL.BRAND' | translate }} </th> 
+                   <th  [ngClass]="{'hideMe': colSetting.min_qty == false , 'showMe': colSetting.min_qty == true }">{{ 'ITEMS.LABEL.MIN_QTY' | translate }}</th>
+                   <th  [ngClass]="{'hideMe': colSetting.item_unit== false , 'showMe': colSetting.item_unit== true }">{{ 'ITEMS.LABEL.UNIT' | translate }}</th> 
+                   <th  [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">{{ 'ITEMS.LABEL.PURCHASE_PRICE' | translate }}</th>
+                   <th  [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">{{ 'ITEMS.LABEL.SELLING_PRICE' | translate }}</th> 
+                   <th  [ngClass]="{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }">{{ 'ITEMS.LABEL.PROFIT_PERCENTAGE' | translate }}</th>  
+                   <th  [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">{{ 'ITEMS.LABEL.IN_STOCK' | translate }}</th>
+                   <th  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">{{ 'ITEMS.LABEL.LAST_SALE' | translate }}
                     
                   </th>
-                   <th  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">المجموع</th>
-                   <th  [ngClass]="{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }"><strong>تعديل</strong>  </th> 
-                   <th  [ngClass]="{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }"><strong>حذف</strong>  </th> 
+                   <th  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">{{ 'ITEMS.LABEL.TOTAL' | translate }}</th>
+                   <th  [ngClass]="{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }"><strong>{{ 'COMMON.BUTTON.EDIT' | translate }}</strong>  </th> 
+                   <th  [ngClass]="{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }"><strong>{{ 'COMMON.BUTTON.DELETE' | translate }}</strong>  </th> 
                   </tr>
                   <tr *ngFor="let item of filterArray ; let i = index"   (dblclick)="prClick(i , item)">
                     <td>{{i+1}}</td>
@@ -643,7 +643,7 @@
 
                <table class="table" *ngIf="searchMode == true && searchTerm != ''">
                  <ion-item>
-                  <ion-label class="ion-padding"><strong>البحث</strong></ion-label>
+                  <ion-label class="ion-padding"><strong>{{ 'ITEMS.LABEL.SEARCH' | translate }}</strong></ion-label>
                  </ion-item>
                  <tr *ngIf="colSetting">
                   <th> 
@@ -675,7 +675,7 @@
                       <ion-icon *ngIf="sortStatus[2].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.model == false , 'showMe': colSetting.model == true }">الموديل (model)
+                  <th  [ngClass]="{'hideMe': colSetting.model == false , 'showMe': colSetting.model == true }">{{ 'ITEMS.LABEL.MODEL' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('model', sortStatus[3].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[3].type == 'asc' || sortStatus[3].type == null" name="chevron-down-outline"></ion-icon>
@@ -683,69 +683,69 @@
                     </ion-button>
                   </th>
                  
-                  <th  [ngClass]="{'hideMe': colSetting.part_no == false , 'showMe': colSetting.part_no == true }">الكود (part no)
+                  <th  [ngClass]="{'hideMe': colSetting.part_no == false , 'showMe': colSetting.part_no == true }">{{ 'ITEMS.LABEL.PART_NO' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('part_no', sortStatus[4].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[4].type == 'asc' || sortStatus[4].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[4].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.brand == false , 'showMe': colSetting.brand == true }">الماركة (brand) 
+                  <th  [ngClass]="{'hideMe': colSetting.brand == false , 'showMe': colSetting.brand == true }">{{ 'ITEMS.LABEL.BRAND' | translate }} 
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('brand', sortStatus[5].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[5].type == 'asc' || sortStatus[5].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[5].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th> 
-                  <th  [ngClass]="{'hideMe': colSetting.min_qty == false , 'showMe': colSetting.min_qty == true }">اقل كمية (MSQ)
+                  <th  [ngClass]="{'hideMe': colSetting.min_qty == false , 'showMe': colSetting.min_qty == true }">{{ 'ITEMS.LABEL.MIN_QTY' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('min_qty', sortStatus[6].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[6].type == 'asc' || sortStatus[6].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[6].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.item_unit== false , 'showMe': colSetting.item_unit== true }">الوحده (unit)
+                  <th  [ngClass]="{'hideMe': colSetting.item_unit== false , 'showMe': colSetting.item_unit== true }">{{ 'ITEMS.LABEL.UNIT' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('item_unit', sortStatus[7].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[7].type == 'asc' || sortStatus[7].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[7].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th> 
-                  <th  [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">سعر الشراء (purch price)
+                  <th  [ngClass]="{'hideMe': colSetting.perch_price == false , 'showMe': colSetting.perch_price == true }">{{ 'ITEMS.LABEL.PURCHASE_PRICE' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('perch_price', sortStatus[8].type,'items')">
                       <ion-icon *ngIf="sortStatus[8].type == 'asc' || sortStatus[8].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[8].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">سعر الوحده (selling price)
+                  <th  [ngClass]="{'hideMe': colSetting.pay_price == false , 'showMe': colSetting.pay_price == true }">{{ 'ITEMS.LABEL.SELLING_PRICE' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('pay_price', sortStatus[9].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[9].type == 'asc' || sortStatus[9].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[9].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th> 
-                  <th  [ngClass]="{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }">نسبة الفائدة (profit perc)
+                  <th  [ngClass]="{'hideMe': colSetting.profit == false , 'showMe': colSetting.profit == true }">{{ 'ITEMS.LABEL.PROFIT_PERCENTAGE' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('profit', sortStatus[10].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[10].type == 'asc' || sortStatus[10].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[10].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>  
-                  <th  [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">المخزون (in stock)
+                  <th  [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">{{ 'ITEMS.LABEL.IN_STOCK' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('quantity', sortStatus[11].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[11].type == 'asc' || sortStatus[11].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[11].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">المجموع
+                  <th  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">{{ 'ITEMS.LABEL.TOTAL' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('total', sortStatus[12].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[12].type == 'asc' || sortStatus[12].type == null" name="chevron-down-outline"></ion-icon>
                       <ion-icon *ngIf="sortStatus[12].type == 'desc'" name="chevron-up-outline"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">اخر عملية بيع
+                  <th  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">{{ 'ITEMS.LABEL.LAST_SALE' | translate }}
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sorting('lastSold', sortStatus[13].type,'items')">
                     
                       <ion-icon *ngIf="sortStatus[13].type == 'asc' || sortStatus[13].type == null" name="chevron-down-outline"></ion-icon>
@@ -757,8 +757,8 @@
                   <th>purch28</th>
                   <th>purch29</th>-->
                   <th>   المخزون الإفتتاحي </th> 
-                  <th  [ngClass]="{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }"><strong>تعديل</strong>  </th> 
-                  <th  [ngClass]="{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }"><strong>حذف</strong>  </th> 
+                  <th  [ngClass]="{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }"><strong>{{ 'COMMON.BUTTON.EDIT' | translate }}</strong>  </th> 
+                  <th  [ngClass]="{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }"><strong>{{ 'COMMON.BUTTON.DELETE' | translate }}</strong>  </th> 
                  </tr>
                  <tr *ngFor="let item of itemsAll | filter : searchTerm ; let i = index"   (dblclick)="prClick(i , item)">
                   <!-- <td>{{i+1}}</td> -->
@@ -1154,15 +1154,15 @@
   <ion-row dir="rtl" class="ion-align-items-center ion-justify-content-center">
     <ion-col size="12" class="ion-text-center">
       <ion-item lines="none">
-        <ion-label>عناصر لكل صفحة:</ion-label>
+        <ion-label>{{ 'ITEMS.PAGINATION.ITEMS_PER_PAGE' | translate }}:</ion-label>
         <ion-select [value]="itemsPerPage" (ionChange)="changeItemsPerPage($event)">
           <ion-select-option *ngFor="let option of pageSizeOptions" [value]="option">{{ option }}</ion-select-option>
         </ion-select>
       </ion-item>
-      
+
       <ion-button fill="clear" [disabled]="currentPage === 1" (click)="prevPage()">
         <ion-icon name="chevron-forward"></ion-icon>
-        السابق
+        {{ 'ITEMS.PAGINATION.PREVIOUS' | translate }}
       </ion-button>
      
 
@@ -1175,14 +1175,14 @@
       </ion-button>
       
       <ion-button fill="clear" [disabled]="currentPage === totalPages" (click)="nextPage()">
-        التالي 
+        {{ 'ITEMS.PAGINATION.NEXT' | translate }}
         <ion-icon name="chevron-back"></ion-icon>
       </ion-button>
 
 
-       
+
       <ion-text color="medium">
-        صفحة {{ currentPage }} من {{ totalPages }} (إجمالي العناصر: {{ totalItems }})
+        {{ 'ITEMS.PAGINATION.PAGE_INFO' | translate: {current: currentPage, total: totalPages, count: totalItems} }}
       </ion-text>
     </ion-col>
   </ion-row>

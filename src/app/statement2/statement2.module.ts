@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { Statement2PageRoutingModule } from './statement2-routing.module';
 
@@ -15,7 +16,8 @@ import { SharedModule } from '../module/shared/shared.module';
     FormsModule,
     IonicModule,
     Statement2PageRoutingModule,
-    SharedModule
+    SharedModule,
+    TranslateModule
   ],
   declarations: [Statement2Page]
 })

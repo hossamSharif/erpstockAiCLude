@@ -116,4 +116,16 @@ export class SortingService {
     }
     return currentSort.direction === 'asc' ? 'desc' : 'asc';
   }
+
+  // Sort data and return new sort config
+  sort<T>(data: T[], column: string, currentSort: SortConfig | null): SortConfig {
+    const direction = this.getNextSortDirection(column, currentSort);
+    const sortedData = this.sortData(data, column, direction);
+
+    // Update the original array in place
+    data.length = 0;
+    data.push(...sortedData);
+
+    return { column, direction };
+  }
 }

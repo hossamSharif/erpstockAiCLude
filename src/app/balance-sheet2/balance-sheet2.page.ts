@@ -8,6 +8,7 @@ import { SortingService, SortConfig } from '../services/sorting.service';
 import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
 import { CurrencyService } from '../services/currency.service';
 import { Subscription } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-balance-sheet2',
@@ -63,7 +64,7 @@ export class BalanceSheet2Page implements OnInit, OnDestroy {
     private sortingService: SortingService,
     private exportService: ExportService,
     private currencyService: CurrencyService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef, private translate: TranslateService
   ) { 
     this.checkPlatform();
     this.getAppInfo();
@@ -244,9 +245,9 @@ export class BalanceSheet2Page implements OnInit, OnDestroy {
     this.loadBalanceSheet();
   }
 
-  async presentToast(message: string, color: string = 'primary') {
+  async presentToast(translationKey: string, color: string = 'primary') {
     const toast = await this.toast.create({
-      message: message,
+      message: this.translate.instant(translationKey),
       duration: 2000,
       color: color,
       cssClass: 'cust_Toast',
@@ -284,7 +285,7 @@ export class BalanceSheet2Page implements OnInit, OnDestroy {
   // Export functionality
   async exportToPDF(): Promise<void> {
     if (!this.filteredAccounts || this.filteredAccounts.length === 0) {
-      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      await this.presentToast('ACCOUNTING.BALANCE_SHEET.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
       return;
     }
 
@@ -304,7 +305,7 @@ export class BalanceSheet2Page implements OnInit, OnDestroy {
 
   async exportToExcel(): Promise<void> {
     if (!this.filteredAccounts || this.filteredAccounts.length === 0) {
-      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      await this.presentToast('ACCOUNTING.BALANCE_SHEET.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
       return;
     }
 

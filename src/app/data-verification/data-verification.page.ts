@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { DataVerificationService, VerificationResult, VerificationSummary } from '../services/data-verification.service';
+import { TranslateService } from '@ngx-translate/core';
 import { LoadingController, ToastController } from '@ionic/angular';
 import { Storage } from '@ionic/storage';
 import { Router, NavigationExtras } from '@angular/router';
@@ -47,7 +48,8 @@ export class DataVerificationPage implements OnInit {
     private toastCtrl: ToastController,
     private storage: Storage,
     private router: Router,
-    private api: ServicesService
+    private api: ServicesService,
+    private translate: TranslateService
   ) { }
 
   ngOnInit() {

@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>فاتورة مبيعات</ion-title>
+    <ion-title>{{ 'SALES.TITLE' | translate }}</ion-title>
     <ion-buttons  slot="end">  
       <div class="poRel">
         <div class="posAb noti">
@@ -16,20 +16,20 @@
        </div>
      </div> 
      <ion-button fill="clear" (click)="presentPopoverNotif($event)">
-      <ion-label><ion-text color="dark" >الإشعارات</ion-text></ion-label>  
+      <ion-label><ion-text color="dark" >{{ 'ITEMS.LABEL.NOTIFICATIONS' | translate }}</ion-text></ion-label>
      </ion-button>
 
-    <ion-button fill="clear" class="ion-margin"  (click)="changeMode()"  > 
-      <ion-label><ion-icon name="wifi-outline" [color]="color" style="font-size:20px"></ion-icon></ion-label> 
-      <ion-label><ion-text color="dark"  *ngIf="color == 'primary'">متصل</ion-text></ion-label>   
-      <ion-label><ion-text  color="dark" *ngIf="color == 'dark'">غير متصل</ion-text></ion-label>
+    <ion-button fill="clear" class="ion-margin"  (click)="changeMode()"  >
+      <ion-label><ion-icon name="wifi-outline" [color]="color" style="font-size:20px"></ion-icon></ion-label>
+      <ion-label><ion-text color="dark"  *ngIf="color == 'primary'">{{ 'SALES.LABEL.CONNECTED' | translate }}</ion-text></ion-label>
+      <ion-label><ion-text  color="dark" *ngIf="color == 'dark'">{{ 'SALES.LABEL.DISCONNECTED' | translate }}</ion-text></ion-label>
     </ion-button> 
     </ion-buttons> 
   <ion-popover  #popoverNotif [isOpen]="isOpenNotif" (didDismiss)="didDissmisNotif()">
    <ng-template>
      <ion-header>
        <ion-toolbar dir="rtl" class="ion-text-center">
-         الإشعارات
+         {{ 'ITEMS.LABEL.NOTIFICATIONS' | translate }}
        </ion-toolbar>
      </ion-header>
      <ion-content  dir="rtl">  
@@ -55,14 +55,14 @@
 
 <ion-content dir="rtl">
   <ion-segment [(ngModel)]="segmentVal" (ionChange)="segmentChange($event)" >
-    <ion-segment-button value="first"> 
-      <ion-label>تهيئة الفاتورة</ion-label>
+    <ion-segment-button value="first">
+      <ion-label>{{ 'SALES.LABEL.INVOICE_SETUP' | translate }}</ion-label>
     </ion-segment-button>
-    <ion-segment-button value="second"> 
-      <ion-label>إضافة الأصناف</ion-label>
+    <ion-segment-button value="second">
+      <ion-label>{{ 'SALES.LABEL.ADD_ITEMS' | translate }}</ion-label>
     </ion-segment-button>
-    <ion-segment-button value="third"> 
-      <ion-label> الحسابات  </ion-label>
+    <ion-segment-button value="third">
+      <ion-label> {{ 'SALES.LABEL.ACCOUNTS' | translate }}  </ion-label>
     </ion-segment-button>
   </ion-segment>
 
@@ -79,25 +79,25 @@
                       <ion-col class="ion-no-padding ion-no-margin">
                         <ion-item lines="none" >
                           <ion-radio [value]="0" class="ion-margin-end"></ion-radio>
-                          <ion-label>قائمة الحسابات </ion-label> 
+                          <ion-label>{{ 'SALES.LABEL.ACCOUNT_LIST' | translate }} </ion-label>
                         </ion-item>
                       </ion-col>
                       <ion-col class="ion-no-padding ion-no-margin">
                         <ion-item lines="none" >
                           <ion-radio [value]="1" class="ion-margin-end"></ion-radio>
-                          <ion-label>حساب جديد</ion-label> 
+                          <ion-label>{{ 'SALES.LABEL.NEW_ACCOUNT' | translate }}</ion-label>
                         </ion-item>
                       </ion-col> 
                     </ion-row>
                   </ion-grid> 
                 </ion-radio-group>
                   <ion-item class="custInput" *ngIf="radioVal == 0 ">
-                    <input  *ngIf="sub_account" class="bnone" placeholder="اختر  حساب العميل" list="accountsSales" id="accountSales" [(ngModel)]="selectedAccount.sub_name"  (change)="pickAccount($event)">
+                    <input  *ngIf="sub_account" class="bnone" [placeholder]="'SALES.LABEL.SELECT_CUSTOMER' | translate" list="accountsSales" id="accountSales" [(ngModel)]="selectedAccount.sub_name"  (change)="pickAccount($event)">
                     <datalist *ngIf="sub_account" style="border: none;" id="accountsSales" style="height: auto;max-height: 20px;">
                       <option *ngFor="let ac of sub_account ; let i = index"   [value]="ac.sub_name"></option>
                     </datalist>
                     <ion-label *ngIf="!sub_account">
-                      <ion-text color="danger" >خطأ في التحميل </ion-text>
+                      <ion-text color="danger" >{{ 'SALES.LABEL.LOADING_ERROR' | translate }} </ion-text>
                      </ion-label>
                     <ion-button  *ngIf="!sub_account" fill="clear" size="small" slot="end" (click)="refresh('account')">
                       <ion-icon name="refresh" color="success"></ion-icon>

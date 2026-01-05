@@ -1,5 +1,6 @@
 import { DatePipe, Location } from '@angular/common';
 import { Component, OnInit , ViewChild, ElementRef} from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { ServicesService } from '../stockService/services.service';
@@ -74,7 +75,7 @@ searchResult :Array<any> =[]
 aliasResult :Array<any> =[]
 year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any} 
 
-  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) {
+  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) {
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:""};
   this.route.queryParams.subscribe(params => {
     if (params && params.payInvo) {

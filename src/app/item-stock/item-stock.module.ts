@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ItemStockPageRoutingModule } from './item-stock-routing.module';
 
@@ -22,7 +23,8 @@ import { ItemStockPrintPageModule } from '../item-stock-print/item-stock-print.m
     ShareModule,
     SharedModule,
     ItemStockPageRoutingModule,
-    ItemStockPrintPageModule
+    ItemStockPrintPageModule,
+    TranslateModule
   ],
   declarations: [ItemStockPage]
 })

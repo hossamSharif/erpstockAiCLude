@@ -1,10 +1,10 @@
 <ion-content>
   <ion-card>
     <div class="container">
-      
+
       <!-- Header Section -->
       <div class="section-header">
-        <ion-title>تعديل فاتورة مرتجعات الشراء</ion-title>
+        <ion-title>{{ 'PURCHASE.EDIT_RETURN_TITLE' | translate }}</ion-title>
         <ion-button fill="clear" (click)="back()">
           <ion-icon name="arrow-back"></ion-icon>
         </ion-button>
@@ -16,7 +16,7 @@
           <ion-card-content>
             <div class="edit-notice">
               <ion-icon name="create-outline" color="primary"></ion-icon>
-              <span>وضع التعديل - رقم المرتجعة: {{ returnInvo.return_ref }}</span>
+              <span>{{ 'PURCHASE.LABEL.EDIT_MODE' | translate }} - {{ 'PURCHASE.LABEL.RETURN_NUMBER' | translate }}: {{ returnInvo.return_ref }}</span>
             </div>
           </ion-card-content>
         </ion-card>
@@ -26,16 +26,16 @@
       <div class="section" *ngIf="selectedOriginalInvoice">
         <ion-card>
           <ion-card-header>
-            <ion-card-title class="section-title">معلومات فاتورة الشراء الأصلية</ion-card-title>
+            <ion-card-title class="section-title">{{ 'PURCHASE.LABEL.ORIGINAL_INVOICE_INFO' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             <div class="invoice-info-readonly">
               <div class="info-row">
-                <label>رقم الفاتورة الأصلية:</label>
+                <label>{{ 'PURCHASE.LABEL.ORIGINAL_INVOICE_NUMBER' | translate }}:</label>
                 <span>{{ selectedOriginalInvoice.pay_ref }}</span>
               </div>
               <div class="info-row">
-                <label>المورد:</label>
+                <label>{{ 'PURCHASE.LABEL.SUPPLIER_ACCOUNT' | translate }}:</label>
                 <span>{{ selectedAccount.sub_name }}</span>
               </div>
             </div>
@@ -47,19 +47,19 @@
       <div class="section" *ngIf="itemList.length > 0">
         <ion-card>
           <ion-card-header>
-            <ion-card-title class="section-title">أصناف الإرجاع</ion-card-title>
+            <ion-card-title class="section-title">{{ 'PURCHASE.LABEL.RETURN_ITEMS' | translate }}</ion-card-title>
           </ion-card-header>
-          
+
           <ion-card-content>
             <div class="table-container">
               <table class="items-table">
                 <thead>
                   <tr>
-                    <th>الصنف</th>
-                    <th>الكمية</th>
-                    <th>السعر ({{ getCurrencySymbol() }})</th>
-                    <th>المجموع ({{ getCurrencySymbol() }})</th>
-                    <th>عمليات</th>
+                    <th>{{ 'COMMON.LABEL.NAME' | translate }}</th>
+                    <th>{{ 'COMMON.LABEL.QUANTITY' | translate }}</th>
+                    <th>{{ 'COMMON.LABEL.PRICE' | translate }} ({{ getCurrencySymbol() }})</th>
+                    <th>{{ 'COMMON.LABEL.TOTAL' | translate }} ({{ getCurrencySymbol() }})</th>
+                    <th>{{ 'PURCHASE.LABEL.OPERATIONS' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody>

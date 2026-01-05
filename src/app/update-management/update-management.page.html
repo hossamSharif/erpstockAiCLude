@@ -1,0 +1,202 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/"></ion-back-button>
+    </ion-buttons>
+    <ion-title>إدارة إشعارات التحديثات</ion-title>
+    <ion-buttons slot="end" *ngIf="!showForm">
+      <ion-button (click)="showAddForm()">
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Form Section -->
+  <ion-card *ngIf="showForm" class="form-card">
+    <ion-card-header>
+      <ion-card-title>{{ isEditMode ? 'تعديل التحديث' : 'إضافة تحديث جديد' }}</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <form>
+        <!-- Version -->
+        <ion-item>
+          <ion-label position="floating">رقم الإصدار *</ion-label>
+          <ion-input
+            type="text"
+            [(ngModel)]="updateForm.version"
+            name="version"
+            placeholder="1.0.5"
+            [disabled]="isEditMode">
+          </ion-input>
+        </ion-item>
+
+        <!-- Title -->
+        <ion-item>
+          <ion-label position="floating">العنوان *</ion-label>
+          <ion-input
+            type="text"
+            [(ngModel)]="updateForm.title"
+            name="title"
+            placeholder="تحديث النظام 1.0.5">
+          </ion-input>
+        </ion-item>
+
+        <!-- Description -->
+        <ion-item>
+          <ion-label position="floating">الوصف *</ion-label>
+          <ion-textarea
+            [(ngModel)]="updateForm.description"
+            name="description"
+            rows="3"
+            placeholder="وصف مختصر للتحديث">
+          </ion-textarea>
+        </ion-item>
+
+        <!-- Features -->
+        <ion-item lines="none">
+          <ion-label>
+            <h3>الميزات الجديدة *</h3>
+            <p>أضف قائمة بالميزات والتحسينات</p>
+          </ion-label>
+        </ion-item>
+
+        <div class="features-list">
+          <ion-item *ngFor="let feature of updateForm.features; let i = index; trackBy: trackByIndex">
+            <ion-label position="floating">الميزة {{ i + 1 }}</ion-label>
+            <ion-input
+              type="text"
+              [(ngModel)]="updateForm.features[i]"
+              [name]="'feature_' + i"
+              placeholder="مثال: تحسين واجهة المستخدم">
+            </ion-input>
+            <ion-button
+              slot="end"
+              fill="clear"
+              color="danger"
+              (click)="removeFeature(i)"
+              *ngIf="updateForm.features.length > 1">
+              <ion-icon name="trash-outline"></ion-icon>
+            </ion-button>
+          </ion-item>
+
+          <ion-button
+            expand="block"
+            fill="outline"
+            (click)="addFeature()"
+            class="add-feature-btn">
+            <ion-icon slot="start" name="add-outline"></ion-icon>
+            إضافة ميزة أخرى
+          </ion-button>
+        </div>
+
+        <!-- Priority -->
+        <ion-item>
+          <ion-label>الأولوية</ion-label>
+          <ion-select [(ngModel)]="updateForm.priority" name="priority" interface="popover">
+            <ion-select-option [value]="50">منخفضة (50)</ion-select-option>
+            <ion-select-option [value]="100">متوسطة (100)</ion-select-option>
+            <ion-select-option [value]="150">عالية (150)</ion-select-option>
+            <ion-select-option [value]="200">عاجلة (200)</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <!-- Active Status -->
+        <ion-item>
+          <ion-label>الحالة</ion-label>
+          <ion-toggle
+            [(ngModel)]="updateForm.is_active"
+            name="is_active"
+            [checked]="updateForm.is_active === 1"
+            (ionChange)="updateForm.is_active = $any($event).detail.checked ? 1 : 0">
+          </ion-toggle>
+        </ion-item>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+          <ion-button expand="block" color="primary" (click)="saveUpdate()">
+            <ion-icon slot="start" name="checkmark-circle-outline"></ion-icon>
+            {{ isEditMode ? 'تحديث' : 'إضافة' }}
+          </ion-button>
+          <ion-button expand="block" fill="outline" color="medium" (click)="cancelForm()">
+            <ion-icon slot="start" name="close-circle-outline"></ion-icon>
+            إلغاء
+          </ion-button>
+        </div>
+      </form>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Updates List -->
+  <div class="updates-list" *ngIf="!showForm">
+    <ion-card *ngIf="updates.length === 0" class="empty-state">
+      <ion-card-content class="ion-text-center">
+        <ion-icon name="notifications-off-outline" class="empty-icon"></ion-icon>
+        <p>لا توجد تحديثات حالياً</p>
+        <ion-button fill="outline" (click)="showAddForm()">
+          إضافة أول تحديث
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngFor="let update of updates" class="update-card">
+      <ion-card-header>
+        <div class="update-header-content">
+          <div class="update-info">
+            <ion-card-title>{{ update.title }}</ion-card-title>
+            <ion-card-subtitle>
+              <ion-badge color="primary">{{ update.version }}</ion-badge>
+              <ion-badge [color]="update.is_active === 1 ? 'success' : 'medium'">
+                {{ update.is_active === 1 ? 'نشط' : 'غير نشط' }}
+              </ion-badge>
+              <ion-badge color="warning">أولوية: {{ update.priority }}</ion-badge>
+            </ion-card-subtitle>
+          </div>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content>
+        <p class="update-description">{{ update.description }}</p>
+
+        <div class="features-preview" *ngIf="update.features && update.features.length > 0">
+          <strong>الميزات:</strong>
+          <ul>
+            <li *ngFor="let feature of update.features">{{ feature }}</li>
+          </ul>
+        </div>
+
+        <div class="update-meta">
+          <ion-note>تاريخ الإنشاء: {{ update.created_at | date:'medium' }}</ion-note>
+        </div>
+
+        <div class="update-actions">
+          <ion-button size="small" fill="outline" (click)="previewUpdate(update)">
+            <ion-icon slot="start" name="eye-outline"></ion-icon>
+            معاينة
+          </ion-button>
+
+          <ion-button size="small" fill="outline" color="primary" (click)="editUpdate(update)">
+            <ion-icon slot="start" name="create-outline"></ion-icon>
+            تعديل
+          </ion-button>
+
+          <ion-button
+            size="small"
+            fill="outline"
+            [color]="update.is_active === 1 ? 'warning' : 'success'"
+            (click)="toggleActive(update)">
+            <ion-icon slot="start" [name]="update.is_active === 1 ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            {{ update.is_active === 1 ? 'إخفاء' : 'تفعيل' }}
+          </ion-button>
+
+          <ion-button size="small" fill="outline" color="danger" (click)="deleteUpdate(update)">
+            <ion-icon slot="start" name="trash-outline"></ion-icon>
+            حذف
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

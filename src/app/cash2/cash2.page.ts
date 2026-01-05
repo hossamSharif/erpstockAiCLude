@@ -10,6 +10,7 @@ import { StockServiceService } from '../syncService/stock-service.service';
 import * as momentObj from 'moment';
 import { Subscription } from 'rxjs';
 import { CurrencyService } from '../services/currency.service';
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-cash2',
   templateUrl: './cash2.page.html',
@@ -73,19 +74,25 @@ coloredMsgTo:boolean = false
 coloredMsgTo3:boolean = false
 // new aproch
 year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
-  isAccountPopoverOpen = false;
-  searchTerm = '';
-  searchedAccounts: any[] = [];
 
-  // Balance display properties
+  // Balance display properties (from account selector)
   selectedAccountBalance: any = null;
   sourceAccountBalance: any = null;
-  loadingAccountBalance = false;
   loadingSourceBalance = false;
+  loadingAccountBalance = false;
+  accountBalance: any = null;
+  selectedAccount: any = null;
 
-  constructor(private platform :Platform ,private behavApi:StockServiceService ,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private currencyService: CurrencyService, private cdr: ChangeDetectorRef) {
-    this.selectedBankAccount = {id:null,ac_id:null,sub_name:null,sub_type:null,sub_code:null,sub_balance:null,store_id:null,debit:null ,credit:null, currentType:null} 
-    this.getAppInfo() 
+  // Source dropdown properties
+  sourceSearchTerm: string = '';
+  showSourceDropdown: boolean = false;
+  sourceHighlightedIndex: number = -1;
+  allSources: Array<{id: any, name: string}> = [];
+  filteredSources: Array<{id: any, name: string}> = [];
+
+  constructor(private platform :Platform ,private behavApi:StockServiceService ,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private currencyService: CurrencyService, private cdr: ChangeDetectorRef, public translate: TranslateService) {
+    this.selectedBankAccount = {id:null,ac_id:null,sub_name:null,sub_type:null,sub_code:null,sub_balance:null,store_id:null,debit:null ,credit:null, currentType:null}
+    this.getAppInfo()
    }
 
   ngOnInit() {
@@ -109,26 +116,20 @@ year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
     });
   }
 
-  presentAccountPopover(event) {
-    this.searchedAccounts = this.sub_accountFrom;
-    this.isAccountPopoverOpen = true;
+  // Handle account selection from account-selector component
+  onAccountSelected(account: any) {
+    if (account) {
+      this.selectedAccount = account; // Store for inline balance display
+      this.loadingAccountBalance = true; // Set loading state
+      this.pickAccount(account);
+    }
   }
 
-  searchAccount(event) {
-    const searchTerm = event.target.value.toLowerCase();
-    if (searchTerm && searchTerm.trim() !== '') {
-      this.searchedAccounts = this.sub_accountFrom.filter((acc) => {
-        return acc.sub_name.toLowerCase().indexOf(searchTerm) > -1;
-      });
-    } else {
-      this.searchedAccounts = this.sub_accountFrom;
-    }
-   }
-
-  selectAccount(account) {
-    this.pickAccount(account);
-    this.isAccountPopoverOpen = false;
-    this.loadAccountBalance(account.id);
+  // Handle balance loaded from account-selector component
+  onBalanceLoaded(balance: any) {
+    this.selectedAccountBalance = balance;
+    this.accountBalance = balance; // Store for inline balance display
+    this.loadingAccountBalance = false; // Clear loading state
   }
 
   
@@ -554,9 +555,9 @@ let to :any = ""
 
  addTolist() {
   if (this.selectedItem.sub_name == "" || this.selectedItem.id == "" ) {
-    this.presentToast('الرجاء اختيار الحساب ', 'danger')
+    this.presentToast('ACCOUNTING.CASH.MESSAGE.SELECT_ACCOUNT', 'danger')
   }else if(+this.pay == 0){
-    this.presentToast('الرجاء ادخال المبلغ ', 'danger')
+    this.presentToast('ACCOUNTING.CASH.MESSAGE.ENTER_AMOUNT', 'danger')
   }  else {
     let fl: any = []
     if (this.itemList.length > 0) {
@@ -637,22 +638,22 @@ hideMe(i){
   this.showMe = null 
 }
 
-editCell(i){ 
+editCell(i){
   if(+this.jType  == 1){
     if(+this.itemList[i].debit > 0){
       this.hideMe(i)
-      this.getTotal() 
+      this.getTotal()
     }else{
-      this.presentToast("خطأ في الإدخال ", "danger")
+      this.presentToast("ACCOUNTING.CASH.MESSAGE.INPUT_ERROR", "danger")
     }
   }else if(+this.jType  == 2){
     if(+this.itemList[i].credit > 0){
       this.hideMe(i)
-      this.getTotal() 
+      this.getTotal()
     }else{
-      this.presentToast("خطأ في الإدخال ", "danger")
+      this.presentToast("ACCOUNTING.CASH.MESSAGE.INPUT_ERROR", "danger")
     }
-  } 
+  }
 }
 
 
@@ -802,6 +803,139 @@ pickAccountTo(ev ,index ,sub_name?){
 getBanksAccount(){
   this.banksAccountArray = this.sub_accountFrom.filter(x=> x.ac_id == 7)
   console.log('banksAccountArray', this.banksAccountArray);
+  this.prepareSources();
+}
+
+// Prepare sources list (Cash + Banks)
+prepareSources() {
+  this.allSources = [];
+
+  // Add cash option
+  this.allSources.push({
+    id: '1',
+    name: this.translate.instant('ACCOUNTING.CASH.LABEL.CASH') || 'الخزينة'
+  });
+
+  // Add bank accounts
+  this.banksAccountArray.forEach(bank => {
+    this.allSources.push({
+      id: bank.id,
+      name: bank.sub_name
+    });
+  });
+
+  this.filteredSources = [...this.allSources];
+
+  // Set default to cash
+  if (!this.sourceSearchTerm) {
+    this.sourceSearchTerm = this.allSources[0].name;
+    this.radioVal = '1';
+  }
+}
+
+// Handle source search input
+onSourceSearchInput(event: any) {
+  this.sourceSearchTerm = event.target.value;
+  this.filterSources();
+  this.sourceHighlightedIndex = -1;
+
+  if (this.sourceSearchTerm.length > 0 || this.allSources.length > 0) {
+    this.showSourceDropdown = true;
+  } else {
+    this.showSourceDropdown = false;
+    this.filteredSources = [...this.allSources];
+  }
+}
+
+// Filter sources based on search term
+filterSources() {
+  if (this.sourceSearchTerm.trim() === '') {
+    this.filteredSources = [...this.allSources];
+  } else {
+    this.filteredSources = this.allSources.filter(source =>
+      source.name.toLowerCase().includes(this.sourceSearchTerm.toLowerCase())
+    );
+  }
+}
+
+// Handle source input focus
+onSourceInputFocus() {
+  this.sourceHighlightedIndex = -1;
+
+  if (this.allSources.length > 0) {
+    setTimeout(() => {
+      this.showSourceDropdown = true;
+    }, 10);
+
+    if (this.sourceSearchTerm.length === 0) {
+      this.filteredSources = [...this.allSources];
+    } else {
+      this.filterSources();
+    }
+  }
+}
+
+// Handle source input blur
+onSourceInputBlur() {
+  setTimeout(() => {
+    this.showSourceDropdown = false;
+    this.sourceHighlightedIndex = -1;
+  }, 200);
+}
+
+// Handle source keyboard navigation
+onSourceKeyDown(event: KeyboardEvent) {
+  if (!this.showSourceDropdown || this.filteredSources.length === 0) {
+    if (event.key === 'ArrowDown' && this.filteredSources.length > 0) {
+      event.preventDefault();
+      this.showSourceDropdown = true;
+      this.sourceHighlightedIndex = 0;
+    }
+    return;
+  }
+
+  switch (event.key) {
+    case 'ArrowDown':
+      event.preventDefault();
+      this.sourceHighlightedIndex = Math.min(this.sourceHighlightedIndex + 1, this.filteredSources.length - 1);
+      break;
+
+    case 'ArrowUp':
+      event.preventDefault();
+      this.sourceHighlightedIndex = Math.max(this.sourceHighlightedIndex - 1, -1);
+      break;
+
+    case 'Enter':
+      event.preventDefault();
+      if (this.sourceHighlightedIndex >= 0 && this.sourceHighlightedIndex < this.filteredSources.length) {
+        this.selectSource(this.filteredSources[this.sourceHighlightedIndex]);
+      }
+      break;
+
+    case 'Escape':
+      event.preventDefault();
+      this.showSourceDropdown = false;
+      this.sourceHighlightedIndex = -1;
+      break;
+
+    case 'Tab':
+      this.showSourceDropdown = false;
+      this.sourceHighlightedIndex = -1;
+      break;
+  }
+}
+
+// Select source from dropdown
+selectSource(source: {id: any, name: string}) {
+  this.sourceSearchTerm = source.name;
+  this.showSourceDropdown = false;
+  this.sourceHighlightedIndex = -1;
+
+  // Call the original pickAccountBank logic
+  const event = { target: { value: source.id } };
+  this.pickAccountBank(event);
+
+  this.cdr.detectChanges();
 }
  
  prepareCurrentBalnces(){
@@ -873,13 +1007,13 @@ getBanksAccount(){
 
  validate():boolean{
   if ( +this.radioVal == 0 || +this.jType == 0 ) {
-    this.presentToast('الرجاء اختيار  نوع السند ','danger')
+    this.presentToast('ACCOUNTING.CASH.MESSAGE.SELECT_VOUCHER_TYPE','danger')
     return false
  }else if ( +this.journal.j_pay == 0  ) {
-  this.presentToast('الرجاء ادخال معاملات ','danger')
+  this.presentToast('ACCOUNTING.CASH.MESSAGE.ENTER_TRANSACTIONS','danger')
     return false
   }else if(+this.jdetail_fromArr[0].ac_id == 0 || +this.jdetail_toArr[0].ac_id == 0){
-    this.presentToast('الرجاء إختيار الحساب مرة اخري  ','danger')
+    this.presentToast('ACCOUNTING.CASH.MESSAGE.SELECT_ACCOUNT_AGAIN','danger')
   }
    else {
     return true
@@ -908,23 +1042,23 @@ setStandard(){
  
 
 
-  save() { 
+  save() {
    this.prepare4save()
     if (  this.validate() == true) {
-       this.presentLoadingWithOptions('جاري حفظ البيانات ...') 
-       this.saveJournal()   
-    }  
+       this.presentLoadingWithOptions('COMMON.MESSAGE.SAVING')
+       this.saveJournal()
+    }
   }
 
 
 
-  async presentModalSales(type?, sub_name? , cust_id?) { 
+  async presentModalSales(type?, sub_name? , cust_id?) {
   if(this.selectedToAccount.ac_id == 8 ){
     type = 'sales' // حساب المبيعات
     if(this.selectedFromAccount2.sub_name == "" && this.showFrom == true){
-      this.presentToast('الرجاء اختيار حساب العميل' , 'warning')
+      this.presentToast('ACCOUNTING.CASH.MESSAGE.SELECT_CUSTOMER_ACCOUNT' , 'warning')
     }else if(this.selectedFromAccount2.sub_name != "" && this.showFrom == true){
-    
+
     sub_name = this.selectedFromAccount2.sub_name // حساب العميل
     cust_id = this.selectedFromAccount2.id // حساب المورد
     }
@@ -932,9 +1066,9 @@ setStandard(){
   if(this.selectedFromAccount.ac_id == 9 ){
     type = 'purch'  // حساب المشتريات
     if(this.selectedToAccount2.sub_name == "" && this.showTo == true){
-      this.presentToast('الرجاء اختيار حساب المورد' , 'warning')
+      this.presentToast('ACCOUNTING.CASH.MESSAGE.SELECT_SUPPLIER_ACCOUNT' , 'warning')
     }else if(this.selectedToAccount2.sub_name != "" && this.showTo == true){
-    
+
      sub_name = this.selectedToAccount2.sub_name // حساب المورد
      cust_id = this.selectedToAccount2.id // حساب المورد
     }
@@ -982,15 +1116,15 @@ setStandard(){
         const element = this.jdetail_toArr[i];
         element.j_id = data['message']
       }
-    
+
       this.saveJournalFrom()
       }else{
-      this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري', 'danger') 
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
       this.loadingController.dismiss()
-      } 
+      }
     }, (err) => {
       //console.log(err);
-      this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري', 'danger')
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
       this.loadingController.dismiss()
     })
   }
@@ -1008,16 +1142,16 @@ setStandard(){
     this.api.saveJournalFrom(this.jdetail_fromArr).subscribe(data => {
       //console.log(data)
       if (data['message'] != 'Post Not Created') {
-        
+
         this.saveJournalTo()
       }else{
-        this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري', 'danger')
+        this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
         this.loadingController.dismiss()
       }
-     
+
     }, (err) => {
       //console.log(err);
-      this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري', 'danger')
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
       this.loadingController.dismiss()
     })
   }
@@ -1025,19 +1159,19 @@ setStandard(){
   saveJournalTo() {
     this.api.saveJournalTo(this.jdetail_toArr).subscribe(data => {
       //console.log(data)
-      if (data['message'] != 'Post Not Created') { 
-        this.presentToast('تم الحفظ بنجاح' , 'success') 
+      if (data['message'] != 'Post Not Created') {
+        this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY' , 'success')
         this.loadingController.dismiss()
         this.prepareInvo('saved')
       } else{
-        this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري', 'danger')
+        this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
         this.loadingController.dismiss()
       }
     }, (err) => {
       //console.log(err);
-      this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري', 'danger')
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
       this.loadingController.dismiss()
-    } 
+    }
     )
   }
 
@@ -1045,28 +1179,29 @@ setStandard(){
     await this.saveLogHistory()
   }
   
-  async presentLoadingWithOptions(msg?) {
+  async presentLoadingWithOptions(translationKey?) {
+    const message = translationKey ? this.translate.instant(translationKey) : undefined;
     const loading = await this.loadingController.create({
       spinner: 'bubbles',
-      mode:'ios', 
-      message: msg,
+      mode:'ios',
+      message: message,
       translucent: true,
      // cssClass: 'custom-class custom-loading',
       backdropDismiss: false
     });
     await loading.present();
-  
+
     const { role, data } = await loading.onDidDismiss();
     //console.log('Loading dismissed with role:', role);
   }
  
 
-  saveLogHistory(){  
-    //let mdata =  this.prepareLogHistory(itemData , firstq , role) 
+  saveLogHistory(){
+    //let mdata =  this.prepareLogHistory(itemData , firstq , role)
     //console.log('this.logHistoryArr[0]',this.logHistoryArr[0])
      let role
      let cust
-     let invo 
+     let invo
      if (this.logHistoryArr.length > 1) {
       invo = this.logHistoryArr[1]
       cust = this.logHistoryArr[0]
@@ -1077,16 +1212,16 @@ setStandard(){
      }
     this.api.saveLogHistoryMultiSales(invo ,cust,role).subscribe(data => {
      //console.log(data)
-     if (data['message'] != 'Post Not Created') { 
-      this.logHistoryArr = [] 
+     if (data['message'] != 'Post Not Created') {
+      this.logHistoryArr = []
       // this.getStockItems()
      }else{
-       this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+       this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR' , 'danger')
      }
    }, (err) => {
      //console.log(err);
-     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
-   }) 
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR' , 'danger')
+   })
   }
   
   presentPopoverNotif(e?: Event) {
@@ -1102,14 +1237,15 @@ setStandard(){
     //console.log('dismissOver') 
   }
 
-  async presentToast(msg,color?) {
+  async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
     const toast = await this.toast.create({
-      message: msg,
+      message: message,
       duration: 2000,
       color:color,
       cssClass:'cust_Toast',
       mode:'ios',
-      position:'top' 
+      position:'top'
     });
     toast.present();
   }
@@ -1158,11 +1294,11 @@ setStandard(){
   clearForm(): void {
     // Reset payment amount
     this.pay = 0;
-    
+
     // Reset journal type and radio value
     this.jType = "1";
     this.radioVal = "1";
-    
+
     // Reset selected accounts
     this.selectedFromAccount = {
       id: "",
@@ -1176,7 +1312,7 @@ setStandard(){
       credit: "",
       currentType: ""
     };
-    
+
     this.selectedItem = {
       id: "",
       ac_id: "",
@@ -1189,7 +1325,7 @@ setStandard(){
       credit: "",
       currentType: ""
     };
-    
+
     this.selectedBankAccount = {
       id: null,
       ac_id: null,
@@ -1202,72 +1338,41 @@ setStandard(){
       credit: null,
       currentType: null
     };
-    
+
+    // Reset source dropdown
+    this.sourceSearchTerm = this.allSources.length > 0 ? this.allSources[0].name : '';
+    this.showSourceDropdown = false;
+    this.sourceHighlightedIndex = -1;
+    this.filteredSources = [...this.allSources];
+
     // Reset item list
     this.itemList = [];
-    
+
     // Reset journal details arrays
     this.jdetail_fromArr = [];
     this.jdetail_toArr = [];
-    
+
     // Reset visibility flags
     this.showFrom = false;
     this.showTo = false;
     this.showFrom3 = false;
     this.showTo3 = false;
     this.showMe = null;
-    
+
     // Reset colored message flags
     this.coloredMsgFrom = false;
     this.coloredMsgFrom3 = false;
     this.coloredMsgTo = false;
     this.coloredMsgTo3 = false;
-    
-    // Reset search term and account popover
-    this.searchTerm = '';
-    this.isAccountPopoverOpen = false;
-    this.searchedAccounts = [];
-    
+
     // Reinitialize the form with fresh data
     this.prepareInvo();
-    
+
     // Reset balance data
     this.selectedAccountBalance = null;
     this.sourceAccountBalance = null;
   }
 
-  // Load balance for selected account (الحساب)
-  loadAccountBalance(accountId: any) {
-    if (!accountId || !this.store_info || !this.year) {
-      return;
-    }
-
-    this.loadingAccountBalance = true;
-    this.selectedAccountBalance = null;
-
-    this.api.getAccountBalance(accountId, this.store_info.id, this.year.id).subscribe(
-      (response) => {
-        this.loadingAccountBalance = false;
-        if (response.success) {
-          this.selectedAccountBalance = response.data;
-          console.log('Account balance loaded:', this.selectedAccountBalance);
-          console.log('INVOICE AMOUNT:', this.selectedAccountBalance.invoice_amount);
-          console.log('CURRENT BALANCE:', this.selectedAccountBalance.current_balance);
-          console.log('CUSTOMER TOTALS:', this.selectedAccountBalance.customer_totals);
-          console.log('TOTAL DEBITS:', this.selectedAccountBalance.journal_transactions.total_debits);
-          console.log('Debug info:', this.selectedAccountBalance.debug_info);
-        } else {
-          console.error('Failed to load account balance:', response.message);
-          this.selectedAccountBalance = null;
-        }
-      },
-      (error) => {
-        this.loadingAccountBalance = false;
-        console.error('Error loading account balance:', error);
-        this.selectedAccountBalance = null;
-      }
-    );
-  }
 
   // Load balance for source account (المصدر)
   loadSourceBalance(accountId: any) {
@@ -1299,16 +1404,30 @@ setStandard(){
 
   // Format balance for display
   formatBalance(balance: any): string {
-    if (!balance) return '0.00'; 
+    if (!balance) return '0.00';
     const amount = parseFloat(balance.current_balance || 0).toFixed(2);
-    const type = balance.balance_type === 'debit' ? 'مدين' : 'دائن'; 
+    const type = balance.status === 'debit' ? 'مدين' : 'دائن';
     return `${amount} ${type}`;
   }
 
   // Get balance color for styling
   getBalanceColor(balance: any): string {
-    if (!balance) return 'medium'; 
-    return balance.balance_type === 'debit' ? 'success' : 'danger';
+    if (!balance) return 'medium';
+    return balance.status === 'debit' ? 'success' : 'danger';
+  }
+
+  // Format account balance from account object (when account has balance embedded)
+  formatAccountBalance(account: any): string {
+    if (!account || !account.current_balance) return '0.00';
+    const amount = parseFloat(account.current_balance || 0).toFixed(2);
+    const type = account.balance_status === 'debit' ? 'مدين' : 'دائن';
+    return `${amount} ${type}`;
+  }
+
+  // Get account balance color from account object
+  getAccountBalanceColor(account: any): string {
+    if (!account || !account.balance_status) return 'medium';
+    return account.balance_status === 'debit' ? 'success' : 'danger';
   }
 
 

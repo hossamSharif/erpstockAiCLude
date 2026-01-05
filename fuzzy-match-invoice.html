@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuzzy Match Invoice Items</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: right;
+            border: 1px solid #ddd;
+        }
+        th {
+            background: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .similarity-high { color: #28a745; font-weight: bold; }
+        .similarity-med { color: #ffc107; font-weight: bold; }
+        .actions {
+            text-align: center;
+            margin: 30px 0;
+        }
+        #log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Fuzzy Match Invoice Items</h1>
+
+        <div id="status" class="status info">
+            جاري التحميل...
+        </div>
+
+        <div class="actions">
+            <button id="runMatchBtn" onclick="runFuzzyMatching()">تشغيل المطابقة الذكية</button>
+            <button id="applyMatchBtn" onclick="applyMatches()" disabled>تطبيق المطابقات</button>
+            <button onclick="location.reload()">إعادة تحميل</button>
+        </div>
+
+        <div id="results"></div>
+
+        <details style="margin-top: 20px;">
+            <summary style="cursor: pointer; font-weight: bold;">عرض السجل</summary>
+            <div id="log"></div>
+        </details>
+    </div>
+
+    <script>
+        let matchResults = [];
+        let invoiceData = null;
+        let inventoryItems = [];
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString('ar-SA');
+            logDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function setStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        // Arabic normalization
+        function normalizeArabic(str) {
+            return str
+                .replace(/ی/g, 'ي')
+                .replace(/ک/g, 'ك')
+                .replace(/ئ/g, 'ي')
+                .replace(/ة/g, 'ه')
+                .replace(/أ|إ|آ/g, 'ا')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+        }
+
+        // Levenshtein distance
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[str2.length][str1.length];
+        }
+
+        // Similarity score
+        function similarityScore(str1, str2) {
+            const normalized1 = normalizeArabic(str1);
+            const normalized2 = normalizeArabic(str2);
+            const maxLen = Math.max(normalized1.length, normalized2.length);
+            if (maxLen === 0) return 100;
+            const distance = levenshteinDistance(normalized1, normalized2);
+            return ((maxLen - distance) / maxLen) * 100;
+        }
+
+        async function runFuzzyMatching() {
+            try {
+                setStatus('جاري تحميل البيانات من التطبيق...', 'info');
+                log('بدء عملية المطابقة الذكية');
+
+                // Get data from the Angular app
+                const salesPage = window.opener || window.parent;
+                if (!salesPage || !salesPage.document) {
+                    throw new Error('يرجى فتح هذه الصفحة من نفس المتصفح الذي يعمل فيه التطبيق');
+                }
+
+                const element = salesPage.document.querySelector('app-sales');
+                if (!element || !element.__ngContext__) {
+                    throw new Error('لم يتم العثور على صفحة المبيعات. تأكد من فتح صفحة المبيعات في النافذة الرئيسية');
+                }
+
+                const ng = element.__ngContext__;
+                let component = null;
+                for (let i = 0; i < ng.length; i++) {
+                    if (ng[i] && typeof ng[i] === 'object' && ng[i].payInvo !== undefined) {
+                        component = ng[i];
+                        break;
+                    }
+                }
+
+                if (!component) {
+                    throw new Error('فشل الوصول إلى مكون المبيعات');
+                }
+
+                inventoryItems = component.items;
+                log(`تم تحميل ${inventoryItems.length} صنف من المخزون`);
+
+                // Fetch invoice from both pay and payinit tables
+                const payRef = 'sh104125013831';
+                setStatus('جاري تحميل بيانات الفاتورة...', 'info');
+
+                // Try to get from payinit_detail first (items with item_id = 0)
+                let allItems = [];
+
+                try {
+                    const initResponse = await fetch(`http://localhost/stock/myapi/payinit/readPayInvoDetailinit.php?pay_ref=${payRef}`);
+                    const initData = await initResponse.json();
+                    if (Array.isArray(initData)) {
+                        allItems = allItems.concat(initData);
+                        log(`تم تحميل ${initData.length} صنف من payinit_detail`);
+                    } else if (initData.message && Array.isArray(initData.message)) {
+                        allItems = allItems.concat(initData.message);
+                        log(`تم تحميل ${initData.message.length} صنف من payinit_detail`);
+                    } else {
+                        log('لا توجد أصناف في payinit_detail: ' + (initData.message || 'no data'));
+                    }
+                } catch (e) {
+                    log('خطأ في تحميل payinit_detail: ' + e.message);
+                }
+
+                // Also try to get from pay_detail (final invoice)
+                try {
+                    const response = await fetch(`http://localhost/stock/myapi/pay/readOnePay.php?pay_ref=${payRef}`);
+                    const invoiceData = await response.json();
+                    if (invoiceData && invoiceData.pay_items) {
+                        allItems = allItems.concat(invoiceData.pay_items);
+                        log(`تم تحميل ${invoiceData.pay_items.length} صنف من pay_detail`);
+                    }
+                } catch (e) {
+                    log('خطأ في تحميل pay_detail: ' + e.message);
+                }
+
+                if (allItems.length === 0) {
+                    throw new Error('فشل تحميل بيانات الفاتورة من كلا الجدولين');
+                }
+
+                log(`إجمالي الأصناف المحملة: ${allItems.length}`);
+
+                // Find unmatched items
+                const unmatchedItems = allItems.filter(item => item.item_id == 0 || item.item_id === '0');
+                log(`عدد الأصناف غير المطابقة: ${unmatchedItems.length}`);
+
+                if (unmatchedItems.length === 0) {
+                    setStatus('جميع الأصناف مطابقة بالفعل!', 'success');
+                    return;
+                }
+
+                setStatus(`جاري مطابقة ${unmatchedItems.length} صنف...`, 'info');
+
+                // Perform fuzzy matching
+                matchResults = [];
+                let matched = 0;
+
+                unmatchedItems.forEach((unmatchedItem, index) => {
+                    let bestMatch = null;
+                    let bestScore = 0;
+
+                    inventoryItems.forEach(inventoryItem => {
+                        const score = similarityScore(unmatchedItem.item_name, inventoryItem.item_name);
+                        if (score > bestScore && score >= 85) {
+                            bestScore = score;
+                            bestMatch = inventoryItem;
+                        }
+                    });
+
+                    if (bestMatch) {
+                        matchResults.push({
+                            index: index,
+                            originalName: unmatchedItem.item_name,
+                            matchedName: bestMatch.item_name,
+                            similarity: Math.round(bestScore),
+                            item_id: bestMatch.id,
+                            perch_price: bestMatch.perch_price,
+                            tax: bestMatch.tax || 0,
+                            imageUrl: bestMatch.imageUrl || "",
+                            originalItem: unmatchedItem
+                        });
+                        matched++;
+                    }
+
+                    if ((index + 1) % 20 === 0) {
+                        log(`تم فحص ${index + 1} من ${unmatchedItems.length} صنف...`);
+                    }
+                });
+
+                log(`اكتملت المطابقة: ${matched} مطابقة من ${unmatchedItems.length}`);
+
+                // Display results
+                displayResults();
+
+                setStatus(`تم العثور على ${matched} مطابقة من ${unmatchedItems.length} صنف`, 'success');
+                document.getElementById('applyMatchBtn').disabled = false;
+
+            } catch (error) {
+                setStatus(`خطأ: ${error.message}`, 'error');
+                log(`خطأ: ${error.message}`);
+                console.error(error);
+            }
+        }
+
+        function displayResults() {
+            const resultsDiv = document.getElementById('results');
+
+            if (matchResults.length === 0) {
+                resultsDiv.innerHTML = '<p style="text-align:center; color:#666;">لا توجد مطابقات</p>';
+                return;
+            }
+
+            let html = `
+                <h2>نتائج المطابقة (${matchResults.length} مطابقة)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الاسم الأصلي</th>
+                            <th>الاسم المطابق</th>
+                            <th>نسبة التطابق</th>
+                            <th>رقم الصنف</th>
+                            <th>سعر الشراء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            matchResults.forEach((match, idx) => {
+                const simClass = match.similarity >= 95 ? 'similarity-high' : 'similarity-med';
+                html += `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td>${match.originalName}</td>
+                        <td>${match.matchedName}</td>
+                        <td class="${simClass}">${match.similarity}%</td>
+                        <td>${match.item_id}</td>
+                        <td>${match.perch_price}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            resultsDiv.innerHTML = html;
+        }
+
+        async function applyMatches() {
+            if (!confirm(`هل تريد تطبيق ${matchResults.length} مطابقة على الفاتورة؟`)) {
+                return;
+            }
+
+            try {
+                setStatus('جاري تطبيق المطابقات...', 'info');
+                log('بدء تطبيق المطابقات على الفاتورة');
+
+                // Update invoice items
+                matchResults.forEach(match => {
+                    match.originalItem.item_id = match.item_id;
+                    match.originalItem.perch_price = match.perch_price;
+                    match.originalItem.tax = match.tax;
+                    match.originalItem.imageUrl = match.imageUrl;
+                });
+
+                // Update each item directly in the database
+                let updated = 0;
+                for (const match of matchResults) {
+                    try {
+                        const updateResponse = await fetch('http://localhost/stock/myapi/payinit/updatePayInitDetail.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                id: match.originalItem.id,
+                                item_id: match.item_id,
+                                perch_price: match.perch_price,
+                                tax: match.tax,
+                                imageUrl: match.imageUrl
+                            })
+                        });
+
+                        const updateResult = await updateResponse.json();
+                        if (updateResult.message && (updateResult.message.includes('success') || updateResult.message.includes('updated'))) {
+                            updated++;
+                            log(`تم تحديث: ${match.originalName} → ${match.matchedName}`);
+                        }
+                    } catch (e) {
+                        log(`خطأ في تحديث ${match.originalName}: ${e.message}`);
+                    }
+                }
+
+                if (updated > 0) {
+                    setStatus(`تم تطبيق ${updated} مطابقة بنجاح!`, 'success');
+                    log(`تم حفظ ${updated} من ${matchResults.length} تحديث`);
+                    document.getElementById('applyMatchBtn').disabled = true;
+
+                    // Reload the page after 2 seconds
+                    setTimeout(() => {
+                        if (window.opener) {
+                            window.opener.location.reload();
+                        }
+                        window.close();
+                    }, 2000);
+                } else {
+                    throw new Error('لم يتم تحديث أي صنف');
+                }
+
+            } catch (error) {
+                setStatus(`خطأ في التطبيق: ${error.message}`, 'error');
+                log(`خطأ: ${error.message}`);
+                console.error(error);
+            }
+        }
+
+        // Initialize
+        window.onload = function() {
+            setStatus('جاهز للبدء. انقر على "تشغيل المطابقة الذكية"', 'info');
+            log('تم تحميل أداة المطابقة الذكية');
+        };
+    </script>
+</body>
+</html>

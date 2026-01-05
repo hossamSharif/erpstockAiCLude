@@ -9,6 +9,7 @@ import { StockServiceService } from '../syncService/stock-service.service';
 import * as momentObj from 'moment';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-edit-journal',
@@ -77,28 +78,25 @@ export class EditJournalPage implements OnInit {
   originalJdetailFrom: any;
   originalJdetailTo: any;
 
-  // Balance display properties (from cash2)
-  isAccountPopoverOpen = false;
-  searchTerm = '';
-  searchedAccounts: any[] = [];
+  // Balance display properties (from account selector)
   selectedAccountBalance: any = null;
   sourceAccountBalance: any = null;
-  loadingAccountBalance = false;
   loadingSourceBalance = false;
 
   constructor(
     private platform :Platform,
     private behavApi:StockServiceService,
     private modalController: ModalController,
-    private alertController: AlertController, 
+    private alertController: AlertController,
     private authenticationService: AuthServiceService,
     private storage: Storage,
-    private loadingController:LoadingController, 
+    private loadingController:LoadingController,
     private datePipe:DatePipe,
     private api:ServicesService,
     private toast :ToastController,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService
   ) {
     this.selectedBankAccount = {id:null,ac_id:null,sub_name:null,sub_type:null,sub_code:null,sub_balance:null,store_id:null,debit:null ,credit:null, currentType:null} 
     this.checkPlatform()
@@ -115,27 +113,16 @@ export class EditJournalPage implements OnInit {
     // });
   }
 
-  // Account popover methods (from cash2)
-  presentAccountPopover(event) {
-    this.searchedAccounts = this.sub_accountFrom;
-    this.isAccountPopoverOpen = true;
-  }
-
-  searchAccount(event) {
-    const searchTerm = event.target.value.toLowerCase();
-    if (searchTerm && searchTerm.trim() !== '') {
-      this.searchedAccounts = this.sub_accountFrom.filter((acc) => {
-        return acc.sub_name.toLowerCase().indexOf(searchTerm) > -1;
-      });
-    } else {
-      this.searchedAccounts = this.sub_accountFrom;
+  // Handle account selection from account-selector component
+  onAccountSelected(account: any) {
+    if (account) {
+      this.pickAccount({ target: { value: account.sub_name } }, 1);
     }
   }
 
-  selectAccount(account) {
-    this.pickAccount({ target: { value: account.sub_name } }, 1);
-    this.isAccountPopoverOpen = false;
-    this.loadAccountBalance(account.id);
+  // Handle balance loaded from account-selector component
+  onBalanceLoaded(balance: any) {
+    this.selectedAccountBalance = balance;
   }
 
   checkPlatform(){
@@ -192,7 +179,7 @@ export class EditJournalPage implements OnInit {
         this.loadJournalDetails();
       }
     }, (err) => {
-      this.presentToast('خطأ في تحميل البيانات', 'danger');
+      this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.ERROR_LOADING_DATA', 'danger');
       this.loadingController.dismiss();
     });
   }
@@ -213,7 +200,7 @@ export class EditJournalPage implements OnInit {
         this.loadJDetailsTo();
       }
     }, (err) => {
-      this.presentToast('خطأ في تحميل تفاصيل القيد', 'danger');
+      this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.ERROR_LOADING_DETAILS', 'danger');
       this.loadingController.dismiss();
     });
   }
@@ -236,11 +223,11 @@ export class EditJournalPage implements OnInit {
           this.setAccountToDetails(); 
         } 
       }else{
-        this.presentToast('لم يتم تحميل تفاصيل القيد', 'danger');
+        this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.DETAILS_NOT_LOADED', 'danger');
         this.loadingController.dismiss();
       }
     }, (err) => {
-      this.presentToast('خطأ في تحميل تفاصيل القيد', 'danger');
+      this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.ERROR_LOADING_DETAILS', 'danger');
       this.loadingController.dismiss();
     });
   }
@@ -261,11 +248,8 @@ export class EditJournalPage implements OnInit {
         debit: account.debit,
         credit: account.credit,
         currentType: account.currentType
-      }; 
-      // Load account balance
-      this.loadAccountBalance(account.id);
+      };
       console.log('jType' , this.jType );
-     
     }
   }
   setAccountToDetails() {
@@ -284,11 +268,8 @@ export class EditJournalPage implements OnInit {
         debit: account.debit,
         credit: account.credit,
         currentType: account.currentType
-      }; 
-      // Load account balance
-      this.loadAccountBalance(account.id);
+      };
       console.log('jType' , this.jType );
-    
     }
   }
 
@@ -454,13 +435,13 @@ export class EditJournalPage implements OnInit {
 
   validate():boolean{
     if ( +this.radioVal == 0 || +this.jType == 0 ) {
-      this.presentToast('الرجاء اختيار  نوع السند ','danger')
+      this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.SELECT_VOUCHER_TYPE','danger')
       return false
    }else if ( +this.pay == 0  ) {
-    this.presentToast('الرجاء ادخال المبلغ ','danger')
+    this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.ENTER_AMOUNT','danger')
       return false
     }else if(this.selectedFromAccount.id == null){
-      this.presentToast('الرجاء إختيار الحساب ','danger')
+      this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.SELECT_ACCOUNT','danger')
       return false
     }
      else {
@@ -484,11 +465,11 @@ export class EditJournalPage implements OnInit {
       if (data['message'] != 'Post Not Updated') {
         this.updateJournalDetails();
       } else {
-        this.presentToast('لم يتم تحديث البيانات , خطا في الإتصال حاول مرة اخري', 'danger')
+        this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.UPDATE_FAILED', 'danger')
         this.loadingController.dismiss();
       }
     }, (err) => {
-      this.presentToast('لم يتم تحديث البيانات , خطا في الإتصال حاول مرة اخري', 'danger')
+      this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.UPDATE_FAILED', 'danger')
       this.loadingController.dismiss();
     });
   }
@@ -638,11 +619,11 @@ export class EditJournalPage implements OnInit {
       if (data['message'] != 'Post Not Updated') {
         this.updateJDetailsTo();
       } else {
-        this.presentToast('لم يتم تحديث البيانات , خطا في الإتصال حاول مرة اخري', 'danger')
+        this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.UPDATE_FAILED', 'danger')
         this.loadingController.dismiss();
       }
     }, (err) => {
-      this.presentToast('لم يتم تحديث البيانات , خطا في الإتصال حاول مرة اخري', 'danger')
+      this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.UPDATE_FAILED', 'danger')
       this.loadingController.dismiss();
     });
   }
@@ -661,16 +642,16 @@ export class EditJournalPage implements OnInit {
     
     this.api.updateJTo(this.jdetail_toArr[0]).subscribe(data => {
       if (data['message'] != 'Post Not Updated') {
-        this.presentToast('تم التحديث بنجاح', 'success');
+        this.presentToast('COMMON.MESSAGE.UPDATED_SUCCESSFULLY', 'success');
        
         this.router.navigate(['/folder/spend-record2']);
         this.loadingController.dismiss();
       } else {
-        this.presentToast('لم يتم تحديث البيانات , خطا في الإتصال حاول مرة اخري', 'danger')
+        this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.UPDATE_FAILED', 'danger')
         this.loadingController.dismiss();
       }
     }, (err) => {
-      this.presentToast('لم يتم تحديث البيانات , خطا في الإتصال حاول مرة اخري', 'danger')
+      this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.UPDATE_FAILED', 'danger')
       this.loadingController.dismiss();
     });
   }
@@ -767,14 +748,15 @@ export class EditJournalPage implements OnInit {
     const { role, data } = await loading.onDidDismiss();
   }
 
-  async presentToast(msg,color?) {
+  async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
     const toast = await this.toast.create({
-      message: msg,
+      message: message,
       duration: 2000,
       color:color,
       cssClass:'cust_Toast',
       mode:'ios',
-      position:'top' 
+      position:'top'
     });
     toast.present();
   }
@@ -857,12 +839,12 @@ export class EditJournalPage implements OnInit {
       if (data['message'] != 'Post Not Deleted') {
         this.deleteJfrom(j_ref);
       } else {
-        this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري', 'danger');
+        this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.DELETE_FAILED', 'danger');
         this.loadingController.dismiss();
       }
     }, (err) => {
       console.log(err);
-      this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري', 'danger');
+      this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.DELETE_FAILED', 'danger');
       this.loadingController.dismiss();
     });
   }
@@ -873,12 +855,12 @@ export class EditJournalPage implements OnInit {
       if (data['message'] != 'Post Not Deleted') {
         this.deleteJto(j_ref);
       } else {
-        this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري', 'danger');
+        this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.DELETE_FAILED', 'danger');
         this.loadingController.dismiss();
       }
     }, (err) => {
       console.log(err);
-      this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري', 'danger');
+      this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.DELETE_FAILED', 'danger');
       this.loadingController.dismiss();
     });
   }
@@ -887,48 +869,21 @@ export class EditJournalPage implements OnInit {
     this.api.deleteJto(j_ref).subscribe(data => {
       console.log('delete Jto response', data);
       if (data['message'] != 'Post Not Deleted') {
-        this.presentToast('تم الحذف بنجاح', 'success');
+        this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success');
         this.loadingController.dismiss();
         // Navigate back to spend-record2 page
         this.router.navigate(['/spend-record2']);
       } else {
-        this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري', 'danger');
+        this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.DELETE_FAILED', 'danger');
         this.loadingController.dismiss();
       }
     }, (err) => {
       console.log(err);
-      this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري', 'danger');
+      this.presentToast('ACCOUNTING.JOURNAL.MESSAGE.DELETE_FAILED', 'danger');
       this.loadingController.dismiss();
     });
   }
 
-  // Load balance for selected account (الحساب) - from cash2
-  loadAccountBalance(accountId: any) {
-    if (!accountId || !this.store_info || !this.year) {
-      return;
-    }
-
-    this.loadingAccountBalance = true;
-    this.selectedAccountBalance = null;
-
-    this.api.getAccountBalance(accountId, this.store_info.id, this.year.id).subscribe(
-      (response) => {
-        this.loadingAccountBalance = false;
-        if (response.success) {
-          this.selectedAccountBalance = response.data;
-          console.log('Account balance loaded:', this.selectedAccountBalance);
-        } else {
-          console.error('Failed to load account balance:', response.message);
-          this.selectedAccountBalance = null;
-        }
-      },
-      (error) => {
-        this.loadingAccountBalance = false;
-        console.error('Error loading account balance:', error);
-        this.selectedAccountBalance = null;
-      }
-    );
-  }
 
   // Load balance for source account (المصدر) - from cash2
   loadSourceBalance(accountId: any) {

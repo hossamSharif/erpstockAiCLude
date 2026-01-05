@@ -109,8 +109,6 @@ when user click to edit qty or itm in itemlist the total not changed after dismi
 موقع فافاديا
 
 
-الفيو للسجلات لحذف سجل البشبه   , التصفح يكون بالداون سهم والفاتةرة بالعمليات تتعرض بالجنب اليمين
- والعمليات بتاعة الطباعى
 
 ================================================================================
 IMPLEMENTATION SUMMARY: MULTI-SELECT SALES INVOICE - CREATE NEW SALES INVOICE

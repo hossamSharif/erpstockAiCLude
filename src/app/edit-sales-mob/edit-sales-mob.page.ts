@@ -1,5 +1,6 @@
 
 import { DatePipe, Location } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { Component, OnInit ,ViewChild, ElementRef} from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -67,7 +68,7 @@ export class EditSalesMobPage implements OnInit {
   segmentVal:any = 'second'
   year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any} 
   loadingItems:boolean = false
-  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController) {
+  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private translate: TranslateService) {
     this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
     this.route.queryParams.subscribe(params => {
       if (params && params.payInvo) {
@@ -592,19 +593,19 @@ saveLogHistory(role2?){
   
     if(role2 == 'delete'){
     
-      this.presentToast('تم الحذف بنجاح' , 'success') 
+      this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success') 
      
     }else{
-    this.presentToast('تم الحفظ بنجاح' , 'success')
+    this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
 
     }
     // this.getStockItems()
    }else{
-     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger') 
+     this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger') 
    }
  }, (err) => {
    //console.log(err);
-   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
  }) 
 }
 async  performSync(){
@@ -648,9 +649,10 @@ async  performSync(){
 // )
 // }
 
-   async presentToast(msg,color?) {
+   async presentToast(translationKey: string, color?) {
+    const message = this.translate.instant(translationKey);
      const toast = await this.toast.create({
-       message: msg,
+       message: message,
        duration: 2000,
        color:color,
        cssClass:'cust_Toast',
@@ -1109,7 +1111,7 @@ selectFromPop(item){
      this.deleteSalesitemList4update()
       }, (err) => {
       //console.log(err);
-      this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
+      this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger').then(()=>{
         this.loadingController.dismiss()
       })
      })
@@ -1166,14 +1168,14 @@ saveSubAccount(){
   if (data['message'] != 'Post Not Deleted') {
     this.saveitemList()    
   }else{
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger').then(()=>{
     this.loadingController.dismiss()
   })
 
   } 
 },(err) => {
   //console.log(err);
-  this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger').then(()=>{
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger').then(()=>{
     this.loadingController.dismiss()
   })
   
@@ -1252,7 +1254,7 @@ saveSubAccountlocal(){
 
   this.storage.set('salesLocal', this.salesLocal).then((response) => {
     //console.log('resoponse set', response)
-    this.presentToast('تم الحفظ بنجاح', 'success')
+    this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
     this.back()
   });
 }
@@ -1262,7 +1264,7 @@ saveSubAccountlocal(){
 saveitemList(){  
 this.api.saveSalesitemList(this.itemList).subscribe(data=>{ 
   //console.log(data)  
-  this.presentToast('تم الحفظ بنجاح' , 'success')
+  this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success')
   this.sales = this.sales.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);
   this.sales.push({
     "payInvo": this.payInvo,
@@ -1294,7 +1296,7 @@ this.api.saveSalesitemList(this.itemList).subscribe(data=>{
   });
 }, (err) => {
   //console.log(err);
-  this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+  this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
 }, () => {
   this.loadingController.dismiss()
 }
@@ -1370,11 +1372,11 @@ deleteSalesInvo(){
    if (data['message'] != 'Post Not Deleted') {
    this.deleteSalesitemList()
    }else{
-    this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    }
  },(err) => {
    //console.log(err);
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
   }) 
 }
 
@@ -1393,7 +1395,7 @@ deleteSalesInvoLocal(){
    //console.log('case undefined' , this.salesLocal)
    this.storage.set('salesLocal', this.salesLocal).then((response) => {
     //console.log('resoponse set', response) 
-    this.presentToast('تم الحذف بنجاح' , 'success') 
+    this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success') 
     this.back()
   });
   }else{
@@ -1407,7 +1409,7 @@ deleteSalesInvoLocal(){
     })
     this.storage.set('salesLocalDelete', this.salesLocalDelete).then((response) => {
       //console.log('resoponse set', response) 
-      this.presentToast('تم الحذف بنجاح' , 'success') 
+      this.presentToast('COMMON.MESSAGE.DELETED_SUCCESSFULLY', 'success') 
       this.back()
     }); 
   });
@@ -1432,11 +1434,11 @@ deleteSalesitemList(){
       
       });
    }else{
-    this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+    this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    }
  },(err) => {
    //console.log(err);
-   this.presentToast('لم يتم حذف البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
+   this.presentToast('COMMON.MESSAGE.CONNECTION_ERROR', 'danger')
    
   },() => {
     this.loadingController.dismiss()

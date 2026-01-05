@@ -1,0 +1,63 @@
+.modal-content {
+  padding: 16px;
+}
+
+ion-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
+}
+
+ion-card-content {
+  padding: 16px;
+}
+
+.input-item {
+  --background: transparent;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  margin-bottom: 16px;
+
+  ion-label {
+    font-weight: 500;
+    color: var(--ion-color-dark);
+    margin-bottom: 8px;
+  }
+
+  ion-input,
+  ion-textarea {
+    --background: #f8f9fa;
+    --padding-start: 12px;
+    --padding-end: 12px;
+    border-radius: 8px;
+    margin-top: 4px;
+  }
+
+  ion-textarea {
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+  }
+}
+
+.button-container {
+  padding: 0 0 16px 0;
+
+  ion-button {
+    margin-bottom: 8px;
+    font-weight: 500;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// RTL support
+[dir="rtl"] {
+  .input-item {
+    ion-label {
+      text-align: right;
+    }
+  }
+}

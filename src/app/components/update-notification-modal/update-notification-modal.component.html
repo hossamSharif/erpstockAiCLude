@@ -1,0 +1,40 @@
+<ion-content class="update-modal-content">
+  <div class="update-modal-container">
+    <!-- Header with icon -->
+    <div class="update-header">
+      <div class="update-icon-wrapper">
+        <ion-icon name="rocket-outline" class="update-icon"></ion-icon>
+      </div>
+      <h1 class="update-title">{{ update.title }}</h1>
+      <p class="update-version">الإصدار {{ update.version }}</p>
+    </div>
+
+    <!-- Description -->
+    <div class="update-description">
+      <p>{{ update.description }}</p>
+    </div>
+
+    <!-- Features List -->
+    <div class="features-section" *ngIf="update.features && update.features.length > 0">
+      <h2 class="features-title">التحديثات الجديدة:</h2>
+      <div class="features-list">
+        <div class="feature-item" *ngFor="let feature of update.features">
+          <ion-icon name="checkmark-circle" class="feature-icon"></ion-icon>
+          <span class="feature-text">{{ feature }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Button -->
+    <div class="action-section">
+      <ion-button
+        expand="block"
+        size="large"
+        class="update-button"
+        (click)="closeAndRefresh()">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon>
+        تحديث الآن
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

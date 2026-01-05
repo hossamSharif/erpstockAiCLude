@@ -3,6 +3,7 @@ import { ServicesService } from "../stockService/services.service";
 import { Observable, Subscription } from 'rxjs';
 import { LoadingController, ModalController, Platform, ToastController } from '@ionic/angular';
 import { DatePipe } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 import { Storage } from '@ionic/storage';
 import { Router } from '@angular/router';
 import { ExportService, ExportConfig, ExportColumn } from '../services/export.service';
@@ -79,7 +80,7 @@ export class ItemAnalyticsPage implements OnInit, OnDestroy {
     private loadingController: LoadingController,
     private datePipe: DatePipe,
     private api: ServicesService,
-    private toast: ToastController,
+    private toast: ToastController, private translate: TranslateService,
     private exportService: ExportService,
     private currencyService: CurrencyService,
     private cdr: ChangeDetectorRef
@@ -202,7 +203,7 @@ export class ItemAnalyticsPage implements OnInit, OnDestroy {
         },
         (error) => {
           console.error('Error loading analytics:', error);
-          this.presentToast('خطأ في تحميل البيانات التحليلية', 'danger');
+          this.presentToast('INVENTORY.ITEM_ANALYTICS.MESSAGE.ERROR_LOADING_ANALYTICS', 'danger');
           this.loading = false;
           this.showEmpty = true;
         }
@@ -310,7 +311,7 @@ export class ItemAnalyticsPage implements OnInit, OnDestroy {
 
   async exportToPDF(): Promise<void> {
     if (!this.filteredData || this.filteredData.length === 0) {
-      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      await this.presentToast('INVENTORY.ITEM_ANALYTICS.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
       return;
     }
 
@@ -330,7 +331,7 @@ export class ItemAnalyticsPage implements OnInit, OnDestroy {
 
   async exportToExcel(): Promise<void> {
     if (!this.filteredData || this.filteredData.length === 0) {
-      await this.presentToast('لا توجد بيانات للتصدير', 'warning');
+      await this.presentToast('INVENTORY.ITEM_ANALYTICS.MESSAGE.NO_DATA_TO_EXPORT', 'warning');
       return;
     }
 
@@ -375,9 +376,10 @@ export class ItemAnalyticsPage implements OnInit, OnDestroy {
     ];
   }
 
-  async presentToast(msg: string, color?: string) {
+  async presentToast(translationKey: string, color?: string) {
+    const message = this.translate.instant(translationKey);
     const toast = await this.toast.create({
-      message: msg,
+      message: message,
       duration: 2000,
       color: color,
       cssClass: 'cust_Toast',

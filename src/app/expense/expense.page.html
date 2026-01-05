@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>{{ isEditMode ? 'تعديل مصروف' : 'إضافة مصروف جديد' }}</ion-title>
+    <ion-title>{{ isEditMode ? ('EXPENSE.EDIT_TITLE' | translate) : ('EXPENSE.NEW_EXPENSE_TITLE' | translate) }}</ion-title>
     <ion-buttons slot="end" *ngIf="user_info && store_info">
       <ion-item class="header-date-item">
         <ion-input type="date" [(ngModel)]="expense.expense_date" class="header-date-input"></ion-input>
@@ -16,7 +16,7 @@
   <!-- Loading State -->
   <div *ngIf="!user_info || !store_info" class="loading-container">
     <ion-spinner name="crescent"></ion-spinner>
-    <p>جاري التحميل...</p>
+    <p>{{ 'COMMON.MESSAGE.LOADING' | translate }}</p>
   </div>
 
   <!-- Description and Details Card -->
@@ -27,7 +27,7 @@
           <ion-card-header color="primary" class="card-header">
             <ion-card-title>
               <ion-icon name="document-text" slot="start"></ion-icon>
-              تفاصيل المصروف
+              {{ 'EXPENSE.LABEL.EXPENSE_DETAILS' | translate }}
             </ion-card-title>
           </ion-card-header>
           <ion-card-content>
@@ -36,7 +36,7 @@
               <ion-row>
                 <!-- Amount -->
                 <ion-col size="4">
-                  <ion-label class="field-label">المبلغ <span class="required">*</span></ion-label>
+                  <ion-label class="field-label">{{ 'EXPENSE.LABEL.AMOUNT' | translate }} <span class="required">*</span></ion-label>
                   <ion-item class="custInput">
                     <ion-input
                       type="number"
@@ -49,7 +49,17 @@
 
                 <!-- Category -->
                 <ion-col size="4">
-                  <ion-label class="field-label">التصنيف</ion-label>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <ion-label class="field-label">{{ 'EXPENSE.LABEL.CATEGORY' | translate }}</ion-label>
+                    <ion-button
+                      size="small"
+                      fill="clear"
+                      color="warning"
+                      (click)="openAddCategoryModal()"
+                      [title]="'EXPENSE.LABEL.ADD_NEW_CATEGORY' | translate">
+                      <ion-icon name="add-circle" slot="icon-only"></ion-icon>
+                    </ion-button>
+                  </div>
                   <div class="custom-dropdown-wrapper">
                     <ion-item class="custInput dropdown-input">
                       <ion-input
@@ -57,7 +67,7 @@
                         (ionInput)="onCategorySearch($event)"
                         (ionFocus)="onCategoryInputFocus()"
                         (click)="onCategoryInputFocus()"
-                        placeholder="اختر التصنيف"
+                        [placeholder]="'EXPENSE.PLACEHOLDER.SELECT_CATEGORY' | translate"
                         class="rtl-input">
                       </ion-input>
                       <ion-icon

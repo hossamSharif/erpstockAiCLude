@@ -3,9 +3,12 @@
     <ion-buttons slot="start">
       <ion-back-button (click)="back()" defaultHref="/"></ion-back-button>
     </ion-buttons>
-    <ion-title>تعديل فاتورة مشتريات</ion-title>
+    <ion-title>{{ 'PURCHASE.EDIT_TITLE' | translate }}</ion-title>
     <!-- Date in header -->
     <ion-buttons slot="end">
+      <ion-button fill="clear" [routerLink]="['/folder/ai-assistant']" title="المساعد الذكي">
+        <ion-icon name="sparkles" color="primary"></ion-icon>
+      </ion-button>
       <app-currency-switcher></app-currency-switcher>
       <ion-item class="header-date-item">
         <ion-input type="date" [(ngModel)]="payInvo.pay_date" class="header-date-input"></ion-input>
@@ -22,8 +25,8 @@
           <ion-col size="4" offset="3" class="account-column">
             <app-account-selector
               accountType="supplier"
-              placeholder="اختر حساب المورد"
-              label="حساب المورد"
+              [placeholder]="'PURCHASE.LABEL.SELECT_SUPPLIER' | translate"
+              [label]="'PURCHASE.LABEL.SUPPLIER_ACCOUNT' | translate"
               [store_info]="store_info"
               [year]="year"
               [showAddButton]="true"
@@ -32,12 +35,12 @@
               (balanceLoaded)="onAccountBalanceLoaded($event)">
             </app-account-selector>
           </ion-col>
-          
+
           <!-- Comment Column: Note field in same row -->
           <ion-col size="4" class="date-comment-column">
-            <ion-label class="column-label">ملاحظة</ion-label>
-            <ion-item class="custInput comment-input"> 
-              <ion-input placeholder="أكتب تعليقا" [(ngModel)]="payInvo.payComment" [disabled]="isLoading()"></ion-input>
+            <ion-label class="column-label">{{ 'PURCHASE.LABEL.COMMENT' | translate }}</ion-label>
+            <ion-item class="custInput comment-input">
+              <ion-input [placeholder]="'PURCHASE.LABEL.WRITE_COMMENT' | translate" [(ngModel)]="payInvo.payComment" [disabled]="isLoading()"></ion-input>
             </ion-item>
           </ion-col>
         </ion-row>

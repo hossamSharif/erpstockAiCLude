@@ -4,7 +4,7 @@
       <ion-back-button *ngIf="showBackButton" (click)="goBack()" defaultHref="/"></ion-back-button>
       <ion-menu-button *ngIf="!showBackButton"></ion-menu-button>
     </ion-buttons>
-    <ion-title>فاتورة مشتريات</ion-title>
+    <ion-title>{{ 'PURCHASE.TITLE' | translate }}</ion-title>
     <!-- Date in header -->
     <ion-buttons slot="end">
       <app-currency-switcher *ngIf="user_info && store_info"></app-currency-switcher>
@@ -24,8 +24,8 @@
           <ion-col size="4" offset="3" class="account-column">
             <app-account-selector
               accountType="supplier"
-              placeholder="اختر حساب المورد"
-              label="حساب المورد"
+              [placeholder]="'PURCHASE.LABEL.SELECT_SUPPLIER' | translate"
+              [label]="'PURCHASE.LABEL.SUPPLIER_ACCOUNT' | translate"
               [store_info]="store_info"
               [year]="year"
               [showAddButton]="true"
@@ -37,9 +37,9 @@
           
           <!-- Comment Column: Note field in same row -->
           <ion-col size="4" class="date-comment-column">
-            <ion-label class="column-label">ملاحظة</ion-label>
-            <ion-item class="custInput comment-input"> 
-              <ion-input placeholder="أكتب تعليقا" [(ngModel)]="payInvo.payComment" [disabled]="isLoading()"></ion-input>
+            <ion-label class="column-label">{{ 'PURCHASE.LABEL.COMMENT' | translate }}</ion-label>
+            <ion-item class="custInput comment-input">
+              <ion-input [placeholder]="'PURCHASE.LABEL.WRITE_COMMENT' | translate" [(ngModel)]="payInvo.payComment" [disabled]="isLoading()"></ion-input>
             </ion-item>
           </ion-col>
         </ion-row>
@@ -65,7 +65,7 @@
                 [showQuantityInput]="true"
                 [showPriceInput]="false"
                 [showPerchPriceInput]="true"
-                placeholder="اختر الصنف"
+                [placeholder]="'PURCHASE.LABEL.SELECT_ITEM' | translate"
                 (itemSelected)="onItemSelected($event)"
                 (itemAdded)="onItemAdded($event)"
                 (refreshItems)="refresh('item')">

@@ -45,6 +45,7 @@
  */
 
 import { Component, OnInit, OnDestroy, Input, ChangeDetectorRef } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ModalController, ToastController } from '@ionic/angular';
 import { CurrencyService } from '../services/currency.service';
 import { Storage } from '@ionic/storage';
@@ -88,7 +89,8 @@ export class PrintModalPage implements OnInit, OnDestroy {
     private toast: ToastController,
     private currencyService: CurrencyService,
     private storage: Storage,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private translate: TranslateService
   ) {
     this.mode = 'enhanced';
   }
@@ -709,7 +711,8 @@ export class PrintModalPage implements OnInit, OnDestroy {
     return modifiedContent;
   }
 
-  private async showToast(message: string, color: string = 'primary') {
+  private async showToast(translationKey: string, color: string = 'primary') {
+    const message = this.translate.instant(translationKey);
     const toast = await this.toast.create({
       message: message,
       duration: 3000,

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { PurchaseOrderPageRoutingModule } from './purchase-order-routing.module';
 
@@ -16,6 +17,8 @@ import { SharedModule } from '../module/shared/shared.module';
     IonicModule,
     PurchaseOrderPageRoutingModule,
     SharedModule
+  ,
+    TranslateModule
   ],
   declarations: [PurchaseOrderPage]
 })
