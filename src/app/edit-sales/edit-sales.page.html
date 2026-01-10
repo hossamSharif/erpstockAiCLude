@@ -13,6 +13,15 @@
       <ion-item class="header-date-item">
         <ion-input type="date" [(ngModel)]="payInvo.pay_date" class="header-date-input"></ion-input>
       </ion-item>
+      <!-- Auto-save status -->
+      <ion-note *ngIf="autoSaveStatus" class="auto-save-status">
+        <ion-icon *ngIf="autoSaveStatus === 'جاري الحفظ...'" name="cloud-upload-outline"></ion-icon>
+        <ion-icon *ngIf="autoSaveStatus === 'تم الحفظ'" name="checkmark-circle-outline" color="success"></ion-icon>
+        <span>{{ autoSaveStatus }}</span>
+      </ion-note>
+      <ion-note *ngIf="lastSaveTime" class="last-save-time">
+        {{ lastSaveTime }}
+      </ion-note>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>

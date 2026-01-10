@@ -149,7 +149,15 @@
 
   <!-- Transactions Table -->
   <div class="table-wrapper">
-    <div class="glass-table-container">
+    <!-- Table Loading Overlay -->
+    <div class="table-loading-overlay" *ngIf="tableLoading">
+      <div class="loading-content">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <span class="loading-text" *ngIf="isDeleting">جاري الحذف...</span>
+        <span class="loading-text" *ngIf="!isDeleting">جاري التحميل...</span>
+      </div>
+    </div>
+    <div class="glass-table-container" [class.loading]="tableLoading">
       <table class="glass-table">
         <thead>
           <tr>

@@ -60,46 +60,55 @@
             <ion-card-title class="card-title">قائمة الحسابات</ion-card-title>
             
             <div class="filter-buttons-center">
-              <ion-button 
-                fill="outline" 
-                size="small" 
+              <ion-button
+                fill="outline"
+                size="small"
+                class="filter-btn load-all-btn"
+                [class.active]="loadAllMode"
+                (click)="toggleLoadAllMode()">
+                <ion-icon [name]="loadAllMode ? 'layers' : 'layers-outline'" slot="start"></ion-icon>
+                {{ loadAllMode ? 'عرض مجزأ' : 'عرض الكل' }}
+              </ion-button>
+              <ion-button
+                fill="outline"
+                size="small"
                 class="filter-btn"
                 [class.active]="activeFilters.cat_name"
                 (click)="toggleCategoryFilter()">
                 <ion-icon name="funnel-outline" slot="start"></ion-icon>
                 تصنيف
               </ion-button>
-              <ion-button 
-                fill="outline" 
-                size="small" 
+              <ion-button
+                fill="outline"
+                size="small"
                 class="filter-btn"
                 [class.active]="activeFilters.balance_type"
                 (click)="toggleBalanceTypeFilter()">
                 <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
                 نوع الرصيد
               </ion-button>
-              <ion-button 
-                fill="outline" 
-                size="small" 
+              <ion-button
+                fill="outline"
+                size="small"
                 class="filter-btn"
                 [class.active]="activeFilters.has_balance"
                 (click)="toggleHasBalanceFilter()">
                 <ion-icon name="cash-outline" slot="start"></ion-icon>
                 رصيد > 0
               </ion-button>
-              <ion-button 
-                fill="outline" 
-                size="small" 
+              <ion-button
+                fill="outline"
+                size="small"
                 class="filter-btn"
                 [class.active]="activeFilters.sub_type"
                 (click)="toggleSubTypeFilter()">
                 <ion-icon name="list-outline" slot="start"></ion-icon>
                 طبيعة الحساب
               </ion-button>
-              <ion-button 
+              <ion-button
                 *ngIf="hasActiveFilters()"
-                fill="clear" 
-                size="small" 
+                fill="clear"
+                size="small"
                 class="clear-filters-btn"
                 (click)="clearAllFilters()">
                 <ion-icon name="close-outline" slot="start"></ion-icon>
@@ -117,12 +126,53 @@
             </div>
           </div>
         </ion-card-header>
+
+        <!-- Selected Accounts Bar -->
+        <div class="selected-items-bar" *ngIf="selectedAccountsList.length > 0">
+          <ion-row dir="rtl">
+            <ion-col size="12">
+              <div class="selected-items-card">
+                <div class="selected-items-content">
+                  <ion-grid>
+                    <ion-row class="ion-align-items-center">
+                      <ion-col size="12" size-md="6">
+                        <div class="selected-count">
+                          <div class="count-badge">{{selectedAccountsList.length}}</div>
+                          <span class="selected-text">حساب محدد</span>
+                        </div>
+                      </ion-col>
+                      <ion-col size="12" size-md="6">
+                        <div class="action-buttons">
+                          <ion-button class="action-btn delete-action" (click)="bulkDeleteAccounts()">
+                            <ion-icon name="trash-outline"></ion-icon>
+                            حذف المحدد
+                          </ion-button>
+                          <ion-button class="action-btn secondary-action" (click)="clearAccountSelection()">
+                            <ion-icon name="close-outline"></ion-icon>
+                            إلغاء التحديد
+                          </ion-button>
+                        </div>
+                      </ion-col>
+                    </ion-row>
+                  </ion-grid>
+                </div>
+              </div>
+            </ion-col>
+          </ion-row>
+        </div>
+
         <ion-card-content class="table-content">
           <!-- Glass Table -->
           <div class="glass-table-container">
             <table class="glass-table">
               <thead>
                 <tr>
+                  <th style="width: 50px;">
+                    <ion-checkbox
+                      [(ngModel)]="selectAllAccounts"
+                      (ionChange)="toggleSelectAll($event)">
+                    </ion-checkbox>
+                  </th>
                   <th>م</th>
                   <th class="sortable-header" (click)="sortBy('sub_code')">
                     <ion-icon [name]="getSortIcon('sub_code')" class="sort-icon"></ion-icon>
@@ -157,17 +207,20 @@
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                </tr>
-                <tr *ngIf="loading" class="loading-row">
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
-                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                 </tr>
                 <tr *ngIf="loading" class="loading-row">
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
+                </tr>
+                <tr *ngIf="loading" class="loading-row">
+                  <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                   <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
@@ -179,6 +232,12 @@
                 
                 <!-- Data Rows -->
                 <tr *ngFor="let account of sortedAccounts; let i = index" class="data-row">
+                  <td class="checkbox-cell">
+                    <ion-checkbox
+                      [checked]="isAccountSelected(account)"
+                      (ionChange)="toggleAccountSelection(account, $event)">
+                    </ion-checkbox>
+                  </td>
                   <td class="serial-cell">{{(currentPage - 1) * pageSize + i + 1}}</td>
                   <td class="code-cell">{{account.sub_code}}</td>
                   <td class="name-cell">{{account.sub_name}}</td>
@@ -231,9 +290,20 @@
               </ion-button>
             </div>
             
+            <!-- Account Count Info -->
+            <div class="accounts-count-info" *ngIf="!loading && filteredAccounts.length > 0">
+              <span class="count-text">
+                عرض {{ filteredAccounts.length }} {{ loadAllMode ? '' : 'من ' + totalAccountsCount }} حساب
+                <span *ngIf="loadAllMode" class="load-all-badge">
+                  <ion-icon name="checkmark-circle"></ion-icon>
+                  تم تحميل الكل
+                </span>
+              </span>
+            </div>
+
             <!-- Load More Button -->
-            <div class="load-more-container" *ngIf="hasMoreAccounts && !loading">
-              <ion-button 
+            <div class="load-more-container" *ngIf="hasMoreAccounts && !loading && !loadAllMode">
+              <ion-button
                 (click)="loadMoreAccounts()"
                 fill="outline"
                 color="primary"

@@ -42,7 +42,7 @@
     </div>
   </div>
 
-  <!-- Input Field Container -->
+  <!-- Input Field Container with Dropdown -->
   <div class="input-container">
     <!-- Search Input - Match item-selector styling -->
     <ion-item class="custInput account-selector-wrapper">
@@ -62,51 +62,43 @@
         </ion-input>
       </div>
     </ion-item>
-  </div>
 
- 
+    <!-- Dropdown List - Inside input-container for proper positioning -->
+    <div class="dropdown-container"
+         *ngIf="showDropdown && filteredAccounts.length > 0">
+      <ion-list class="account-dropdown">
+        <ion-item
+          *ngFor="let account of filteredAccounts; let i = index"
+          button
+          class="account-item"
+          [class.highlighted]="i === highlightedIndex"
+          (click)="selectAccount(account)"
+          (mousedown)="$event.preventDefault()"
+          (mouseenter)="highlightedIndex = i">
+          <ion-label>
+            <h3>{{ account.sub_name }}</h3>
+            <p *ngIf="account.sub_code" class="account-code">كود: {{ account.sub_code }}</p>
+            <p *ngIf="account.current_balance && account.balance_status"
+               class="account-balance"
+               [style.color]="getAccountBalanceColor(account) === 'success' ? '#10dc60' : '#f04141'">
+              الرصيد: {{ formatAccountBalance(account) }}
+            </p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
 
-  <!-- Dropdown List -->
-  <div class="dropdown-container" 
-       *ngIf="showDropdown && filteredAccounts.length > 0"
-       [style.top]="dropdownPosition.top"
-       [style.left]="dropdownPosition.left"
-       [style.width]="dropdownPosition.width">
-    <ion-list class="account-dropdown">
-      <ion-item 
-        *ngFor="let account of filteredAccounts; let i = index" 
-        button 
-        class="account-item"
-        [class.highlighted]="i === highlightedIndex"
-        (click)="selectAccount(account)"
-        (mousedown)="$event.preventDefault()"
-        (mouseenter)="highlightedIndex = i">
-        <ion-label>
-          <h3>{{ account.sub_name }}</h3>
-          <p *ngIf="account.sub_code" class="account-code">كود: {{ account.sub_code }}</p>
-          <p *ngIf="account.current_balance && account.balance_status" 
-             class="account-balance" 
-             [style.color]="getAccountBalanceColor(account) === 'success' ? '#10dc60' : '#f04141'">
-            الرصيد: {{ formatAccountBalance(account) }}
-          </p>
-        </ion-label>
-      </ion-item>
-    </ion-list>
-  </div>
-
-  <!-- No Results Dropdown -->
-  <div class="dropdown-container" 
-       *ngIf="showDropdown && filteredAccounts.length === 0 && searchTerm.length > 0"
-       [style.top]="dropdownPosition.top"
-       [style.left]="dropdownPosition.left"
-       [style.width]="dropdownPosition.width">
-    <ion-list class="account-dropdown">
-      <ion-item class="no-results">
-        <ion-label>
-          <p>لا توجد نتائج مطابقة</p>
-        </ion-label>
-      </ion-item>
-    </ion-list>
+    <!-- No Results Dropdown -->
+    <div class="dropdown-container"
+         *ngIf="showDropdown && filteredAccounts.length === 0 && searchTerm.length > 0">
+      <ion-list class="account-dropdown">
+        <ion-item class="no-results">
+          <ion-label>
+            <p>لا توجد نتائج مطابقة</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
   </div>
 
   <!-- Account Balance Display -->

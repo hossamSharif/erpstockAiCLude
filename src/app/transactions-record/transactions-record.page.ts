@@ -44,6 +44,10 @@ export class TransactionsRecordPage implements OnInit {
   entryTypeFilter: string = 'all'; // 'all', 'سند قبض', 'سند دفع'
   currentSort: any = null;
 
+  // Table loading state
+  tableLoading: boolean = false;
+  isDeleting: boolean = false;
+
   // Multi-select
   selectedRecords: Set<string> = new Set();
   selectAll: boolean = false;
@@ -194,6 +198,10 @@ export class TransactionsRecordPage implements OnInit {
     if (!this.store_info || !this.year) {
       return;
     }
+
+    // Show table loading indicator
+    this.tableLoading = true;
+
     // Load journal entries for selected date
     this.api.getJournaleByDate(this.store_info.id, this.selectedDate, this.year.id).subscribe(
       (res: any) => {
@@ -207,6 +215,8 @@ export class TransactionsRecordPage implements OnInit {
       },
       (error) => {
         this.payArray = [];
+        this.sortedPayArray = [];
+        this.tableLoading = false;
       }
     );
   }
@@ -272,6 +282,9 @@ export class TransactionsRecordPage implements OnInit {
     });
 
     this.applyFilters();
+
+    // Hide table loading indicator after data is ready
+    this.tableLoading = false;
   }
 
   applyFilters() {
@@ -396,43 +409,126 @@ export class TransactionsRecordPage implements OnInit {
 
   async executeBulkDelete() {
     const selectedRefs = Array.from(this.selectedRecords);
-    let deletedCount = 0;
+    const deleteCount = selectedRefs.length;
 
+    // Show deleting state
+    this.isDeleting = true;
+    this.tableLoading = true;
+
+    // Backup records in case some fail
+    const recordsBackup: any[] = [];
     for (const j_ref of selectedRefs) {
-      await this.deleteTransaction(j_ref, false);
-      deletedCount++;
+      const record = this.payArray.find(item => item.j_ref === j_ref);
+      if (record) {
+        recordsBackup.push({ ...record });
+      }
     }
 
-    // Reload data to refresh table and recalculate dashboard
-    this.loadData();
-    this.clearSelection();
+    // Optimistically remove all selected records from UI immediately
+    for (const j_ref of selectedRefs) {
+      this.removeRecordFromUI(j_ref);
+    }
 
-    const toast = await this.toastCtrl.create({
-      message: `تم حذف ${deletedCount} حركة بنجاح`,
-      duration: 2000,
-      color: 'success'
-    });
-    toast.present();
+    // Perform the actual deletes and track results
+    let successCount = 0;
+    let failedCount = 0;
+    const failedRecords: any[] = [];
+
+    for (let i = 0; i < selectedRefs.length; i++) {
+      const j_ref = selectedRefs[i];
+      const result = await this.deleteTransaction(j_ref, false);
+      if (result.success) {
+        successCount++;
+      } else {
+        failedCount++;
+        // Find the backup record for this j_ref
+        const backup = recordsBackup.find(r => r.j_ref === j_ref);
+        if (backup) {
+          failedRecords.push(backup);
+        }
+      }
+    }
+
+    // Restore any failed records to UI
+    for (const record of failedRecords) {
+      this.restoreRecordToUI(record);
+    }
+
+    // Only refresh dashboard data (for totals)
+    if (successCount > 0) {
+      this.loadDashboardData();
+    }
+
+    // Clear selection and hide loading
+    this.clearSelection();
+    this.tableLoading = false;
+    this.isDeleting = false;
+
+    // Show appropriate toast message
+    if (failedCount === 0) {
+      const toast = await this.toastCtrl.create({
+        message: `تم حذف ${successCount} حركة بنجاح`,
+        duration: 2000,
+        color: 'success'
+      });
+      toast.present();
+    } else if (successCount === 0) {
+      const toast = await this.toastCtrl.create({
+        message: `فشل في حذف جميع الحركات المحددة`,
+        duration: 3000,
+        color: 'danger'
+      });
+      toast.present();
+    } else {
+      const toast = await this.toastCtrl.create({
+        message: `تم حذف ${successCount} حركة، فشل في حذف ${failedCount} حركة`,
+        duration: 3000,
+        color: 'warning'
+      });
+      toast.present();
+    }
   }
 
-  async deleteTransaction(j_ref: string, showToast: boolean = true): Promise<void> {
+  async deleteTransaction(j_ref: string, showToast: boolean = true): Promise<{ success: boolean; error?: string }> {
     return new Promise((resolve) => {
       // Delete journal
-      this.api.deleteJournal(j_ref).subscribe(async () => {
-        // Delete from details
-        this.api.deleteJFrom(j_ref).subscribe(() => {});
-        // Delete to details
-        this.api.deleteJto(j_ref).subscribe(async () => {
-          if (showToast) {
-            const toast = await this.toastCtrl.create({
-              message: 'تم حذف الحركة بنجاح',
-              duration: 2000,
-              color: 'success'
-            });
-            toast.present();
-          }
-          resolve();
-        });
+      this.api.deleteJournal(j_ref).subscribe({
+        next: async () => {
+          // Delete from details
+          this.api.deleteJFrom(j_ref).subscribe({
+            error: () => {} // Ignore errors for details deletion
+          });
+          // Delete to details
+          this.api.deleteJto(j_ref).subscribe({
+            next: async () => {
+              if (showToast) {
+                const toast = await this.toastCtrl.create({
+                  message: 'تم حذف الحركة بنجاح',
+                  duration: 2000,
+                  color: 'success'
+                });
+                toast.present();
+              }
+              resolve({ success: true });
+            },
+            error: async () => {
+              // Journal was deleted but details failed - still consider it success
+              if (showToast) {
+                const toast = await this.toastCtrl.create({
+                  message: 'تم حذف الحركة بنجاح',
+                  duration: 2000,
+                  color: 'success'
+                });
+                toast.present();
+              }
+              resolve({ success: true });
+            }
+          });
+        },
+        error: async (err) => {
+          console.error('Delete journal error:', err);
+          resolve({ success: false, error: 'فشل في حذف الحركة. يرجى المحاولة مرة أخرى.' });
+        }
       });
     });
   }
@@ -450,15 +546,67 @@ export class TransactionsRecordPage implements OnInit {
           text: 'حذف',
           role: 'destructive',
           handler: async () => {
-            await this.deleteTransaction(record.j_ref);
-            // Reload data to refresh table and recalculate dashboard
-            this.loadData();
+            // Show deleting state
+            this.isDeleting = true;
+            this.tableLoading = true;
+
+            // Store record data in case we need to restore it
+            const recordBackup = { ...record };
+
+            // Optimistically remove the record from UI immediately
+            this.removeRecordFromUI(record.j_ref);
+
+            // Perform the actual delete
+            const result = await this.deleteTransaction(record.j_ref);
+
+            if (result.success) {
+              // Only refresh dashboard data (for totals), not the full table
+              this.loadDashboardData();
+              // Immediately hide loading since we already removed from UI
+              this.tableLoading = false;
+              this.isDeleting = false;
+            } else {
+              // Delete failed - restore the record to UI
+              this.restoreRecordToUI(recordBackup);
+              // Show error message
+              const toast = await this.toastCtrl.create({
+                message: result.error || 'فشل في حذف الحركة',
+                duration: 3000,
+                color: 'danger'
+              });
+              toast.present();
+              // Hide loading
+              this.tableLoading = false;
+              this.isDeleting = false;
+            }
           }
         }
       ]
     });
 
     await alert.present();
+  }
+
+  // Helper method to remove a record from UI arrays immediately
+  removeRecordFromUI(j_ref: string) {
+    // Remove from payArray
+    this.payArray = this.payArray.filter(item => item.j_ref !== j_ref);
+    // Remove from sortedPayArray
+    this.sortedPayArray = this.sortedPayArray.filter(item => item.j_ref !== j_ref);
+    // Remove from searchResult if searching
+    if (this.searchTerm) {
+      this.searchResult = this.searchResult.filter(item => item.j_ref !== j_ref);
+    }
+    // Remove from selected records if selected
+    this.selectedRecords.delete(j_ref);
+  }
+
+  // Helper method to restore a record to UI arrays (when delete fails)
+  restoreRecordToUI(record: any) {
+    // Add back to payArray
+    this.payArray.push(record);
+    // Re-apply filters to update sortedPayArray
+    this.applyFilters();
   }
 
   // Open modal for create/edit

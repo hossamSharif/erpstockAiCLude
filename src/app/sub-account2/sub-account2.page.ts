@@ -27,7 +27,11 @@ export class SubAccount2Page implements OnInit, OnDestroy {
   filteredAccounts: Array<any> = [];
   sortedAccounts: Array<any> = [];
   currentSort: SortConfig | null = null;
-  
+
+  // Bulk selection properties
+  selectedAccountsList: Array<any> = [];
+  selectAllAccounts: boolean = false;
+
   // App info
   store_info: {id: any, location: any, store_name: any, store_ref: any};
   user_info: {id: any, user_name: any, store_id: any, full_name: any, password: any};
@@ -38,6 +42,8 @@ export class SubAccount2Page implements OnInit, OnDestroy {
   currentPage: number = 1;
   pageSize: number = 20;
   hasMoreAccounts: boolean = true;
+  loadAllMode: boolean = false;
+  totalAccountsCount: number = 0;
   
   // UI state
   loading: boolean = false;
@@ -103,6 +109,8 @@ export class SubAccount2Page implements OnInit, OnDestroy {
     this.hasMoreAccounts = true;
     this.searchTerm = '';
     this.currentSearchTerm = '';
+    this.loadAllMode = false;
+    this.totalAccountsCount = 0;
   }
 
 
@@ -335,16 +343,20 @@ export class SubAccount2Page implements OnInit, OnDestroy {
       this.filteredAccounts = [];
     }
 
+    // Determine page size based on loadAllMode
+    const effectivePageSize = this.loadAllMode ? 99999 : this.pageSize;
+
     // Choose the appropriate API endpoint based on filters
     console.log('API call with params:', {
       store_id: this.store_info.id,
       year_id: this.year.id,
       page: this.currentPage,
-      pageSize: this.pageSize,
+      pageSize: effectivePageSize,
       searchTerm: this.currentSearchTerm,
-      filters: this.filters
+      filters: this.filters,
+      loadAllMode: this.loadAllMode
     });
-    
+
     // Use separate endpoint for positive balance filter
     let apiCall;
     if (this.filters.has_balance) {
@@ -355,33 +367,37 @@ export class SubAccount2Page implements OnInit, OnDestroy {
         balance_type: this.filters.balance_type,
         sub_type: this.filters.sub_type
       };
-      apiCall = this.api.getAccountsWithPositiveBalance(this.store_info.id, this.year.id, this.currentPage, this.pageSize, this.currentSearchTerm, filtersWithoutHasBalance);
+      apiCall = this.api.getAccountsWithPositiveBalance(this.store_info.id, this.year.id, this.currentPage, effectivePageSize, this.currentSearchTerm, filtersWithoutHasBalance);
     } else {
       console.log('Using regular endpoint');
-      apiCall = this.api.getAccountsWithBalance(this.store_info.id, this.year.id, this.currentPage, this.pageSize, this.currentSearchTerm, this.filters);
+      apiCall = this.api.getAccountsWithBalance(this.store_info.id, this.year.id, this.currentPage, effectivePageSize, this.currentSearchTerm, this.filters);
     }
-    
+
     apiCall.subscribe(
       (data: any) => {
         const newAccounts = data['data'] || [];
-        
-        console.log(`Loading page ${this.currentPage}: Got ${newAccounts.length} accounts`);
-        console.log(`Load more: ${loadMore}, Current displayed: ${this.displayedAccounts.length}`);
-        
+        this.totalAccountsCount = data['total'] || newAccounts.length;
+
+        console.log(`Loading page ${this.currentPage}: Got ${newAccounts.length} accounts (Total: ${this.totalAccountsCount})`);
+        console.log(`Load more: ${loadMore}, Current displayed: ${this.displayedAccounts.length}, Load all mode: ${this.loadAllMode}`);
+
         if (loadMore) {
           this.displayedAccounts = [...this.displayedAccounts, ...newAccounts];
         } else {
           this.displayedAccounts = newAccounts;
         }
-        
+
         // Since search is now handled by backend, filteredAccounts should always match displayedAccounts
         this.filteredAccounts = [...this.displayedAccounts];
-        
+
+        // Clear selections when data changes
+        this.clearAccountSelection();
+
         // Apply sorting to filtered accounts
         this.applySorting();
-        
-        // Check if there are more accounts to load
-        this.hasMoreAccounts = newAccounts.length === this.pageSize;
+
+        // Check if there are more accounts to load (not applicable in loadAllMode)
+        this.hasMoreAccounts = !this.loadAllMode && newAccounts.length === this.pageSize;
         
         console.log(`Total displayed: ${this.displayedAccounts.length}, Has more: ${this.hasMoreAccounts}`);
         
@@ -421,6 +437,25 @@ export class SubAccount2Page implements OnInit, OnDestroy {
     if (this.hasMoreAccounts && !this.loadingMore) {
       this.loadAccountsWithPagination(true);
     }
+  }
+
+  // Toggle load all mode
+  toggleLoadAllMode() {
+    this.loadAllMode = !this.loadAllMode;
+    // Reload accounts with the new mode
+    this.loadAccountsWithPagination(false);
+  }
+
+  // Load all accounts at once
+  loadAllAccounts() {
+    this.loadAllMode = true;
+    this.loadAccountsWithPagination(false);
+  }
+
+  // Reset to paginated mode
+  resetToPaginatedMode() {
+    this.loadAllMode = false;
+    this.loadAccountsWithPagination(false);
   }
 
   // Backend search functionality with debouncing
@@ -864,6 +899,279 @@ getAccountCategory () {
   // Get current currency symbol for headers
   getCurrencySymbol(): string {
     return this.currencyService.getCurrentCurrencySymbol();
+  }
+
+  // ========================================
+  // BULK SELECTION METHODS
+  // ========================================
+
+  /**
+   * Toggle individual account selection
+   */
+  toggleAccountSelection(account: any, event: any) {
+    if (event.detail.checked) {
+      // Add to selection if not already present
+      if (!this.isAccountSelected(account)) {
+        this.selectedAccountsList.push(account);
+      }
+    } else {
+      // Remove from selection
+      this.selectedAccountsList = this.selectedAccountsList.filter(
+        acc => acc.id !== account.id
+      );
+    }
+
+    // Update select all checkbox state
+    this.updateSelectAllState();
+  }
+
+  /**
+   * Check if account is selected
+   */
+  isAccountSelected(account: any): boolean {
+    return this.selectedAccountsList.some(acc => acc.id === account.id);
+  }
+
+  /**
+   * Toggle select all accounts
+   */
+  toggleSelectAll(event: any) {
+    if (event.detail.checked) {
+      // Select all visible accounts
+      this.selectedAccountsList = [...this.sortedAccounts];
+    } else {
+      // Deselect all
+      this.selectedAccountsList = [];
+    }
+  }
+
+  /**
+   * Update select all checkbox state based on current selections
+   */
+  private updateSelectAllState() {
+    if (this.sortedAccounts.length === 0) {
+      this.selectAllAccounts = false;
+    } else {
+      this.selectAllAccounts = this.selectedAccountsList.length === this.sortedAccounts.length;
+    }
+  }
+
+  /**
+   * Clear all selections
+   */
+  clearAccountSelection() {
+    this.selectedAccountsList = [];
+    this.selectAllAccounts = false;
+  }
+
+  // ========================================
+  // BULK DELETE METHODS
+  // ========================================
+
+  /**
+   * Bulk delete accounts with progress tracking and error handling
+   */
+  async bulkDeleteAccounts() {
+    if (this.selectedAccountsList.length === 0) {
+      this.presentToast('الرجاء تحديد حسابات للحذف', 'warning');
+      return;
+    }
+
+    // Confirmation alert
+    const confirmAlert = await this.alertController.create({
+      header: 'تأكيد الحذف الجماعي',
+      message: `هل تريد حذف ${this.selectedAccountsList.length} حساب؟ سيتم تخطي الحسابات المستخدمة في معاملات.`,
+      buttons: [
+        {
+          text: 'إلغاء',
+          role: 'cancel',
+          cssClass: 'secondary'
+        },
+        {
+          text: 'حذف',
+          cssClass: 'danger',
+          handler: () => {
+            this.performBulkDelete();
+          }
+        }
+      ]
+    });
+
+    await confirmAlert.present();
+  }
+
+  /**
+   * Perform bulk delete with progress modal
+   */
+  private async performBulkDelete() {
+    const totalAccounts = this.selectedAccountsList.length;
+    const results = {
+      deleted: [] as any[],
+      skipped: [] as any[],
+      failed: [] as any[]
+    };
+
+    // Create progress modal
+    const progressLoading = await this.loadingController.create({
+      message: this.getBulkDeleteProgressMessage(0, totalAccounts, ''),
+      spinner: 'crescent',
+      backdropDismiss: false
+    });
+    await progressLoading.present();
+
+    // Process each account sequentially
+    for (let i = 0; i < this.selectedAccountsList.length; i++) {
+      const account = this.selectedAccountsList[i];
+
+      // Update progress message
+      progressLoading.message = this.getBulkDeleteProgressMessage(
+        i + 1,
+        totalAccounts,
+        account.sub_name
+      );
+
+      try {
+        // Check if account can be deleted
+        const canDelete = await this.checkAccountCanBeDeleted(account.id);
+
+        if (canDelete) {
+          // Attempt to delete
+          const deleteSuccess = await this.deleteAccountFromServer(account.id);
+
+          if (deleteSuccess) {
+            results.deleted.push(account);
+          } else {
+            results.failed.push(account);
+          }
+        } else {
+          // Account is in use, skip it
+          results.skipped.push(account);
+        }
+      } catch (error) {
+        console.error('Error processing account:', account.sub_name, error);
+        results.failed.push(account);
+      }
+
+      // Small delay to show progress (optional, can be removed for speed)
+      await this.delay(100);
+    }
+
+    // Dismiss progress modal
+    await progressLoading.dismiss();
+
+    // Show results summary
+    await this.showBulkDeleteSummary(results);
+
+    // Clear selection
+    this.clearAccountSelection();
+
+    // Reload accounts list
+    this.loadAccountsWithPagination();
+  }
+
+  /**
+   * Check if account can be deleted (not used in transactions)
+   */
+  private checkAccountCanBeDeleted(accountId: any): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.api.checkAccountUsage(accountId).subscribe(
+        (data: any) => {
+          if (data && data.data) {
+            const usage = data.data;
+            const hasJournalEntries = (usage.jdetails_from_count || 0) > 0 ||
+                                     (usage.jdetails_to_count || 0) > 0;
+            const hasPayments = (usage.pay_count || 0) > 0;
+            const hasPurchases = (usage.perch_count || 0) > 0;
+
+            const canDelete = !hasJournalEntries && !hasPayments && !hasPurchases;
+            resolve(canDelete);
+          } else {
+            // If no usage data, assume safe to delete
+            resolve(true);
+          }
+        },
+        (error) => {
+          console.error('Error checking account usage:', error);
+          reject(error);
+        }
+      );
+    });
+  }
+
+  /**
+   * Delete account from server
+   */
+  private deleteAccountFromServer(accountId: any): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.api.deleteSubAccont(accountId).subscribe(
+        (data: any) => {
+          if (data['message'] !== 'Post Not Deleted') {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        },
+        (error) => {
+          reject(error);
+        }
+      );
+    });
+  }
+
+  /**
+   * Generate progress message for bulk delete
+   */
+  private getBulkDeleteProgressMessage(current: number, total: number, accountName: string): string {
+    return `جاري حذف ${current} من ${total} حساب...\n${accountName}`;
+  }
+
+  /**
+   * Show summary of bulk delete results
+   */
+  private async showBulkDeleteSummary(results: any) {
+    const { deleted, skipped, failed } = results;
+
+    let message = '';
+
+    if (deleted.length > 0) {
+      message += `✓ تم حذف ${deleted.length} حساب بنجاح\n\n`;
+    }
+
+    if (skipped.length > 0) {
+      message += `⊘ تم تخطي ${skipped.length} حساب (مستخدم في معاملات):\n`;
+      skipped.forEach((acc: any) => {
+        message += `  • ${acc.sub_name} (${acc.sub_code})\n`;
+      });
+      message += '\n';
+    }
+
+    if (failed.length > 0) {
+      message += `✗ فشل حذف ${failed.length} حساب:\n`;
+      failed.forEach((acc: any) => {
+        message += `  • ${acc.sub_name} (${acc.sub_code})\n`;
+      });
+    }
+
+    const alert = await this.alertController.create({
+      header: 'نتيجة الحذف الجماعي',
+      message: message,
+      buttons: ['موافق'],
+      cssClass: 'bulk-delete-summary-alert'
+    });
+
+    await alert.present();
+
+    // Show success toast if any accounts were deleted
+    if (deleted.length > 0) {
+      this.presentToast(`تم حذف ${deleted.length} حساب بنجاح`, 'success');
+    }
+  }
+
+  /**
+   * Utility delay function
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
 }

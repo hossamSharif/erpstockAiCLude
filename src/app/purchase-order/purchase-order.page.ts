@@ -7,6 +7,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { Storage } from '@ionic/storage';
 import { ActivatedRoute } from '@angular/router';
 import { CurrencyService } from '../services/currency.service';
+import { DraftService, DraftType, DraftData } from '../services/draft.service';
 
 @Component({
   selector: 'app-purchase-order',
@@ -55,6 +56,13 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
   currentLoadingMessage: string = '';
   currentLoader: HTMLIonLoadingElement | null = null;
 
+  // Auto-save properties
+  private autoSaveInterval: any;
+  private isDirty: boolean = false;
+  private lastSaveTimestamp: number = 0;
+  autoSaveStatus: string = '';
+  lastSaveTime: string = '';
+
   constructor(
     private route: ActivatedRoute,
     private modalController: ModalController,
@@ -66,7 +74,8 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
     private toast: ToastController,
     private _location: Location,
     private cdr: ChangeDetectorRef,
-    private currencyService: CurrencyService
+    private currencyService: CurrencyService,
+    private draftService: DraftService
   ) {
     this.selectedAccount = { id: "", ac_id: "", sub_name: "", sub_type: "", sub_code: "", sub_balance: "", store_id: "", cat_name: "", cat_id: "", currentCustumerStatus: 0 };
 
@@ -85,6 +94,29 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
       aliasEn: ""
     }
 
+    // Initialize payInvo immediately to prevent undefined errors in template
+    let d = new Date();
+    let da = this.datePipe.transform(d, 'yyyy-MM-dd');
+    let ti = this.datePipe.transform(d, 'HH:mm');
+    this.payInvo = {
+      pay_id: null,
+      pay_ref: '',
+      store_id: 0,
+      tot_pr: 0,
+      pay: 0,
+      pay_date: da,
+      pay_time: ti,
+      user_id: 0,
+      cust_id: 0,
+      pay_method: 'cash',
+      discount: 0,
+      changee: 0,
+      sub_name: "",
+      payComment: "",
+      nextPay: null,
+      yearId: 0
+    };
+
     // Handle incoming items from sales invoices
     this.route.queryParams.subscribe(params => {
       if (params['status'] === 'newInvoFromItemsPage' && params['selectedItemsList']) {
@@ -99,13 +131,26 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
     });
   }
 
-  ngOnInit() {
+  async ngOnInit() {
+    // Initialize draft service for auto-save
+    await this.draftService.initialize();
+
     this.initializeCurrency();
     this.getAppInfo();
     this.prepareInvo();
+
+    // Ensure auto-save is started after a delay to allow data loading
+    setTimeout(() => {
+      if (!this.autoSaveInterval) {
+        this.startAutoSave();
+      }
+    }, 1000);
   }
 
   ngOnDestroy() {
+    // Stop auto-save before cleanup
+    this.stopAutoSave();
+
     if (this.currencySubscription) {
       this.currencySubscription.unsubscribe();
     }
@@ -127,32 +172,38 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
     this.getAppInfo();
   }
 
-  getAppInfo() {
-    this.storage.get('USER_INFO').then((response) => {
+  async getAppInfo() {
+    await this.storage.get('USER_INFO').then((response) => {
       if (response) {
         this.user_info = response
       }
     });
 
-    this.storage.get('year').then((response) => {
+    await this.storage.get('year').then((response) => {
       if (response) {
         this.year = response
       }
     });
 
-    this.storage.get('STORE_INFO').then((response) => {
+    await this.storage.get('STORE_INFO').then((response) => {
       if (response) {
         this.store_info = response
         this.getSupplierAccounts()
       }
     });
 
-    this.storage.get('itemsLocal').then((response) => {
+    await this.storage.get('itemsLocal').then((response) => {
       if (response) {
         this.items = response
         this.searchResult = this.items
       }
     });
+
+    // After all data is loaded, check for existing draft and start auto-save
+    if (this.user_info && this.store_info) {
+      await this.checkForExistingDraft();
+      this.startAutoSave();
+    }
   }
 
   getSupplierAccounts() {
@@ -165,27 +216,10 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
   }
 
   prepareInvo() {
-    let d = new Date
-    let da = this.datePipe.transform(d, 'yyyy-MM-dd')
-    let ti = this.datePipe.transform(d, 'HH:mm')
-    this.payInvo = {
-      pay_id: null,
-      pay_ref: this.generateRandom(),
-      store_id: 0,
-      tot_pr: 0,
-      pay: 0,
-      pay_date: da,
-      pay_time: ti,
-      user_id: 0,
-      cust_id: 0,
-      pay_method: 'cash',
-      discount: 0,
-      changee: 0,
-      sub_name: "",
-      payComment: "",
-      nextPay: null,
-      yearId: 0
-    };
+    // Update the reference number with store prefix
+    if (this.store_info) {
+      this.payInvo.pay_ref = this.generateRandom();
+    }
   }
 
   generateRandom(): any {
@@ -291,6 +325,7 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
       this.discountPerc = 0
       this.payInvo.discount = 0
       this.hideMe(i)
+      this.markDirty();
       this.getTotal()
     } else {
       this.presentToast("خطأ في الإدخال ", "danger")
@@ -313,6 +348,7 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
 
     this.discountPerc = 0
     this.payInvo.discount = 0
+    this.markDirty();
     this.getTotal()
     this.updateSortedList()
   }
@@ -505,6 +541,9 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
       this.payInvo.cust_id = account.id;
       this.payInvo.sub_name = account.sub_name;
 
+      // Mark as dirty for auto-save
+      this.markDirty();
+
       console.log('Account selected in purchase-order:', this.selectedAccount);
     }
   }
@@ -577,7 +616,11 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
     );
   }
 
-  private handleSaveSuccess() {
+  private async handleSaveSuccess() {
+    // Delete draft after successful save
+    await this.draftService.deleteDraft(DraftType.PURCHASE_ORDER, this.user_info.id, this.store_info.id);
+    this.isDirty = false;
+
     this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success');
     this.itemList = [];
     this.prepareInvo();
@@ -761,5 +804,169 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
     this.getTotal();
     this.updateSortedList();
     this.presentToast('تم تعديل الأسعار بنجاح', 'success');
+  }
+
+  // ========== Auto-save Methods ==========
+
+  startAutoSave() {
+    if (this.autoSaveInterval) {
+      clearInterval(this.autoSaveInterval);
+    }
+
+    this.autoSaveInterval = setInterval(() => {
+      if (this.isDirty && this.shouldSaveDraft()) {
+        this.saveInvoiceDraft();
+      }
+      this.updateLastSaveTime();
+    }, 30000); // 30 seconds
+  }
+
+  stopAutoSave() {
+    if (this.autoSaveInterval) {
+      clearInterval(this.autoSaveInterval);
+      this.autoSaveInterval = null;
+    }
+  }
+
+  markDirty() {
+    this.isDirty = true;
+  }
+
+  async saveInvoiceDraft() {
+    if (!this.shouldSaveDraft()) {
+      return;
+    }
+
+    this.autoSaveStatus = 'جاري الحفظ...';
+
+    const draftData: DraftData = {
+      payInvo: this.payInvo,
+      itemList: this.itemList,
+      selectedAccount: this.selectedAccount,
+      discountType: this.discountType,
+      discountAmount: this.discountAmount,
+      calculatedDiscountPerc: this.calculatedDiscountPerc,
+      calculatedDiscountAmount: this.calculatedDiscountAmount,
+      savedAt: Date.now(),
+      userId: this.user_info.id,
+      storeId: this.store_info.id,
+      yearId: this.year.id
+    };
+
+    const saved = await this.draftService.saveDraft(DraftType.PURCHASE_ORDER, draftData);
+
+    if (saved) {
+      this.lastSaveTimestamp = Date.now();
+      this.autoSaveStatus = 'تم الحفظ';
+      this.isDirty = false;
+
+      setTimeout(() => {
+        this.autoSaveStatus = '';
+      }, 1000);
+    }
+  }
+
+  shouldSaveDraft(): boolean {
+    return !!(
+      this.itemList &&
+      this.itemList.length > 0 &&
+      this.selectedAccount &&
+      this.selectedAccount.id &&
+      this.user_info &&
+      this.store_info
+    );
+  }
+
+  async checkForExistingDraft() {
+    if (!this.user_info || !this.store_info) {
+      return;
+    }
+
+    const hasDraft = await this.draftService.hasDraft(
+      DraftType.PURCHASE_ORDER,
+      this.user_info.id,
+      this.store_info.id
+    );
+
+    if (hasDraft) {
+      this.showDraftRestoreDialog();
+    }
+  }
+
+  async showDraftRestoreDialog() {
+    const alert = await this.alertController.create({
+      cssClass: 'rtl-alert',
+      header: 'استعادة المسودة',
+      message: 'تم العثور على مسودة محفوظة مسبقاً. هل تريد استعادتها؟',
+      buttons: [
+        {
+          text: 'حذف',
+          role: 'destructive',
+          handler: () => {
+            this.deleteDraftSilently();
+          }
+        },
+        {
+          text: 'إلغاء',
+          role: 'cancel'
+        },
+        {
+          text: 'استعادة',
+          handler: () => {
+            this.restoreDraft();
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  async restoreDraft() {
+    const draft = await this.draftService.loadDraft(
+      DraftType.PURCHASE_ORDER,
+      this.user_info.id,
+      this.store_info.id
+    );
+
+    if (!draft) {
+      this.presentToast('فشل في تحميل المسودة', 'danger');
+      return;
+    }
+
+    if (draft.storeId !== this.store_info.id) {
+      this.presentToast('المسودة من متجر آخر', 'warning');
+      await this.draftService.deleteDraft(DraftType.PURCHASE_ORDER, this.user_info.id, this.store_info.id);
+      return;
+    }
+
+    this.payInvo = draft.payInvo;
+    this.itemList = draft.itemList;
+    this.selectedAccount = draft.selectedAccount;
+    this.discountType = draft.discountType || 'percentage';
+    this.discountAmount = draft.discountAmount || 0;
+    this.calculatedDiscountPerc = draft.calculatedDiscountPerc || 0;
+    this.calculatedDiscountAmount = draft.calculatedDiscountAmount || 0;
+
+    this.getTotal();
+    this.lastSaveTimestamp = draft.savedAt;
+    this.updateLastSaveTime();
+
+    this.presentToast('تم استعادة المسودة بنجاح', 'success');
+  }
+
+  async deleteDraftSilently() {
+    await this.draftService.deleteDraft(
+      DraftType.PURCHASE_ORDER,
+      this.user_info.id,
+      this.store_info.id
+    );
+    this.isDirty = false;
+  }
+
+  updateLastSaveTime() {
+    if (this.lastSaveTimestamp > 0) {
+      this.lastSaveTime = this.draftService.getLastSaveTime(this.lastSaveTimestamp);
+    }
   }
 }

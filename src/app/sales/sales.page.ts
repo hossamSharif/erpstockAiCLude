@@ -17,8 +17,9 @@ import { AccountCommunicationService } from '../services/account-communication.s
 import { PriceAdjustmentDialogComponent } from '../component/price-adjustment-dialog/price-adjustment-dialog.component';
 import { InvoiceJournalEntryComponent, InvoiceJournalData } from '../component/invoice-journal-entry/invoice-journal-entry.component';
 import { CurrencyService } from '../services/currency.service';
+import { DraftService, DraftType, DraftData } from '../services/draft.service';
 import * as momentObj from 'moment';
- 
+
 @Component({
   selector: 'app-sales',
   templateUrl: './sales.page.html',
@@ -120,7 +121,15 @@ export class SalesPage implements OnInit, OnDestroy {
   isUpdating: boolean = false;
   currentLoadingMessage: string = '';
   private currentLoader: any = null;
-  constructor(private rout : Router ,private platform:Platform,private behavApi:StockServiceService ,private _location: Location, private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private accountCommunicationService: AccountCommunicationService, private cdr: ChangeDetectorRef, private currencyService: CurrencyService, private translate: TranslateService) {
+
+  // Auto-save properties
+  private autoSaveInterval: any;
+  private isDirty: boolean = false;
+  private lastSaveTimestamp: number = 0;
+  autoSaveStatus: string = '';
+  lastSaveTime: string = '';
+
+  constructor(private rout : Router ,private platform:Platform,private behavApi:StockServiceService ,private _location: Location, private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private accountCommunicationService: AccountCommunicationService, private cdr: ChangeDetectorRef, private currencyService: CurrencyService, private translate: TranslateService, private draftService: DraftService) {
   this.selectedAccount = {id:"",ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",phone:"",address:"",currentCustumerStatus:0};
     this.route.queryParams.subscribe(params => {
       
@@ -181,19 +190,22 @@ export class SalesPage implements OnInit, OnDestroy {
     }
   }
 
-  
-    ngOnInit() {  
+
+    async ngOnInit() {
      // Check category visibility setting
-     
+
+     // Initialize draft service
+     await this.draftService.initialize();
+
      // Ensure discountType is properly initialized
      if (!this.discountType) {
        this.discountType = 'percentage';
        this.cdr.detectChanges();
      }
-     
+
      // Initialize currency service
      this.initializeCurrency();
-     
+
      // Subscribe to customer selection from account-selector
      this.customerSubscription = this.accountCommunicationService.customerSelected$.subscribe(
        ({id, account}) => {
@@ -202,26 +214,37 @@ export class SalesPage implements OnInit, OnDestroy {
            this.payInvo.cust_id = id;
            this.payInvo.sub_name = account.sub_name;
            this.selectedAccount = account;
+           this.markDirty();
            console.log('Sales payInvo updated:', this.payInvo);
          }
        }
      );
-     
+
      if(this.status == 'new'){
-      this.getAppInfo()  
+      this.getAppInfo()
     // this.newLogic()
      }else if(this.status == 'initial'){
-      this.getAppInfoCase2() 
-      this.radioVal2 = 0  
+      this.getAppInfoCase2()
+      this.radioVal2 = 0
      }
     // this.getStockItems()
-    
+
+    // Ensure auto-save is started after a delay to allow data loading
+    setTimeout(() => {
+      if (!this.autoSaveInterval) {
+        this.startAutoSave();
+      }
+    }, 1000);
+
     }
 
   async ngOnDestroy() {
+    // Stop auto-save
+    this.stopAutoSave();
+
     // Clean up loading states
     await this.hideLoading();
-    
+
     // Clean up subscriptions
     if (this.customerSubscription) {
       this.customerSubscription.unsubscribe();
@@ -483,41 +506,45 @@ export class SalesPage implements OnInit, OnDestroy {
 
   
    
-  getAppInfo(){ 
-   
-     this.storage.get('USER_INFO').then((response) => {
+  async getAppInfo(){
+
+     await this.storage.get('USER_INFO').then((response) => {
       if (response) {
         this.user_info = response
-        //console.log(this.user_info) 
+        //console.log(this.user_info)
       }
     });
-    this.storage.get('year').then((response) => {
+    await this.storage.get('year').then((response) => {
       if (response) {
-        this.year = response 
-      } 
+        this.year = response
+      }
     });
 
-    this.storage.get('itemsLocal').then((response) => {
+    await this.storage.get('itemsLocal').then((response) => {
       if (response) {
-         this.items = response 
+         this.items = response
          if (this.items.length == 0 || !this.items) {
            this.getAllStockItemsWithouteCounts()
          } else {
          }
       }
     });
-    this.storage.get('STORE_INFO').then((response) => {
+    await this.storage.get('STORE_INFO').then((response) => {
       if (response) {
         this.store_info = response
-        
-        
+
+
         this.prepareInvo()
       }
-    }); 
-    
-  
+    });
 
-    
+    // Check for existing draft after loading user/store info
+    await this.checkForExistingDraft();
+
+    // Start auto-save
+    this.startAutoSave();
+
+
   }
   
   getAppInfoCase2(){  
@@ -549,14 +576,18 @@ export class SalesPage implements OnInit, OnDestroy {
 
     this.storage.get('itemsLocal').then((response) => {
       if (response) {
-         this.items = response 
-        
-        
-
+         this.items = response
       }
     });
-    
-    
+
+    // Check for existing draft and start auto-save after data is loaded
+    setTimeout(async () => {
+      if (this.user_info && this.store_info) {
+        await this.checkForExistingDraft();
+        this.startAutoSave();
+      }
+    }, 500);
+
   }
 
  
@@ -788,12 +819,13 @@ qtyhange(ev){
      }
   }
 
- 
+  this.markDirty();
 }
 
 pricehange(ev){
   //console.log(ev);
   this.selectedItem.tot =  (this.selectedItem.qty * +this.selectedItem.pay_price).toFixed(2)
+  this.markDirty();
 }
 
 payChange(ev){
@@ -911,13 +943,13 @@ onDiscountTypeChange(event: any) {
 // }
 
 deleteItem(index){
-//console.log( index); 
+//console.log( index);
 const displayList = this.getDisplayItemList();
 const itemToDelete = displayList[index];
 
 // Find the item in the original itemList and remove it
-const originalIndex = this.itemList.findIndex(item => 
-  item.item_name === itemToDelete.item_name && 
+const originalIndex = this.itemList.findIndex(item =>
+  item.item_name === itemToDelete.item_name &&
   item.pay_price === itemToDelete.pay_price &&
   item.quantity === itemToDelete.quantity
 );
@@ -928,9 +960,10 @@ if (originalIndex !== -1) {
 
 // Reset discount but preserve pay amount
 this.discountPerc = 0
-this.payInvo.discount = 0 
+this.payInvo.discount = 0
 this.getTotal()
 this.updateSortedList()
+this.markDirty();
 }
 
 async presentToast(translationKey: string, color?) {
@@ -1016,10 +1049,11 @@ addTolist() {
       }
       this.discountPerc = 0
       this.payInvo.discount = 0
-      
+
       this.getTotal()
       this.setFocusOnInput('dstPop')
-    }  
+      this.markDirty();
+    }
 }
 
   qtyClick(i){
@@ -1642,8 +1676,12 @@ deleteSalesitemListInit(){
 
 
   // Shared success handler for optimized save process
-  private handleSaveSuccess() {
+  private async handleSaveSuccess() {
     this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success');
+
+    // Delete draft after successful save
+    await this.draftService.deleteDraft(DraftType.SALES, this.user_info.id, this.store_info.id);
+    this.isDirty = false;
 
     // IMPORTANT: Save original invoice data BEFORE any operations that might reset payInvo
     // This ensures we have the correct pay_id and pay_ref for deleting the initial invoice
@@ -2070,6 +2108,238 @@ formatBalance(balance: number): string {
 // Get current currency symbol for table headers
 getCurrencySymbol(): string {
   return this.currencyService.getCurrentCurrencySymbol();
+}
+
+// Auto-save methods
+private startAutoSave() {
+  if (this.autoSaveInterval) {
+    return;
+  }
+
+  this.autoSaveInterval = setInterval(() => {
+    if (this.isDirty) {
+      this.saveInvoiceDraft();
+    }
+    if (this.lastSaveTimestamp > 0) {
+      this.updateLastSaveTime();
+    }
+  }, 30000);
+}
+
+private stopAutoSave() {
+  if (this.autoSaveInterval) {
+    clearInterval(this.autoSaveInterval);
+    this.autoSaveInterval = null;
+  }
+}
+
+private markDirty() {
+  this.isDirty = true;
+}
+
+private async saveInvoiceDraft() {
+  if (!this.shouldSaveDraft()) {
+    return;
+  }
+
+  try {
+    this.autoSaveStatus = 'جاري الحفظ...';
+
+    const draftData: DraftData = {
+      payInvo: this.payInvo,
+      itemList: this.itemList,
+      selectedAccount: this.selectedAccount,
+      radioVal2: this.radioVal2,
+      status: this.status,
+      discountType: this.discountType,
+      discountAmount: this.discountAmount,
+      calculatedDiscountPerc: this.calculatedDiscountPerc,
+      calculatedDiscountAmount: this.calculatedDiscountAmount,
+      savedAt: Date.now(),
+      userId: this.user_info.id,
+      storeId: this.store_info.id,
+      yearId: this.year.id
+    };
+
+    const success = await this.draftService.saveDraft(DraftType.SALES, draftData);
+
+    if (success) {
+      this.isDirty = false;
+      this.lastSaveTimestamp = Date.now();
+      this.autoSaveStatus = 'تم الحفظ';
+      this.updateLastSaveTime();
+
+      setTimeout(() => {
+        this.autoSaveStatus = '';
+      }, 1000);
+    } else {
+      this.autoSaveStatus = '';
+    }
+  } catch (error) {
+    console.error('Error saving draft:', error);
+    this.autoSaveStatus = '';
+  }
+}
+
+private shouldSaveDraft(): boolean {
+  if (!this.itemList || this.itemList.length === 0) {
+    return false;
+  }
+
+  if (!this.selectedAccount || !this.selectedAccount.id) {
+    return false;
+  }
+
+  if (this.autoSaveStatus === 'جاري الحفظ...') {
+    return false;
+  }
+
+  if (!this.user_info || !this.store_info || !this.year) {
+    return false;
+  }
+
+  return true;
+}
+
+private async checkForExistingDraft() {
+  if (!this.user_info || !this.store_info) {
+    return;
+  }
+
+  try {
+    const hasDraft = await this.draftService.hasDraft(
+      DraftType.SALES,
+      this.user_info.id,
+      this.store_info.id
+    );
+
+    if (hasDraft) {
+      const draft = await this.draftService.loadDraft(
+        DraftType.SALES,
+        this.user_info.id,
+        this.store_info.id
+      );
+
+      if (draft) {
+        this.showDraftRestoreDialog(draft);
+      }
+    }
+  } catch (error) {
+    console.error('Error checking for draft:', error);
+  }
+}
+
+private async showDraftRestoreDialog(draft: DraftData) {
+  const age = this.draftService.getDraftAge(draft.savedAt);
+  const timeText = this.draftService.getLastSaveTime(draft.savedAt);
+
+  let message = `تم العثور على مسودة محفوظة ${timeText}. هل تريد استعادتها؟`;
+
+  if (age.days >= 7) {
+    message += `\n\nتحذير: هذه المسودة قديمة (${age.days} يوم)`;
+  }
+
+  const alert = await this.alertController.create({
+    header: 'استعادة المسودة',
+    message: message,
+    buttons: [
+      {
+        text: 'حذف',
+        role: 'destructive',
+        handler: () => {
+          this.deleteDraftSilently();
+        }
+      },
+      {
+        text: 'إلغاء',
+        role: 'cancel'
+      },
+      {
+        text: 'استعادة',
+        handler: () => {
+          this.restoreDraft(draft);
+        }
+      }
+    ]
+  });
+
+  await alert.present();
+}
+
+private async restoreDraft(draft: DraftData) {
+  try {
+    if (draft.storeId !== this.store_info.id) {
+      this.presentToast('المسودة من متجر مختلف', 'danger');
+      await this.deleteDraftSilently();
+      return;
+    }
+
+    if (draft.yearId !== this.year.id) {
+      this.presentToast('المسودة من سنة مالية مختلفة', 'danger');
+      await this.deleteDraftSilently();
+      return;
+    }
+
+    this.payInvo = draft.payInvo;
+    this.itemList = draft.itemList;
+    this.selectedAccount = draft.selectedAccount;
+    this.radioVal2 = draft.radioVal2 || 0;
+    this.status = draft.status || 'new';
+
+    if (draft.discountType) {
+      this.discountType = draft.discountType;
+    }
+    if (draft.discountAmount) {
+      this.discountAmount = draft.discountAmount;
+    }
+    if (draft.calculatedDiscountPerc) {
+      this.calculatedDiscountPerc = draft.calculatedDiscountPerc;
+    }
+    if (draft.calculatedDiscountAmount) {
+      this.calculatedDiscountAmount = draft.calculatedDiscountAmount;
+    }
+
+    this.getTotal();
+    this.resortItemList();
+
+    this.cdr.detectChanges();
+
+    this.isDirty = false;
+    this.lastSaveTimestamp = draft.savedAt;
+    this.updateLastSaveTime();
+
+    this.presentToast('تم استعادة المسودة بنجاح', 'success');
+  } catch (error) {
+    console.error('Error restoring draft:', error);
+    this.presentToast('حدث خطأ أثناء استعادة المسودة', 'danger');
+  }
+}
+
+private async deleteDraftSilently() {
+  if (!this.user_info || !this.store_info) {
+    return;
+  }
+
+  try {
+    await this.draftService.deleteDraft(
+      DraftType.SALES,
+      this.user_info.id,
+      this.store_info.id
+    );
+    this.isDirty = false;
+    this.lastSaveTimestamp = 0;
+    this.lastSaveTime = '';
+  } catch (error) {
+    console.error('Error deleting draft:', error);
+  }
+}
+
+private updateLastSaveTime() {
+  if (this.lastSaveTimestamp > 0) {
+    this.lastSaveTime = this.draftService.getLastSaveTime(this.lastSaveTimestamp);
+  } else {
+    this.lastSaveTime = '';
+  }
 }
 
 }

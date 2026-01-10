@@ -85,6 +85,7 @@
   flex-direction: column;
   gap: 8px;
   overflow: visible !important; // Prevent clipping of dropdowns
+  position: relative;
 }
 
 /* ======================================
@@ -111,15 +112,23 @@
       0 12px 48px rgba(0, 0, 0, 0.15),
       inset 0 1px 0 rgba(255, 255, 255, 0.3);
   }
+}
 
-  &.compact-card {
-    border-radius: 12px;
-    overflow: visible; // Allow dropdown to extend beyond card boundaries
+// Compact card styles separated for proper overflow handling
+.form-card.compact-card {
+  border-radius: 12px;
+  overflow: visible !important; // Allow dropdown to extend beyond card boundaries
+  position: relative;
+  z-index: 10;
+  margin-bottom: 8px; // Reduced margin for closer info-card positioning
+  // Remove backdrop-filter to prevent stacking context issues with fixed position dropdown
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: rgba(255, 255, 255, 0.98); // Slightly more opaque to compensate
 
-    .compact-content {
-      padding: 12px 16px;
-      overflow: visible; // Allow dropdown to extend beyond content area
-    }
+  .compact-content {
+    padding: 12px 16px;
+    overflow: visible !important; // Allow dropdown to extend beyond content area
   }
 }
 
@@ -145,12 +154,13 @@
   }
 }
 
-.compact-content, .info-content, .table-content, .mobile-content {
+.info-content, .table-content, .mobile-content {
   padding: 20px;
 }
 
 .compact-content {
   padding: 10px 16px;
+  overflow: visible !important;
 }
 
 /* ======================================
@@ -162,16 +172,29 @@
   gap: 20px;
   align-items: flex-end;
   margin-bottom: 16px;
-  position: relative; // Create positioning context but don't clip
-  overflow: visible; // Ensure dropdown can extend beyond
+  position: relative;
+  overflow: visible !important; // Ensure dropdown can extend beyond
 }
 
 .account-section {
   flex: 1;
   width: 50%;
-  position: relative; // Create positioning context but don't clip
-  overflow: visible; // Ensure dropdown can extend beyond
-  z-index: 100; // Ensure dropdown appears above other content
+  position: relative;
+  overflow: visible !important; // Ensure dropdown can extend beyond
+  z-index: 1000; // Ensure dropdown appears above other content including info-card
+
+  // Ensure app-account-selector container allows dropdown overflow
+  app-account-selector {
+    display: block;
+    position: relative;
+    overflow: visible !important;
+
+    // Allow dropdown to scroll while keeping container visible
+    .dropdown-container {
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+    }
+  }
 }
 
 .search-type-section {
@@ -415,7 +438,10 @@
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   margin: 0;
+  margin-bottom: 8px; // Proper spacing
   overflow: hidden;
+  position: relative;
+  z-index: 1; // Lower than the dropdown z-index
 
   .info-content {
     padding: 12px 16px;

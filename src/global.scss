@@ -141,12 +141,125 @@ position: absolute;
   --max-width: 100%;
   --max-height: 100%;
   --border-radius: 0;
-  
+
   .modal-wrapper {
     width: 100% !important;
     height: 100% !important;
     max-width: 100% !important;
     max-height: 100% !important;
     border-radius: 0 !important;
+  }
+}
+
+/* ======================================
+   ACCOUNT SELECTOR DROPDOWN FIX - Global
+   ====================================== */
+// Fix dropdown clipping across all pages
+// Ensures account-selector dropdowns are visible and not clipped by parent containers
+// This affects: purchase, sales-record, edit-sales, purchase-order, and all other pages using account-selector
+
+// Apply to ion-content to prevent clipping at the page level
+ion-content {
+  // Allow dropdowns to overflow the content area
+  &:has(app-account-selector) {
+    overflow: visible !important;
+  }
+}
+
+// Apply to ion-card containers
+ion-card {
+  &:has(app-account-selector) {
+    overflow: visible !important;
+  }
+}
+
+// Apply to ion-grid containers
+ion-grid {
+  &:has(app-account-selector) {
+    overflow: visible !important;
+  }
+}
+
+// Apply to ion-row containers
+ion-row {
+  &:has(app-account-selector) {
+    overflow: visible !important;
+  }
+}
+
+// Apply to ion-col containers
+ion-col {
+  &:has(app-account-selector) {
+    overflow: visible !important;
+    position: relative; // Ensure dropdown positioning context
+    z-index: 10; // Ensure dropdown appears above sibling elements
+  }
+}
+
+// Apply to card content containers
+ion-card-content {
+  &:has(app-account-selector) {
+    overflow: visible !important;
+  }
+}
+
+// Apply to common wrapper divs
+div {
+  &:has(> app-account-selector) {
+    overflow: visible !important;
+  }
+}
+
+/* ======================================
+   SAFARI MODAL FIX - Global
+   ====================================== */
+// Fix for Safari on macOS where modal footer may not be visible
+// Safari has issues with flex layouts and 100vh on mobile
+
+ion-modal {
+  // Safari fix: ensure proper modal rendering
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+
+  &.modal-default {
+    // Safari fix: ensure modal content respects flex layout
+    .modal-wrapper {
+      display: flex;
+      flex-direction: column;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
+
+    // Safari fix: use -webkit-fill-available for viewport height issues
+    @supports (-webkit-touch-callout: none) {
+      // iOS Safari specific
+      --height: -webkit-fill-available;
+    }
+  }
+
+  // Transaction modal specific fix
+  &:has(app-transaction-modal) {
+    .modal-wrapper {
+      // Safari fix: GPU acceleration
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+  }
+}
+
+// Safari viewport height fix
+@supports (-webkit-touch-callout: none) {
+  // iOS Safari specific fixes
+  ion-modal {
+    .modal-wrapper {
+      max-height: -webkit-fill-available !important;
+    }
+  }
+
+  // Ensure body doesn't have overflow issues on Safari
+  body {
+    min-height: -webkit-fill-available;
   }
 }

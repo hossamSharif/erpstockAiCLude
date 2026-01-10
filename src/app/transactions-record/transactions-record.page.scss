@@ -374,6 +374,45 @@
 // Table Styles
 .table-wrapper {
   padding: 0 20px 100px 20px;
+  position: relative;
+}
+
+// Table Loading Overlay
+.table-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+  bottom: 100px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  border-radius: 12px;
+
+  .loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 32px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+
+    ion-spinner {
+      width: 40px;
+      height: 40px;
+    }
+
+    .loading-text {
+      font-size: 14px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+  }
 }
 
 .glass-table-container {
@@ -383,6 +422,12 @@
   border: 1px solid #e5e7eb;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   overflow-x: auto;
+  transition: opacity 0.2s ease;
+
+  &.loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
 
   @media (max-width: 768px) {
     padding: 12px;

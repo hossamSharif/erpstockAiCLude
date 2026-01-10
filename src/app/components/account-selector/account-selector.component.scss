@@ -9,6 +9,8 @@
 .account-selector-container {
   position: relative;
   width: 100%;
+  // Ensure this container is the positioning context for the dropdown
+  z-index: 100;
   
 
   .header-container {
@@ -101,12 +103,11 @@
   }
 
   .input-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    position: relative;
+    display: block; // Changed from flex to block for proper dropdown positioning
+    position: relative; // Positioning context for dropdown
     margin: 0; // Remove any default margin
     padding: 0; // Remove any default padding
+    overflow: visible !important; // Allow dropdown to extend beyond
 
     // Account Selector Enhanced Styles - Match item-selector
     .account-selector-wrapper {
@@ -144,19 +145,23 @@
   }
 
   .dropdown-container {
-    position: fixed !important;
+    position: absolute !important; // Changed from fixed to absolute for proper positioning
+    top: calc(100% - 1px) !important; // Position directly below input with slight overlap for seamless border
+    left: 0 !important;
+    right: 0 !important;
     z-index: 99999 !important; // Very high z-index to ensure it's above everything
     background: white;
     border: 1px solid #ccc;
-    border-top: none; // No top border for seamless connection
-    border-radius: 0 0 4px 4px; // Match input border radius
+    border-top: 1px solid #ddd; // Subtle top border for separation
+    border-radius: 0 0 8px 8px; // Rounded bottom corners
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     max-height: 300px; // Increased to show more items
     overflow-y: auto;
     overflow-x: hidden;
     margin: 0 !important;
+    margin-top: 0 !important;
     padding: 0;
-    min-width: 250px;
+    width: 100% !important; // Match parent width
 
     // Prevent any parent clipping
     clip-path: none !important;

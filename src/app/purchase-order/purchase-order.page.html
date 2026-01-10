@@ -10,6 +10,15 @@
       <ion-item class="header-date-item">
         <ion-input type="date" [(ngModel)]="payInvo.pay_date" class="header-date-input"></ion-input>
       </ion-item>
+      <!-- Auto-save status -->
+      <ion-note *ngIf="autoSaveStatus" class="auto-save-status">
+        <ion-icon *ngIf="autoSaveStatus === 'جاري الحفظ...'" name="cloud-upload-outline"></ion-icon>
+        <ion-icon *ngIf="autoSaveStatus === 'تم الحفظ'" name="checkmark-circle-outline" color="success"></ion-icon>
+        <span>{{ autoSaveStatus }}</span>
+      </ion-note>
+      <ion-note *ngIf="lastSaveTime" class="last-save-time">
+        {{ lastSaveTime }}
+      </ion-note>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -17,9 +26,9 @@
 <ion-content>
     <ion-card class="ion-no-padding ion-no-margin">
       <ion-grid *ngIf="payInvo">
-        <ion-row dir="rtl" class="top-card-row">
-          <!-- First Column: Account Selector -->
-          <ion-col size="4" offset="3" class="account-column">
+        <ion-row dir="rtl" class="top-card-row compact-inline-row">
+          <!-- Account Selector on right -->
+          <ion-col size="5" class="account-column">
             <app-account-selector
               accountType="supplier"
               [placeholder]="'PURCHASE.LABEL.SELECT_SUPPLIER' | translate"
@@ -33,10 +42,10 @@
             </app-account-selector>
           </ion-col>
 
-          <!-- Comment Column: Note field in same row -->
-          <ion-col size="4" class="date-comment-column">
+          <!-- Comment field on left -->
+          <ion-col size="5" class="comment-column">
             <ion-label class="column-label">{{ 'PURCHASE.LABEL.COMMENT' | translate }}</ion-label>
-            <ion-item class="custInput comment-input">
+            <ion-item class="custInput comment-input" lines="none">
               <ion-input [placeholder]="'PURCHASE.LABEL.WRITE_COMMENT' | translate" [(ngModel)]="payInvo.payComment" [disabled]="isLoading()"></ion-input>
             </ion-item>
           </ion-col>
@@ -130,8 +139,8 @@
               <div class="table-container">
                <table class="table">
                  <tr>
-                  <th>{{ 'ITEMS.LABEL.SEQUENCE' | translate }}</th>
-                  <th>{{ 'ITEMS.LABEL.ITEM_NAME' | translate }}</th>
+                  <th>{{ 'INVENTORY.ITEMS.LABEL.SEQUENCE' | translate }}</th>
+                  <th>{{ 'INVENTORY.ITEMS.LABEL.ITEM_NAME' | translate }}</th>
                   <th>{{ 'COMMON.LABEL.QUANTITY' | translate }}</th>
                   <th>{{ 'PURCHASE.LABEL.PURCHASE_PRICE' | translate }} ({{ getCurrencySymbol() }})</th>
                   <th>{{ 'COMMON.LABEL.TOTAL' | translate }} ({{ getCurrencySymbol() }})</th>

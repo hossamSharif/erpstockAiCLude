@@ -11,6 +11,7 @@ import { FilterPipe3 } from '../sales/pipe3';
 import { StockServiceService } from '../syncService/stock-service.service';
 import { PriceAdjustmentDialogComponent } from '../component/price-adjustment-dialog/price-adjustment-dialog.component';
 import { CurrencyService } from '../services/currency.service';
+import { DraftService, DraftType, DraftData } from '../services/draft.service';
 import * as momentObj from 'moment';
 import { Subscription } from 'rxjs';
 @Component({
@@ -99,11 +100,18 @@ calculatedDiscountAmount: number = 0;
   isUpdating: boolean = false;
   currentLoadingMessage: string = '';
   private currentLoader: any = null;
-  
+
   // Data initialization flag to prevent re-initialization from query parameters
   private dataInitialized: boolean = false;
-  
-  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private cdr: ChangeDetectorRef, private currencyService: CurrencyService, private translate: TranslateService) {
+
+  // Auto-save properties
+  private autoSaveInterval: any;
+  private isDirty: boolean = false;
+  private lastSaveTimestamp: number = 0;
+  autoSaveStatus: string = '';
+  lastSaveTime: string = '';
+
+  constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private cdr: ChangeDetectorRef, private currencyService: CurrencyService, private translate: TranslateService, private draftService: DraftService) {
     this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
     this.route.queryParams.subscribe(params => {
       // Only initialize from parameters if data hasn't been loaded yet
@@ -175,23 +183,31 @@ calculatedDiscountAmount: number = 0;
 
     
 
-  ngOnInit() {
+  async ngOnInit() {
+    // Initialize draft service
+    await this.draftService.initialize();
+
     // Initialize currency service
     this.initializeCurrency();
-    
+
     // Check category visibility setting
-   
+
+    // Start auto-save
+    this.startAutoSave();
   }
-  
+
   async ngOnDestroy() {
+    // Stop auto-save
+    this.stopAutoSave();
+
     // Clean up loading states
     await this.hideLoading();
-    
+
     // Clean up subscriptions
     if (this.currencySubscription) {
       this.currencySubscription.unsubscribe();
     }
-    
+
     // Reset flag when component is actually destroyed (not just navigating to subpages)
     this.dataInitialized = false;
   }
@@ -860,7 +876,7 @@ selectFromPop(item){
     if (this.itemList.length > 0) {
         fl = this.itemList.filter(x => x.item_name == this.selectedItem.item_name )
       if (fl.length> 0){
-        
+
         if(+this.selectedItem.qty + +fl[0].quantity > +this.selectedItem.availQty){
           this.presentToast('الصنف موجود بالقائمة , مجموع الكمية الجديد اكبر من المتوفر في المخزن','warning')
          }
@@ -874,11 +890,13 @@ selectFromPop(item){
         this.presentToast('الكمية في المخزن غير كافية','warning')
        }
     }
+    this.markDirty();
   }
 
   pricehange(ev){
     //console.log(ev);
     this.selectedItem.tot = (this.selectedItem.qty * +this.selectedItem.pay_price).toFixed(2)
+    this.markDirty();
   }
 
   payChange(ev){
@@ -994,6 +1012,7 @@ getTotal() {
   // DO NOT reset discount - getTotal() will preserve and recalculate it properly
   this.getTotal()
   this.updateSortedList()
+  this.markDirty();
   }
 
   
@@ -1059,6 +1078,7 @@ getTotal() {
       this.getTotal()
       this.setFocusOnInput('dstPop3')
       //this.setFocusOnInput('dstEds')
+      this.markDirty();
     }
 
   }
@@ -1262,27 +1282,30 @@ async updateItemDetail(item){
     }
   }
 
-  private handleUpdateSuccess() {
+  private async handleUpdateSuccess() {
     // Show success message
     this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success');
-    
+
+    // Delete draft after successful save
+    await this.deleteDraftSilently();
+
     // Update local sales storage
     this.sales = this.sales.filter(item => item.payInvo.pay_ref != this.payInvo.pay_ref);
     this.sales.push({
       "payInvo": this.payInvo,
-      "itemList": this.itemList 
+      "itemList": this.itemList
     });
-    
+
     this.storage.set('sales', this.sales).then((response) => {
       let arr: Array<any> = [];
       arr.push({
         "payInvo": this.payInvo,
-        "itemList": this.itemList 
+        "itemList": this.itemList
       });
-      
+
       this.performSync();
     });
-    
+
     // Loading already dismissed in updateInvo success handler
   }
 
@@ -1540,11 +1563,14 @@ onAccountSelected(account: any) {
       cat_id: account.cat_id,
       currentCustumerStatus: 0
     };
-    
+
     // Update invoice with selected account
     this.payInvo.cust_id = account.id;
     this.payInvo.sub_name = account.sub_name;
-    
+
+    // Mark as dirty for auto-save
+    this.markDirty();
+
     console.log('Account selected in edit-sales:', this.selectedAccount);
   }
 }
@@ -1713,6 +1739,124 @@ formatBalance(balance: number): string {
 // Get current currency symbol for table headers
 getCurrencySymbol(): string {
   return this.currencyService.getCurrentCurrencySymbol();
+}
+
+// Auto-save methods
+private startAutoSave() {
+  if (this.autoSaveInterval) {
+    return;
+  }
+
+  this.autoSaveInterval = setInterval(() => {
+    if (this.isDirty) {
+      this.saveInvoiceDraft();
+    }
+    if (this.lastSaveTimestamp > 0) {
+      this.updateLastSaveTime();
+    }
+  }, 30000);
+}
+
+private stopAutoSave() {
+  if (this.autoSaveInterval) {
+    clearInterval(this.autoSaveInterval);
+    this.autoSaveInterval = null;
+  }
+}
+
+private markDirty() {
+  this.isDirty = true;
+}
+
+private async saveInvoiceDraft() {
+  if (!this.shouldSaveDraft()) {
+    return;
+  }
+
+  try {
+    this.autoSaveStatus = 'جاري الحفظ...';
+
+    const draftData: DraftData = {
+      payInvo: this.payInvo,
+      itemList: this.itemList,
+      selectedAccount: this.selectedAccount,
+      radioVal2: this.radioVal2,
+      status: this.status,
+      discountType: this.discountType,
+      discountAmount: this.discountAmount,
+      calculatedDiscountPerc: this.calculatedDiscountPerc,
+      calculatedDiscountAmount: this.calculatedDiscountAmount,
+      savedAt: Date.now(),
+      userId: this.user_info.id,
+      storeId: this.store_info.id,
+      yearId: this.year.id
+    };
+
+    const success = await this.draftService.saveDraft(DraftType.SALES, draftData);
+
+    if (success) {
+      this.isDirty = false;
+      this.lastSaveTimestamp = Date.now();
+      this.autoSaveStatus = 'تم الحفظ';
+      this.updateLastSaveTime();
+
+      setTimeout(() => {
+        this.autoSaveStatus = '';
+      }, 1000);
+    } else {
+      this.autoSaveStatus = '';
+    }
+  } catch (error) {
+    console.error('Error saving draft:', error);
+    this.autoSaveStatus = '';
+  }
+}
+
+private shouldSaveDraft(): boolean {
+  if (!this.itemList || this.itemList.length === 0) {
+    return false;
+  }
+
+  if (!this.selectedAccount || !this.selectedAccount.id) {
+    return false;
+  }
+
+  if (this.autoSaveStatus === 'جاري الحفظ...') {
+    return false;
+  }
+
+  if (!this.user_info || !this.store_info || !this.year) {
+    return false;
+  }
+
+  return true;
+}
+
+private async deleteDraftSilently() {
+  if (!this.user_info || !this.store_info) {
+    return;
+  }
+
+  try {
+    await this.draftService.deleteDraft(
+      DraftType.SALES,
+      this.user_info.id,
+      this.store_info.id
+    );
+    this.isDirty = false;
+    this.lastSaveTimestamp = 0;
+    this.lastSaveTime = '';
+  } catch (error) {
+    console.error('Error deleting draft:', error);
+  }
+}
+
+private updateLastSaveTime() {
+  if (this.lastSaveTimestamp > 0) {
+    this.lastSaveTime = this.draftService.getLastSaveTime(this.lastSaveTimestamp);
+  } else {
+    this.lastSaveTime = '';
+  }
 }
 
 }

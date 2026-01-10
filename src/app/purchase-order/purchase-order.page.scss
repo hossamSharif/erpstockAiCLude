@@ -40,11 +40,35 @@ ion-header {
           --padding-start: 12px;
           --padding-end: 12px;
           margin: 0 5px;
-          
+
           ion-label {
             font-weight: 500;
             font-size: 0.9rem;
           }
+        }
+
+        .auto-save-status {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.9);
+          margin-inline-start: 16px;
+          margin-inline-end: 12px;
+          padding: 4px 8px;
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 12px;
+
+          ion-icon {
+            font-size: 16px;
+          }
+        }
+
+        .last-save-time {
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.8);
+          margin-inline-start: 8px;
+          margin-inline-end: 16px;
         }
       }
     }
@@ -55,7 +79,7 @@ ion-header {
     --padding-top: 56px; // Approximate height of ion-header
     --padding-bottom: 120px; // Approximate height of footer (adjust based on actual footer height)
   }
-  
+
   .custInput{
       border-style: solid;
       border-color: var(--ion-color-light);
@@ -65,7 +89,7 @@ ion-header {
           border-radius: 5px;
       }
       .show{ visibility: visible; }
-  
+
       .hide{visibility: hidden;}
       .custRow{
         //  margin-top: 5rem;
@@ -396,7 +420,7 @@ ion-header {
     padding: 16px;
     align-items: flex-start;
     gap: 16px; // Replace offset with gap
-    
+
     .account-column,
     .invoice-type-column,
     .category-column,
@@ -406,7 +430,7 @@ ion-header {
       min-width: 0;
       display: flex;
       flex-direction: column;
-      
+
       .column-label {
         display: block;
         font-weight: 600;
@@ -415,6 +439,48 @@ ion-header {
         font-size: 0.95rem;
         height: 22px; // Fixed height for consistent alignment
         line-height: 30px;
+      }
+    }
+
+    // Compact inline row - account selector and comment on same line
+    &.compact-inline-row {
+      padding: 16px 24px;
+      gap: 16px;
+      align-items: flex-start;
+      justify-content: flex-end;
+
+      .account-column {
+        .column-label {
+          text-align: right;
+          margin-bottom: 8px;
+        }
+      }
+
+      .comment-column {
+        display: flex;
+        flex-direction: column;
+
+        .column-label {
+          text-align: right;
+          margin-bottom: 8px;
+        }
+
+        .comment-input {
+          --background: #fff;
+          --border-color: var(--ion-color-medium);
+          border: 1px solid var(--ion-color-medium-shade);
+          border-radius: 6px;
+          min-height: 44px;
+
+          ion-input {
+            --padding-start: 12px;
+            --padding-end: 12px;
+            --padding-top: 10px;
+            --padding-bottom: 10px;
+            text-align: right;
+            direction: rtl;
+          }
+        }
       }
     }
     
@@ -496,7 +562,7 @@ ion-header {
   @media (max-width: 768px) {
     .top-card-row {
       flex-direction: column;
-      
+
       .account-column,
       .invoice-type-column,
       .category-column,
@@ -504,9 +570,33 @@ ion-header {
         size: 12;
         padding: 8px 0;
         margin-bottom: 16px;
-        
+
         &:last-child {
           margin-bottom: 0;
+        }
+      }
+
+      // Compact inline row stays horizontal on mobile
+      &.compact-inline-row {
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 12px 16px;
+        gap: 12px;
+
+        .account-column,
+        .comment-column {
+          margin-bottom: 0;
+          padding: 4px 0;
+        }
+
+        .account-column {
+          flex: 0 0 50%;
+          max-width: 50%;
+        }
+
+        .comment-column {
+          flex: 0 0 45%;
+          max-width: 45%;
         }
       }
     }
