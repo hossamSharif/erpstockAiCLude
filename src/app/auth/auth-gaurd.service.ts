@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { AuthServiceService } from './auth-service.service';
-import { CanActivate, Router } from '@angular/router';
+import { CanActivate } from '@angular/router';
 import { Storage } from '@ionic/storage';
+import { MenuController, NavController } from '@ionic/angular';
 
 @Injectable({
   providedIn: 'root'
@@ -10,34 +11,34 @@ export class AuthGaurdService implements CanActivate  {
 
   constructor(
     public authenticationService: AuthServiceService,
-    private router: Router,
-    private storage: Storage
+    private storage: Storage,
+    private menuController: MenuController,
+    private navCtrl: NavController
   ) {}
 
    async canActivate(): Promise<boolean> {
-    // First ensure storage is created
     try {
       await this.storage.create();
-      
-      // Check storage for user info first
+
       const userInfo = await this.storage.get('USER_INFO');
-      console.log('AuthGuard - USER_INFO from storage:', userInfo);
-      
+
       if (userInfo && userInfo.id) {
-        // User exists in storage, ensure auth state is updated
         if (!this.authenticationService.isAuthenticated()) {
           this.authenticationService.authState.next(true);
         }
+        this.menuController.enable(true);
         return true;
       } else {
-        // No user in storage, redirect to login
-        this.router.navigate(['folder/login'], { replaceUrl: true });
+        this.menuController.enable(false);
+        await this.menuController.close();
+        this.navCtrl.navigateRoot('folder/login');
         return false;
       }
     } catch (error) {
       console.error('Error in AuthGuard:', error);
-      // On error, redirect to login
-      this.router.navigate(['folder/login'], { replaceUrl: true });
+      this.menuController.enable(false);
+      await this.menuController.close();
+      this.navCtrl.navigateRoot('folder/login');
       return false;
     }
   }

@@ -92,6 +92,8 @@ export class PurchaseRecordPage implements OnInit, OnDestroy {
      }
   }
   
+  private invoiceChannel: BroadcastChannel;
+
   ngOnInit() {
     this.payArray =[]
     this.sortedPayArray =[]
@@ -99,13 +101,25 @@ export class PurchaseRecordPage implements OnInit, OnDestroy {
     // Check category visibility setting
    // this.isCategoryVisibilityEnabled = CategoriesPage.isCategoryVisibilityEnabled();
     //console.log('ngOnInit')
-    this.getAppInfo() 
+    this.getAppInfo()
     this.prepareOffline()
     this.initializeCurrency()
+
+    // Listen for invoice creation in new tabs
+    try {
+      this.invoiceChannel = new BroadcastChannel('invoice-channel');
+      this.invoiceChannel.onmessage = (event) => {
+        if (event.data.type === 'invoice-created') {
+          this.search(); // refresh data
+          this.clearInvoiceSelection();
+        }
+      };
+    } catch (e) { /* BroadcastChannel not supported */ }
   }
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+    this.invoiceChannel?.close();
   }
 
   private async initializeCurrency() {
@@ -174,6 +188,12 @@ export class PurchaseRecordPage implements OnInit, OnDestroy {
           break;
         case 'copyPurchase':
           this.copyAsInvoice(pay, 'purchase');
+          break;
+        case 'printStoreReport':
+          this.printStoreReport(pay);
+          break;
+        case 'createReturn':
+          this.navigateToReturnPage(pay);
           break;
       }
     }
@@ -342,25 +362,17 @@ private navigateToInvoicePage(itemList: any[], type: 'sales' | 'purchase') {
 
   
 
-  if (type === 'sales') { 
-    let navigationExtras: NavigationExtras = {  
-    queryParams: {
-        status: 'newInvoFromItemsPage',
-        selectedItemsList: JSON.stringify(salesitems) 
-    },
-    replaceUrl: true
-  };
-      this.rout.navigate(['folder/sales'], navigationExtras); 
-  } else {  
-     let navigationExtras: NavigationExtras = {  
-    queryParams: {
-        status: 'newInvoFromItemsPage',
-        selectedItemsList: JSON.stringify(purchitems) 
-    },
-    replaceUrl: true
-  };
-      this.rout.navigate(['folder/purchase'], navigationExtras); 
+  if (type === 'sales') {
+    this.openInvoiceInNewTab('/folder/sales', salesitems);
+  } else {
+    this.openInvoiceInNewTab('/folder/purchase', purchitems);
   }
+}
+
+private openInvoiceInNewTab(route: string, items: any[]) {
+  const dataKey = 'invoice_data_' + Date.now();
+  localStorage.setItem(dataKey, JSON.stringify(items));
+  window.open(`${route}?fromTab=true&dataKey=${dataKey}`, '_blank');
 }
 
 // Navigate to purchase return page
@@ -555,7 +567,7 @@ getSalesAccount(){
          'sub_nameNew' : ""
        })
         //console.log(this.printArr)
-        this.presentModal(this.printArr , 'purchase_order_record')
+        this.askIncludePricesDialog('perchOrderAr-record')
          }, (err) => {
           //console.log(err);
           this.presentToast('خطا في الإتصال حاول مرة اخري' , 'danger')
@@ -637,7 +649,141 @@ getSalesAccount(){
     
    }
 
-   async presentModal(printArr , page) { 
+   async askIncludePricesDialog(page: string): Promise<void> {
+    const alert = await this.alertController.create({
+      cssClass: 'my-custom-class',
+      header: this.translate.instant('PURCHASE_ORDER.PRINT_OPTIONS_TITLE'),
+      mode: 'ios',
+      message: this.translate.instant('PURCHASE_ORDER.INCLUDE_PRICES_MESSAGE'),
+      buttons: [
+        {
+          text: this.translate.instant('PURCHASE_ORDER.NO_HIDE_PRICES'),
+          cssClass: 'secondary',
+          handler: () => {
+            this.presentModalWithPriceOption(page, false);
+          }
+        },
+        {
+          text: this.translate.instant('PURCHASE_ORDER.YES_INCLUDE_PRICES'),
+          handler: () => {
+            this.presentModalWithPriceOption(page, true);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async presentModalWithPriceOption(page: string, showPrices: boolean): Promise<void> {
+    const modal = await this.modalController.create({
+      component: PrintModalPage,
+      componentProps: {
+        "printArr": this.printArr,
+        "page": page,
+        "showPrices": showPrices
+      }
+    });
+    modal.onDidDismiss().then((dataReturned) => {
+      if (dataReturned !== null) {
+        // Handle if needed
+      }
+    });
+    return await modal.present();
+  }
+
+   printStoreReport(dataFrom) {
+    if (this.offline == false && dataFrom.pay_id != undefined) {
+      this.paInvo = dataFrom;
+      if (this.purchaseType === 'order') {
+        this.api.getPurchaseOrderDetail(this.store_info.id, dataFrom.pay_ref, this.year.id).subscribe(data => {
+          let res = data;
+          this.itemList = res['data'];
+          this.printArr = [];
+          this.printArr.push({
+            'payInvo': this.paInvo,
+            'itemList': this.itemList,
+            'selectedAccount': this.paInvo.sub_name,
+            'sub_nameNew': ""
+          });
+          this.presentModalStoreReport(this.printArr, 'purchase_receiving_list');
+        }, (err) => {
+          this.presentToast('خطا في الإتصال حاول مرة اخري', 'danger');
+        });
+      } else {
+        this.api.getPerchInvoDetail(this.store_info.id, dataFrom.pay_ref, this.year.id).subscribe(data => {
+          let res = data;
+          this.itemList = res['data'];
+          this.printArr = [];
+          this.printArr.push({
+            'payInvo': this.paInvo,
+            'itemList': this.itemList,
+            'selectedAccount': this.paInvo.sub_name,
+            'sub_nameNew': ""
+          });
+          this.presentModalStoreReport(this.printArr, 'purchase_receiving_list');
+        }, (err) => {
+          this.presentToast('خطا في الإتصال حاول مرة اخري', 'danger');
+        });
+      }
+    } else if (this.offline == false && dataFrom.pay_id == undefined) {
+      let flt: Array<any> = [];
+      flt = this.purchLocal.filter(x => x.payInvo.pay_ref == dataFrom.pay_ref);
+      if (flt.length > 0) {
+        this.printArr = [];
+        this.printArr.push({
+          'payInvo': flt[0].payInvo,
+          'itemList': flt[0].itemList,
+          'selectedAccount': flt[0].payInvo.sub_name,
+          'sub_nameNew': ""
+        });
+        this.presentModalStoreReport(this.printArr, 'purchase_receiving_list');
+      }
+    } else if (this.offline == true && dataFrom.pay_id != undefined) {
+      let flt: Array<any> = [];
+      flt = this.purchase.filter(x => x.payInvo.pay_ref == dataFrom.pay_ref);
+      if (flt.length > 0) {
+        this.printArr = [];
+        this.printArr.push({
+          'payInvo': flt[0].payInvo,
+          'itemList': flt[0].itemList,
+          'selectedAccount': flt[0].payInvo.sub_name,
+          'sub_nameNew': ""
+        });
+        this.presentModalStoreReport(this.printArr, 'purchase_receiving_list');
+      }
+    } else if (this.offline == true && dataFrom.pay_id == undefined) {
+      let flt: Array<any> = [];
+      flt = this.purchLocal.filter(x => x.payInvo.pay_ref == dataFrom.pay_ref);
+      if (flt.length > 0) {
+        this.printArr = [];
+        this.printArr.push({
+          'payInvo': flt[0].payInvo,
+          'itemList': flt[0].itemList,
+          'selectedAccount': flt[0].payInvo.sub_name,
+          'sub_nameNew': ""
+        });
+        this.presentModalStoreReport(this.printArr, 'purchase_receiving_list');
+      }
+    }
+  }
+
+  async presentModalStoreReport(printArr, page) {
+    const modal = await this.modalController.create({
+      component: PrintModalPage,
+      componentProps: {
+        "printArr": printArr,
+        "page": page,
+        "showPrices": false
+      }
+    });
+    modal.onDidDismiss().then((dataReturned) => {
+      if (dataReturned !== null) {
+      }
+    });
+    return await modal.present();
+  }
+
+   async presentModal(printArr , page) {
     const modal = await this.modalController.create({
       component: PrintModalPage ,
       componentProps: {
@@ -645,15 +791,15 @@ getSalesAccount(){
         "page": page
       }
     });
-    
+
     modal.onDidDismiss().then((dataReturned) => {
       if (dataReturned !== null) {
         //console.log(dataReturned )
-       
+
       }
     });
-  
-    return await modal.present(); 
+
+    return await modal.present();
   }
 
    preparedPrin(printarea ,paInvo, itemList){
@@ -1495,6 +1641,7 @@ getCurrencySymbol(): string {
 }
 
 // Multi-select invoice methods
+
 toggleInvoiceSelection(invoice: any, event: any) {
   if (event.detail.checked) {
     if (!this.isInvoiceSelected(invoice)) {
@@ -1504,8 +1651,8 @@ toggleInvoiceSelection(invoice: any, event: any) {
     this.selectedInvoicesList = this.selectedInvoicesList.filter(
       selectedInvoice => selectedInvoice.pay_ref !== invoice.pay_ref
     );
-    this.selectAllInvoices = false;
   }
+  this.selectAllInvoices = this.selectedInvoicesList.length === this.sortedPayArray.length;
 }
 
 isInvoiceSelected(invoice: any): boolean {
@@ -1515,10 +1662,14 @@ isInvoiceSelected(invoice: any): boolean {
 }
 
 toggleSelectAll(event: any) {
-  if (event.detail.checked) {
+  const isChecked = event.detail.checked;
+  if (isChecked === this.selectAllInvoices) return;
+  if (isChecked) {
     this.selectedInvoicesList = [...this.sortedPayArray];
+    this.selectAllInvoices = true;
   } else {
     this.selectedInvoicesList = [];
+    this.selectAllInvoices = false;
   }
 }
 
@@ -1612,19 +1763,11 @@ async createSalesInvoiceFromSelectedInvoices() {
 
     modal.onDidDismiss().then((result) => {
       if (result.data) {
-        // User confirmed configuration, navigate with configured items
+        // User confirmed configuration, open in new tab
         const configuredItems = result.data;
+        this.openInvoiceInNewTab('/folder/sales', configuredItems);
 
-        let navigationExtras: NavigationExtras = {
-          queryParams: {
-            status: 'newInvoFromItemsPage',
-            selectedItemsList: JSON.stringify(configuredItems)
-          }
-        };
-
-        this.rout.navigate(['folder/sales'], navigationExtras);
-
-        // Clear selection after navigation
+        // Clear selection after opening new tab
         this.clearInvoiceSelection();
       }
       // If result.data is null/undefined, user cancelled - don't navigate
@@ -1724,19 +1867,11 @@ async createPurchaseInvoiceFromSelectedInvoices() {
 
     modal.onDidDismiss().then((result) => {
       if (result.data) {
-        // User confirmed configuration, navigate with configured items
+        // User confirmed configuration, open in new tab
         const configuredItems = result.data;
+        this.openInvoiceInNewTab('/folder/purchase', configuredItems);
 
-        let navigationExtras: NavigationExtras = {
-          queryParams: {
-            status: 'newInvoFromItemsPage',
-            selectedItemsList: JSON.stringify(configuredItems)
-          }
-        };
-
-        this.rout.navigate(['folder/purchase'], navigationExtras);
-
-        // Clear selection after navigation
+        // Clear selection after opening new tab
         this.clearInvoiceSelection();
       }
       // If result.data is null/undefined, user cancelled - don't navigate
@@ -1782,17 +1917,22 @@ async createPurchaseOrderFromSelectedInvoices() {
       }
     });
 
-    // Merge duplicate items by item_id and perch_price, summing quantities
+    // Merge duplicate items by item_id only, summing quantities and keeping highest price
     const mergedItemsMap = new Map<string, any>();
 
     allItems.forEach(item => {
-      // Create a unique key based on item_id and perch_price (for purchase order)
-      const key = `${item.item_id}_${item.perch_price || 0}`;
+      // Create a unique key based on item_id only (for purchase order)
+      const key = `${item.item_id}`;
+      const currentPrice = +(item.perch_price || 0);
 
       if (mergedItemsMap.has(key)) {
-        // Item exists, sum the quantity
+        // Item exists, sum the quantity and keep highest price
         const existingItem = mergedItemsMap.get(key);
         existingItem.quantity = +existingItem.quantity + +item.quantity;
+        // Keep the highest price
+        if (currentPrice > +(existingItem.perch_price || 0)) {
+          existingItem.perch_price = currentPrice;
+        }
       } else {
         // New item, add to map with a copy
         mergedItemsMap.set(key, { ...item });
@@ -1836,19 +1976,11 @@ async createPurchaseOrderFromSelectedInvoices() {
 
     modal.onDidDismiss().then((result) => {
       if (result.data) {
-        // User confirmed configuration, navigate with configured items
+        // User confirmed configuration, open in new tab
         const configuredItems = result.data;
+        this.openInvoiceInNewTab('/purchase-order', configuredItems);
 
-        let navigationExtras: NavigationExtras = {
-          queryParams: {
-            status: 'newInvoFromItemsPage',
-            selectedItemsList: JSON.stringify(configuredItems)
-          }
-        };
-
-        this.rout.navigate(['/purchase-order'], navigationExtras);
-
-        // Clear selection after navigation
+        // Clear selection after opening new tab
         this.clearInvoiceSelection();
       }
       // If result.data is null/undefined, user cancelled - don't navigate

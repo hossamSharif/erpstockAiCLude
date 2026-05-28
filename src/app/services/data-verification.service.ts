@@ -1,18 +1,32 @@
 import { Injectable } from '@angular/core';
 import { ServicesService } from '../stockService/services.service';
-import { Observable, forkJoin, of } from 'rxjs';
-import { map, catchError, switchMap } from 'rxjs/operators';
+import { Observable, forkJoin, of, from } from 'rxjs';
+import { map, catchError, switchMap, concatMap } from 'rxjs/operators';
 
 export interface VerificationResult {
   invoiceRef: string;
   date: string;
   customerName: string;
+  userName: string;
   storedTotal: number;
   calculatedTotal: number;
   difference: number;
+  discount: number;
+  totPrFormat: 'gross' | 'net' | 'unknown';
   status: 'OK' | 'ERROR';
   details: any[];
   invoiceData: any;
+}
+
+export interface VerificationProgress {
+  totalInvoices: number;
+  processedCount: number;
+  errorCount: number;
+  okCount: number;
+  currentBatchIndex: number;
+  totalBatches: number;
+  isComplete: boolean;
+  results: VerificationResult[];
 }
 
 export interface VerificationSummary {
@@ -41,39 +55,66 @@ export class DataVerificationService {
       map((result: any) => {
         const details = result.data || [];
 
-        // Calculate the sum of all item totals by multiplying quantity × pay_price
-        // For SALES invoices, use pay_price (selling price)
-        const calculatedGrossTotal = details.reduce((sum: number, item: any) => {
+        // Calculate gross total from items: SUM(quantity × pay_price)
+        const grossFromItems = details.reduce((sum: number, item: any) => {
           const quantity = parseFloat(item.quantity) || 0;
           const price = parseFloat(item.pay_price) || 0;
-          const itemTotal = quantity * price;
-          return sum + itemTotal;
+          return sum + (quantity * price);
         }, 0);
 
-        // Use invoice header data if provided, otherwise try to get from details
         const invoiceData = invoiceHeader || (details.length > 0 ? details[0] : null);
         const tot_pr = invoiceData ? parseFloat(invoiceData.tot_pr || 0) : 0;
         const discount = invoiceData ? parseFloat(invoiceData.discount || 0) : 0;
 
-        // Apply discount to BOTH sides for fair comparison
-        // Stored side: tot_pr - discount
-        const storedTotalAfterDiscount = tot_pr - discount;
-        // Calculated side: SUM(quantity × price) - discount
-        const calculatedTotalAfterDiscount = calculatedGrossTotal - discount;
+        // Multi-format detection for discount handling:
+        // Format 1: tot_pr = SUM(items) — no discount or discount stored separately
+        // Format 2: tot_pr = SUM(items) - discount — tot_pr is net
+        // Format 3: tot_pr - discount = SUM(items) — tot_pr is gross, items have discount distributed
+        let status: 'OK' | 'ERROR' = 'ERROR';
+        let totPrFormat: 'gross' | 'net' | 'unknown' = 'unknown';
+        let difference = tot_pr - grossFromItems;
 
-        // Calculate signed difference: stored - calculated
-        // Positive = stored > calculated (stored has extra)
-        // Negative = stored < calculated (stored is missing amount)
-        const difference = storedTotalAfterDiscount - calculatedTotalAfterDiscount;
+        // Check 1: tot_pr == SUM(items)
+        if (Math.abs(tot_pr - grossFromItems) < 0.01) {
+          status = 'OK';
+          totPrFormat = 'gross';
+          difference = 0;
+        }
+        // Check 2: tot_pr == SUM(items) - discount — tot_pr stored as net
+        else if (discount > 0 && Math.abs(tot_pr - (grossFromItems - discount)) < 0.01) {
+          status = 'OK';
+          totPrFormat = 'net';
+          difference = 0;
+        }
+        // Check 3: tot_pr - discount == SUM(items) — tot_pr is gross, items adjusted for discount
+        else if (discount > 0 && Math.abs((tot_pr - discount) - grossFromItems) < 0.01) {
+          status = 'OK';
+          totPrFormat = 'gross';
+          difference = 0;
+        }
+
+        // For genuine errors with discount, calculate difference including discount
+        if (status === 'ERROR' && discount > 0) {
+          const d1 = tot_pr - grossFromItems;
+          const d2 = tot_pr - (grossFromItems - discount);
+          const d3 = (tot_pr - discount) - grossFromItems;
+          // Use the smallest absolute difference as the real discrepancy
+          difference = [d1, d2, d3].reduce((best, curr) =>
+            Math.abs(curr) < Math.abs(best) ? curr : best
+          );
+        }
 
         return {
           invoiceRef: pay_ref,
           date: invoiceData?.pay_date || '',
           customerName: invoiceData?.sub_name || 'Unknown',
-          storedTotal: storedTotalAfterDiscount,  // Show net total after discount
-          calculatedTotal: calculatedTotalAfterDiscount,  // Show net total after discount
+          userName: invoiceData?.user_name || '',
+          storedTotal: tot_pr,
+          calculatedTotal: grossFromItems,
           difference: difference,
-          status: (Math.abs(difference) < 0.01 ? 'OK' : 'ERROR') as 'OK' | 'ERROR', // Allow 0.01 difference for rounding
+          discount: discount,
+          totPrFormat: totPrFormat,
+          status: status,
           details: details,
           invoiceData: invoiceData
         };
@@ -84,9 +125,12 @@ export class DataVerificationService {
           invoiceRef: pay_ref,
           date: '',
           customerName: 'Error',
+          userName: '',
           storedTotal: 0,
           calculatedTotal: 0,
           difference: 0,
+          discount: 0,
+          totPrFormat: 'unknown' as 'unknown',
           status: 'ERROR' as 'ERROR',
           details: [],
           invoiceData: null
@@ -103,39 +147,66 @@ export class DataVerificationService {
       map((result: any) => {
         const details = result.data || [];
 
-        // Calculate the sum of all item totals by multiplying quantity × perch_price
-        // For PURCHASE invoices, use perch_price (purchase price)
-        const calculatedGrossTotal = details.reduce((sum: number, item: any) => {
+        // Calculate gross total from items: SUM(quantity × perch_price)
+        const grossFromItems = details.reduce((sum: number, item: any) => {
           const quantity = parseFloat(item.quantity) || 0;
           const price = parseFloat(item.perch_price) || 0;
-          const itemTotal = quantity * price;
-          return sum + itemTotal;
+          return sum + (quantity * price);
         }, 0);
 
-        // Use invoice header data if provided, otherwise try to get from details
         const invoiceData = invoiceHeader || (details.length > 0 ? details[0] : null);
         const tot_pr = invoiceData ? parseFloat(invoiceData.tot_pr || 0) : 0;
         const discount = invoiceData ? parseFloat(invoiceData.discount || 0) : 0;
 
-        // Apply discount to BOTH sides for fair comparison
-        // Stored side: tot_pr - discount
-        const storedTotalAfterDiscount = tot_pr - discount;
-        // Calculated side: SUM(quantity × price) - discount
-        const calculatedTotalAfterDiscount = calculatedGrossTotal - discount;
+        // Multi-format detection for discount handling:
+        // Format 1: tot_pr = SUM(items) — no discount or discount stored separately
+        // Format 2: tot_pr = SUM(items) - discount — tot_pr is net
+        // Format 3: tot_pr - discount = SUM(items) — tot_pr is gross, items have discount distributed
+        let status: 'OK' | 'ERROR' = 'ERROR';
+        let totPrFormat: 'gross' | 'net' | 'unknown' = 'unknown';
+        let difference = tot_pr - grossFromItems;
 
-        // Calculate signed difference: stored - calculated
-        // Positive = stored > calculated (stored has extra)
-        // Negative = stored < calculated (stored is missing amount)
-        const difference = storedTotalAfterDiscount - calculatedTotalAfterDiscount;
+        // Check 1: tot_pr == SUM(items)
+        if (Math.abs(tot_pr - grossFromItems) < 0.01) {
+          status = 'OK';
+          totPrFormat = 'gross';
+          difference = 0;
+        }
+        // Check 2: tot_pr == SUM(items) - discount — tot_pr stored as net
+        else if (discount > 0 && Math.abs(tot_pr - (grossFromItems - discount)) < 0.01) {
+          status = 'OK';
+          totPrFormat = 'net';
+          difference = 0;
+        }
+        // Check 3: tot_pr - discount == SUM(items) — tot_pr is gross, items adjusted for discount
+        else if (discount > 0 && Math.abs((tot_pr - discount) - grossFromItems) < 0.01) {
+          status = 'OK';
+          totPrFormat = 'gross';
+          difference = 0;
+        }
+
+        // For genuine errors with discount, calculate difference including discount
+        if (status === 'ERROR' && discount > 0) {
+          const d1 = tot_pr - grossFromItems;
+          const d2 = tot_pr - (grossFromItems - discount);
+          const d3 = (tot_pr - discount) - grossFromItems;
+          // Use the smallest absolute difference as the real discrepancy
+          difference = [d1, d2, d3].reduce((best, curr) =>
+            Math.abs(curr) < Math.abs(best) ? curr : best
+          );
+        }
 
         return {
           invoiceRef: pay_ref,
           date: invoiceData?.pay_date || '',
           customerName: invoiceData?.sub_name || 'Unknown',
-          storedTotal: storedTotalAfterDiscount,  // Show net total after discount
-          calculatedTotal: calculatedTotalAfterDiscount,  // Show net total after discount
+          userName: invoiceData?.user_name || '',
+          storedTotal: tot_pr,
+          calculatedTotal: grossFromItems,
           difference: difference,
-          status: (Math.abs(difference) < 0.01 ? 'OK' : 'ERROR') as 'OK' | 'ERROR',
+          discount: discount,
+          totPrFormat: totPrFormat,
+          status: status,
           details: details,
           invoiceData: invoiceData
         };
@@ -146,9 +217,12 @@ export class DataVerificationService {
           invoiceRef: pay_ref,
           date: '',
           customerName: 'Error',
+          userName: '',
           storedTotal: 0,
           calculatedTotal: 0,
           difference: 0,
+          discount: 0,
+          totPrFormat: 'unknown' as 'unknown',
           status: 'ERROR' as 'ERROR',
           details: [],
           invoiceData: null
@@ -309,6 +383,89 @@ export class DataVerificationService {
               accuracy: accuracy,
               results: results
             };
+          })
+        );
+      })
+    );
+  }
+
+  /**
+   * Verify all invoices sequentially in batches, emitting progress after each batch
+   */
+  verifyAllInvoicesSequential(
+    store_id: number,
+    yearId: number,
+    type: 'sales' | 'purchase',
+    batchSize: number = 20
+  ): Observable<VerificationProgress> {
+    const invoicesObservable = type === 'sales'
+      ? this.servicesService.getTopSales(store_id, yearId)
+      : this.servicesService.getTopPerch(store_id, yearId);
+
+    return invoicesObservable.pipe(
+      map((response: any) => {
+        if (response.message === 'No record Found' || !response.data) {
+          return [];
+        }
+        return response.data || [];
+      }),
+      catchError(error => {
+        console.error('Error fetching invoices:', error);
+        return of([]);
+      }),
+      switchMap((allInvoices: any[]) => {
+        if (!allInvoices || allInvoices.length === 0) {
+          return of({
+            totalInvoices: 0,
+            processedCount: 0,
+            errorCount: 0,
+            okCount: 0,
+            currentBatchIndex: 0,
+            totalBatches: 0,
+            isComplete: true,
+            results: []
+          } as VerificationProgress);
+        }
+
+        const totalBatches = Math.ceil(allInvoices.length / batchSize);
+        const batchIndices = Array.from({ length: totalBatches }, (_, i) => i);
+
+        let cumulativeResults: VerificationResult[] = [];
+        let cumulativeErrors = 0;
+        let cumulativeOk = 0;
+
+        // Process batches sequentially using from() + concatMap()
+        return from(batchIndices).pipe(
+          concatMap(batchIndex => {
+            const start = batchIndex * batchSize;
+            const end = Math.min(start + batchSize, allInvoices.length);
+            const batchInvoices = allInvoices.slice(start, end);
+
+            const verificationObservables = batchInvoices.map((invoice: any) => {
+              const pay_ref = invoice.pay_ref;
+              return type === 'sales'
+                ? this.verifySalesInvoice(pay_ref, store_id, yearId, invoice)
+                : this.verifyPurchaseInvoice(pay_ref, store_id, yearId, invoice);
+            });
+
+            return forkJoin(verificationObservables).pipe(
+              map((batchResults: VerificationResult[]) => {
+                cumulativeResults = [...cumulativeResults, ...batchResults];
+                cumulativeErrors += batchResults.filter(r => r.status === 'ERROR').length;
+                cumulativeOk += batchResults.filter(r => r.status === 'OK').length;
+
+                return {
+                  totalInvoices: allInvoices.length,
+                  processedCount: cumulativeResults.length,
+                  errorCount: cumulativeErrors,
+                  okCount: cumulativeOk,
+                  currentBatchIndex: batchIndex,
+                  totalBatches: totalBatches,
+                  isComplete: batchIndex === totalBatches - 1,
+                  results: cumulativeResults
+                } as VerificationProgress;
+              })
+            );
           })
         );
       })

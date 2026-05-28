@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable } from 'rxjs';
-import {  LoadingController, ModalController, ToastController } from '@ionic/angular';
+import { AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { DatePipe } from '@angular/common'; 
 import { Storage } from '@ionic/storage';
 import { NavigationExtras, Router } from '@angular/router'
@@ -39,7 +39,7 @@ export class PrchOrderRecordPage implements OnInit {
   color :any ='dark'
   sums : {pay:any ,change:any,discount:any,tot:any,totAfterDiscout:any}
   year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
-  constructor(private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) { 
+  constructor(private rout : Router,private storage: Storage,private modalController: ModalController,private alertController: AlertController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) {
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:""};
    
     this.sums = {pay:0 ,change:0,discount:0,tot:0,totAfterDiscout:0}
@@ -195,31 +195,31 @@ getSalesAccount(){
   } 
 }
 
-   printInvo(printarea , dataFrom){   
+   printInvo(printarea , dataFrom){
     if (this.offline==false && dataFrom.pay_id != undefined) {
-      this.paInvo = dataFrom 
-      //console.log( this.paInvo) 
+      this.paInvo = dataFrom
+      //console.log( this.paInvo)
       this.api.getPerchOrderInvoDetail(this.store_info.id , dataFrom.pay_ref).subscribe(data =>{
        //console.log(data)
-       let res = data 
+       let res = data
        this.itemList = res['data']
-       //console.log(res) 
+       //console.log(res)
        this.printArr = []
        this.printArr.push({
        'payInvo': this.paInvo,
        'itemList':this.itemList,
        'selectedAccount' : this.paInvo.sub_name,
        'sub_nameNew' : ""
-     }) 
+     })
       //console.log(this.printArr)
-      this.presentModal(this.printArr , 'perchOrderAr-record')
+      this.askIncludePricesDialog('perchOrderAr-record')
        }, (err) => {
         //console.log(err);
         this.presentToast('خطا في الإتصال حاول مرة اخري' , 'danger')
-       },()=>{ 
-       })        
+       },()=>{
+       })
     } else if (this.offline==false && dataFrom.pay_id == undefined) {
-     console .log(dataFrom,dataFrom) 
+     console .log(dataFrom,dataFrom)
      //console.log(this.purchLocal ,'case2')
      let flt:Array<any> =[]
      flt = this.purchLocal.filter(x=>x.payInvo.pay_ref==dataFrom.pay_ref )
@@ -231,12 +231,12 @@ getSalesAccount(){
      'itemList':flt[0].itemList,
      'selectedAccount' : flt[0].payInvo.sub_name,
      'sub_nameNew' : ""
-   }) 
+   })
     //console.log(this.printArr)
-    this.presentModal(this.printArr , 'perchOrderAr-record') 
+    this.askIncludePricesDialog('perchOrderAr-record')
     }else if (this.offline==true && dataFrom.pay_id != undefined) {
-      
-     
+
+
      //console.log(this.purchase ,'case3')
      let flt:Array<any> =[]
      flt = this.purchase.filter(x=>x.payInvo.pay_ref==dataFrom.pay_ref )
@@ -248,10 +248,10 @@ getSalesAccount(){
      'itemList':flt[0].itemList,
      'selectedAccount' : flt[0].payInvo.sub_name,
      'sub_nameNew' : ""
-   }) 
+   })
     //console.log(this.printArr)
-    this.presentModal(this.printArr , 'perchOrderAr-record') 
-    }else if (this.offline==true && dataFrom.pay_id == undefined) { 
+    this.askIncludePricesDialog('perchOrderAr-record')
+    }else if (this.offline==true && dataFrom.pay_id == undefined) {
      //console.log(this.purchLocal)
      let flt:Array<any> =[]
      flt = this.purchLocal.filter(x=>x.payInvo.pay_ref==dataFrom.pay_ref )
@@ -262,67 +262,67 @@ getSalesAccount(){
      'itemList':flt[0].itemList,
      'selectedAccount' : flt[0].payInvo.sub_name,
      'sub_nameNew' : ""
-   }) 
+   })
     //console.log(this.printArr)
-    
-    this.presentModal(this.printArr , 'perchOrderAr-record')  
-    } 
-    
+
+    this.askIncludePricesDialog('perchOrderAr-record')
+    }
+
    }
 
-   printInvoEn(printarea , dataFrom){   
+   printInvoEn(printarea , dataFrom){
     if (this.offline==false && dataFrom.pay_id != undefined) {
-      this.paInvo = dataFrom 
-      //console.log( this.paInvo) 
+      this.paInvo = dataFrom
+      //console.log( this.paInvo)
       this.api.getPerchOrderInvoDetail(this.store_info.id , dataFrom.pay_ref).subscribe(data =>{
        //console.log(data)
-       let res = data 
+       let res = data
        this.itemList = res['data']
-       //console.log(res) 
+       //console.log(res)
        this.printArr = []
        this.printArr.push({
        'payInvo': this.paInvo,
        'itemList':this.itemList,
        'selectedAccount' : this.paInvo.sub_name,
        'sub_nameNew' : ""
-     }) 
+     })
       //console.log(this.printArr)
-      this.presentModal(this.printArr , 'perchOrderEn-record')
+      this.askIncludePricesDialog('perchOrderEn-record')
        }, (err) => {
         //console.log(err);
         this.presentToast('خطا في الإتصال حاول مرة اخري' , 'danger')
-       },()=>{ 
-       })        
+       },()=>{
+       })
     } else if (this.offline==false && dataFrom.pay_id == undefined) {
-     console .log(dataFrom,dataFrom) 
+     console .log(dataFrom,dataFrom)
      //console.log(this.purchLocal ,'case2')
      let flt:Array<any> =[]
      flt = this.purchLocal.filter(x=>x.payInvo.pay_ref==dataFrom.pay_ref )
-     //console.log(flt,'here') 
+     //console.log(flt,'here')
      this.printArr = []
      this.printArr.push({
      'payInvo': flt[0].payInvo,
      'itemList':flt[0].itemList,
      'selectedAccount' : flt[0].payInvo.sub_name,
      'sub_nameNew' : ""
-   }) 
+   })
     //console.log(this.printArr)
-    this.presentModal(this.printArr , 'perchOrderEn-record') 
-    } else if (this.offline==true && dataFrom.pay_id != undefined) { 
+    this.askIncludePricesDialog('perchOrderEn-record')
+    } else if (this.offline==true && dataFrom.pay_id != undefined) {
      //console.log(this.purchase ,'case3')
      let flt:Array<any> =[]
      flt = this.purchase.filter(x=>x.payInvo.pay_ref==dataFrom.pay_ref)
-     //console.log(flt,'here') 
+     //console.log(flt,'here')
      this.printArr = []
      this.printArr.push({
      'payInvo': flt[0].payInvo,
      'itemList':flt[0].itemList,
      'selectedAccount' : flt[0].payInvo.sub_name,
      'sub_nameNew' : ""
-   }) 
+   })
     //console.log(this.printArr)
-    this.presentModal(this.printArr , 'perchOrderEn-record') 
-    }else if (this.offline==true && dataFrom.pay_id == undefined) { 
+    this.askIncludePricesDialog('perchOrderEn-record')
+    }else if (this.offline==true && dataFrom.pay_id == undefined) {
      //console.log(this.purchLocal)
      let flt:Array<any> =[]
      flt = this.purchLocal.filter(x=>x.payInvo.pay_ref==dataFrom.pay_ref )
@@ -333,15 +333,15 @@ getSalesAccount(){
      'itemList':flt[0].itemList,
      'selectedAccount' : flt[0].payInvo.sub_name,
      'sub_nameNew' : ""
-   }) 
+   })
     //console.log(this.printArr)
-    
-    this.presentModal(this.printArr , 'perchOrderEn-record')  
-    } 
-    
+
+    this.askIncludePricesDialog('perchOrderEn-record')
+    }
+
    }
 
-   async presentModal(printArr , page) { 
+   async presentModal(printArr , page) {
     const modal = await this.modalController.create({
       component: PrintModalPage ,
       componentProps: {
@@ -349,15 +349,57 @@ getSalesAccount(){
         "page": page
       }
     });
-    
+
     modal.onDidDismiss().then((dataReturned) => {
       if (dataReturned !== null) {
         //console.log(dataReturned )
-       
+
       }
     });
-  
-    return await modal.present(); 
+
+    return await modal.present();
+  }
+
+  async askIncludePricesDialog(page: string): Promise<void> {
+    const alert = await this.alertController.create({
+      cssClass: 'my-custom-class',
+      header: this.translate.instant('PURCHASE_ORDER.PRINT_OPTIONS_TITLE'),
+      mode: 'ios',
+      message: this.translate.instant('PURCHASE_ORDER.INCLUDE_PRICES_MESSAGE'),
+      buttons: [
+        {
+          text: this.translate.instant('PURCHASE_ORDER.NO_HIDE_PRICES'),
+          cssClass: 'secondary',
+          handler: () => {
+            this.presentModalWithPriceOption(page, false);
+          }
+        },
+        {
+          text: this.translate.instant('PURCHASE_ORDER.YES_INCLUDE_PRICES'),
+          handler: () => {
+            this.presentModalWithPriceOption(page, true);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async presentModalWithPriceOption(page: string, showPrices: boolean): Promise<void> {
+    const modal = await this.modalController.create({
+      component: PrintModalPage,
+      componentProps: {
+        "printArr": this.printArr,
+        "page": page,
+        "showPrices": showPrices
+      }
+    });
+    modal.onDidDismiss().then((dataReturned) => {
+      if (dataReturned !== null) {
+        // Handle if needed
+      }
+    });
+    return await modal.present();
   }
 
    preparedPrin(printarea ,paInvo, itemList){

@@ -81,7 +81,7 @@ itemsAll:Array<any> =[]
   showBrand:boolean = false
   showMdel:boolean = false
   selectedItem2 : {id:any ,item_name:any ,model:any ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,retail_price:any,item_unit:any,item_desc:any,item_parcode:any,aliasEn:any , quantity?:any};
-  colSetting : {id:any ,item_name:any ,model:any ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,retail_price:any,item_unit:any,item_desc:any,item_parcode:any,profit:any,instock:any,total:any,lastSold:any,lastPurch:any,edit:any,delete:any,aliasEn:any};
+  colSetting : {id:any ,item_name:any ,model:any ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,retail_price:any,item_unit:any,item_desc:any,item_parcode:any,profit:any,instock:any,total:any,lastSold:any,lastPurch:any,edit:any,delete:any,aliasEn:any,firstQuantity:any};
   year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
    selectedItemsList: Array<any> = [];
   logHistoryObj : {id:any,	logRef:any,	userId:any,	typee:any,	datee:any,	logStatus:any,	logToken:any,	yearId:any,	store_id:any}
@@ -172,7 +172,7 @@ itemsAll:Array<any> =[]
     this.store_info = {id:"" ,store_ref:"" , store_name:"" , location :"" }
     this.selectedItem = {id:null ,item_name:"" ,model:"" ,part_no:""  ,min_qty:0 ,brand:"",pay_price:0,perch_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:""};
     this.selectedItem2 = {id:null ,item_name:"" ,model:"" ,part_no:""  ,min_qty:0 ,brand:"",pay_price:0,perch_price:0,retail_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:""};
-    this.colSetting = {id:true ,item_name:true ,model:true ,part_no:true  ,min_qty:true ,brand:true,pay_price:true,perch_price:true,retail_price:true,item_unit:true,item_desc:true,item_parcode:true,profit:true,instock:true,total:true,lastSold:true,lastPurch:true,edit:true,delete:true,aliasEn:true};
+    this.colSetting = {id:true ,item_name:true ,model:true ,part_no:true  ,min_qty:true ,brand:true,pay_price:true,perch_price:true,retail_price:true,item_unit:true,item_desc:true,item_parcode:true,profit:true,instock:true,total:true,lastSold:true,lastPurch:true,edit:true,delete:true,aliasEn:true,firstQuantity:true};
     this.getAppInfo()
        // Initialize filter state
     this.filterState = {
@@ -230,9 +230,12 @@ itemsAll:Array<any> =[]
   }
 
   toggleSelectAll(event: any) {
+    const isChecked = event.detail.checked;
+    // If event value matches computed state, this is a programmatic echo — ignore
+    if (isChecked === this.isAllSelected()) return;
     const currentData = this.getCurrentViewData();
-    
-    if (event.detail.checked) {
+
+    if (isChecked) {
       // Select all items in current view
       currentData.forEach(item => {
         if (!this.isItemSelected(item)) {
@@ -321,6 +324,12 @@ itemsAll:Array<any> =[]
     this.selectedItemsList = [];
   }
 
+  private openInvoiceInNewTab(route: string, items: any[]) {
+    const dataKey = 'invoice_data_' + Date.now();
+    localStorage.setItem(dataKey, JSON.stringify(items));
+    window.open(`${route}?fromTab=true&dataKey=${dataKey}`, '_blank');
+  }
+
   // Helper method to get current view's data array
   getCurrentViewData(): any[] {
     if (this.showSearchView) {
@@ -385,14 +394,9 @@ itemsAll:Array<any> =[]
 
 
     
-    // Navigate to purchase page with selected items
-    this.router.navigate(['folder/purchase'], {
-      queryParams: {
-        status: 'newInvoFromItemsPage',
-        selectedItemsList: JSON.stringify(purchaseItems)
-      }
-    });
-    // Clear selection after navigation
+    // Open purchase page in new tab with selected items
+    this.openInvoiceInNewTab('/folder/purchase', purchaseItems);
+    // Clear selection after opening new tab
     this.clearSelection();
   }
 
@@ -429,14 +433,9 @@ itemsAll:Array<any> =[]
       aliasEn: item.aliasEn
       }));
 
-      // Navigate to sales page
-      await this.router.navigate(['folder/tswia'], {
-        queryParams: {
-          status: 'newInvoFromItemsPage',
-          selectedItemsList: JSON.stringify(salesItems)
-        }
-      });
-    
+      // Open tswia page in new tab with selected items
+      this.openInvoiceInNewTab('/folder/tswia', salesItems);
+
       // Clear selection
         this.clearSelection();
     // Show loading
@@ -475,14 +474,9 @@ itemsAll:Array<any> =[]
       aliasEn: item.aliasEn
       }));
 
-      // Navigate to sales page
-      await this.router.navigate(['folder/sales'], {
-        queryParams: {
-          status: 'newInvoFromItemsPage',
-          selectedItemsList: JSON.stringify(salesItems)
-        }
-      });
-    
+      // Open sales page in new tab with selected items
+      this.openInvoiceInNewTab('/folder/sales', salesItems);
+
         // Clear selection
         this.clearSelection();
         // Show loading
@@ -1044,15 +1038,29 @@ updateItemArrays(itemId,status?) {
       } 
     }
 
+      private invoiceChannel: BroadcastChannel;
+
       ngOnInit() {
         this.initializeCurrency();
-        //   this.loading = true 
+        //   this.loading = true
+
+        // Listen for invoice creation in new tabs
+        try {
+          this.invoiceChannel = new BroadcastChannel('invoice-channel');
+          this.invoiceChannel.onmessage = (event) => {
+            if (event.data.type === 'invoice-created') {
+              this.getStockItems(); // refresh data
+              this.clearSelection();
+            }
+          };
+        } catch (e) { /* BroadcastChannel not supported */ }
       }
-      
+
       ngOnDestroy() {
         if (this.currencySubscription) {
           this.currencySubscription.unsubscribe();
         }
+        this.invoiceChannel?.close();
       }
       
       async initializeCurrency() {
@@ -1498,10 +1506,12 @@ refreshToInitialState() {
           this.itemsAll = items
             
             this.itemsAll.forEach(element => {
-              if ((+element.availQty - +element.qtyReal) < 0) {
-                element.perchQuantity = +element.perchQuantity + Math.abs((+element.availQty - +element.qtyReal))
-              } else if ((+element.availQty - +element.qtyReal) > 0) {
-                element.salesQuantity = +element.salesQuantity + (+element.availQty - +element.qtyReal)
+              let availQty = +element.availQty || (+element.quantity || 0);
+              let qtyReal = +element.qtyReal || 0;
+              if ((availQty - qtyReal) < 0) {
+                element.perchQuantity = +element.perchQuantity + Math.abs(availQty - qtyReal);
+              } else if ((availQty - qtyReal) > 0) {
+                element.salesQuantity = +element.salesQuantity + (availQty - qtyReal);
               }
               element.quantity = +element.firstQuantity + +element.perchQuantity - +element.salesQuantity
               element.stockValuePayPrice = +element.quantity * +element.pay_price
@@ -2472,10 +2482,12 @@ incresePrice(data){
           
           // Process each item (same as existing logic)
           this.allItemsData.forEach(element => {
-            if ((+element.availQty - +element.qtyReal) < 0) {
-              element.perchQuantity = +element.perchQuantity + Math.abs((+element.availQty - +element.qtyReal));
-            } else if ((+element.availQty - +element.qtyReal) > 0) {
-              element.salesQuantity = +element.salesQuantity + (+element.availQty - +element.qtyReal);
+            let availQty = +element.availQty || (+element.quantity || 0);
+            let qtyReal = +element.qtyReal || 0;
+            if ((availQty - qtyReal) < 0) {
+              element.perchQuantity = +element.perchQuantity + Math.abs(availQty - qtyReal);
+            } else if ((availQty - qtyReal) > 0) {
+              element.salesQuantity = +element.salesQuantity + (availQty - qtyReal);
             }
             element.quantity = +element.firstQuantity + +element.perchQuantity - +element.salesQuantity;
             element.stockValuePayPrice = +element.quantity * +element.pay_price;
@@ -2561,10 +2573,12 @@ incresePrice(data){
           
           // Process each item (same as existing logic)
           this.searchData.forEach(element => {
-            if ((+element.availQty - +element.qtyReal) < 0) {
-              element.perchQuantity = +element.perchQuantity + Math.abs((+element.availQty - +element.qtyReal));
-            } else if ((+element.availQty - +element.qtyReal) > 0) {
-              element.salesQuantity = +element.salesQuantity + (+element.availQty - +element.qtyReal);
+            let availQty = +element.availQty || (+element.quantity || 0);
+            let qtyReal = +element.qtyReal || 0;
+            if ((availQty - qtyReal) < 0) {
+              element.perchQuantity = +element.perchQuantity + Math.abs(availQty - qtyReal);
+            } else if ((availQty - qtyReal) > 0) {
+              element.salesQuantity = +element.salesQuantity + (availQty - qtyReal);
             }
             element.quantity = +element.firstQuantity + +element.perchQuantity - +element.salesQuantity;
             element.stockValuePayPrice = +element.quantity * +element.pay_price;
@@ -2798,11 +2812,16 @@ incresePrice(data){
     if (this.colSetting.profit) columns.push({ key: 'profitPercentage', title: 'نسبة الفائدة', width: 12, type: 'number' });
     if (this.colSetting.instock) columns.push({ key: 'quantity', title: 'المخزون', width: 12, type: 'number' });
     if (this.colSetting.total) columns.push({ key: 'stockValue', title: 'المجموع', width: 15, type: 'currency' });
-    if (this.colSetting.lastSold) columns.push({ key: 'lastSoldDate', title: 'اخر عملية بيع', width: 15, type: 'text' });
-    if (this.colSetting.lastPurch) columns.push({ key: 'lastPurchDate', title: 'اخر عملية شراء', width: 15, type: 'text' });
+    if (this.colSetting.lastSold) {
+      columns.push({ key: 'lastSoldDate', title: 'تاريخ اخر بيع', width: 15, type: 'text' });
+      columns.push({ key: 'lastSoldQty', title: 'كمية اخر بيع', width: 12, type: 'number' });
+    }
+    if (this.colSetting.lastPurch) {
+      columns.push({ key: 'lastPurchDate', title: 'تاريخ اخر شراء', width: 15, type: 'text' });
+      columns.push({ key: 'lastPurchQty', title: 'كمية اخر شراء', width: 12, type: 'number' });
+    }
 
-    // Always add opening stock (firstQuantity) if it exists
-    columns.push({ key: 'firstQuantity', title: 'المخزون الإفتتاحي', width: 15, type: 'number' });
+    if (this.colSetting.firstQuantity) columns.push({ key: 'firstQuantity', title: 'المخزون الإفتتاحي', width: 15, type: 'number' });
     
     return columns;
   }

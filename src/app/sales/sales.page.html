@@ -24,7 +24,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
+<ion-content #content scrollEvents="true" (ionScroll)="scrollFab.onScroll($event)">
 
     <ion-card class="ion-no-padding ion-no-margin"> 
       <ion-grid *ngIf="user_info && store_info">
@@ -113,7 +113,7 @@
                       <ion-col size="3">
                         <span>قائمة الأصناف</span>
                       </ion-col>
-                      <ion-col size="6" class="ion-text-center">
+                      <ion-col size="4" class="ion-text-center">
                         <div class="search-container">
                           <ion-item lines="none" class="search-item">
                             <ion-icon name="search" slot="start" color="medium"></ion-icon>
@@ -136,27 +136,31 @@
                           </ion-item>
                         </div>
                       </ion-col>
-                      <ion-col size="3" class="ion-text-end">
-                        <ion-button 
-                          fill="clear" 
-                          color="light" 
-                          size="small"
-                          (click)="sortItemListAlphabetically()"
-                          [disabled]="!itemList || itemList.length === 0"
-                        >
-                          <ion-icon name="list" slot="start"></ion-icon>
-                          {{ isItemListSorted ? 'ترتيب أصلي' : 'ترتيب أبجدي' }}
-                        </ion-button>
-                        <ion-button 
-                          fill="clear" 
-                          color="light" 
-                          size="small"
-                          (click)="openPriceAdjustmentDialog()"
-                          [disabled]="!itemList || itemList.length === 0"
-                        >
-                          <ion-icon name="pricetag" slot="start"></ion-icon>
-                          تعديل الأسعار
-                        </ion-button>
+                      <ion-col size="5" class="ion-text-end">
+                        <div style="display: flex; gap: 4px; justify-content: flex-end; flex-wrap: wrap;">
+                          <ion-button
+                            fill="clear"
+                            color="light"
+                            size="small"
+                            (click)="sortItemListAlphabetically()"
+                            [disabled]="!itemList || itemList.length === 0"
+                            style="font-size: 12px; min-width: auto;"
+                          >
+                            <ion-icon name="list" slot="start" style="font-size: 16px;"></ion-icon>
+                            {{ isItemListSorted ? 'ترتيب أصلي' : 'ترتيب أبجدي' }}
+                          </ion-button>
+                          <ion-button
+                            fill="clear"
+                            color="light"
+                            size="small"
+                            (click)="openPriceAdjustmentDialog()"
+                            [disabled]="!itemList || itemList.length === 0"
+                            style="font-size: 12px; min-width: auto;"
+                          >
+                            <ion-icon name="pricetag" slot="start" style="font-size: 16px;"></ion-icon>
+                            تعديل الأسعار
+                          </ion-button>
+                        </div>
                       </ion-col>
                     </ion-row>
                   </ion-card-title>
@@ -164,44 +168,56 @@
                 <div class="table-container">
                 <table class="table">
                   <tr>
+                    <th class="checkbox-cell">
+                      <ion-checkbox
+                        [checked]="isSelectAll"
+                        (ionChange)="toggleSelectAll($event)"
+                        [indeterminate]="selectedItems.size > 0 && selectedItems.size < itemList.length">
+                      </ion-checkbox>
+                    </th>
                     <th>no</th>
                     <th>الصنف</th>
                     <th>الكمية</th>
                     <th>سعر الوحده ({{ getCurrencySymbol() }})</th>
-                    <th>المجموع ({{ getCurrencySymbol() }})</th> 
-                    <th></th> 
+                    <th>المجموع ({{ getCurrencySymbol() }})</th>
+                    <th></th>
                   </tr>
-                  <tr *ngFor="let item of getDisplayItemList() ; let i = index"  
+                  <tr *ngFor="let item of getDisplayItemList() ; let i = index"
                       (dblclick)="qtyClick(i)"
                       [attr.data-index]="i"
                       [class.search-highlight]="isHighlighted(i)"
-                      [class.search-match]="isSearchMatch(i)">
+                      [class.search-match]="isSearchMatch(i)"
+                      [class.selected-row]="isItemSelected(i)"
+                      [ngClass]="getStockStatusClass(item)">
+                    <td class="checkbox-cell">
+                      <ion-checkbox
+                        [checked]="isItemSelected(i)"
+                        (ionChange)="toggleItemSelection(i, $event)">
+                      </ion-checkbox>
+                    </td>
                     <td>{{i+1}}</td>
                     <td>
                       <span [innerHTML]="highlightText(item.item_name, searchTerm)"></span>
                     </td>
-                    <td >
-                      <ion-text *ngIf="showMe != i">{{item.quantity}}</ion-text> 
+                    <td>
+                      <ion-text *ngIf="showMe != i">{{item.quantity}}</ion-text>
                       <ion-item *ngIf="showMe == i">
-                        <ion-input (keyup.enter)="editCell(i)" [(ngModel)] ="item.quantity" (ionBlur)="editCell(i)" ></ion-input>
+                        <ion-input (keyup.enter)="editCell(i)" [(ngModel)]="item.quantity" (ionBlur)="editCell(i)"></ion-input>
                       </ion-item>
                     </td>
                     <td>
-                      <ion-text *ngIf="showMe != i">{{item.pay_price | currencyDisplay:'SDG':false}}</ion-text> 
+                      <ion-text *ngIf="showMe != i">{{item.pay_price | currencyDisplay:'SDG':false}}</ion-text>
                       <ion-item *ngIf="showMe == i">
-                        <ion-input (keyup.enter)="editCell(i)" [(ngModel)] ="item.pay_price" (ionBlur)="editCell(i)" ></ion-input>
+                        <ion-input (keyup.enter)="editCell(i)" [(ngModel)]="item.pay_price" (ionBlur)="editCell(i)"></ion-input>
                       </ion-item>
                     </td>
-
                     <td>{{item.tot | currencyDisplay:'SDG':false}}</td>
                     <td>
                       <ion-button fill="clear" size="small" (click)="deleteItem(i)">
-                        <ion-icon name="trash" color="danger" ></ion-icon>
+                        <ion-icon name="trash" color="danger"></ion-icon>
                       </ion-button>
                     </td>
                   </tr>
-                  
-                
                 </table>
                 </div> 
               </ion-card>
@@ -211,6 +227,21 @@
         </ion-col> 
       </ion-row> 
     </ion-grid>
+    <!-- Selection Action Panel -->
+    <app-selection-action-panel
+      [selectedCount]="selectedItems.size"
+      [totalCount]="itemList.length"
+      [isVisible]="selectedItems.size > 0"
+      [showBulkPriceUpdate]="true"
+      [mode]="'sales'"
+      (bulkCopy)="bulkCopyItems()"
+      (bulkCut)="bulkCutItems()"
+      (bulkDelete)="bulkDeleteItems()"
+      (bulkPriceUpdate)="openBulkPriceUpdateModal()"
+      (clearSelection)="clearSelection()"
+      (selectAll)="selectAllItems()">
+    </app-selection-action-panel>
+
     <!-- Journal Entry Modal -->
 <ion-modal [isOpen]="showJournalEntryModal" (willDismiss)="onJournalCancelled()" style="--width: 90%; --max-width: 600px; --min-width: 320px;">
   <ng-template>
@@ -243,6 +274,7 @@
   </ng-template>
 </ion-modal>
 
+  <app-scroll-to-top-fab #scrollFab [content]="content"></app-scroll-to-top-fab>
 </ion-content>
 <!-- Footer with totals and action buttons -->
 <ion-footer *ngIf="user_info && store_info" >

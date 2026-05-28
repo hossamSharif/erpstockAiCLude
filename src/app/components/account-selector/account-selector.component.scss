@@ -245,6 +245,23 @@
     border-radius: 6px;
     direction: rtl;
 
+    .statement-btn {
+      --padding-start: 4px;
+      --padding-end: 4px;
+      height: 28px;
+      width: 28px;
+      margin: 0;
+      flex-shrink: 0;
+
+      ion-icon {
+        font-size: 18px;
+      }
+
+      &:hover {
+        --background: rgba(var(--ion-color-primary-rgb), 0.1);
+      }
+    }
+
     .balance-label {
       font-size: 12px;
       font-weight: 600;
@@ -354,6 +371,15 @@
 
     .balance-container {
       padding: 6px 10px;
+
+      .statement-btn {
+        height: 24px;
+        width: 24px;
+
+        ion-icon {
+          font-size: 16px;
+        }
+      }
 
       .balance-label {
         font-size: 11px;

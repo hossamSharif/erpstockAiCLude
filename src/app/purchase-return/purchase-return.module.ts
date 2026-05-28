@@ -10,6 +10,7 @@ import { PurchaseReturnPageRoutingModule } from './purchase-return-routing.modul
 import { PurchaseReturnPage } from './purchase-return.page';
 
 import { SharedModule } from '../module/shared/shared.module';
+import { ScrollToTopFabModule } from '../components/scroll-to-top-fab/scroll-to-top-fab.module';
 
 @NgModule({
   imports: [
@@ -19,7 +20,8 @@ import { SharedModule } from '../module/shared/shared.module';
     PurchaseReturnPageRoutingModule,
     SharedModule
   ,
-    TranslateModule
+    TranslateModule,
+    ScrollToTopFabModule
   ],
   declarations: [PurchaseReturnPage]
 })

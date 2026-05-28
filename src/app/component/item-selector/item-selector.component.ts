@@ -5,6 +5,7 @@ import { AlertController, LoadingController, ToastController, IonInput } from '@
 import { FilterPipe } from './pipe';
 import { ModalController } from '@ionic/angular';
 import { ItemModalPage } from '../../item-modal/item-modal.page';
+import { ItemsReportPage } from '../../items-report/items-report.page';
 import { DatePipe } from '@angular/common';
 import { NavigationExtras, Router } from '@angular/router';
 
@@ -41,11 +42,8 @@ export class ItemSelectorComponent implements OnInit {
   @Input() showPriceInput: boolean = true;
   @Input() showPerchPriceInput: boolean = true;
   @Input() placeholder: string = 'اختر الصنف';
+  @Input() selectOnly: boolean = false;
 
-  
-  
-  
-  
   // Dropdown positioning
   dropdownPosition = { top: '0px', left: '0px', width: '250px' };
   
@@ -215,26 +213,60 @@ getItemLoader: boolean = false;
     // Search filtering is handled by the getFilteredItems method
   }
 
-  // Get filtered items for display (search filtering only)
+  // Get filtered items for display (ranked multi-word search across all fields)
   getFilteredItems() {
-    if (!this.items || this.items.length === 0) {
-      return [];
-    }
-
-    // Apply search filter if search term exists
+    if (!this.items || this.items.length === 0) return [];
     if (this.searchTerm && this.searchTerm.trim() !== '') {
-      const searchValue = this.searchTerm.toLowerCase();
-      return this.items.filter(item => 
-        item.item_name.toLowerCase().includes(searchValue) ||
-        (item.item_desc && item.item_desc.toLowerCase().includes(searchValue))
-      );
+      const searchWords = this.searchTerm.toLowerCase().trim().split(/\s+/);
+      const scored = [];
+      for (const item of this.items) {
+        const searchable = [
+          item.item_name, item.item_desc, item.parcode,
+          item.brand, item.model, item.part_no, item.aliasEn
+        ].filter(Boolean).join(' ').toLowerCase();
+        const matchCount = searchWords.filter(word => searchable.includes(word)).length;
+        if (matchCount > 0) {
+          scored.push({ item, matchCount });
+        }
+      }
+      // Sort: items matching more words first, then by stock quantity as tiebreaker
+      scored.sort((a, b) => {
+        if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount;
+        const qtyA = this.getItemStockQty(a.item);
+        const qtyB = this.getItemStockQty(b.item);
+        if (qtyA > 0 && qtyB <= 0) return -1;
+        if (qtyA <= 0 && qtyB > 0) return 1;
+        return qtyB - qtyA;
+      });
+      return scored.map(s => s.item);
     }
-    
-    // Return only first 50 items if no search term (for performance)
-    return this.items.slice(0, 50);
+    // Return first 50 items sorted by stock quantity (items with stock first)
+    const sorted = [...this.items].sort((a, b) => {
+      const qtyA = this.getItemStockQty(a);
+      const qtyB = this.getItemStockQty(b);
+      if (qtyA > 0 && qtyB <= 0) return -1;
+      if (qtyA <= 0 && qtyB > 0) return 1;
+      return qtyB - qtyA;
+    });
+    return sorted.slice(0, 50);
   }
 
- 
+  getItemStockQty(item: any): number {
+    let perchTotQty = +item.perchQuantity || 0;
+    let payTotQty = +item.salesQuantity || 0;
+    let firstQty = +item.firstQuantity || 0;
+    let availQty = +item.availQty || (+item.quantity || 0);
+    let qtyReal = +item.qtyReal || 0;
+
+    if ((availQty - qtyReal) < 0) {
+      perchTotQty = perchTotQty + Math.abs(availQty - qtyReal);
+    } else if ((availQty - qtyReal) > 0) {
+      payTotQty = payTotQty + (availQty - qtyReal);
+    }
+
+    return firstQty + perchTotQty - payTotQty;
+  }
+
   getAppInfo() {
     this.storage.get('USER_INFO').then((response) => {
       if (response) {
@@ -245,23 +277,26 @@ getItemLoader: boolean = false;
   }
   // drop down 
 
-  // Add this method to your component
-viewItemReport(item: any) {
+  // Open items-report as a modal to prevent destroying the parent edit page
+async viewItemReport(item: any) {
   if (!item || !item.id) {
     this.presentToast('يرجى اختيار صنف أولاً', 'warning');
     return;
   }
 
-  let navigationExtras: NavigationExtras = {
-    queryParams: {
-      item: JSON.stringify(item)
-    }
-  };
- 
-  this.router.navigate(['folder/items-report'], navigationExtras); 
+  const modal = await this.modalController.create({
+    component: ItemsReportPage,
+    componentProps: {
+      modalItem: item,
+      isModal: true
+    },
+    cssClass: 'items-report-modal'
+  });
+
+  return await modal.present();
 }
 
-// Add this method to handle button click from popover
+// Handle button click from popover
 viewSelectedItemReport() {
   if (this.selectedItem && this.selectedItem.id) {
     this.viewItemReport(this.selectedItem);

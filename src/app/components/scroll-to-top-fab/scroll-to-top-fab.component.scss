@@ -1,0 +1,19 @@
+:host {
+  position: fixed;
+  bottom: 90px;
+  right: 16px;
+  z-index: 1000;
+  pointer-events: none;
+  display: block;
+}
+
+.scroll-top-btn {
+  pointer-events: auto;
+  opacity: 0.92;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}

@@ -25,15 +25,27 @@
       </div>
     </div>
 
-    <!-- Action Button -->
+    <!-- Action Buttons -->
     <div class="action-section">
       <ion-button
         expand="block"
         size="large"
         class="update-button"
+        [disabled]="isUpdating"
         (click)="closeAndRefresh()">
-        <ion-icon name="refresh-outline" slot="start"></ion-icon>
-        تحديث الآن
+        <ion-spinner *ngIf="isUpdating" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!isUpdating" name="refresh-outline" slot="start"></ion-icon>
+        {{ isUpdating ? 'جاري التحديث...' : 'تحديث الآن' }}
+      </ion-button>
+
+      <!-- "Later" button — hidden for urgent updates (priority >= 200) and during updating -->
+      <ion-button
+        *ngIf="update.priority < 200 && !isUpdating"
+        expand="block"
+        fill="clear"
+        class="later-button"
+        (click)="dismissLater()">
+        لاحقاً
       </ion-button>
     </div>
   </div>

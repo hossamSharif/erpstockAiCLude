@@ -1,0 +1,456 @@
+:host {
+  --page-padding: 16px;
+}
+
+// ===== Management Tab =====
+.management-tab {
+  padding: var(--page-padding);
+}
+
+.form-card {
+  margin-bottom: 16px;
+
+  ion-card-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  ion-item {
+    --padding-start: 0;
+    margin-bottom: 8px;
+  }
+
+  .form-grid {
+    padding: 0;
+
+    .form-row {
+      align-items: stretch;
+    }
+
+    ion-col {
+      padding: 4px 8px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    // Make the inner field stretch to fill the column so rows align
+    ion-col > .field-block,
+    ion-col > app-account-dropdown-selector {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  // Unified field block: label on top + bordered input area below
+  .field-block {
+    margin-bottom: 6px;
+    display: flex;
+    flex-direction: column;
+
+    .column-label {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      font-weight: 500;
+      color: var(--ion-color-dark);
+      font-size: 0.9rem;
+      margin: 0 0 6px 0;
+      text-align: right;
+      direction: rtl;
+      min-height: 32px;
+    }
+
+    .field-input {
+      --background: #ffffff;
+      --padding-start: 12px;
+      --padding-end: 12px;
+      --min-height: 44px;
+      --inner-padding-end: 0;
+      --inner-border-width: 0;
+      --border-color: transparent;
+      margin: 0;
+      border: 1px solid var(--ion-color-light-shade);
+      border-radius: 8px;
+      direction: rtl;
+
+      ion-input,
+      ion-select {
+        --padding-top: 8px;
+        --padding-bottom: 8px;
+        direction: rtl;
+        text-align: right;
+        width: 100%;
+      }
+    }
+  }
+
+  // Harmonize the account-dropdown-selector so it aligns with .field-block rows
+  ::ng-deep app-account-dropdown-selector {
+    display: block;
+    width: 100%;
+
+    .account-selector-wrapper {
+      width: 100%;
+
+      .label-with-buttons-container {
+        min-height: 32px;
+        margin-bottom: 6px;
+      }
+
+      .account-selector-label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--ion-color-dark);
+        margin: 0;
+        min-height: 32px;
+      }
+
+      .custInput {
+        border: 1px solid var(--ion-color-light-shade);
+        border-radius: 8px;
+        --min-height: 44px;
+        margin: 0;
+      }
+    }
+  }
+
+  .form-buttons {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+
+    ion-button {
+      min-width: 140px;
+      margin: 0;
+    }
+  }
+
+  // Column label (ported from sales page)
+  .column-label {
+    display: block;
+    font-weight: 500;
+    color: var(--ion-color-dark);
+    font-size: 0.95rem;
+    margin: 8px 0 4px 0;
+    text-align: right;
+    direction: rtl;
+  }
+
+  // Base custInput (ported from sales page)
+  .custInput {
+    border-style: solid;
+    border-color: var(--ion-color-light);
+    border-width: 1px;
+    border-radius: 5px;
+  }
+
+  // Date field — same border style as .field-input (white bg, light-shade border, 8px radius)
+  .date-field-block {
+    .header-date-item {
+      --background: #ffffff;
+      --padding-start: 12px;
+      --padding-end: 12px;
+      --min-height: 44px;
+      --inner-border-width: 0;
+      --border-color: transparent;
+      margin: 0;
+      border: 1px solid var(--ion-color-light-shade);
+      border-radius: 8px;
+
+      .header-date-input {
+        --color: var(--ion-color-dark);
+        --placeholder-color: var(--ion-color-medium);
+        --padding-top: 8px;
+        --padding-bottom: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        text-align: right;
+        direction: rtl;
+      }
+    }
+  }
+}
+
+// Alert-style select dialog — shared across نوع الإلتزام, حساب المصروف, day_of_month
+::ng-deep .recurring-alert-select {
+  .alert-wrapper {
+    direction: rtl;
+    text-align: right;
+  }
+}
+
+.obligations-list {
+  padding-bottom: 80px;
+}
+
+.obligation-card {
+  margin-bottom: 12px;
+  border-radius: 12px;
+  transition: opacity 0.3s;
+
+  &.inactive {
+    opacity: 0.6;
+  }
+
+  .ob-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+
+    .ob-info {
+      flex: 1;
+
+      h3 {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--ion-color-dark);
+      }
+
+      .ob-description {
+        margin: 0;
+        font-size: 13px;
+        color: var(--ion-color-medium);
+
+        strong {
+          color: var(--ion-color-dark);
+          font-weight: 600;
+        }
+
+        .ob-source {
+          color: var(--ion-color-medium);
+          font-weight: 400;
+        }
+      }
+    }
+
+    .ob-badges {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+
+      ion-badge {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 6px;
+      }
+    }
+  }
+
+  .ob-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 12px;
+    background: var(--ion-color-light);
+    border-radius: 8px;
+    margin-bottom: 8px;
+
+    .detail-item {
+      text-align: center;
+
+      .detail-label {
+        display: block;
+        font-size: 11px;
+        color: var(--ion-color-medium);
+        margin-bottom: 2px;
+      }
+
+      .detail-value {
+        font-size: 14px;
+        font-weight: 600;
+
+        &.amount {
+          color: var(--ion-color-primary);
+        }
+      }
+    }
+  }
+
+  .ob-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    border-top: 1px solid var(--ion-color-light);
+    padding-top: 8px;
+  }
+}
+
+// ===== Status Tab =====
+.status-tab {
+  padding: var(--page-padding);
+}
+
+.month-navigator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  .month-display {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    min-width: 160px;
+    text-align: center;
+  }
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+
+  .summary-card {
+    margin: 0;
+    border-radius: 12px;
+
+    ion-card-content {
+      padding: 12px;
+      text-align: center;
+    }
+
+    .summary-label {
+      font-size: 11px;
+      color: var(--ion-color-medium);
+      margin-bottom: 4px;
+    }
+
+    .summary-value {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    &.salary-card {
+      border-top: 3px solid var(--ion-color-primary);
+      .summary-value { color: var(--ion-color-primary); }
+    }
+
+    &.rent-card {
+      border-top: 3px solid var(--ion-color-tertiary);
+      .summary-value { color: var(--ion-color-tertiary); }
+    }
+
+    &.progress-card {
+      border-top: 3px solid var(--ion-color-success);
+      .summary-value { color: var(--ion-color-success); }
+    }
+  }
+}
+
+.generate-section {
+  margin-bottom: 16px;
+}
+
+.status-card {
+  margin-bottom: 12px;
+  border-radius: 12px;
+
+  .status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+
+    .status-info {
+      flex: 1;
+
+      h3 {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--ion-color-medium);
+      }
+    }
+
+    .status-badges {
+      display: flex;
+      gap: 4px;
+
+      ion-badge {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 6px;
+      }
+    }
+  }
+
+  .status-amount {
+    text-align: center;
+    padding: 8px 0;
+
+    .amount-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--ion-color-primary);
+    }
+  }
+
+  .status-actions {
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+    border-top: 1px solid var(--ion-color-light);
+  }
+
+  .paid-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid var(--ion-color-light);
+    font-size: 13px;
+    color: var(--ion-color-success);
+  }
+}
+
+// ===== Common =====
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 64px;
+    color: var(--ion-color-medium);
+    margin-bottom: 16px;
+  }
+
+  p {
+    font-size: 16px;
+    color: var(--ion-color-medium);
+  }
+}
+
+// ===== Responsive =====
+@media (max-width: 576px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .ob-details {
+    grid-template-columns: 1fr !important;
+  }
+}

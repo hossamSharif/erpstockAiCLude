@@ -35,12 +35,37 @@
                     (click)="verifyAllInvoices()"
                     [disabled]="isVerifying"
                     color="primary">
-                    <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
-                    <ion-label>Verify All | التحقق من الكل</ion-label>
+                    <ion-spinner *ngIf="isVerifying" name="crescent" slot="start" style="margin-right: 8px;"></ion-spinner>
+                    <ion-icon *ngIf="!isVerifying" name="checkmark-done-outline" slot="start"></ion-icon>
+                    <ion-label>{{ isVerifying ? 'Verifying... | جاري التحقق...' : 'Verify All | التحقق من الكل' }}</ion-label>
                   </ion-button>
                 </ion-col>
               </ion-row>
             </ion-grid>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <!-- Progress Bar Card -->
+    <ion-row *ngIf="isAutoVerifying && verificationProgress">
+      <ion-col size="12">
+        <ion-card>
+          <ion-card-content>
+            <div class="progress-section">
+              <p>
+                <strong>Processing batch {{ verificationProgress.currentBatchIndex + 1 }} of {{ verificationProgress.totalBatches }}</strong>
+                &mdash; {{ processedCount }} / {{ totalInvoicesCount }} invoices
+              </p>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill"
+                     [style.width.%]="totalInvoicesCount > 0 ? (processedCount / totalInvoicesCount) * 100 : 0">
+                </div>
+              </div>
+              <p style="margin-top: 6px; font-size: 0.85rem; color: var(--ion-color-medium);">
+                {{ totalOkCount }} valid, {{ totalErrorCount }} errors so far
+              </p>
+            </div>
           </ion-card-content>
         </ion-card>
       </ion-col>
@@ -126,8 +151,10 @@
                     <th>Invoice Ref | رقم الفاتورة</th>
                     <th>Date | التاريخ</th>
                     <th>Customer/Supplier | العميل/المورد</th>
+                    <th>Added By | بواسطة</th>
                     <th>Stored Total | الإجمالي المحفوظ</th>
                     <th>Calculated Total | الإجمالي المحسوب</th>
+                    <th>Discount | الخصم</th>
                     <th>Difference | الفرق</th>
                     <th>Actions | إجراءات</th>
                   </tr>
@@ -144,8 +171,10 @@
                     <td>{{ result.invoiceRef }}</td>
                     <td>{{ result.date }}</td>
                     <td>{{ result.customerName }}</td>
+                    <td>{{ result.userName }}</td>
                     <td class="ion-text-end">{{ formatNumber(result.storedTotal) }}</td>
                     <td class="ion-text-end">{{ formatNumber(result.calculatedTotal) }}</td>
+                    <td class="ion-text-end">{{ formatNumber(result.discount) }}</td>
                     <td class="ion-text-end" [class.difference-highlight]="Math.abs(result.difference) > 0.01">
                       {{ formatNumber(result.difference) }}
                     </td>
@@ -162,28 +191,6 @@
                 </tbody>
               </table>
             </div>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-
-    <!-- Load More Button -->
-    <ion-row *ngIf="hasMoreInvoices && verificationResults.length > 0">
-      <ion-col size="12">
-        <ion-card>
-          <ion-card-content class="ion-text-center">
-            <p>
-              <strong>{{ verificationResults.length }} / {{ totalInvoicesCount }}</strong> invoices verified<br>
-              <strong>{{ verificationResults.length }} / {{ totalInvoicesCount }}</strong> فاتورة تم التحقق منها
-            </p>
-            <ion-button
-              expand="block"
-              (click)="loadMoreInvoices()"
-              [disabled]="isVerifying"
-              color="primary">
-              <ion-icon name="download-outline" slot="start"></ion-icon>
-              <ion-label>Load Next 20 Invoices | تحميل الـ 20 فاتورة التالية</ion-label>
-            </ion-button>
           </ion-card-content>
         </ion-card>
       </ion-col>
@@ -215,12 +222,12 @@
               تتحقق هذه الأداة من أن إجماليات الفواتير تطابق مجموع تفاصيل العناصر.
             </p>
             <p>
-              <strong>Verification Formula:</strong><br>
-              Stored Total = (tot_pr - discount)<br>
-              Calculated Total = SUM(quantity × price)<br>
+              <strong>Dual-Format Detection:</strong><br>
+              Invoices may store <code>tot_pr</code> as gross (before discount) or net (after discount).<br>
+              The tool automatically detects both formats and only flags true mismatches.<br>
               <br>
-              <strong>Batch Processing:</strong> Invoices are verified in batches of 20 to prevent server overload.<br>
-              <strong>المعالجة على دفعات:</strong> يتم التحقق من الفواتير على دفعات من 20 لتجنب إرهاق الخادم.
+              <strong>Automatic Processing:</strong> All invoices are verified automatically in batches of 20.<br>
+              <strong>المعالجة التلقائية:</strong> يتم التحقق من جميع الفواتير تلقائياً على دفعات من 20.
             </p>
             <p>
               Select an invoice type above and click "Verify All" to start.<br>

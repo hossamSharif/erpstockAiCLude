@@ -175,3 +175,15 @@ myapi/error_log
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Build archives / packaged output
+www*.tar
+www*.zip
+*.tar
+*.zip
+
+# Claude temp files
+tmpclaude-*
+
+# Backup files
+*.backup

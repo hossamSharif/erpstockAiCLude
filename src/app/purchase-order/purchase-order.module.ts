@@ -9,6 +9,8 @@ import { PurchaseOrderPageRoutingModule } from './purchase-order-routing.module'
 
 import { PurchaseOrderPage } from './purchase-order.page';
 import { SharedModule } from '../module/shared/shared.module';
+import { SelectionActionPanelModule } from '../components/selection-action-panel/selection-action-panel.module';
+import { ScrollToTopFabModule } from '../components/scroll-to-top-fab/scroll-to-top-fab.module';
 
 @NgModule({
   imports: [
@@ -16,9 +18,10 @@ import { SharedModule } from '../module/shared/shared.module';
     FormsModule,
     IonicModule,
     PurchaseOrderPageRoutingModule,
-    SharedModule
-  ,
-    TranslateModule
+    SharedModule,
+    TranslateModule,
+    SelectionActionPanelModule,
+    ScrollToTopFabModule
   ],
   declarations: [PurchaseOrderPage]
 })

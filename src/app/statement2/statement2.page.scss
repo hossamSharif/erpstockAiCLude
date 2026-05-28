@@ -570,6 +570,29 @@
         border-bottom: none;
       }
 
+      // Clickable row styles
+      &.clickable-row {
+        cursor: pointer;
+
+        &:hover {
+          background: rgba(74, 144, 226, 0.1);
+          transform: scale(1.002);
+          box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);
+        }
+
+        &:active {
+          transform: scale(0.998);
+          background: rgba(74, 144, 226, 0.15);
+        }
+      }
+
+      // Navigating state - disable row during navigation
+      &.navigating {
+        pointer-events: none;
+        opacity: 0.6;
+        cursor: wait;
+      }
+
       td {
         padding: 12px;
         text-align: right;
@@ -741,6 +764,39 @@
 
       .debit-amount {
         color: var(--ion-color-danger);
+      }
+    }
+  }
+
+  // Edit button container for mobile accordion
+  .edit-button-container {
+    padding: 12px 0 4px 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    margin-top: 12px;
+
+    .edit-transaction-btn {
+      --background: rgba(74, 144, 226, 0.1);
+      --border-color: var(--ion-color-primary);
+      --color: var(--ion-color-primary);
+      --border-radius: 10px;
+      --padding-top: 12px;
+      --padding-bottom: 12px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+
+      &:hover:not([disabled]) {
+        --background: rgba(74, 144, 226, 0.2);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(74, 144, 226, 0.25);
+      }
+
+      &[disabled] {
+        opacity: 0.6;
+        cursor: wait;
+      }
+
+      ion-icon {
+        margin-left: 6px;
       }
     }
   }

@@ -1,12 +1,12 @@
 <ion-grid>
   <ion-row>
-    <ion-col size="4" *ngIf="loadingItems == true">
+    <ion-col [attr.size]="selectOnly ? '12' : '4'" *ngIf="loadingItems == true">
       <ion-item class="custInput">
         <ion-input [disabled]="true"></ion-input>
         <ion-spinner></ion-spinner>
       </ion-item>
     </ion-col>
-    <ion-col size="4" *ngIf="loadingItems == false">
+    <ion-col [attr.size]="selectOnly ? '12' : '4'" *ngIf="loadingItems == false">
       <ion-grid class="ion-no-margin ion-no-padding">
         <ion-row>
           <ion-col size="12" class="ion-no-margin ion-no-padding">
@@ -88,7 +88,7 @@
                   <div class="item-prices-compact">
                     <span class="price-sale">بيع: {{ item.pay_price }}</span>
                     <span class="price-purchase">شراء: {{ item.perch_price }}</span>
-                    <!-- <span class="stock-qty">مخزون: {{ item.quantity }}</span> -->
+                    <span class="stock-qty">الكمية: {{ getItemStockQty(item) }}</span>
                   </div>
                 </ion-label>
               </ion-item>
@@ -198,14 +198,14 @@
       </ion-item>
     </ion-col>
 
-    <ion-col size="2" class="ion-margin-top">
+    <ion-col size="2" class="ion-margin-top" *ngIf="!selectOnly">
       <ion-label class="ion-padding"><strong>المجموع</strong></ion-label>
       <ion-item class="custInput">
         <ion-input [readonly]="true" [(ngModel)]="selectedItem.tot"></ion-input>
       </ion-item>
     </ion-col>
 
-    <ion-col size="2" class="ion-padding" class="ion-margin-top ion-padding-top">
+    <ion-col size="2" class="ion-padding" class="ion-margin-top ion-padding-top" *ngIf="!selectOnly">
       <ion-button class="ion-margin-top" expand="block" routerDirection="root" color="primary" (click)="addToList()">
         <ion-label class="ion-text-center">+</ion-label>
       </ion-button>

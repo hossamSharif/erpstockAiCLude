@@ -624,6 +624,7 @@ export class TransactionsRecordPage implements OnInit {
 
     const modal = await this.modalCtrl.create({
       component: TransactionModalComponent,
+      cssClass: 'transaction-full-modal',
       componentProps: {
         transaction: transaction,
         store_id: this.store_info.id,

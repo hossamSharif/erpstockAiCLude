@@ -209,7 +209,12 @@
         "ERROR_SELECTING_ACCOUNT": "خطأ في اختيار الحساب",
         "SELECT_ACCOUNT_FIRST": "الرجاء اختيار حساب أولاً",
         "ERROR_LOADING_DATA": "خطأ في تحميل البيانات",
-        "NO_DATA_TO_EXPORT": "لا توجد بيانات للتصدير"
+        "NO_DATA_TO_EXPORT": "لا توجد بيانات للتصدير",
+        "NO_REFERENCE": "لا يوجد مرجع للمعاملة",
+        "INVOICE_NOT_FOUND": "لم يتم العثور على الفاتورة",
+        "JOURNAL_NOT_FOUND": "لم يتم العثور على القيد",
+        "ERROR_LOADING_INVOICE": "خطأ في تحميل بيانات الفاتورة",
+        "ERROR_LOADING_JOURNAL": "خطأ في تحميل بيانات القيد"
       }
     },
     "EXPENSE_RECORD": {
@@ -582,7 +587,43 @@
     "CURRENCIES": "العملات",
     "DATA_VERIFICATION": "التحقق من البيانات",
     "UPDATE_MANAGEMENT": "إدارة التحديثات",
-    "SYNC_CONNECTION": "المزامنة والإتصال"
+    "SYNC_CONNECTION": "المزامنة والإتصال",
+    "RECURRING_OBLIGATIONS": "الالتزامات المتكررة",
+    "SELECT_CATEGORY": "اختر التصنيف",
+    "SWITCH_CATEGORY_TITLE": "تبديل التصنيف",
+    "SEARCH_CATEGORY": "ابحث..."
+  },
+  "RECURRING": {
+    "TITLE": "الالتزامات المتكررة",
+    "MANAGEMENT": "إدارة الالتزامات",
+    "MONTHLY_STATUS": "الصرف الشهري",
+    "SALARY": "راتب",
+    "RENT": "إيجار",
+    "ADD_OBLIGATION": "إضافة التزام",
+    "EDIT_OBLIGATION": "تعديل التزام",
+    "OBLIGATION_TYPE": "نوع الالتزام",
+    "ACCOUNT": "الحساب",
+    "EXPENSE_ACCOUNT": "حساب المصروف",
+    "AMOUNT": "المبلغ",
+    "DESCRIPTION": "الوصف",
+    "DESCRIPTION_PLACEHOLDER": "مثال: راتب أحمد أو إيجار المحل",
+    "DAY_OF_MONTH": "يوم الصرف من الشهر",
+    "START_DATE": "تاريخ البداية",
+    "END_DATE": "تاريخ النهاية",
+    "NO_END_DATE": "بدون تاريخ نهاية",
+    "ACTIVE": "نشط",
+    "INACTIVE": "غير نشط",
+    "GENERATE_ALL": "إنشاء الكل",
+    "GENERATED": "تم الإنشاء",
+    "PAID": "مدفوع",
+    "OVERDUE": "متأخر",
+    "PENDING": "معلق",
+    "QUICK_PAY": "دفع سريع",
+    "TOTAL_SALARIES": "إجمالي الرواتب",
+    "TOTAL_RENT": "إجمالي الإيجارات",
+    "NO_OBLIGATIONS": "لا توجد التزامات",
+    "OBLIGATIONS_GENERATED": "تم إنشاء {{count}} التزام لهذا الشهر",
+    "CONFIRM_DELETE": "هل تريد حذف هذا الالتزام؟"
   },
   "EXPENSE": {
     "TITLE": "إضافة مصروف",
@@ -745,6 +786,28 @@
       "LOADING_REPORT": "جاري تحميل التقرير...",
       "SELECT_DATE": "حدد التاريخ لعرض التقرير اليومي"
     }
+  },
+  "PURCHASE_ORDER": {
+    "PRINT_OPTIONS_TITLE": "خيارات الطباعة",
+    "INCLUDE_PRICES_MESSAGE": "هل تريد تضمين أسعار الشراء في الطباعة؟",
+    "YES_INCLUDE_PRICES": "نعم، اظهر الأسعار",
+    "NO_HIDE_PRICES": "لا، اخفِ الأسعار"
+  },
+  "STORE_REPORT": {
+    "STORE_REPORT": "تقرير المخزن",
+    "PICKING_LIST": "قائمة تجهيز الطلب",
+    "RECEIVING_LIST": "قائمة استلام البضاعة",
+    "SERIAL": "م",
+    "ITEM_NAME": "الصنف",
+    "UNIT": "الوحدة",
+    "QUANTITY": "الكمية",
+    "PICKED": "تم التجهيز",
+    "RECEIVED": "تم الاستلام",
+    "TOTAL_ITEMS": "إجمالي عدد الأصناف",
+    "WAREHOUSE_KEEPER": "أمين المخزن / المُجهّز",
+    "RECEIVER": "المُستلم",
+    "MANAGER": "المدير",
+    "PRINTED_BY": "طبع بواسطة"
   },
   "CATEGORIES": {
     "TITLE": "تصنيفات الأصناف",

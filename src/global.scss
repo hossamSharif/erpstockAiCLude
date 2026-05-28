@@ -126,12 +126,50 @@ ion-menu[side="start"] {
 position: absolute; 
 }
 
-// Price Adjustment Modal Styling
-.price-adjustment-modal {
-  --width: 90%;
-  --max-width: 600px;
-  --height: 85vh; // Set reasonable height
-  --max-height: 85vh;
+// Price Adjustment Modal Styling (now full-screen via global ion-modal rule)
+.price-adjustment-modal {}
+
+// Bulk Price Update Modal - Full Screen on all platforms (macOS, Windows, etc.)
+.bulk-price-update-modal {
+  --width: 100%;
+  --height: 100%;
+  --max-width: 100%;
+  --max-height: 100%;
+  --border-radius: 0;
+
+  .modal-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    border-radius: 0 !important;
+  }
+
+  // Ensure proper flex layout for header/content/footer
+  ion-content {
+    --background: var(--ion-background-color);
+  }
+
+  // Safari fix for macOS - prevent glitchy rendering
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+// Transaction Full Modal - Full Screen for transaction modal visibility fix
+.transaction-full-modal {
+  --width: 100%;
+  --height: 100%;
+  --max-width: 100%;
+  --max-height: 100%;
+  --border-radius: 0;
+
+  .modal-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    border-radius: 0 !important;
+  }
 }
 
 // Purchase Full Modal Styling
@@ -211,42 +249,57 @@ div {
 }
 
 /* ======================================
-   SAFARI MODAL FIX - Global
+   GLOBAL FULL-SCREEN MODAL OVERRIDE
    ====================================== */
-// Fix for Safari on macOS where modal footer may not be visible
-// Safari has issues with flex layouts and 100vh on mobile
+// Force ALL modals to cover the entire window (full-screen)
+// Works on all platforms including Safari/macOS
 
 ion-modal {
+  --width: 100% !important;
+  --height: 100% !important;
+  --max-width: 100% !important;
+  --max-height: 100% !important;
+  --border-radius: 0 !important;
+
   // Safari fix: ensure proper modal rendering
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
 
-  &.modal-default {
-    // Safari fix: ensure modal content respects flex layout
-    .modal-wrapper {
-      display: flex;
-      flex-direction: column;
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-    }
-
-    // Safari fix: use -webkit-fill-available for viewport height issues
-    @supports (-webkit-touch-callout: none) {
-      // iOS Safari specific
-      --height: -webkit-fill-available;
-    }
+  .modal-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    border-radius: 0 !important;
+    display: flex;
+    flex-direction: column;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
   }
+}
 
-  // Transaction modal specific fix
-  &:has(app-transaction-modal) {
-    .modal-wrapper {
-      // Safari fix: GPU acceleration
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-    }
+// Items Report Modal - Full Screen (opened from item-selector to prevent state loss)
+.items-report-modal {
+  --width: 100%;
+  --height: 100%;
+  --max-width: 100%;
+  --max-height: 100%;
+  --border-radius: 0;
+
+  .modal-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    border-radius: 0 !important;
   }
+}
+
+// Invoice price config modal - full page
+ion-modal.invoice-price-config-modal {
+  --width: 100%;
+  --height: 100%;
+  --border-radius: 0;
 }
 
 // Safari viewport height fix

@@ -87,13 +87,31 @@
               </svg>
             </div>
           </button>
+
+          <!-- General Entry -->
+          <button class="type-btn general-entry-btn"
+                  [class.active]="transactionType === 'general_entry'"
+                  [disabled]="isEditMode"
+                  (click)="selectTransactionType('general_entry')">
+            <div class="type-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+              </svg>
+            </div>
+            <div class="type-label">قيد عام</div>
+            <div class="checkmark" *ngIf="transactionType === 'general_entry'">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+              </svg>
+            </div>
+          </button>
         </div>
       </div>
 
       <!-- Form Fields (shown after selecting type) -->
       <div *ngIf="transactionType" class="form-section">
         <!-- Regular transaction types -->
-        <div *ngIf="transactionType !== 'internal_transfer'">
+        <div *ngIf="transactionType !== 'internal_transfer' && transactionType !== 'general_entry'">
           <!-- Account Selection -->
           <div class="form-group">
             <label class="form-label">حساب الفئة</label>
@@ -193,19 +211,22 @@
           </div>
         </div>
 
-        <!-- Internal Transfer -->
-        <div *ngIf="transactionType === 'internal_transfer'">
+        <!-- Internal Transfer / General Entry -->
+        <div *ngIf="transactionType === 'internal_transfer' || transactionType === 'general_entry'">
           <!-- Source Account -->
           <div class="form-group">
-            <label class="form-label">حساب المصدر</label>
+            <label class="form-label">{{ transactionType === 'general_entry' ? 'حساب المدين (من)' : 'حساب المصدر' }}</label>
             <div class="custom-dropdown">
               <div class="dropdown-header"
                    [class.open]="showSourceDropdown"
                    [class.has-selection]="selectedSourceAccount"
                    (click)="toggleSourceDropdown()">
-                <span *ngIf="!selectedSourceAccount" class="placeholder">اختر حساب المصدر...</span>
+                <span *ngIf="!selectedSourceAccount" class="placeholder">{{ transactionType === 'general_entry' ? 'اختر حساب المدين...' : 'اختر حساب المصدر...' }}</span>
                 <span *ngIf="selectedSourceAccount" class="selected-source-display">
                   <span class="source-name">{{ selectedSourceAccount.sub_name }}</span>
+                  <span *ngIf="transactionType === 'general_entry'" class="account-badge-small" [ngClass]="getAccountCategoryClass(selectedSourceAccount)">
+                    {{ getAccountCategoryLabel(selectedSourceAccount) }}
+                  </span>
                   <span *ngIf="loadingSourceBalance" class="balance-badge loading">
                     <ion-spinner name="dots"></ion-spinner>
                   </span>
@@ -235,7 +256,10 @@
                   <div class="dropdown-option"
                        *ngFor="let account of getFilteredSourceAccounts()"
                        (click)="selectSourceAccount(account)">
-                    {{ account.sub_name }}
+                    <span class="account-name">{{ account.sub_name }}</span>
+                    <span *ngIf="transactionType === 'general_entry'" class="account-badge" [ngClass]="getAccountCategoryClass(account)">
+                      {{ getAccountCategoryLabel(account) }}
+                    </span>
                   </div>
                   <div class="dropdown-empty" *ngIf="getFilteredSourceAccounts().length === 0">
                     لا توجد نتائج
@@ -247,15 +271,18 @@
 
           <!-- Destination Account -->
           <div class="form-group">
-            <label class="form-label">حساب الوجهة</label>
+            <label class="form-label">{{ transactionType === 'general_entry' ? 'حساب الدائن (إلى)' : 'حساب الوجهة' }}</label>
             <div class="custom-dropdown">
               <div class="dropdown-header"
                    [class.open]="showDestDropdown"
                    [class.has-selection]="selectedDestAccount"
                    (click)="toggleDestDropdown()">
-                <span *ngIf="!selectedDestAccount" class="placeholder">اختر حساب الوجهة...</span>
+                <span *ngIf="!selectedDestAccount" class="placeholder">{{ transactionType === 'general_entry' ? 'اختر حساب الدائن...' : 'اختر حساب الوجهة...' }}</span>
                 <span *ngIf="selectedDestAccount" class="selected-dest-display">
                   <span class="dest-name">{{ selectedDestAccount.sub_name }}</span>
+                  <span *ngIf="transactionType === 'general_entry'" class="account-badge-small" [ngClass]="getAccountCategoryClass(selectedDestAccount)">
+                    {{ getAccountCategoryLabel(selectedDestAccount) }}
+                  </span>
                   <span *ngIf="loadingDestBalance" class="balance-badge loading">
                     <ion-spinner name="dots"></ion-spinner>
                   </span>
@@ -285,7 +312,10 @@
                   <div class="dropdown-option"
                        *ngFor="let account of getFilteredDestAccounts()"
                        (click)="selectDestAccount(account)">
-                    {{ account.sub_name }}
+                    <span class="account-name">{{ account.sub_name }}</span>
+                    <span *ngIf="transactionType === 'general_entry'" class="account-badge" [ngClass]="getAccountCategoryClass(account)">
+                      {{ getAccountCategoryLabel(account) }}
+                    </span>
                   </div>
                   <div class="dropdown-empty" *ngIf="getFilteredDestAccounts().length === 0">
                     لا توجد نتائج
@@ -313,7 +343,7 @@
         <div class="form-group">
           <label class="form-label">البيان</label>
           <textarea class="form-textarea"
-                    rows="4"
+                    rows="2"
                     placeholder="أدخل تفاصيل الحركة..."
                     [(ngModel)]="description"></textarea>
         </div>

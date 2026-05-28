@@ -1,13 +1,14 @@
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { Subscription } from 'rxjs';
-import { AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
+import { ActionSheetController, AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { DatePipe, Location } from '@angular/common';
 import { TranslateService } from '@ngx-translate/core';
 import { Storage } from '@ionic/storage';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { CurrencyService } from '../services/currency.service';
 import { DraftService, DraftType, DraftData } from '../services/draft.service';
+import { ClipboardTransferService } from '../services/clipboard-transfer.service';
 
 @Component({
   selector: 'app-purchase-order',
@@ -63,8 +64,13 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
   autoSaveStatus: string = '';
   lastSaveTime: string = '';
 
+  // Bulk selection properties
+  selectedItems: Set<number> = new Set();
+  isSelectAll: boolean = false;
+
   constructor(
     private route: ActivatedRoute,
+    private rout: Router,
     private modalController: ModalController,
     private alertController: AlertController,
     private storage: Storage,
@@ -75,7 +81,9 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
     private _location: Location,
     private cdr: ChangeDetectorRef,
     private currencyService: CurrencyService,
-    private draftService: DraftService
+    private draftService: DraftService,
+    private actionSheetController: ActionSheetController,
+    private clipboardTransfer: ClipboardTransferService
   ) {
     this.selectedAccount = { id: "", ac_id: "", sub_name: "", sub_type: "", sub_code: "", sub_balance: "", store_id: "", cat_name: "", cat_id: "", currentCustumerStatus: 0 };
 
@@ -119,14 +127,21 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
 
     // Handle incoming items from sales invoices
     this.route.queryParams.subscribe(params => {
-      if (params['status'] === 'newInvoFromItemsPage' && params['selectedItemsList']) {
-        console.log('New purchase order from sales invoices');
-        const incomingItems = JSON.parse(params['selectedItemsList']);
-
-        // Wait for store_info and year to be loaded, then populate itemList
-        setTimeout(() => {
-          this.populateItemsFromSalesInvoices(incomingItems);
-        }, 500);
+      if (params['fromTab'] === 'true' && params['dataKey']) {
+        // New tab mode: read items from localStorage
+        const dataKey = params['dataKey'];
+        const storedData = localStorage.getItem(dataKey);
+        if (storedData) {
+          const incomingItems = JSON.parse(storedData);
+          // Don't remove from localStorage here - component may be created twice
+          console.log('New purchase order from new tab, items:', incomingItems);
+          if (incomingItems.length > 0) {
+            setTimeout(() => {
+              this.populateItemsFromSalesInvoices(incomingItems);
+              localStorage.removeItem(dataKey); // Clean up after processing
+            }, 500);
+          }
+        }
       }
     });
   }
@@ -136,15 +151,22 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
     await this.draftService.initialize();
 
     this.initializeCurrency();
-    this.getAppInfo();
+    await this.getAppInfo();
     this.prepareInvo();
 
-    // Ensure auto-save is started after a delay to allow data loading
-    setTimeout(() => {
-      if (!this.autoSaveInterval) {
-        this.startAutoSave();
+    // Fallback: check localStorage via snapshot if subscription hasn't fired yet
+    const snap = this.route.snapshot.queryParams;
+    if (snap['fromTab'] === 'true' && snap['dataKey']) {
+      const storedData = localStorage.getItem(snap['dataKey']);
+      if (storedData) {
+        const incomingItems = JSON.parse(storedData);
+        if (incomingItems.length > 0) {
+          this.populateItemsFromSalesInvoices(incomingItems);
+          localStorage.removeItem(snap['dataKey']); // Clean up after processing
+        }
       }
-    }, 1000);
+    }
+
   }
 
   ngOnDestroy() {
@@ -213,6 +235,28 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
     }, (err) => {
       console.log(err);
     })
+  }
+
+  getAllStockItemsWithouteCounts() {
+    this.storage.get('year').then((response) => {
+      if (response) {
+        this.year = response;
+        this.loadingItems = true;
+        this.api.getAllStockItemsWithouteCounts(1, this.year.id).subscribe(data => {
+          let res = data;
+          this.items = res['data'];
+          this.loadingItems = false;
+          this.storage.set('itemsLocal', this.items).then((response) => {
+            console.log('Items refreshed and stored locally');
+          });
+        }, (err) => {
+          console.log('Error loading items:', err);
+          this.loadingItems = false;
+        }, () => {
+          this.loadingItems = false;
+        });
+      }
+    });
   }
 
   prepareInvo() {
@@ -350,7 +394,266 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
     this.payInvo.discount = 0
     this.markDirty();
     this.getTotal()
-    this.updateSortedList()
+    this.autoSortAfterOperation()
+  }
+
+  // ============ Bulk Selection Methods ============
+
+  toggleSelectAll(event: any) {
+    const isChecked = event.detail.checked;
+    if (isChecked === this.isSelectAll) return;
+    if (isChecked) {
+      this.selectAllItems();
+    } else {
+      this.clearSelection();
+    }
+  }
+
+  selectAllItems() {
+    this.selectedItems.clear();
+    const displayList = this.getDisplayItemList();
+    displayList.forEach((_, index) => {
+      this.selectedItems.add(index);
+    });
+    this.isSelectAll = true;
+  }
+
+  clearSelection() {
+    this.selectedItems.clear();
+    this.isSelectAll = false;
+  }
+
+  toggleItemSelection(index: number, event: any) {
+    const isChecked = event.detail.checked;
+    if (isChecked) {
+      this.selectedItems.add(index);
+    } else {
+      this.selectedItems.delete(index);
+    }
+    this.isSelectAll = this.selectedItems.size === this.getDisplayItemList().length;
+  }
+
+  isItemSelected(displayIndex: number): boolean {
+    return this.selectedItems.has(displayIndex);
+  }
+
+  async bulkDeleteItems() {
+    if (this.selectedItems.size === 0) return;
+
+    const alert = await this.alertController.create({
+      header: 'تأكيد الحذف',
+      message: `هل تريد حذف ${this.selectedItems.size} صنف من القائمة؟`,
+      mode: 'ios',
+      buttons: [
+        {
+          text: 'إلغاء',
+          role: 'cancel'
+        },
+        {
+          text: 'حذف',
+          handler: () => this.performBulkDelete()
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  private performBulkDelete() {
+    const displayList = this.getDisplayItemList();
+
+    // Get items to delete from display list
+    const itemsToDelete = Array.from(this.selectedItems).map(displayIndex => displayList[displayIndex]);
+
+    // Remove items from original itemList
+    itemsToDelete.forEach(itemToDelete => {
+      const originalIndex = this.itemList.findIndex(item =>
+        item.item_name === itemToDelete.item_name &&
+        item.perch_price === itemToDelete.perch_price &&
+        item.quantity === itemToDelete.quantity
+      );
+      if (originalIndex !== -1) {
+        this.itemList.splice(originalIndex, 1);
+      }
+    });
+
+    const deletedCount = this.selectedItems.size;
+    this.clearSelection();
+
+    // Reset discount
+    this.discountPerc = 0;
+    this.payInvo.discount = 0;
+
+    this.getTotal();
+    this.autoSortAfterOperation();
+    this.markDirty();
+    this.presentToast(`تم حذف ${deletedCount} صنف`, 'success');
+  }
+
+  private autoSortAfterOperation() {
+    if (this.itemList.length > 0) {
+      this.sortedItemList = [...this.itemList].sort((a, b) => {
+        const nameA = a.item_name?.toString().toLowerCase() || '';
+        const nameB = b.item_name?.toString().toLowerCase() || '';
+        return nameA.localeCompare(nameB, 'ar', { numeric: true });
+      });
+      this.isItemListSorted = true;
+    } else {
+      this.sortedItemList = [];
+      this.isItemListSorted = false;
+    }
+    // Clear selection after sort since indices change
+    this.clearSelection();
+  }
+
+  // ============ Bulk Copy/Cut Methods ============
+
+  getSelectedItemsForNavigation(): any[] {
+    const displayList = this.getDisplayItemList();
+    return Array.from(this.selectedItems).map(displayIndex => {
+      const item = displayList[displayIndex];
+      return {
+        id: item.item_id, item_id: item.item_id, item_name: item.item_name,
+        item_desc: item.item_desc, part_no: item.part_no, brand: item.brand,
+        model: item.model, item_unit: item.item_unit,
+        perch_price: item.perch_price || 0, pay_price: item.pay_price || 0,
+        qty: item.quantity,
+        tot: (item.perch_price * item.quantity).toFixed(2),
+        availQty: item.quantity || 0, aliasEn: item.aliasEn
+      };
+    });
+  }
+
+  async bulkCopyItems() {
+    if (this.selectedItems.size === 0) return;
+    const actionSheet = await this.actionSheetController.create({
+      header: 'نسخ المحدد إلى',
+      mode: 'ios',
+      buttons: [
+        { text: 'فاتورة بيع', icon: 'cart-outline', handler: () => { this.performBulkCopyOrCut('sales', false); } },
+        { text: 'فاتورة شراء', icon: 'bag-outline', handler: () => { this.performBulkCopyOrCut('purchase', false); } },
+        { text: 'طلب شراء', icon: 'document-text-outline', handler: () => { this.performBulkCopyOrCut('purchase-order', false); } },
+        { text: 'إلغاء', icon: 'close', role: 'cancel' }
+      ]
+    });
+    await actionSheet.present();
+  }
+
+  async bulkCutItems() {
+    if (this.selectedItems.size === 0) return;
+    const actionSheet = await this.actionSheetController.create({
+      header: 'قص المحدد إلى',
+      mode: 'ios',
+      buttons: [
+        { text: 'فاتورة بيع', icon: 'cart-outline', handler: () => { this.performBulkCopyOrCut('sales', true); } },
+        { text: 'فاتورة شراء', icon: 'bag-outline', handler: () => { this.performBulkCopyOrCut('purchase', true); } },
+        { text: 'طلب شراء', icon: 'document-text-outline', handler: () => { this.performBulkCopyOrCut('purchase-order', true); } },
+        { text: 'إلغاء', icon: 'close', role: 'cancel' }
+      ]
+    });
+    await actionSheet.present();
+  }
+
+  async performBulkCopyOrCut(destinationType: 'sales' | 'purchase' | 'purchase-order', isCut: boolean) {
+    let items = this.getSelectedItemsForNavigation();
+    // PO -> sales needs dialog, PO -> purchase doesn't (same price field), PO -> PO doesn't
+    const needsDialog = (destinationType === 'sales');
+
+    if (needsDialog) {
+      const { InvoicePriceConfigDialogComponent } = await import('../component/invoice-price-config-dialog/invoice-price-config-dialog.component');
+      const modal = await this.modalController.create({
+        component: InvoicePriceConfigDialogComponent,
+        componentProps: {
+          itemList: items,
+          invoiceType: 'sales',
+          context: 'purchase-order'
+        },
+        cssClass: 'invoice-price-config-modal'
+      });
+
+      modal.onDidDismiss().then((result) => {
+        if (result.data) {
+          this.finalizeBulkCopyOrCut(result.data, destinationType, isCut);
+        }
+      });
+
+      return await modal.present();
+    }
+
+    this.finalizeBulkCopyOrCut(items, destinationType, isCut);
+  }
+
+  private async finalizeBulkCopyOrCut(items: any[], destinationType: string, isCut: boolean) {
+    if (isCut) {
+      if (this.selectedItems.size === this.itemList.length) {
+        const alert = await this.alertController.create({
+          header: 'تنبيه',
+          message: 'سيتم قص جميع الأصناف من هذه الفاتورة. هل تريد المتابعة؟',
+          mode: 'ios',
+          buttons: [
+            { text: 'إلغاء', role: 'cancel' },
+            { text: 'متابعة', handler: () => { this.executeCutAndNavigate(items, destinationType); } }
+          ]
+        });
+        await alert.present();
+        return;
+      }
+      this.executeCutAndNavigate(items, destinationType);
+    } else {
+      this.navigateToDestination(items, destinationType);
+    }
+  }
+
+  private async executeCutAndNavigate(items: any[], destinationType: string) {
+    // Open new tab first
+    this.navigateToDestination(items, destinationType);
+
+    // Then ask user whether to remove items from source
+    const alert = await this.alertController.create({
+      header: 'تأكيد',
+      message: 'تم فتح الفاتورة الجديدة في نافذة جديدة. هل تريد حذف الأصناف المقصوصة من هذه الفاتورة؟',
+      mode: 'ios',
+      buttons: [
+        { text: 'إبقاء', role: 'cancel', handler: () => { this.clearSelection(); } },
+        {
+          text: 'حذف', cssClass: 'danger', handler: () => {
+            this.performCutRemoval();
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  private performCutRemoval() {
+    const displayList = this.getDisplayItemList();
+    const itemsToRemove = Array.from(this.selectedItems).map(displayIndex => displayList[displayIndex]);
+    itemsToRemove.forEach(itemToRemove => {
+      const originalIndex = this.itemList.findIndex(item =>
+        item.item_name === itemToRemove.item_name &&
+        item.perch_price === itemToRemove.perch_price &&
+        item.quantity === itemToRemove.quantity
+      );
+      if (originalIndex !== -1) {
+        this.itemList.splice(originalIndex, 1);
+      }
+    });
+    this.clearSelection();
+    this.getTotal();
+    this.autoSortAfterOperation();
+    this.markDirty();
+  }
+
+  private navigateToDestination(items: any[], destinationType: string) {
+    const clipboardKey = this.clipboardTransfer.storeItems(items);
+
+    const routes: { [key: string]: string } = {
+      'sales': '/folder/sales',
+      'purchase': '/folder/purchase',
+      'purchase-order': '/purchase-order'
+    };
+
+    const url = routes[destinationType] + '?fromTab=true&dataKey=' + clipboardKey;
+    window.open(url, '_blank');
   }
 
   sortItemListAlphabetically() {
@@ -389,21 +692,35 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
   }
 
   onItemAdded(selectedItem: any) {
-    console.log('Item to be added:', selectedItem);
+    console.log('=== onItemAdded CALLED ===');
+    console.log('Selected item:', selectedItem);
+    console.log('Current itemList.length:', this.itemList.length);
+    console.log('Current sortedItemList.length:', this.sortedItemList.length);
+    console.log('Current pay_ref:', this.payInvo.pay_ref);
+
+    // CRITICAL FIX: Ensure pay_ref exists before adding items
+    if (!this.payInvo.pay_ref || this.payInvo.pay_ref === '') {
+      console.warn('pay_ref is empty, generating...');
+      this.prepareInvo();
+      console.log('Generated pay_ref:', this.payInvo.pay_ref);
+    }
+
     let existingItem = this.itemList.find(item =>
       item.item_name === selectedItem.item_name &&
       item.perch_price === selectedItem.perch_price
     );
 
     if (existingItem) {
+      console.log('Item exists, updating quantity');
       let newQty = +existingItem.quantity + +selectedItem.qty;
       existingItem.quantity = newQty;
       existingItem.tot = (newQty * +existingItem.perch_price).toFixed(2);
     } else {
+      console.log('New item, adding to itemList');
       let d = new Date();
       let r = this.datePipe.transform(d, 'dd-MM-YYYY');
 
-      this.itemList.push({
+      this.itemList.unshift({
         "id": 'NULL',
         "pay_ref": this.payInvo.pay_ref,
         "item_name": selectedItem.item_name,
@@ -420,6 +737,12 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
 
     this.getTotal();
     this.updateSortedList();
+    this.markDirty();
+
+    console.log('After adding item:');
+    console.log('itemList.length:', this.itemList.length);
+    console.log('sortedItemList.length:', this.sortedItemList.length);
+    console.log('=== onItemAdded END ===');
   }
 
   // Populate items from sales invoices
@@ -435,11 +758,18 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
 
     console.log('Populating items from sales invoices:', incomingItems);
 
+    // CRITICAL FIX: Ensure pay_ref exists before adding items
+    if (!this.payInvo.pay_ref || this.payInvo.pay_ref === '') {
+      console.warn('pay_ref is empty in populateItems, generating...');
+      this.prepareInvo();
+      console.log('Generated pay_ref:', this.payInvo.pay_ref);
+    }
+
     let d = new Date();
     let r = this.datePipe.transform(d, 'dd-MM-YYYY');
 
     incomingItems.forEach(item => {
-      this.itemList.push({
+      this.itemList.unshift({
         "id": 'NULL',
         "pay_ref": this.payInvo.pay_ref,
         "item_name": item.item_name,
@@ -464,6 +794,7 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
 
     console.log('Items populated successfully. Total items:', this.itemList.length);
     this.presentToast(`تم تحميل ${this.itemList.length} صنف من الفواتير المحددة`, 'success');
+    this.markDirty();
   }
 
   // Discount calculations
@@ -483,6 +814,7 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
       this.calculatedDiscountAmount = (+this.payInvo.tot_pr * +this.discountPerc / 100);
       this.payInvo.discount = this.calculatedDiscountAmount.toFixed(2);
       this.calculateChange();
+    this.markDirty();
     }
   }
 
@@ -497,6 +829,7 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
       this.payInvo.discount = 0;
       this.calculateChange();
     }
+    this.markDirty();
   }
 
   calculateChange() {
@@ -556,9 +889,37 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
     }
   }
 
+  // Ensure itemList and sortedItemList are synchronized
+  ensureListConsistency() {
+    // If sortedItemList has items but itemList is empty, sync them
+    if (this.sortedItemList.length > 0 && this.itemList.length === 0) {
+      console.warn('List inconsistency detected: sortedItemList has items but itemList is empty. Syncing...');
+      this.itemList = [...this.sortedItemList];
+    }
+    // If itemList has items but sortedItemList is empty, sync them
+    else if (this.itemList.length > 0 && this.sortedItemList.length === 0) {
+      console.warn('List inconsistency detected: itemList has items but sortedItemList is empty. Syncing...');
+      this.updateSortedList();
+    }
+  }
+
   // Validation
   validate(): boolean {
+    // Debug logging
+    console.log('=== VALIDATION START ===');
+    console.log('itemList.length BEFORE sync:', this.itemList.length);
+    console.log('sortedItemList.length BEFORE sync:', this.sortedItemList.length);
+
+    // Ensure lists are synchronized before validation
+    this.ensureListConsistency();
+
+    console.log('After ensureListConsistency:');
+    console.log('itemList.length:', this.itemList.length);
+    console.log('sortedItemList.length:', this.sortedItemList.length);
+    console.log('itemList:', this.itemList);
+
     if (this.itemList.length == 0 || this.payInvo.pay_ref == "") {
+      console.error('VALIDATION FAILED: itemList.length =', this.itemList.length, ', pay_ref =', this.payInvo.pay_ref);
       this.presentToast('الرجاء إدخال أصناف إلى القائمة', 'danger')
       return false
     }
@@ -623,11 +984,20 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
 
     this.presentToast('COMMON.MESSAGE.SAVED_SUCCESSFULLY', 'success');
     this.itemList = [];
+    this.sortedItemList = []; // Clear sorted list to prevent ghost items
+    this.isItemListSorted = false; // Reset sort state
     this.prepareInvo();
     this.selectedAccount = { id: "", ac_id: "", sub_name: "", sub_type: "", sub_code: "", sub_balance: "", store_id: "", cat_name: "", cat_id: "", currentCustumerStatus: 0 };
     this.discountPerc = 0;
     this.discountAmount = 0;
     this.payInvo.discount = 0;
+
+    // Notify original tab that purchase order was created
+    try {
+      const channel = new BroadcastChannel('invoice-channel');
+      channel.postMessage({ type: 'invoice-created', source: 'purchase-order' });
+      channel.close();
+    } catch (e) { /* BroadcastChannel not supported */ }
   }
 
   // Loading management
@@ -803,7 +1173,52 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
 
     this.getTotal();
     this.updateSortedList();
+    this.markDirty();
     this.presentToast('تم تعديل الأسعار بنجاح', 'success');
+  }
+
+  async openBulkPriceUpdateModal() {
+    if (!this.itemList || this.itemList.length === 0) {
+      this.presentToast('لا توجد أصناف في القائمة', 'warning');
+      return;
+    }
+
+    const { BulkPriceUpdateModalComponent } = await import('../components/bulk-price-update-modal/bulk-price-update-modal.component');
+
+    const modal = await this.modalController.create({
+      component: BulkPriceUpdateModalComponent,
+      cssClass: 'bulk-price-update-modal',
+      componentProps: {
+        itemsList: this.itemList,
+        mode: 'purchase'
+      },
+      backdropDismiss: false
+    });
+
+    modal.onDidDismiss().then((result) => {
+      if (result.data && result.data.success) {
+        if (result.data.updatedItems && result.data.updatedItems.length > 0) {
+          result.data.updatedItems.forEach(updatedItem => {
+            const idx = this.itemList.findIndex(item =>
+              item.item_id == updatedItem.id && item.item_name === updatedItem.item_name
+            );
+            if (idx !== -1) {
+              this.itemList[idx].pay_price = parseFloat(updatedItem.pay_price) || 0;
+              this.itemList[idx].perch_price = parseFloat(updatedItem.perch_price) || 0;
+              this.itemList[idx].retail_price = parseFloat(updatedItem.retail_price) || 0;
+              this.itemList[idx].tot = (this.itemList[idx].quantity * this.itemList[idx].perch_price).toFixed(2);
+            }
+          });
+          this.getTotal();
+          this.updateSortedList();
+          this.markDirty();
+        }
+        this.presentToast(`تم تعديل اسعار النظام والفاتورة لـ ${result.data.updated} صنف`, 'success');
+        this.getAllStockItemsWithouteCounts();
+      }
+    });
+
+    return await modal.present();
   }
 
   // ========== Auto-save Methods ==========
@@ -949,6 +1364,19 @@ export class PurchaseOrderPage implements OnInit, OnDestroy {
     this.calculatedDiscountAmount = draft.calculatedDiscountAmount || 0;
 
     this.getTotal();
+    this.updateSortedList(); // Sync sortedItemList with restored itemList
+
+    // CRITICAL FIX: Ensure pay_ref is not empty after draft restoration
+    if (!this.payInvo.pay_ref || this.payInvo.pay_ref === '') {
+      console.warn('Draft had empty pay_ref, regenerating...');
+      this.prepareInvo(); // Generate new pay_ref
+      // Update all items with the new pay_ref
+      this.itemList.forEach(item => {
+        item.pay_ref = this.payInvo.pay_ref;
+      });
+      console.log('New pay_ref generated:', this.payInvo.pay_ref);
+    }
+
     this.lastSaveTimestamp = draft.savedAt;
     this.updateLastSaveTime();
 

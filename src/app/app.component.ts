@@ -1,28 +1,34 @@
-import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { AuthServiceService } from "../app/auth/auth-service.service";
 import { Storage } from '@ionic/storage';
 import { HttpClient, HttpHeaders , HttpParams } from '@angular/common/http';
 import { ServicesService } from './stockService/services.service';
-import { Observable, Observer, timer } from 'rxjs';
-import { Platform, PopoverController, MenuController, ModalController } from '@ionic/angular';
+import { Observable, Observer, timer, Subscription } from 'rxjs';
+import { Platform, PopoverController, MenuController, ModalController, NavController, ToastController } from '@ionic/angular';
 import { filter } from 'rxjs/operators';
+import { SwUpdate } from '@angular/service-worker';
 import { ActionPopoverComponent } from './component/action-popover/action-popover.component';
 import { UserActionsPopoverComponent } from './component/user-actions-popover/user-actions-popover.component';
+import { CategorySwitcherPopoverComponent } from './component/category-switcher-popover/category-switcher-popover.component';
 import { UpdateService, AppUpdate } from './services/update.service';
 import { UpdateNotificationModalComponent } from './components/update-notification-modal/update-notification-modal.component';
 import { TranslationServiceCustom } from './services/translation.service';
+import { NetworkService, NetworkStatus } from './services/network.service';
+import { OfflineDataService } from './services/offline-data.service';
+import { SyncEngineService, SyncStatus } from './services/sync-engine.service';
+import { SyncQueueService } from './services/sync-queue.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
 })
-export class AppComponent implements AfterViewInit {
+export class AppComponent implements AfterViewInit, OnDestroy {
   // Navigation structure is now defined in the template for better control
   public appPages = [];
 
-   store_info : {id:any ,store_ref:any , store_name:any , location :any } 
+   store_info : {id:any ,store_ref:any , store_name:any , location :any }
    USER_INFO : { id: any , user_name: any, store_id :any, full_name:any, password:any, user_level:any}
   company : { id: any , phone: any, phone2  :any, address :any, logoUrl:any,engName:any,arName:any ,tradNo:any , vatNo:any};
   sub_accountSalse:Array<any> =[]
@@ -32,8 +38,8 @@ export class AppComponent implements AfterViewInit {
   perchArr:Array<any> =[]
   purchNotifArr:Array<any> =[]
   itemNotifArr:Array<any> =[]
-  totalObj : {items:any , pay:any, perch:any} 
-  showSpinner :boolean = false 
+  totalObj : {items:any , pay:any, perch:any}
+  showSpinner :boolean = false
   isAuth :boolean ;
   device:any =''
   api = 'http://localhost/myaperpi/myapi/api/'
@@ -45,6 +51,12 @@ export class AppComponent implements AfterViewInit {
   // Collapsible sidebar properties
   isSidebarCollapsed = true;
   isSidebarHovered = false;
+
+  // Offline-first properties
+  networkStatus: NetworkStatus = 'checking';
+  pendingCount: number = 0;
+  syncStatus: SyncStatus = 'idle';
+  private offlineSubs: Subscription[] = [];
   constructor(
     private platform:Platform,
     public http: HttpClient,
@@ -56,7 +68,14 @@ export class AppComponent implements AfterViewInit {
     private menuController: MenuController,
     private updateService: UpdateService,
     private modalController: ModalController,
-    private translationService: TranslationServiceCustom
+    private translationService: TranslationServiceCustom,
+    private navCtrl: NavController,
+    private swUpdate: SwUpdate,
+    public networkService: NetworkService,
+    private offlineData: OfflineDataService,
+    private syncEngine: SyncEngineService,
+    private syncQueue: SyncQueueService,
+    private toastCtrl: ToastController
   ) {
    
       // Use matchMedia to check the user preference
@@ -377,6 +396,19 @@ checkPlatform(){
     await this.menuController.toggle();
   }
 
+  // Open the category switcher popover from the side menu
+  async presentCategorySwitcher(ev: Event) {
+    ev.stopPropagation();
+    const popover = await this.popoverController.create({
+      component: CategorySwitcherPopoverComponent,
+      event: ev,
+      translucent: true,
+      cssClass: 'category-switcher-popover',
+      showBackdrop: true
+    });
+    await popover.present();
+  }
+
   redirectToExternal(url: string) {
   window.open(url, '_blank');
   }
@@ -416,19 +448,93 @@ checkPlatform(){
   }
 
 async auth (){
-  await this.storage.create(); 
-  this.authenticationService.authState.subscribe(state => {
-    this.isAuth = this.authenticationService.isAuthenticated()
-    if (state) { 
-      // Initialize endpoint on auth success
+  await this.storage.create();
+  let previousState: boolean | null = null;
+  this.authenticationService.authState.subscribe(async state => {
+    this.isAuth = state;
+    if (state) {
+      this.getAppInfo();
       this.api2.initializeEndpoint();
-      // Don't navigate here - let the auth guard handle all navigation
-      // This prevents conflicts with the guard's routing logic
+      // Initialize offline-first services after auth
+      this.initializeOfflineServices();
     } else {
-      // Don't navigate here either - let the auth guard handle it
-      // The guard will redirect to login when authentication fails
+      await this.menuController.close();
+      // Only navigate to login on explicit logout (true → false).
+      // On initial load (null → false), let the AuthGuard handle the redirect.
+      if (previousState === true) {
+        this.navCtrl.navigateRoot('folder/login');
+      }
     }
+    previousState = state;
   });
+}
+
+/** Initialize offline-first services and pre-cache reference data */
+private async initializeOfflineServices() {
+  try {
+    await this.offlineData.initialize();
+    await this.syncQueue.initialize();
+
+    // Subscribe to network status
+    this.offlineSubs.push(
+      this.networkService.status$.subscribe(status => {
+        this.networkStatus = status;
+      })
+    );
+
+    // Subscribe to pending count
+    this.offlineSubs.push(
+      this.networkService.pendingCount$.subscribe(count => {
+        this.pendingCount = count;
+      })
+    );
+
+    // Subscribe to sync status
+    this.offlineSubs.push(
+      this.syncEngine.syncStatus$.subscribe(status => {
+        this.syncStatus = status;
+      })
+    );
+
+    // Start sync engine listening
+    this.syncEngine.startListening();
+
+    // Pre-cache reference data if online
+    const userInfo = await this.storage.get('USER_INFO');
+    const storeInfo = await this.storage.get('STORE_INFO');
+    const year = await this.storage.get('year');
+    if (storeInfo && year) {
+      this.offlineData.preCacheReferenceData(storeInfo.id, year.id);
+      // Auto-generate recurring obligations on app open
+      this.autoGenerateObligations(storeInfo.id, year.id, userInfo?.id);
+    }
+  } catch (err) {
+    console.error('[AppComponent] Offline services init failed:', err);
+  }
+}
+
+/** Auto-generate recurring obligations for current + missed months */
+private autoGenerateObligations(store_id: any, year_id: any, user_id: any) {
+  this.api2.generateObligations(store_id, year_id, user_id).subscribe(
+    async (res: any) => {
+      if (res.success && res.count > 0) {
+        const toast = await this.toastCtrl.create({
+          message: `تم إنشاء ${res.count} التزام لهذا الشهر`,
+          duration: 3000,
+          color: 'success',
+          position: 'bottom'
+        });
+        toast.present();
+      }
+    },
+    (err) => {
+      console.error('[AppComponent] Auto-generate obligations failed:', err);
+    }
+  );
+}
+
+ngOnDestroy() {
+  this.offlineSubs.forEach(s => s.unsubscribe());
 }
 
 logOut(){
@@ -467,14 +573,26 @@ async navigateWithReplace(route: string) {
     setTimeout(() => {
       this.checkForUpdates();
     }, 1000);
+
+    // Listen for Angular SW detecting a new version in the background
+    if (this.swUpdate.isEnabled) {
+      this.swUpdate.available.subscribe(() => {
+        this.checkForUpdates();
+      });
+    }
   }
 
   /**
-   * Check for app updates
+   * Check for app updates and sync the displayed version
    */
   async checkForUpdates() {
     try {
       await this.updateService.initialize();
+
+      // Sync the version shown in the side menu
+      const latestVersion = await this.updateService.fetchAndStoreLatestVersion();
+      this.appVersion = latestVersion;
+
       const update = await this.updateService.checkForUpdate();
 
       if (update) {

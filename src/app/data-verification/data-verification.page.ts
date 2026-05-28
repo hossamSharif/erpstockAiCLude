@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DataVerificationService, VerificationResult, VerificationSummary } from '../services/data-verification.service';
+import { DataVerificationService, VerificationResult, VerificationSummary, VerificationProgress } from '../services/data-verification.service';
 import { TranslateService } from '@ngx-translate/core';
 import { LoadingController, ToastController } from '@ionic/angular';
 import { Storage } from '@ionic/storage';
@@ -25,6 +25,7 @@ export class DataVerificationPage implements OnInit {
 
   // Loading state
   isVerifying: boolean = false;
+  isAutoVerifying: boolean = false;
 
   // Batch verification state
   currentBatch: number = 0;
@@ -33,6 +34,10 @@ export class DataVerificationPage implements OnInit {
   totalOkCount: number = 0;
   hasMoreInvoices: boolean = false;
   totalBatches: number = 0;
+
+  // Progress tracking
+  verificationProgress: VerificationProgress | null = null;
+  processedCount: number = 0;
 
   // Store and year info from Ionic Storage
   store_info: { id: any, location: any, store_name: any, store_ref: any } | null = null;
@@ -111,139 +116,71 @@ export class DataVerificationPage implements OnInit {
     this.totalOkCount = 0;
     this.hasMoreInvoices = false;
     this.totalBatches = 0;
+    this.verificationProgress = null;
+    this.processedCount = 0;
+    this.isAutoVerifying = false;
+    this.filterStatus = 'all';
   }
 
   /**
-   * Verify first batch of invoices (20 invoices)
+   * Verify all invoices automatically in sequential batches
    */
-  async verifyAllInvoices() {
+  verifyAllInvoices() {
     if (this.isVerifying) {
       return;
     }
 
-    // Check if store and year info are loaded
     if (!this.isDataLoaded()) {
       this.showToast('Store and year information not loaded. Please try again.', 'danger');
       return;
     }
 
-    // Reset batch state and clear previous results
     this.clearResults();
-
-    const loading = await this.loadingCtrl.create({
-      message: `Verifying ${this.selectedType === 'sales' ? 'Sales' : 'Purchase'} Invoices (Batch 1)...`,
-      spinner: 'crescent'
-    });
-    await loading.present();
-
     this.isVerifying = true;
+    this.isAutoVerifying = true;
 
-    this.verificationService.verifyInvoicesBatch(this.store_info!.id, this.year!.id, this.selectedType, 0, 20)
+    this.verificationService.verifyAllInvoicesSequential(this.store_info!.id, this.year!.id, this.selectedType, 20)
       .subscribe({
-        next: (summary: VerificationSummary) => {
-          // Store batch results
-          this.verificationResults = summary.results;
-          this.totalInvoicesCount = summary.totalInvoices;
-          this.totalErrorCount = summary.errorCount;
-          this.totalOkCount = summary.okCount;
-          this.hasMoreInvoices = summary.hasMore || false;
-          this.currentBatch = (summary.currentBatch || 0) + 1; // Next batch to load
-          this.totalBatches = summary.totalBatches || 0;
+        next: (progress: VerificationProgress) => {
+          this.verificationProgress = progress;
+          this.verificationResults = progress.results;
+          this.processedCount = progress.processedCount;
+          this.totalInvoicesCount = progress.totalInvoices;
+          this.totalErrorCount = progress.errorCount;
+          this.totalOkCount = progress.okCount;
+          this.totalBatches = progress.totalBatches;
+          this.currentBatch = progress.currentBatchIndex + 1;
 
           // Update summary for display
           this.summary = {
-            totalInvoices: this.totalInvoicesCount,
-            errorCount: this.totalErrorCount,
-            okCount: this.totalOkCount,
-            accuracy: this.verificationResults.length > 0
-              ? (this.totalOkCount / this.verificationResults.length) * 100
+            totalInvoices: progress.totalInvoices,
+            errorCount: progress.errorCount,
+            okCount: progress.okCount,
+            accuracy: progress.processedCount > 0
+              ? (progress.okCount / progress.processedCount) * 100
               : 100,
-            results: this.verificationResults
+            results: progress.results
           };
 
-          this.isVerifying = false;
-          loading.dismiss();
+          if (progress.isComplete) {
+            this.isVerifying = false;
+            this.isAutoVerifying = false;
 
-          // Show toast with summary
-          const checkedCount = this.verificationResults.length;
-          const remainingCount = this.totalInvoicesCount - checkedCount;
+            // Auto-filter to errors if any exist
+            if (progress.errorCount > 0) {
+              this.filterStatus = 'ERROR';
+            }
 
-          this.showToast(
-            `Batch 1 Complete: ${checkedCount}/${this.totalInvoicesCount} invoices checked, ${summary.errorCount} errors found${this.hasMoreInvoices ? `. ${remainingCount} more to check.` : ''}`,
-            summary.errorCount > 0 ? 'warning' : 'success'
-          );
+            this.showToast(
+              `Verification Complete: ${progress.processedCount} invoices checked, ${progress.errorCount} errors found`,
+              progress.errorCount > 0 ? 'warning' : 'success'
+            );
+          }
         },
         error: (error) => {
           console.error('Error during verification:', error);
           this.isVerifying = false;
-          loading.dismiss();
-          this.showToast('Error during verification. Please try again.', 'danger');
-        }
-      });
-  }
-
-  /**
-   * Load and verify next batch of invoices
-   */
-  async loadMoreInvoices() {
-    if (this.isVerifying || !this.hasMoreInvoices) {
-      return;
-    }
-
-    // Check if store and year info are loaded
-    if (!this.isDataLoaded()) {
-      this.showToast('Store and year information not loaded. Please try again.', 'danger');
-      return;
-    }
-
-    const batchNum = this.currentBatch;
-    const loading = await this.loadingCtrl.create({
-      message: `Verifying ${this.selectedType === 'sales' ? 'Sales' : 'Purchase'} Invoices (Batch ${batchNum + 1})...`,
-      spinner: 'crescent'
-    });
-    await loading.present();
-
-    this.isVerifying = true;
-
-    this.verificationService.verifyInvoicesBatch(this.store_info!.id, this.year!.id, this.selectedType, batchNum, 20)
-      .subscribe({
-        next: (summary: VerificationSummary) => {
-          // Append new results to existing results
-          this.verificationResults = [...this.verificationResults, ...summary.results];
-
-          // Update cumulative counts
-          this.totalErrorCount += summary.errorCount;
-          this.totalOkCount += summary.okCount;
-          this.hasMoreInvoices = summary.hasMore || false;
-          this.currentBatch = (summary.currentBatch || 0) + 1; // Next batch to load
-
-          // Update summary for display
-          this.summary = {
-            totalInvoices: this.totalInvoicesCount,
-            errorCount: this.totalErrorCount,
-            okCount: this.totalOkCount,
-            accuracy: this.verificationResults.length > 0
-              ? (this.totalOkCount / this.verificationResults.length) * 100
-              : 100,
-            results: this.verificationResults
-          };
-
-          this.isVerifying = false;
-          loading.dismiss();
-
-          // Show toast with summary
-          const checkedCount = this.verificationResults.length;
-          const remainingCount = this.totalInvoicesCount - checkedCount;
-
-          this.showToast(
-            `Batch ${batchNum + 1} Complete: ${checkedCount}/${this.totalInvoicesCount} invoices checked${this.hasMoreInvoices ? `. ${remainingCount} more to check.` : ''}`,
-            'success'
-          );
-        },
-        error: (error) => {
-          console.error('Error during verification:', error);
-          this.isVerifying = false;
-          loading.dismiss();
+          this.isAutoVerifying = false;
           this.showToast('Error during verification. Please try again.', 'danger');
         }
       });

@@ -630,13 +630,24 @@ export class SubAccount2Page implements OnInit, OnDestroy {
   async editAccount(account: any) {
     // Dismiss the popover first
     await this.dismissActionsPopover();
-    
+
     // Navigate to edit modal
     this.router.navigate(['/account-modal'], {
       queryParams: {
         mode: 'edit',
         account: JSON.stringify(account)
       }
+    });
+  }
+
+  // View account statement
+  async viewStatement(account: any) {
+    // Dismiss the popover first
+    await this.dismissActionsPopover();
+
+    // Navigate to statement page with account ID
+    this.router.navigate(['/folder/statement2'], {
+      queryParams: { accountId: account.id }
     });
   }
 
@@ -921,7 +932,6 @@ getAccountCategory () {
       );
     }
 
-    // Update select all checkbox state
     this.updateSelectAllState();
   }
 
@@ -936,13 +946,16 @@ getAccountCategory () {
    * Toggle select all accounts
    */
   toggleSelectAll(event: any) {
-    if (event.detail.checked) {
+    const isChecked = event.detail.checked;
+    if (isChecked === this.selectAllAccounts) return;
+    if (isChecked) {
       // Select all visible accounts
       this.selectedAccountsList = [...this.sortedAccounts];
     } else {
       // Deselect all
       this.selectedAccountsList = [];
     }
+    this.selectAllAccounts = isChecked;
   }
 
   /**

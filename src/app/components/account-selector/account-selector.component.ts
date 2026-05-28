@@ -3,6 +3,8 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { NavController } from '@ionic/angular';
 import { ServicesService } from '../../stockService/services.service';
 import { AccountCommunicationService } from '../../services/account-communication.service';
+import { OfflineDataService } from '../../services/offline-data.service';
+import { NetworkService } from '../../services/network.service';
 import { Subscription } from 'rxjs';
 
 export interface AccountSelectorData {
@@ -49,11 +51,13 @@ export class AccountSelectorComponent implements OnInit, OnChanges, OnDestroy, C
   @Input() store_info: any = null;
   @Input() year: any = null;
   @Input() showAddButton: boolean = true;
+  @Input() showStatementButton: boolean = false;
   @Input() disabled: boolean = false;
 
   @Output() accountSelected = new EventEmitter<AccountSelectorData>();
   @Output() balanceLoaded = new EventEmitter<AccountBalance>();
   @Output() addAccountClicked = new EventEmitter<void>();
+  @Output() viewStatementClicked = new EventEmitter<AccountSelectorData>();
 
   // Component state
   accounts: AccountSelectorData[] = [];
@@ -83,7 +87,9 @@ export class AccountSelectorComponent implements OnInit, OnChanges, OnDestroy, C
     private api: ServicesService,
     private navController: NavController,
     private accountCommunicationService: AccountCommunicationService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private offlineData: OfflineDataService,
+    private networkService: NetworkService
   ) {}
 
   ngOnInit() {
@@ -130,12 +136,10 @@ export class AccountSelectorComponent implements OnInit, OnChanges, OnDestroy, C
     }
   }
 
-  // Load all accounts (both customers and suppliers)
+  // Load all accounts (both customers and suppliers) — with offline fallback
   loadAccounts() {
     if (!this.store_info || !this.year) {
       console.warn('Account Selector: store_info or year not provided');
-      console.warn('store_info:', this.store_info);
-      console.warn('year:', this.year);
       return;
     }
 
@@ -143,30 +147,23 @@ export class AccountSelectorComponent implements OnInit, OnChanges, OnDestroy, C
     console.log('=== LOADING ACCOUNTS ===');
     console.log('Store ID:', this.store_info.id, 'Year ID:', this.year.id);
 
-    // Load all accounts with ac_id = 1 (customers) and ac_id = 2 (suppliers)
-    this.api.getAllCustomerSupplierAccounts(this.store_info.id, this.year.id).subscribe(
-      (response: any) => {
+    // Use OfflineDataService for cache-through loading
+    this.offlineData.getAllAccounts(this.store_info.id, this.year.id).then(
+      (accounts: any[]) => {
         this.loadingAccounts = false;
-        console.log('=== ACCOUNTS API RESPONSE ===');
-        console.log('Full response:', response);
-
-        if (response && response.data) {
-          this.accounts = response.data;
+        if (accounts && accounts.length > 0) {
+          this.accounts = accounts;
           this.filteredAccounts = [...this.accounts];
-          console.log('✓ Successfully loaded', this.accounts.length, 'accounts');
-          console.log('First 3 accounts:', this.accounts.slice(0, 3));
+          console.log('Successfully loaded', this.accounts.length, 'accounts');
         } else {
-          console.error('✗ No accounts data in response');
-          console.error('Response structure:', Object.keys(response || {}));
           this.accounts = [];
           this.filteredAccounts = [];
         }
-      },
+      }
+    ).catch(
       (error) => {
         this.loadingAccounts = false;
-        console.error('=== ACCOUNTS API ERROR ===');
         console.error('Error loading accounts:', error);
-        console.error('Error details:', error.message, error.status);
         this.accounts = [];
         this.filteredAccounts = [];
       }
@@ -491,13 +488,20 @@ export class AccountSelectorComponent implements OnInit, OnChanges, OnDestroy, C
   onAddAccount() {
     console.log('Add account button clicked');
     this.addAccountClicked.emit();
-    
+
     // Navigate to account modal page
     this.navController.navigateForward('/account-modal', {
       queryParams: {
         mode: 'create'
       }
     });
+  }
+
+  // Handle view statement button click
+  onViewStatement() {
+    if (this.selectedAccount) {
+      this.viewStatementClicked.emit(this.selectedAccount);
+    }
   }
 
   // Clear selection

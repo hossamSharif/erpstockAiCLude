@@ -209,7 +209,12 @@
         "ERROR_SELECTING_ACCOUNT": "Error selecting account",
         "SELECT_ACCOUNT_FIRST": "Please select account first",
         "ERROR_LOADING_DATA": "Error loading data",
-        "NO_DATA_TO_EXPORT": "No data to export"
+        "NO_DATA_TO_EXPORT": "No data to export",
+        "NO_REFERENCE": "No reference for transaction",
+        "INVOICE_NOT_FOUND": "Invoice not found",
+        "JOURNAL_NOT_FOUND": "Journal entry not found",
+        "ERROR_LOADING_INVOICE": "Error loading invoice data",
+        "ERROR_LOADING_JOURNAL": "Error loading journal data"
       }
     },
     "EXPENSE_RECORD": {
@@ -582,7 +587,43 @@
     "CURRENCIES": "Currencies",
     "DATA_VERIFICATION": "Data Verification",
     "UPDATE_MANAGEMENT": "Update Management",
-    "SYNC_CONNECTION": "Sync & Connection"
+    "SYNC_CONNECTION": "Sync & Connection",
+    "RECURRING_OBLIGATIONS": "Recurring Obligations",
+    "SELECT_CATEGORY": "Select category",
+    "SWITCH_CATEGORY_TITLE": "Switch category",
+    "SEARCH_CATEGORY": "Search..."
+  },
+  "RECURRING": {
+    "TITLE": "Recurring Obligations",
+    "MANAGEMENT": "Manage Obligations",
+    "MONTHLY_STATUS": "Monthly Disbursement",
+    "SALARY": "Salary",
+    "RENT": "Rent",
+    "ADD_OBLIGATION": "Add Obligation",
+    "EDIT_OBLIGATION": "Edit Obligation",
+    "OBLIGATION_TYPE": "Obligation Type",
+    "ACCOUNT": "Account",
+    "EXPENSE_ACCOUNT": "Expense Account",
+    "AMOUNT": "Amount",
+    "DESCRIPTION": "Description",
+    "DESCRIPTION_PLACEHOLDER": "e.g. Ahmed's salary or Shop rent",
+    "DAY_OF_MONTH": "Monthly Disbursement Day",
+    "START_DATE": "Start Date",
+    "END_DATE": "End Date",
+    "NO_END_DATE": "No end date",
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive",
+    "GENERATE_ALL": "Generate All",
+    "GENERATED": "Generated",
+    "PAID": "Paid",
+    "OVERDUE": "Overdue",
+    "PENDING": "Pending",
+    "QUICK_PAY": "Quick Pay",
+    "TOTAL_SALARIES": "Total Salaries",
+    "TOTAL_RENT": "Total Rent",
+    "NO_OBLIGATIONS": "No obligations",
+    "OBLIGATIONS_GENERATED": "{{count}} obligation(s) generated for this month",
+    "CONFIRM_DELETE": "Delete this obligation?"
   },
   "EXPENSE": {
     "TITLE": "Add Expense",
@@ -745,6 +786,28 @@
       "LOADING_REPORT": "Loading report...",
       "SELECT_DATE": "Select a date to view the daily report"
     }
+  },
+  "PURCHASE_ORDER": {
+    "PRINT_OPTIONS_TITLE": "Print Options",
+    "INCLUDE_PRICES_MESSAGE": "Do you want to include purchase prices in the print?",
+    "YES_INCLUDE_PRICES": "Yes, include prices",
+    "NO_HIDE_PRICES": "No, hide prices"
+  },
+  "STORE_REPORT": {
+    "STORE_REPORT": "Store Report",
+    "PICKING_LIST": "Picking List",
+    "RECEIVING_LIST": "Receiving List",
+    "SERIAL": "#",
+    "ITEM_NAME": "Item",
+    "UNIT": "Unit",
+    "QUANTITY": "Quantity",
+    "PICKED": "Picked",
+    "RECEIVED": "Received",
+    "TOTAL_ITEMS": "Total Items",
+    "WAREHOUSE_KEEPER": "Warehouse Keeper / Preparer",
+    "RECEIVER": "Receiver",
+    "MANAGER": "Manager",
+    "PRINTED_BY": "Printed by"
   },
   "CATEGORIES": {
     "TITLE": "Item Categories",

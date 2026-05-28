@@ -18,8 +18,10 @@ import { FileOpener } from '@ionic-native/file-opener/ngx';
 import { File } from '@ionic-native/file/ngx';
 import { QRCodeModule } from 'angularx-qrcode';
 import { UserActionsPopoverComponent } from './component/user-actions-popover/user-actions-popover.component';
+import { CategorySwitcherPopoverComponent } from './component/category-switcher-popover/category-switcher-popover.component';
 import { UpdateNotificationModalComponent } from './components/update-notification-modal/update-notification-modal.component';
 import { AiChatWidgetComponent } from './components/ai-chat-widget/ai-chat-widget.component';
+import { BulkPriceUpdateModalComponent } from './components/bulk-price-update-modal/bulk-price-update-modal.component';
 import { UpdateService } from './services/update.service';
 import { PipesModule } from './pipes/pipes.module';
 import { FormsModule } from '@angular/forms';
@@ -33,7 +35,7 @@ export function createTranslateLoader(http: HttpClient) {
 }
 
 @NgModule({
-  declarations: [AppComponent, SelectAllDirective, UserActionsPopoverComponent, UpdateNotificationModalComponent, AiChatWidgetComponent],
+  declarations: [AppComponent, SelectAllDirective, UserActionsPopoverComponent, CategorySwitcherPopoverComponent, UpdateNotificationModalComponent, AiChatWidgetComponent, BulkPriceUpdateModalComponent],
   entryComponents: [],
   imports: [
     BrowserModule,

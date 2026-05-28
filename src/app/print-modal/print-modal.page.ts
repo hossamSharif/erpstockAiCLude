@@ -59,6 +59,7 @@ import { Subscription } from 'rxjs';
 export class PrintModalPage implements OnInit, OnDestroy {
   @Input() printArr: any;
   @Input() page: any;
+  @Input() showPrices: boolean = true; // Controls whether purchase prices are shown in print
    //mode = 'pos'
    mode = 'enhanced'
    logoBase64: string = '';
@@ -97,6 +98,7 @@ export class PrintModalPage implements OnInit, OnDestroy {
 
   async ngOnInit() {
     console.log(this.printArr[0]);
+    console.log('showPrices value:', this.showPrices, 'page:', this.page);
     this.sortItemListAlphabetically();
     await this.loadCategoryFromStorage();
     await this.loadImages();
@@ -115,7 +117,9 @@ export class PrintModalPage implements OnInit, OnDestroy {
 
   // Get the current vehicle image path based on categoryId
   getVehicleImagePath(): string {
-    return this.categoryId !== 1 ? 'assets/imgs/track.jpg' : 'assets/imgs/tuk.jpg';
+    if (this.categoryId === 5) return 'assets/imgs/mot.png';
+    if (this.categoryId === 2) return 'assets/imgs/track.jpg';
+    return 'assets/imgs/tuk.jpg';
   }
 
   // Utility method to get the appropriate invoice object
@@ -267,7 +271,7 @@ export class PrintModalPage implements OnInit, OnDestroy {
     );
     
     // Load vehicle image with retry mechanism - conditional based on categoryId
-    const vehicleImagePath = this.categoryId !== 1 ? 'assets/imgs/track.jpg' : 'assets/imgs/tuk.jpg';
+    const vehicleImagePath = this.getVehicleImagePath();
     console.log(`Loading vehicle image based on categoryId ${this.categoryId}: ${vehicleImagePath}`);
 
     imageLoadingPromises.push(
@@ -631,6 +635,11 @@ export class PrintModalPage implements OnInit, OnDestroy {
         replacement: `src="${this.vehicleBase64}"`,
         name: 'vehicle-track-direct'
       },
+      {
+        pattern: /src=['"]assets\/imgs\/mot\.png['"]/gi,
+        replacement: `src="${this.vehicleBase64}"`,
+        name: 'vehicle-mot-direct'
+      },
       // Handle variations with different quote styles
       {
         pattern: /src=assets\/imgs\/logo\.png/gi,
@@ -646,6 +655,11 @@ export class PrintModalPage implements OnInit, OnDestroy {
         pattern: /src=assets\/imgs\/track\.jpg/gi,
         replacement: `src="${this.vehicleBase64}"`,
         name: 'vehicle-track-no-quotes'
+      },
+      {
+        pattern: /src=assets\/imgs\/mot\.png/gi,
+        replacement: `src="${this.vehicleBase64}"`,
+        name: 'vehicle-mot-no-quotes'
       },
       // Handle Angular property binding results (after rendering)
       {
@@ -663,6 +677,11 @@ export class PrintModalPage implements OnInit, OnDestroy {
         replacement: `src="${this.vehicleBase64}"`,
         name: 'vehicle-track-property-binding'
       },
+      {
+        pattern: /src=['"][^'"]*assets\/imgs\/mot\.png[^'"]*['"]/gi,
+        replacement: `src="${this.vehicleBase64}"`,
+        name: 'vehicle-mot-property-binding'
+      },
       // Handle fallback paths that might be in the HTML
       {
         pattern: /assets\/imgs\/logo\.png/gi,
@@ -678,6 +697,11 @@ export class PrintModalPage implements OnInit, OnDestroy {
         pattern: /assets\/imgs\/track\.jpg/gi,
         replacement: this.vehicleBase64,
         name: 'vehicle-track-any-occurrence'
+      },
+      {
+        pattern: /assets\/imgs\/mot\.png/gi,
+        replacement: this.vehicleBase64,
+        name: 'vehicle-mot-any-occurrence'
       }
     ];
     

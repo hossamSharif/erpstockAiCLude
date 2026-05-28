@@ -1,6 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { ModalController, AlertController } from '@ionic/angular';
-import { Router, NavigationExtras } from '@angular/router';
 import { PurchasePage } from '../../purchase/purchase.page';
 
 @Component({
@@ -16,8 +15,7 @@ export class InsufficientStockDialogComponent implements OnInit {
 
   constructor(
     private modalController: ModalController,
-    private alertController: AlertController,
-    private router: Router
+    private alertController: AlertController
   ) { }
 
   ngOnInit() {
@@ -95,57 +93,20 @@ export class InsufficientStockDialogComponent implements OnInit {
 
       modal.onDidDismiss().then((result) => {
         if (result.data && result.data.success) {
-          // Handle successful purchase completion
-          console.log('Purchase completed successfully:', result.data);
-          // Dismiss the current insufficient stock dialog
-          this.dismissModal();
+          // Purchase completed - dismiss with success data so sales page can refresh
+          this.modalController.dismiss({ purchaseCompleted: true });
+        } else {
+          // User cancelled/backed out - just dismiss the insufficient stock dialog
+          this.modalController.dismiss();
         }
       });
 
       await modal.present();
     } catch (error) {
       console.error('Error opening purchase modal:', error);
-      // Fallback to navigation method
-      this.navigateToInvoicePage(itemList, 'purchase');
+      // Don't navigate away - just dismiss and show error
+      this.modalController.dismiss();
     }
-  }
-
-  private navigateToInvoicePage(itemList: any[], type: 'purchase') {
-    // Transform insufficient items to purchase items format
-    const purchaseItems = itemList.map(item => ({
-      id: item.item_id,
-      item_name: item.item_name,
-      item_desc: item.item_desc,
-      part_no: item.part_no || '',
-      brand: item.brand || '',
-      model: item.model || '',
-      item_unit: item.item_unit || '',
-      realPerchPrice:item.perch_price ,
-      perch_price: item.pay_price || 0,// Use sales price for purchase price initially
-      pay_price: item.pay_price || 0, 
-      qty: item.shortage, // Use shortage as the quantity to purchase
-      tot: (item.pay_price * item.shortage).toFixed(2) || 0,
-      availQty: item.shortage,
-      aliasEn: item.aliasEn || ''
-    }));
-
-    // Navigate to purchase page with items
-    let navigationExtras: NavigationExtras = {
-      queryParams: {
-        status: 'newInvoFromItemsPage',
-        selectedItemsList: JSON.stringify(purchaseItems)
-      },
-      replaceUrl: true // This ensures the current route is replaced
-    };
-
-    // Dismiss modal first, then navigate with a small delay to ensure proper cleanup
-    this.modalController.dismiss().then(() => {
-      // Small delay to ensure modal is fully dismissed before navigation
-      setTimeout(() => {
-        // Navigate to purchase page with route replacement
-        this.router.navigate(['folder/purchase'], navigationExtras);
-      }, 100);
-    });
   }
 
   getTotalShortage(): number {

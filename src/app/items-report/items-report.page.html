@@ -1,8 +1,11 @@
 <ion-header class="transparent-header">
   <ion-toolbar class="transparent-toolbar">
     <ion-buttons slot="start">
-      <ion-back-button *ngIf="hasParameter" defaultHref="/" class="glass-menu-button"></ion-back-button>
-      <ion-menu-button *ngIf="!hasParameter" class="glass-menu-button"></ion-menu-button>
+      <ion-button *ngIf="isModal" fill="clear" (click)="dismissModal()" class="glass-menu-button">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+      <ion-back-button *ngIf="!isModal && hasParameter" defaultHref="/" class="glass-menu-button"></ion-back-button>
+      <ion-menu-button *ngIf="!isModal && !hasParameter" class="glass-menu-button"></ion-menu-button>
     </ion-buttons>
     <ion-title class="glass-title">تقرير حركة الصنف</ion-title>
     <ion-buttons slot="end">

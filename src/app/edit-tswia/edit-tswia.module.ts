@@ -9,6 +9,8 @@ import { EditTswiaPageRoutingModule } from './edit-tswia-routing.module';
 
 import { EditTswiaPage } from './edit-tswia.page';
 import { ShareModule } from '../shareModule/share-module/share-module.module';
+import { SharedModule } from '../module/shared/shared.module';
+import { SelectionActionPanelModule } from '../components/selection-action-panel/selection-action-panel.module';
 
 @NgModule({
   imports: [
@@ -16,8 +18,10 @@ import { ShareModule } from '../shareModule/share-module/share-module.module';
     CommonModule,
     FormsModule,
     ShareModule,
+    SharedModule,
     IonicModule,
-    EditTswiaPageRoutingModule
+    EditTswiaPageRoutingModule,
+    SelectionActionPanelModule
   ],
   declarations: [EditTswiaPage]
 })

@@ -1,18 +1,12 @@
 <ion-app>
-  <ion-split-pane contentId="main-content" when="lg" *ngIf="isAuth == true">
-    <!-- Main Content Area -->
-    <ion-content id="main-content">
-      <div class="main-content-wrapper" dir="rtl">
-        <ion-router-outlet></ion-router-outlet>
-      </div>
-    </ion-content>
-
-    <!-- Main Menu - Positioned on the right side -->
-    <ion-menu 
-      contentId="main-content" 
-      type="overlay" 
-      side="start" 
+  <ion-split-pane contentId="main-content" when="lg">
+    <!-- Main Menu -->
+    <ion-menu
+      contentId="main-content"
+      type="overlay"
+      side="start"
       swipeGesture="true"
+      [disabled]="!isAuth"
       [class.collapsed]="isSidebarCollapsed"
       [class.expanded]="isSidebarExpanded()"
       (mouseenter)="onSidebarMouseEnter()"
@@ -40,6 +34,36 @@
     </ion-icon>
   </div>
   
+  <!-- Network Status Indicator -->
+  <div class="network-status-bar"
+       [class.online]="networkStatus === 'online'"
+       [class.offline]="networkStatus === 'offline'"
+       [class.checking]="networkStatus === 'checking'"
+       [class.syncing]="syncStatus === 'syncing'"
+       [class.collapsed]="isSidebarCollapsed"
+       [class.expanded]="isSidebarExpanded()">
+    <div class="status-content">
+      <div class="status-dot"></div>
+      <span class="status-text" *ngIf="syncStatus === 'syncing'">جاري المزامنة...</span>
+      <span class="status-text" *ngIf="syncStatus !== 'syncing' && networkStatus === 'online'">متصل</span>
+      <span class="status-text" *ngIf="syncStatus !== 'syncing' && networkStatus === 'offline'">غير متصل</span>
+      <span class="status-text" *ngIf="syncStatus !== 'syncing' && networkStatus === 'checking'">فحص الاتصال...</span>
+      <span class="pending-badge" *ngIf="pendingCount > 0">{{pendingCount}}</span>
+    </div>
+  </div>
+
+  <!-- Category Switcher -->
+  <div class="category-switcher-bar"
+       [class.collapsed]="isSidebarCollapsed"
+       [class.expanded]="isSidebarExpanded()"
+       (click)="presentCategorySwitcher($event)">
+    <div class="switcher-content">
+      <ion-icon name="folder-open-outline" class="switcher-icon"></ion-icon>
+      <span class="switcher-text">{{ selectedEndpointName || ('MENU.SELECT_CATEGORY' | translate) }}</span>
+      <ion-icon name="chevron-down-outline" class="switcher-chevron"></ion-icon>
+    </div>
+  </div>
+
   <!-- Header Section -->
   <div class="menu-header" [class.collapsed]="isSidebarCollapsed" [class.expanded]="isSidebarExpanded()">
     <ion-label>{{getSelectedEndpointName()}} - <ion-text> <strong> V{{appVersion}} </strong></ion-text></ion-label>
@@ -247,6 +271,13 @@
                   <span>{{ 'MENU.BALANCES' | translate }}</span>
                 </div>
               </div>
+
+              <div class="menu-item" [routerLink]="['recurring-obligations']" routerLinkActive="selected">
+                <div class="menu-item-content">
+                  <ion-icon name="repeat-outline"></ion-icon>
+                  <span>{{ 'MENU.RECURRING_OBLIGATIONS' | translate }}</span>
+                </div>
+              </div>
             </div>
 
             <!-- Expenses Section - MOVED ABOVE -->
@@ -340,10 +371,10 @@
         </div>
       </ion-content>
     </ion-menu>
+
+    <!-- Main Content Area -->
+    <ion-router-outlet id="main-content"></ion-router-outlet>
   </ion-split-pane>
-  
-  <!-- Login View -->
-  <ion-router-outlet *ngIf="isAuth == false"></ion-router-outlet>
 
   <!-- AI Chat Widget - Admin Only - COMMENTED OUT FOR LATER USE -->
   <!-- <app-ai-chat-widget *ngIf="isAuth == true && isAdmin()"></app-ai-chat-widget> -->

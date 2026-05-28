@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { LoadingController, ToastController, MenuController, NavController } from '@ionic/angular';
 import { AuthServiceService } from "../../app/auth/auth-service.service";
 import { Storage } from '@ionic/storage';
 import { ServicesService } from '../stockService/services.service';
@@ -12,6 +12,22 @@ import { TranslateService } from '@ngx-translate/core';
 })
 
 export class LoginPage implements OnInit {
+  private backBlocker = () => {
+    window.history.pushState(null, '', window.location.href);
+  };
+
+  ionViewWillEnter() {
+    this.menuController.enable(false);
+    // Block browser back button — push a history entry so pressing back
+    // triggers popstate, which pushes another entry, keeping user on login.
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', this.backBlocker);
+  }
+
+  ionViewWillLeave() {
+    window.removeEventListener('popstate', this.backBlocker);
+  }
+
   USER_INFO : {
     id: any ,
     email: any,
@@ -26,7 +42,7 @@ export class LoginPage implements OnInit {
   store_info : {id:any ,store_ref:any , store_name:any , location :any }
   company : { id: any , phone: any, phone2  :any, address :any, logoUrl:any,engName:any,arName:any ,tradNo:any , vatNo:any};
 
-  constructor(private api:ServicesService,private storage: Storage,private toast:ToastController ,private loadingController:LoadingController , private authenticationService: AuthServiceService, private router: Router, private translate: TranslateService) {
+  constructor(private api:ServicesService,private storage: Storage,private toast:ToastController ,private loadingController:LoadingController , private authenticationService: AuthServiceService, private router: Router, private translate: TranslateService, private menuController: MenuController, private navCtrl: NavController) {
     this.store_info = {id:"1" ,store_ref:"sh" , store_name:"sooq sha'by" , location :"sha'aby" }
     this.USER_INFO = {
       id: "" ,
@@ -39,6 +55,7 @@ export class LoginPage implements OnInit {
    }
 
   ngOnInit() {
+    this.menuController.enable(false);
     this.getStore()
   //  this.getCompany()
     this.getyear()
@@ -163,11 +180,8 @@ export class LoginPage implements OnInit {
     // Subscribe to auth state changes to handle redirect
     const authSubscription = this.authenticationService.authState.subscribe(async (isAuthenticated) => {
       if (isAuthenticated) {
-        // Cleanup subscription
         authSubscription.unsubscribe();
-
-        // Navigate to analytics dashboard
-        await this.router.navigate(['/analytics-dashboard'], { replaceUrl: true });
+        this.navCtrl.navigateRoot('/analytics-dashboard');
       }
     });
 

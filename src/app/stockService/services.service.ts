@@ -1661,9 +1661,13 @@ getTswiaByDate(store_id,from ,yearId){
   }
 
    updatePayPrice(item){
-    return this.http.post(this.api+'items/updatePayPrice.php', 
+    return this.http.post(this.api+'items/updatePayPrice.php',
      item
      )
+  }
+
+   bulkUpdatePrices(items: any[]) {
+    return this.http.post(this.api + 'items/bulkUpdatePrices.php', { items: items });
   }
 
    updateFirstQ(item){
@@ -1700,9 +1704,17 @@ getTswiaByDate(store_id,from ,yearId){
 
   // New methods for edit journal functionality
   getJournalById(journalId){
-    let params = new HttpParams() 
+    let params = new HttpParams()
     params=params.append('j_id' , journalId)
     return this.http.get(this.api+'journal/read_single.php',{params: params})
+  }
+
+  getJournalByRef(storeId: any, jRef: any, yearId: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', storeId)
+    params = params.append('j_ref', jRef)
+    params = params.append('year_id', yearId)
+    return this.http.get(this.api + 'journal/readByRef.php', {params: params})
   }
 
   getJFromByJournalId(journalId){
@@ -1730,9 +1742,28 @@ getTswiaByDate(store_id,from ,yearId){
   }
 
   updateJTo(jdetailTo){
-    return this.http.post(this.api+'jdetails_to/update.php', 
+    return this.http.post(this.api+'jdetails_to/update.php',
      jdetailTo
      )
+  }
+
+  // Atomic transaction endpoints - create/update journal + from + to in single DB transaction
+  createFullTransaction(transactionData){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+    return this.http.post(this.api+'journal/createTransaction.php', transactionData, httpOptions)
+  }
+
+  updateFullTransaction(transactionData){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+    return this.http.post(this.api+'journal/updateTransaction.php', transactionData, httpOptions)
   }
 
  
@@ -2201,6 +2232,52 @@ getTswiaByDate(store_id,from ,yearId){
     let params = new HttpParams()
     params = params.append('id', id)
     return this.http.delete(this.api + 'app_updates/delete.php', {params: params})
+  }
+
+  // ============== Recurring Obligations Methods ==============
+
+  getRecurringObligations(store_id: any, year_id: any) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('year_id', year_id)
+    return this.http.get(this.api + 'recurring/read.php', {params: params})
+  }
+
+  createRecurringObligation(data: any) {
+    return this.http.post(this.api + 'recurring/create.php', data)
+  }
+
+  updateRecurringObligation(data: any) {
+    return this.http.post(this.api + 'recurring/update.php', data)
+  }
+
+  deleteRecurringObligation(id: any) {
+    let params = new HttpParams()
+    params = params.append('id', id)
+    return this.http.delete(this.api + 'recurring/delete.php', {params: params})
+  }
+
+  generateObligations(store_id: any, year_id: any, user_id?: any) {
+    return this.http.post(this.api + 'recurring/generate.php', {
+      store_id: store_id,
+      year_id: year_id,
+      user_id: user_id || 1
+    })
+  }
+
+  getObligationStatus(store_id: any, year_id: any, month: string) {
+    let params = new HttpParams()
+    params = params.append('store_id', store_id)
+    params = params.append('year_id', year_id)
+    params = params.append('month', month)
+    return this.http.get(this.api + 'recurring/status.php', {params: params})
+  }
+
+  markObligationPaid(log_id: any, payment_journal_ref: string) {
+    return this.http.post(this.api + 'recurring/mark-paid.php', {
+      log_id: log_id,
+      payment_journal_ref: payment_journal_ref
+    })
   }
 
 }

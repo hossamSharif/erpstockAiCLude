@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef ,Renderer2,Input, ChangeDetectorRef} from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, Renderer2, Input, ChangeDetectorRef } from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable } from 'rxjs';
 import { AlertController, IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
@@ -18,10 +18,14 @@ import { SortingService, SortConfig } from '../services/sorting.service';
   styleUrls: ['./items-report.page.scss'],
 })
 export class ItemsReportPage implements OnInit {
+  // Modal support inputs
+  @Input() modalItem: any;
+  @Input() isModal: boolean = false;
+
   @ViewChild("dst") nameField: ElementRef;
-  @ViewChild('qtyId') qtyId;  
+  @ViewChild('qtyId') qtyId;
    @ViewChild('dstPop') dstPop;
-   @ViewChild('popInput') popInput; 
+   @ViewChild('popInput') popInput;
     @ViewChild('popover') popover;
     searchResult :Array<any> =[]
   isOpen : boolean = false;
@@ -185,6 +189,15 @@ export class ItemsReportPage implements OnInit {
   }
 
   ngOnInit() {
+    // Modal mode: use modalItem directly instead of route queryParams
+    if (this.isModal && this.modalItem) {
+      this.hasParameter = true;
+      this.prepareOffline();
+      this.getAppInfo();
+      this.handleItemFromNavigation(this.modalItem);
+      return;
+    }
+
      this.route.queryParams.subscribe(queryParams => {
       if (Object.keys(queryParams).length > 0) {
         this.hasParameter = true;
@@ -791,10 +804,16 @@ this.selectedItem = {
     //console.log('Loading dismissed with role:', role);
   }
 
-  getPayInvoDetail(pay,sub_name,status){
+  async getPayInvoDetail(pay,sub_name,status){
     console .log(pay,sub_name,status)
-    let itemList :Array<any>=[] 
-    this.presentLoadingWithOptions('جاري جلب التفاصيل ...') 
+
+    // If in modal mode, dismiss the modal before navigating to edit pages
+    if (this.isModal) {
+      await this.modalController.dismiss();
+    }
+
+    let itemList :Array<any>=[]
+    this.presentLoadingWithOptions('جاري جلب التفاصيل ...')
     let  payInvo ={
       pay_id:pay.pay_id ,
       pay_ref:pay.pay_ref ,
@@ -1471,6 +1490,11 @@ onRefreshRequested() {
 refresh() {
   this.presentToast('COMMON.MESSAGE.UPDATED_SUCCESSFULLY', 'success');
   window.location.reload();
+}
+
+// Dismiss the modal (used when isModal is true)
+dismissModal() {
+  this.modalController.dismiss();
 }
 
 // Helper method to clear item selection

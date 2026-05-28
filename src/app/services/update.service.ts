@@ -20,6 +20,7 @@ export interface AppUpdate {
 })
 export class UpdateService {
   private SEEN_UPDATES_KEY = 'SEEN_APP_UPDATES';
+  private LATEST_VERSION_KEY = 'LATEST_APP_VERSION';
   private apiUrl = 'https://erp.gvstech.net/myapiAi/api/app_updates/';
 
   constructor(
@@ -114,5 +115,63 @@ export class UpdateService {
    */
   refreshApp(): void {
     window.location.reload();
+  }
+
+  /**
+   * Force-clear all service worker caches and reload.
+   * This ensures the new version loads on the first reload
+   * instead of requiring multiple refreshes.
+   */
+  async forceUpdateAndReload(): Promise<void> {
+    try {
+      // 1. Unregister all service workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(r => r.unregister()));
+      }
+
+      // 2. Clear all Cache Storage entries
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+
+      // 3. Hard reload (bypasses browser cache)
+      window.location.reload();
+    } catch (error) {
+      console.error('Error during force update:', error);
+      // Fallback to plain reload
+      window.location.reload();
+    }
+  }
+
+  /**
+   * Fetch the latest active version from the API and cache it in storage.
+   * Returns the version string (e.g. '1.0.5') or fallback '1.0.3'.
+   */
+  async fetchAndStoreLatestVersion(): Promise<string> {
+    try {
+      const update = await this.getLatestUpdate().toPromise();
+      if (update && update.version) {
+        await this.storage.set(this.LATEST_VERSION_KEY, update.version);
+        return update.version;
+      }
+    } catch (error) {
+      console.error('Error fetching latest version:', error);
+    }
+    return this.getStoredVersion();
+  }
+
+  /**
+   * Read the cached latest version from storage.
+   * Returns '1.0.3' as a fallback if nothing is stored.
+   */
+  async getStoredVersion(): Promise<string> {
+    try {
+      const version = await this.storage.get(this.LATEST_VERSION_KEY);
+      return version || '1.0.3';
+    } catch {
+      return '1.0.3';
+    }
   }
 }

@@ -540,7 +540,13 @@
                       <ion-icon [name]="getSortIcon('total')"></ion-icon>
                     </ion-button>
                   </th>
-                  <th  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">اخر عملية بيع
+                  <th  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">تاريخ اخر بيع
+                    <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('lastSold')">
+
+                      <ion-icon [name]="getSortIcon('lastSold')"></ion-icon>
+                    </ion-button>
+                  </th>
+                  <th  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">كمية اخر بيع
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('lastSold')">
 
                       <ion-icon [name]="getSortIcon('lastSold')"></ion-icon>
@@ -559,7 +565,7 @@
                     </ion-button>
                   </th>
 
-                  <th>المخزون الإفتتاحي</th> 
+                  <th  [ngClass]="{'hideMe': colSetting.firstQuantity == false , 'showMe': colSetting.firstQuantity == true }">المخزون الإفتتاحي</th> 
                   <!-- <th  [ngClass]="{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }"><strong>تعديل</strong>  </th>  -->
                   <!-- <th  [ngClass]="{'hideMe': colSetting.delete == false , 'showMe': colSetting.delete == true }"><strong>حذف</strong>  </th>  -->
                  <th [ngClass]="{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }"><strong>الإجراءات</strong></th>
@@ -648,14 +654,10 @@
                   <td  [ngClass]="{'hideMe': colSetting.instock == false , 'showMe': colSetting.instock == true }">{{item.quantity}}</td>
                   <td  [ngClass]="{'hideMe': colSetting.total == false , 'showMe': colSetting.total == true }">{{(+item.quantity * +item.perch_price) | currencyDisplay:'SDG':false}}</td>
                   <td  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">{{item.lastSoldDate }}</td>
+                  <td  [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">{{item.lastSoldQty }}</td>
                   <td  [ngClass]="{'hideMe': colSetting.lastPurch == false , 'showMe': colSetting.lastPurch == true }">{{item.lastPurchDate }}</td>
                   <td  [ngClass]="{'hideMe': colSetting.lastPurch == false , 'showMe': colSetting.lastPurch == true }">{{item.lastPurchQty }}</td>
-                  <!-- new -->
-                  <!-- <td   >{{item.sales28 }}</td>
-                  <td   >{{item.salesQuantity }}</td>
-                  <td   >{{item.purch28 }}</td>
-                  <td   >{{item.perchQuantity }}</td> -->
-                  <td>
+                  <td  [ngClass]="{'hideMe': colSetting.firstQuantity == false , 'showMe': colSetting.firstQuantity == true }">
                      <ion-item *ngIf="showMe == i">
                     <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.quantity"  ></ion-input>
                      </ion-item>
@@ -930,7 +932,12 @@
                       <ion-icon [name]="getSortIcon('total')"></ion-icon>
                     </ion-button>
                   </th>
-                  <th [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">اخر عملية بيع
+                  <th [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">تاريخ اخر بيع
+                    <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('lastSold')">
+                      <ion-icon [name]="getSortIcon('lastSold')"></ion-icon>
+                    </ion-button>
+                  </th>
+                  <th [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">كمية اخر بيع
                     <ion-button class="ion-no-margin ion-no-padding" color="success" fill="clear" size="small" (click)="sortData('lastSold')">
                       <ion-icon [name]="getSortIcon('lastSold')"></ion-icon>
                     </ion-button>
@@ -945,7 +952,7 @@
                       <ion-icon [name]="getSortIcon('lastPurch')"></ion-icon>
                     </ion-button>
                   </th>
-                  <th>المخزون الإفتتاحي</th>
+                  <th [ngClass]="{'hideMe': colSetting.firstQuantity == false , 'showMe': colSetting.firstQuantity == true }">المخزون الإفتتاحي</th>
                   <th [ngClass]="{'hideMe': colSetting.edit == false , 'showMe': colSetting.edit == true }"><strong>الإجراءات</strong></th>
                 </tr>
 
@@ -1024,13 +1031,16 @@
                   <td [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">
                     <ion-text>{{item.lastSoldDate}}</ion-text>
                   </td>
+                  <td [ngClass]="{'hideMe': colSetting.lastSold == false , 'showMe': colSetting.lastSold == true }">
+                    <ion-text>{{item.lastSoldQty}}</ion-text>
+                  </td>
                   <td [ngClass]="{'hideMe': colSetting.lastPurch == false , 'showMe': colSetting.lastPurch == true }">
                     <ion-text>{{item.lastPurchDate}}</ion-text>
                   </td>
                   <td [ngClass]="{'hideMe': colSetting.lastPurch == false , 'showMe': colSetting.lastPurch == true }">
                     <ion-text>{{item.lastPurchQty}}</ion-text>
                   </td>
-                  <td>
+                  <td [ngClass]="{'hideMe': colSetting.firstQuantity == false , 'showMe': colSetting.firstQuantity == true }">
                     <ion-text *ngIf="showMe != i">{{item.firstQuantity}}</ion-text>
                     <ion-item *ngIf="showMe == i">
                       <ion-input (keyup.enter)="editCell(i ,item)" [(ngModel)] ="this.selectedItem2.quantity"  ></ion-input>

@@ -30,7 +30,7 @@ export class BalanceSheet2Page implements OnInit, OnDestroy {
   
   // Filter and UI state
   segmentValue: string = 'all';
-  showOnlyWithBalance: boolean = false;
+  showOnlyWithBalance: boolean = true;
   loading: boolean = false;
   showEmpty: boolean = false;
   device: string = '';
@@ -181,8 +181,11 @@ export class BalanceSheet2Page implements OnInit, OnDestroy {
         case 'purchases':
           filtered = filtered.filter(acc => acc.ac_id == 9);
           break;
-        case 'other':
-          filtered = filtered.filter(acc => ![1, 2, 8, 9].includes(acc.ac_id));
+        case 'debit_balance':
+          filtered = filtered.filter(acc => acc.display_debit > 0 && (acc.cat_id == 1 || acc.cat_id == 2));
+          break;
+        case 'credit_balance':
+          filtered = filtered.filter(acc => acc.display_credit > 0 && (acc.cat_id == 1 || acc.cat_id == 2));
           break;
       }
     }
@@ -243,6 +246,13 @@ export class BalanceSheet2Page implements OnInit, OnDestroy {
   // Refresh data
   refresh() {
     this.loadBalanceSheet();
+  }
+
+  // Navigate to statement page for specific account
+  navigateToStatement(account: any) {
+    this.router.navigate(['/folder/statement2'], {
+      queryParams: { accountId: account.id }
+    });
   }
 
   async presentToast(translationKey: string, color: string = 'primary') {
@@ -333,7 +343,8 @@ export class BalanceSheet2Page implements OnInit, OnDestroy {
       'supplier': 'الموردون',
       'sales': 'حسابات المبيعات',
       'purchases': 'حسابات المشتريات',
-      'other': 'الحسابات الأخرى'
+      'debit_balance': 'أرصدة مدينة (بدون الأصول والمبيعات والمشتريات)',
+      'credit_balance': 'أرصدة دائنة (بدون الأصول والمبيعات والمشتريات)'
     };
     
     if (this.segmentValue && this.segmentValue !== 'all') {

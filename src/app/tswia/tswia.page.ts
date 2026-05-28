@@ -8,9 +8,6 @@ import { Storage } from '@ionic/storage';
 import { AuthServiceService } from '../auth/auth-service.service';
 import { PrintModalPage } from '../print-modal/print-modal.page';
 import { ActivatedRoute } from '@angular/router';
-import { FilterPipe } from '../sales/pipe';
-import { FilterPipe2 } from '../sales/pipe2';
-import { FilterPipe3  } from '../sales/pipe3';
 import { StockServiceService } from '../syncService/stock-service.service';
 import * as momentObj from 'moment';
 
@@ -21,20 +18,24 @@ import * as momentObj from 'moment';
 })
 export class TswiaPage implements OnInit {
   @ViewChild("dst") nameField: ElementRef;
-  @ViewChild('dstPop12') dstPop12;
-  @ViewChild('qtyId12') qtyId12; 
-  @ViewChild('popInput') popInput; 
-  @ViewChild('popover') popover;
-  @ViewChild('popoverNotif7') popoverNotif7;
+  @ViewChild('qtyId12') qtyId12;
   notifArr:Array<any> =[]
   showNotif = false
   LogHistoryLocalArr:Array<any> =[]
   logHistoryArr:Array<any>=[];
   isOpenNotif = false ;
   subiscribtionNotif:Subscription;
-  newNotif = false ; 
-  isOpen = false; 
+  newNotif = false ;
   selectedItemSales29
+
+  // Selection, search, sort properties
+  selectedItems: Set<number> = new Set()
+  isSelectAll: boolean = false
+  sortedItemList: Array<any> = []
+  isItemListSorted: boolean = false
+  tableSearchTerm: string = ''
+  highlightedIndex: number = -1
+  searchMatches: number[] = []
   sub_account:Array<any> =[]
   sub_accountLocalSales:Array<any> =[]
   sub_accountSales:Array<any> =[]
@@ -64,11 +65,6 @@ export class TswiaPage implements OnInit {
   status:any = 'new'
   searchLang :any = 0
   currentCustumerStatus :any
-  searchTerm : any = ""
-  aliasTerm :any =""
-  searchResult :Array<any> =[]
-  aliasResult :Array<any> =[]
-  finalResult :Array<any> =[]
   year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
   pendingItemsFromStock: Array<any> = [];
   statusFromRoute: string = '';
@@ -89,12 +85,23 @@ export class TswiaPage implements OnInit {
       // this.selectedAccount.sub_name = this.payInvo.sub_name;  
       this.prepareOffline()
       this.getAppInfoCase2()
+    } else if (params['fromTab'] === 'true' && params['dataKey']) {
+        // New tab mode: read items from localStorage
+        const dataKey = params['dataKey'];
+        const storedData = localStorage.getItem(dataKey);
+        if (storedData) {
+          const parsed = JSON.parse(storedData);
+          this.statusFromRoute = 'newInvoFromItemsPage';
+          this.pendingItemsFromStock = parsed;
+          // Don't remove from localStorage here - component may be created twice
+        }
+        console.log('New invoice from new tab, items:', this.pendingItemsFromStock);
     } else if (params['status'] === 'newInvoFromItemsPage' && params['selectedItemsList']) {
         console.log('New invoice from items page');
         this.statusFromRoute = params['status'];
         this.pendingItemsFromStock = JSON.parse(params['selectedItemsList']);
         console.log('Received items from stock page:', this.pendingItemsFromStock);
-    } 
+    }
   });
 
 
@@ -125,19 +132,6 @@ export class TswiaPage implements OnInit {
       qtyReal:0
     }
   }
-
-    changeMode(){
-      if(this.offline == true){
-        this.offline = false
-        this.color = 'primary' 
-      }else if(this.offline == false){
-        this.offline = true
-        this.color = 'dark'
-      }
-      this.storage.set('offline',this.offline).then((response) => { 
-        //console.log('mooooode',this.offline)  
-    });
-    }
 
     ionViewDidLeave(){
       //console.log('ionViewWillLeave') 
@@ -193,77 +187,17 @@ export class TswiaPage implements OnInit {
     getItemLocalOff(){
       this.storage.get('itemsLocal').then((response) => {
         if (response) {
-          this.itemsLocal = response 
-           //console.log(this.itemsLocal)  
+          this.itemsLocal = response
            this.items = this.itemsLocal
-           this.items.forEach(element => {
-            if(+element.tswiaQuantity > 0){
-              element.salesQuantity = +element.salesQuantity + +element.tswiaQuantity 
-            }else if(+element.tswiaQuantity < 0){
-              element.perchQuantity = +element.perchQuantity + Math.abs(+element.tswiaQuantity) 
-            }     element.quantity = (+element.perchQuantity + +element.firstQuantity) - +element.salesQuantity
-          });
-          this.searchResult = this.items  
         }
-      }); 
-     }
-    presentPopover(e?: Event) {
-     //console.log('preent me', e)
-      this.popover.event = e;
-      this.isOpen = true;
-      this.clear()
-      this.searchResult = this.items
-      setTimeout(() => {
-      this.setFocusOnInput('popInput')
-      }, 2000);
-    }
-
-    didDissmis(){
-      this.isOpen = false
-      //console.log('dismissOver')
-      this.setFocusOnInput('qtyId12')
-    }
-
-
-    searchItem(ev){
-      this.searchResult = []
-      this.aliasTerm = ev.target.value
-     
-      const filterPipe = new FilterPipe; 
-      const filterPipe2 = new FilterPipe2;
-      const filterPipe3 = new FilterPipe3 ;
-
-      let  fiteredArr :any
-      if(this.searchLang == 0){
-             fiteredArr = filterPipe.transform(this.items,ev.target.value); 
-      }else{
-             fiteredArr = filterPipe3.transform(this.items,ev.target.value);  
-      }
-     
-      const fiteredArr2 = filterPipe2.transform(this.items,this.aliasTerm);  
-      //console.log('filte',fiteredArr)
-      //console.log('fiteredArr2',fiteredArr2)
-
-      if(fiteredArr.length>0){
-        fiteredArr.forEach(element => {
-          this.searchResult.push( element)
-        });
-      }
-
-      if(fiteredArr2.length>0){
-         fiteredArr2.forEach(element => {
-        this.searchResult.push( element)
       });
-      } 
-      
-      //console.log('search',this.searchResult)
-    }
+     }
 
     clear(item_name?){
      if(item_name){
       this.selectedItem = {
         id: undefined,
-        dateCreated: "", 
+        dateCreated: "",
         pay_ref:this.payInvo.pay_ref,
         item_desc: "",
         item_name: "",
@@ -277,8 +211,6 @@ export class TswiaPage implements OnInit {
         aliasEn:"",
         qtyReal:0
       }
-     }else{
-      this.searchTerm = "" 
      }
     }
 
@@ -288,26 +220,11 @@ export class TswiaPage implements OnInit {
       this.year = response
       //console.log('this.year.id',this.year.id)
       if (this.offline == false) {
-        this.api.stockItems(1,this.year.id).subscribe(data => {
-          //console.log(data)
+        this.api.getAllStockItemsWithouteCounts(this.store_info.id, this.year.id).subscribe(data => {
           let res = data
           this.items = res['data']
-          this.items.forEach(element => {
-            if(+element.tswiaQuantity > 0){
-              element.salesQuantity = +element.salesQuantity + +element.tswiaQuantity 
-  
-            }else if(+element.tswiaQuantity < 0){
-              element.perchQuantity = +element.perchQuantity + Math.abs(+element.tswiaQuantity) 
-            }
-  
-            element.quantity = (+element.perchQuantity + +element.firstQuantity) - +element.salesQuantity
-          });
-
           this.storage.set('itemsLocal' , this.items).then((response) => {
-             
           });
-
-          this.searchResult = this.items
         }, (err) => {
           //console.log(err);
         },
@@ -316,21 +233,10 @@ export class TswiaPage implements OnInit {
         )
       } else {
         this.items = this.itemsLocal
-        this.items.forEach(element => {
-          if(+element.tswiaQuantity > 0){
-            element.salesQuantity = +element.salesQuantity + +element.tswiaQuantity 
-
-          }else if(+element.tswiaQuantity < 0){
-            element.perchQuantity = +element.perchQuantity + Math.abs(+element.tswiaQuantity) 
-          }
-
-          element.quantity = (+element.perchQuantity + +element.firstQuantity) - +element.salesQuantity
-        });
-        this.searchResult = this.items
       }
-    } 
+    }
   });
-    
+
     }
 
   
@@ -433,7 +339,7 @@ export class TswiaPage implements OnInit {
          //console.log(response)
          //console.log(this.store_info) 
          this.getItemLocalOff()
-      
+         this.getStockItems()
          this.prepareInvo()
       }
     }); 
@@ -653,10 +559,22 @@ recalSubBalance(){
        this.payInvo.yearId = this.year.id
        //console.log( this.payInvo) 
        this.itemList = []
+
+     // Fallback: check localStorage via snapshot if subscription hasn't fired yet
+     if (this.pendingItemsFromStock.length === 0) {
+       const snap = this.route.snapshot.queryParams;
+       if (snap['fromTab'] === 'true' && snap['dataKey']) {
+         const storedData = localStorage.getItem(snap['dataKey']);
+         if (storedData) {
+           this.pendingItemsFromStock = JSON.parse(storedData);
+           this.statusFromRoute = 'newInvoFromItemsPage';
+         }
+       }
+     }
+
      if (this.statusFromRoute === 'newInvoFromItemsPage' && this.pendingItemsFromStock.length > 0) {
-      //console.log('Pending items from stock page:', this.pendingItemsFromStock);
       this.pendingItemsFromStock.forEach(item => {
-       
+
       this.itemList.push({
       "id" : 'NULL',
       "pay_ref" :this.payInvo.pay_ref,
@@ -664,18 +582,21 @@ recalSubBalance(){
       "pay_price" :item.pay_price,
       "quantity" : +item.qty,
       "tot" :(( +item.qty - 0 ) * +item.perch_price).toFixed(2),
-      "store_id" :+this.store_info.id, 
-      "yearId" :+this.year.id, 
+      "store_id" :+this.store_info.id,
+      "yearId" :+this.year.id,
       "item_id" : +item.id,
       "dateCreated" : this.datePipe.transform(d, 'dd-MM-YYYY'),
       "perch_price":item.perch_price ,
         "availQty" :+item.qty,
-        "qtyReal" :  0 
+        "qtyReal" :  0
         });
       });
       this.statusFromRoute = '';
        this.pendingItemsFromStock = []; // Reset status after processing
        this.getTotal()
+       // Clean up localStorage after successful processing
+       const snap = this.route.snapshot.queryParams;
+       if (snap['dataKey']) { localStorage.removeItem(snap['dataKey']); }
     }
       
 
@@ -686,22 +607,10 @@ recalSubBalance(){
   }
  
    setFocusOnInput(Input) {
-     //console.log('setFocusOnInput')
-     if (Input == 'dst') { 
-      this.nameField.nativeElement.focus(); 
-     } else if(Input == 'dstPop') {
-      this.dstPop12.setFocus();
-      this.isOpen = true;
-      this.clear()
-      this.searchResult = this.items
-      setTimeout(() => {
-          this.popInput.setFocus(); 
-      }, 1500);
-    
-     }else if(Input == 'qtyId12') {
-      this.qtyId12.setFocus();  
-     }else if(Input == 'popInput'){
-      this.popInput.setFocus();  
+     if (Input == 'dst') {
+      this.nameField.nativeElement.focus();
+     } else if(Input == 'qtyId12') {
+      this.qtyId12.setFocus();
      }
    }
 
@@ -709,17 +618,6 @@ recalSubBalance(){
     //console.log('dsdfsdf',event)
   }
 
-  presentPopoverNotif(e?: Event) {
-    //console.log('preent me', e)
-     this.notifArr = []
-     this.showNotif = false
-     this.popoverNotif7.event = e;
-     this.isOpenNotif = true;  
-   }
-  didDissmisNotif(){
-    this.isOpenNotif = false
-    //console.log('dismissOver') 
-  }
   getItems() {
     if (this.offline == false) {
       this.api.getItems().subscribe(data => {
@@ -820,71 +718,54 @@ pickAccount(ev){
 }
 }
 
-selectFromPop(item){
-//console.log(item)
-this.selectedItem = {
-  id:item.id,
-  dateCreated:item.dateCreated,
-  pay_ref:this.payInvo.pay_ref,
-  item_desc:item.item_desc,
-  item_name:item.item_name,
-  item_unit:item.item_unit,
-  parcode:item.parcode,
-  pay_price:item.pay_price,
-  perch_price:item.perch_price,
-  qty:"",
-  tot:item.pay_price,
-  availQty:item.quantity,
-  aliasEn:item.aliasEn ,
-  qtyReal:0
-} 
-this.selectedItemSales29 = item.sales29 
- this.searchTerm = item.item_name
-  //console.log( this.selectedItem); 
-  this.didDissmis()
-  
-}
-
-
-
-pickDetail(ev){ 
-  let fl : Array<any>=[]
-  if(this.searchLang == 1){
-     fl= this.items.filter(x=>x.item_desc == ev.target.value)
-    //console.log('hyrr',fl);
-  } else {
-     fl= this.items.filter(x=>x.item_name == ev.target.value)
-    //console.log(fl);
-  }
- 
-
-  if (fl.length > 0) {
+onItemSelected(event: any) {
+  if (!event) {
     this.selectedItem = {
-    id:fl[0]['id'],
-    dateCreated:fl[0]['dateCreated'],
-    pay_ref:this.payInvo.pay_ref,
-    item_desc:fl[0]['item_desc'],
-    item_name:fl[0]['item_name'],
-    item_unit:fl[0]['item_unit'],
-    parcode:fl[0]['parcode'],
-    pay_price:fl[0]['pay_price'],
-    perch_price:fl[0]['perch_price'],
-    qty:"",
-    tot:fl[0]['perch_price'],
-    availQty:fl[0]['availQty'],
-    aliasEn:fl[0]['aliasEn'],
-    qtyReal:fl[0]['qtyReal']
+      id: undefined,
+      dateCreated: "",
+      pay_ref: this.payInvo.pay_ref,
+      item_desc: "",
+      item_name: "",
+      item_unit: "",
+      parcode: 0,
+      pay_price: 0,
+      perch_price: 0,
+      qty: 0,
+      tot: 0,
+      availQty: 0,
+      aliasEn: "",
+      qtyReal: 0
+    };
+    this.selectedItemSales29 = null;
+    return;
   }
-  //console.log( this.selectedItem);
-  this.setFocusOnInput('qtyId12')
-  }else{
-    this.presentToast('خطأ في اسم الصنف ', 'danger') 
-    this.selectedItem.item_name =""
-    this.selectedItem.item_desc =""
+  this.selectedItem = {
+    id: event.id,
+    dateCreated: event.dateCreated,
+    pay_ref: this.payInvo.pay_ref,
+    item_desc: event.item_desc,
+    item_name: event.item_name,
+    item_unit: event.item_unit,
+    parcode: event.parcode,
+    pay_price: event.pay_price,
+    perch_price: event.perch_price,
+    qty: "",
+    tot: event.pay_price,
+    availQty: 0,
+    aliasEn: event.aliasEn,
+    qtyReal: 0
+  };
+  const orig = this.items.find(i => i.id === event.id);
+  if (orig) {
+    const baseStock = (+orig.firstQuantity || 0) + (+orig.perchQuantity || 0) - (+orig.salesQuantity || 0);
+    const tswiaAdj = +orig.tswiaQuantity || 0;
+    this.selectedItem.availQty = baseStock - tswiaAdj;
+    this.selectedItem.tot = (this.selectedItem.availQty - this.selectedItem.qtyReal) * +this.selectedItem.perch_price;
+    this.selectedItemSales29 = orig.sales29;
   }
-  
-  
+  setTimeout(() => this.setFocusOnInput('qtyId12'), 300);
 }
+
 generateRandom2(role):any{
   let da = new Date 
   //console.log(da)
@@ -1017,9 +898,8 @@ addTolist() {
         qtyReal:""
       } 
       this.getTotal()
-      this.setFocusOnInput('dstPop12')
     }
-   
+
   }
 
   qtyClick(i){
@@ -1362,6 +1242,12 @@ if (!this.sub_account) {
       this.presentToast('تم الحفظ بنجاح', 'success')
       this.prepareInvo()
       this.status = 'new'
+      // Notify original tab that invoice was created
+      try {
+        const channel = new BroadcastChannel('invoice-channel');
+        channel.postMessage({ type: 'invoice-created', source: 'tswia' });
+        channel.close();
+      } catch (e) { /* BroadcastChannel not supported */ }
   }, (err) => {
     //console.log(err);
     this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
@@ -1500,11 +1386,187 @@ async presentLoadingWithOptions(msg?) {
    // cssClass: 'custom-class custom-loading',
     backdropDismiss: false
   });
-  await loading.present(); 
+  await loading.present();
   const { role, data } = await loading.onDidDismiss();
   //console.log('Loading dismissed with role:', role);
 }
 
+// ============ Selection Methods ============
 
+toggleSelectAll(event: any) {
+  const isChecked = event.detail.checked;
+  if (isChecked === this.isSelectAll) return;
+  if (isChecked) {
+    this.selectAllItems();
+  } else {
+    this.clearSelection();
+  }
+}
+
+selectAllItems() {
+  this.selectedItems.clear();
+  const displayList = this.getDisplayItemList();
+  displayList.forEach((_, index) => {
+    this.selectedItems.add(index);
+  });
+  this.isSelectAll = true;
+}
+
+clearSelection() {
+  this.selectedItems.clear();
+  this.isSelectAll = false;
+}
+
+toggleItemSelection(index: number, event: any) {
+  const isChecked = event.detail.checked;
+  if (isChecked) {
+    this.selectedItems.add(index);
+  } else {
+    this.selectedItems.delete(index);
+  }
+  this.isSelectAll = this.selectedItems.size === this.getDisplayItemList().length;
+}
+
+isItemSelected(displayIndex: number): boolean {
+  return this.selectedItems.has(displayIndex);
+}
+
+async bulkDeleteItems() {
+  if (this.selectedItems.size === 0) return;
+
+  const alert = await this.alertController.create({
+    header: 'تأكيد الحذف',
+    message: `هل تريد حذف ${this.selectedItems.size} صنف من القائمة؟`,
+    mode: 'ios',
+    buttons: [
+      { text: 'إلغاء', role: 'cancel' },
+      { text: 'حذف', handler: () => this.performBulkDelete() }
+    ]
+  });
+  await alert.present();
+}
+
+private performBulkDelete() {
+  const displayList = this.getDisplayItemList();
+  const itemsToDelete = Array.from(this.selectedItems).map(displayIndex => displayList[displayIndex]);
+
+  itemsToDelete.forEach(itemToDelete => {
+    const originalIndex = this.itemList.findIndex(item =>
+      item.item_name === itemToDelete.item_name &&
+      item.perch_price === itemToDelete.perch_price
+    );
+    if (originalIndex !== -1) {
+      this.itemList.splice(originalIndex, 1);
+    }
+  });
+
+  const deletedCount = this.selectedItems.size;
+  this.clearSelection();
+  this.getTotal();
+  if (this.isItemListSorted) {
+    this.sortItemListAlphabetically();
+  }
+  this.presentToast(`تم حذف ${deletedCount} صنف`, 'success');
+}
+
+// ============ Sort Methods ============
+
+sortItemListAlphabetically() {
+  if (!this.itemList || this.itemList.length === 0) return;
+
+  if (this.isItemListSorted) {
+    this.sortedItemList = [...this.itemList];
+    this.isItemListSorted = false;
+  } else {
+    this.sortedItemList = [...this.itemList].sort((a, b) => {
+      const nameA = a.item_name ? a.item_name.toString().toLowerCase() : '';
+      const nameB = b.item_name ? b.item_name.toString().toLowerCase() : '';
+      return nameA.localeCompare(nameB, 'ar', { numeric: true });
+    });
+    this.isItemListSorted = true;
+  }
+}
+
+getDisplayItemList() {
+  return this.sortedItemList.length > 0 ? this.sortedItemList : this.itemList;
+}
+
+updateSortedList() {
+  if (this.isItemListSorted) {
+    this.sortItemListAlphabetically();
+  } else {
+    this.sortedItemList = [...this.itemList];
+  }
+}
+
+// ============ Search Methods ============
+
+onSearchTermChange() {
+  this.searchMatches = [];
+  this.highlightedIndex = -1;
+
+  if (this.tableSearchTerm.trim() === '') return;
+
+  const displayList = this.getDisplayItemList();
+  const searchTermLower = this.tableSearchTerm.toLowerCase().trim();
+
+  displayList.forEach((item, index) => {
+    if (item.item_name && item.item_name.toLowerCase().includes(searchTermLower)) {
+      this.searchMatches.push(index);
+    }
+  });
+
+  if (this.searchMatches.length > 0) {
+    this.highlightedIndex = 0;
+    this.scrollToHighlightedItem();
+  }
+}
+
+navigateSearch(direction: 'next' | 'prev') {
+  if (this.searchMatches.length === 0) return;
+
+  if (direction === 'next') {
+    this.highlightedIndex = (this.highlightedIndex + 1) % this.searchMatches.length;
+  } else {
+    this.highlightedIndex = this.highlightedIndex <= 0 ? this.searchMatches.length - 1 : this.highlightedIndex - 1;
+  }
+
+  this.scrollToHighlightedItem();
+}
+
+scrollToHighlightedItem() {
+  if (this.highlightedIndex >= 0 && this.searchMatches.length > 0) {
+    const targetIndex = this.searchMatches[this.highlightedIndex];
+    setTimeout(() => {
+      const tableContainer = document.querySelector('.table-container');
+      const targetRow = document.querySelector(`tr[data-index="${targetIndex}"]`);
+      if (tableContainer && targetRow) {
+        targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  }
+}
+
+isHighlighted(index: number): boolean {
+  return this.searchMatches.includes(index) && this.searchMatches[this.highlightedIndex] === index;
+}
+
+isSearchMatch(index: number): boolean {
+  return this.searchMatches.includes(index);
+}
+
+getSearchResultText(): string {
+  if (this.tableSearchTerm.trim() === '') return '';
+  if (this.searchMatches.length === 0) return 'لا توجد نتائج';
+  return `${this.highlightedIndex + 1} من ${this.searchMatches.length}`;
+}
+
+highlightText(text: string, searchTerm: string): string {
+  if (!text || !searchTerm.trim()) {
+    return text || '';
+  }
+  const regex = new RegExp(`(${searchTerm.trim()})`, 'gi');
+  return text.replace(regex, '<mark>$1</mark>');
+}
 
 }

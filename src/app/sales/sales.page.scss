@@ -397,24 +397,6 @@ ion-segment {
   }
 }
 
-// Modal styling
-ion-modal {
-  --height: 90%;
-  --border-radius: 16px 16px 0 0;
-}
-
-// Insufficient Stock Modal Styling
-.insufficient-stock-modal {
-  --height: 80vh;
-  --width: 90vw;
-  --max-width: 600px;
-  --border-radius: 12px;
-  
-  @media (max-width: 768px) {
-    --height: 95vh;
-    --width: 95vw;
-  }
-}
 
 // Top Card Organization Styling
 .top-card-row {
@@ -578,6 +560,23 @@ tr.search-match {
 tr.search-highlight {
   background-color: rgba(255, 193, 7, 0.4) !important;
   border: 2px solid var(--ion-color-warning);
+}
+
+// Checkbox cell styles
+.checkbox-cell {
+  width: 40px;
+  text-align: center;
+  padding: 8px 4px;
+
+  ion-checkbox {
+    --size: 20px;
+  }
+}
+
+// Selected row highlight
+tr.selected-row {
+  background-color: rgba(var(--ion-color-primary-rgb), 0.15) !important;
+  border-right: 3px solid var(--ion-color-primary);
 }
 
 // Highlight text
@@ -906,4 +905,15 @@ ion-footer {
       height: 28px;
     }
   }
+}
+
+// Stock availability row coloring
+tr.stock-out-of-stock {
+  background-color: rgba(255, 0, 0, 0.12) !important;
+  td { color: #b91c1c; }
+}
+
+tr.stock-exceeds-available {
+  background-color: rgba(255, 193, 7, 0.18) !important;
+  td { color: #92400e; }
 }

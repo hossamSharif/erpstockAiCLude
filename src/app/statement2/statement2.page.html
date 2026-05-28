@@ -1,7 +1,10 @@
 <ion-header class="transparent-header">
   <ion-toolbar class="transparent-toolbar">
     <ion-buttons slot="start">
-      <ion-menu-button class="glass-menu-button"></ion-menu-button>
+      <ion-button *ngIf="navigatedFromExternal" fill="clear" (click)="back()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+      <ion-menu-button *ngIf="!navigatedFromExternal" class="glass-menu-button"></ion-menu-button>
     </ion-buttons>
     <ion-title class="glass-title">{{ 'ACCOUNTING.STATEMENT.TITLE' | translate }}</ion-title>
     <ion-buttons slot="end">
@@ -199,7 +202,10 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let transaction of sortedTransactions; let i = index" class="table-row">
+                <tr *ngFor="let transaction of sortedTransactions; let i = index"
+                    class="table-row clickable-row"
+                    [class.navigating]="navigatingToEdit"
+                    (click)="navigateToEdit(transaction)">
                   <td class="serial">{{ i + 1 }}</td>
                   <td class="date">{{ transaction.j_date | date:'dd/MM/yyyy' }}</td>
                   <td class="type">
@@ -324,6 +330,17 @@
                     </ion-label>
                   </ion-item>
                 </ion-list>
+                <div class="edit-button-container">
+                  <ion-button
+                    (click)="navigateToEdit(transaction)"
+                    fill="outline"
+                    expand="block"
+                    [disabled]="navigatingToEdit"
+                    class="edit-transaction-btn">
+                    <ion-icon name="create-outline" slot="start"></ion-icon>
+                    عرض / تعديل
+                  </ion-button>
+                </div>
               </div>
             </ion-accordion>
           </ion-accordion-group>

@@ -1,0 +1,110 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>تعديل اسعار النظام</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="bulk-price-container">
+    <!-- Info Banner -->
+    <ion-card>
+      <ion-card-content>
+        <ion-text color="warning">
+          <p><ion-icon name="information-circle"></ion-icon> تنبيه: سيتم تحديث اسعار النظام في قاعدة البيانات، مع خيار تحديث أسعار الفاتورة الحالية</p>
+        </ion-text>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Items Table -->
+    <div class="table-responsive" *ngIf="editableItems.length > 0">
+      <table class="price-update-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>اسم الصنف</th>
+            <th>سعر البيع</th>
+            <th>سعر الشراء</th>
+            <th>سعر التجزئة</th>
+            <th>إجراء</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of editableItems; let i = index"
+              [class.edited-row]="item.isEdited">
+            <td>{{ i + 1 }}</td>
+            <td class="item-name">{{ item.item_name }}</td>
+            <td>
+              <ion-input
+                type="number"
+                [(ngModel)]="item.pay_price"
+                (ionChange)="onPriceChange(item, 'pay_price')"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+              ></ion-input>
+            </td>
+            <td>
+              <ion-input
+                type="number"
+                [(ngModel)]="item.perch_price"
+                (ionChange)="onPriceChange(item, 'perch_price')"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+              ></ion-input>
+            </td>
+            <td>
+              <ion-input
+                type="number"
+                [(ngModel)]="item.retail_price"
+                (ionChange)="onPriceChange(item, 'retail_price')"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+              ></ion-input>
+            </td>
+            <td>
+              <ion-button fill="clear" color="danger" (click)="removeItem(i)" size="small">
+                <ion-icon name="trash" slot="icon-only"></ion-icon>
+              </ion-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- No Items Message -->
+    <ion-card *ngIf="editableItems.length === 0">
+      <ion-card-content>
+        <ion-text color="medium">
+          <p style="text-align: center;">لا توجد أصناف للتحديث</p>
+        </ion-text>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button
+        fill="solid"
+        color="primary"
+        (click)="save()"
+        [disabled]="editableItems.length === 0">
+        <ion-icon name="save" slot="start"></ion-icon>
+        حفظ التغييرات
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button fill="outline" (click)="cancel()">
+        إلغاء
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>

@@ -36,6 +36,18 @@
                 <span>جميع الحسابات</span>
               </div>
             </ion-segment-button>
+            <ion-segment-button value="debit_balance">
+              <div class="segment-content">
+                <ion-icon name="arrow-up-outline"></ion-icon>
+                <span>أرصدة مدينة</span>
+              </div>
+            </ion-segment-button>
+            <ion-segment-button value="credit_balance">
+              <div class="segment-content">
+                <ion-icon name="arrow-down-outline"></ion-icon>
+                <span>أرصدة دائنة</span>
+              </div>
+            </ion-segment-button>
             <ion-segment-button value="customer">
               <div class="segment-content">
                 <ion-icon name="people-outline"></ion-icon>
@@ -58,12 +70,6 @@
               <div class="segment-content">
                 <ion-icon name="trending-down-outline"></ion-icon>
                 <span>المشتريات</span>
-              </div>
-            </ion-segment-button>
-            <ion-segment-button value="other">
-              <div class="segment-content">
-                <ion-icon name="folder-outline"></ion-icon>
-                <span>أخرى</span>
               </div>
             </ion-segment-button>
           </ion-segment>
@@ -162,6 +168,7 @@
                   <ion-icon [name]="getSortIcon('balance_status')" class="sort-icon"></ion-icon>
                   حالة الرصيد
                 </th>
+                <th>العمليات</th>
               </tr>
             </thead>
             <tbody>
@@ -192,10 +199,21 @@
                     {{ getBalanceStatusDisplay(account) }}
                   </span>
                 </td>
+                <td class="actions-cell">
+                  <ion-button
+                    fill="clear"
+                    size="small"
+                    class="statement-action-btn"
+                    (click)="navigateToStatement(account)"
+                    title="كشف الحساب">
+                    <ion-icon name="document-text-outline" color="primary"></ion-icon>
+                  </ion-button>
+                </td>
               </tr>
-              
+
               <!-- Loading Skeleton -->
               <tr *ngIf="loading" class="skeleton-row">
+                <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                 <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                 <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
                 <td><ion-skeleton-text animated style="width: 100%"></ion-skeleton-text></td>
@@ -222,6 +240,7 @@
                     {{ getAbsoluteValue(summary.difference) | currencyDisplay:'SDG':false }}
                   </span>
                 </td>
+                <td class="actions-cell"></td>
               </tr>
             </tfoot>
           </table>
@@ -259,8 +278,18 @@
                 {{ getAccountTypeDisplay(account) }}
               </span>
             </div>
+            <div class="mobile-actions">
+              <ion-button
+                fill="clear"
+                size="small"
+                class="statement-action-btn"
+                (click)="navigateToStatement(account)"
+                title="كشف الحساب">
+                <ion-icon name="document-text-outline" color="primary"></ion-icon>
+              </ion-button>
+            </div>
           </div>
-          
+
           <div class="mobile-balances">
             <div class="balance-row">
               <span class="balance-label">الرصيد الافتتاحي:</span>

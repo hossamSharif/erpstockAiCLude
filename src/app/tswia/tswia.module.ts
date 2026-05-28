@@ -6,6 +6,8 @@ import { IonicModule } from '@ionic/angular';
 import { TswiaPageRoutingModule } from './tswia-routing.module'; 
 import { TswiaPage } from './tswia.page';
 import { ShareModule } from '../shareModule/share-module/share-module.module';
+import { SharedModule } from '../module/shared/shared.module';
+import { SelectionActionPanelModule } from '../components/selection-action-panel/selection-action-panel.module';
 
 @NgModule({
   imports: [
@@ -13,8 +15,10 @@ import { ShareModule } from '../shareModule/share-module/share-module.module';
     CommonModule,
     FormsModule,
     ShareModule,
+    SharedModule,
     IonicModule,
-    TswiaPageRoutingModule
+    TswiaPageRoutingModule,
+    SelectionActionPanelModule
   ],
   declarations: [TswiaPage]
 })

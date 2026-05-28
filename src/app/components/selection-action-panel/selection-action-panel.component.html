@@ -1,0 +1,72 @@
+<div class="selection-panel" *ngIf="isVisible" @slideUp>
+  <!-- Selected count chip -->
+  <div class="selected-count-chip">
+    <ion-icon name="checkbox-outline"></ion-icon>
+    <span>{{ selectedCount }} محدد</span>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="action-buttons">
+    <!-- Select All button -->
+    <ion-button
+      fill="clear"
+      size="small"
+      class="action-btn select-all-btn"
+      (click)="onSelectAll()"
+      *ngIf="selectedCount < totalCount">
+      <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
+      تحديد الكل
+    </ion-button>
+
+    <!-- Clear Selection button -->
+    <ion-button
+      fill="clear"
+      size="small"
+      class="action-btn clear-btn"
+      (click)="onClearSelection()">
+      <ion-icon name="close-outline" slot="start"></ion-icon>
+      إلغاء التحديد
+    </ion-button>
+
+    <!-- Copy Selected button -->
+    <ion-button
+      fill="clear"
+      size="small"
+      class="action-btn copy-btn"
+      (click)="onBulkCopy()">
+      <ion-icon name="copy-outline" slot="start"></ion-icon>
+      نسخ المحدد
+    </ion-button>
+
+    <!-- Cut Selected button -->
+    <ion-button
+      fill="clear"
+      size="small"
+      class="action-btn cut-btn"
+      (click)="onBulkCut()">
+      <ion-icon name="cut-outline" slot="start"></ion-icon>
+      قص المحدد
+    </ion-button>
+
+    <!-- Bulk Price Update button -->
+    <ion-button
+      fill="clear"
+      size="small"
+      class="action-btn price-btn"
+      (click)="onBulkPriceUpdate()"
+      *ngIf="showBulkPriceUpdate">
+      <ion-icon name="pricetags-outline" slot="start"></ion-icon>
+      تعديل اسعار النظام
+    </ion-button>
+
+    <!-- Delete Selected button -->
+    <ion-button
+      fill="clear"
+      size="small"
+      class="action-btn delete-btn"
+      (click)="onBulkDelete()">
+      <ion-icon name="trash-outline" slot="start"></ion-icon>
+      حذف المحدد
+    </ion-button>
+  </div>
+</div>

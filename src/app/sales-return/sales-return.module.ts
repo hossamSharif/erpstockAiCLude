@@ -11,6 +11,7 @@ import { SalesReturnPageRoutingModule } from './sales-return-routing.module';
 import { ShareModule } from "../shareModule/share-module/share-module.module";
 import { SalesReturnPage } from './sales-return.page'; 
 import { SharedModule } from '../module/shared/shared.module';
+import { ScrollToTopFabModule } from '../components/scroll-to-top-fab/scroll-to-top-fab.module';
 
 @NgModule({
   imports: [
@@ -21,7 +22,8 @@ import { SharedModule } from '../module/shared/shared.module';
     SharedModule, 
     SalesReturnPageRoutingModule 
   ,
-    TranslateModule
+    TranslateModule,
+    ScrollToTopFabModule
   ],
   declarations: 
   [

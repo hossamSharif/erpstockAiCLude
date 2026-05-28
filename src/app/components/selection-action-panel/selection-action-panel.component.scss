@@ -1,0 +1,158 @@
+:host {
+  display: block;
+}
+
+.selection-panel {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  direction: rtl;
+  animation: slideUp 0.3s ease-out;
+
+  .selected-count-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(var(--ion-color-primary-rgb), 0.2);
+    border-radius: 20px;
+    color: var(--ion-color-primary);
+    font-weight: 600;
+    font-size: 14px;
+
+    ion-icon {
+      font-size: 18px;
+    }
+  }
+
+  .action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .action-btn {
+      --color: rgba(255, 255, 255, 0.9);
+      --padding-start: 12px;
+      --padding-end: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border-radius: 8px;
+
+      ion-icon {
+        font-size: 18px;
+        margin-inline-end: 4px;
+      }
+
+      &:hover {
+        --background: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    .select-all-btn {
+      --color: var(--ion-color-primary);
+
+      &:hover {
+        --background: rgba(var(--ion-color-primary-rgb), 0.15);
+      }
+    }
+
+    .clear-btn {
+      --color: rgba(255, 255, 255, 0.7);
+
+      &:hover {
+        --color: white;
+        --background: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    .price-btn {
+      --color: var(--ion-color-warning);
+
+      &:hover {
+        --background: rgba(var(--ion-color-warning-rgb), 0.15);
+      }
+    }
+
+    .copy-btn {
+      --color: var(--ion-color-tertiary);
+
+      &:hover {
+        --background: rgba(var(--ion-color-tertiary-rgb), 0.15);
+      }
+    }
+
+    .cut-btn {
+      --color: var(--ion-color-secondary);
+
+      &:hover {
+        --background: rgba(var(--ion-color-secondary-rgb), 0.15);
+      }
+    }
+
+    .delete-btn {
+      --color: var(--ion-color-danger);
+
+      &:hover {
+        --background: rgba(var(--ion-color-danger-rgb), 0.15);
+      }
+    }
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateX(-50%) translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+// Responsive adjustments for mobile
+@media (max-width: 768px) {
+  .selection-panel {
+    bottom: 80px;
+    padding: 10px 14px;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 95vw;
+
+    .selected-count-chip {
+      font-size: 12px;
+      padding: 4px 10px;
+
+      ion-icon {
+        font-size: 16px;
+      }
+    }
+
+    .action-buttons {
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+
+      .action-btn {
+        --padding-start: 8px;
+        --padding-end: 8px;
+        font-size: 11px;
+
+        ion-icon {
+          font-size: 16px;
+        }
+      }
+    }
+  }
+}

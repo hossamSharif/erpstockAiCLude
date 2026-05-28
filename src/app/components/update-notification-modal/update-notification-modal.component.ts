@@ -9,6 +9,7 @@ import { UpdateService, AppUpdate } from '../../services/update.service';
 })
 export class UpdateNotificationModalComponent implements OnInit {
   @Input() update: AppUpdate;
+  isUpdating: boolean = false;
 
   constructor(
     private modalController: ModalController,
@@ -20,18 +21,21 @@ export class UpdateNotificationModalComponent implements OnInit {
   }
 
   /**
-   * Close modal, mark update as seen, and refresh app
+   * Mark update as seen, show loading spinner, then force-clear SW cache and reload.
+   * The modal stays visible during reload — the page reload dismisses everything.
    */
   async closeAndRefresh() {
-    // Mark this update as seen so it won't show again
+    this.isUpdating = true;
     await this.updateService.markUpdateAsSeen(this.update.version);
+    await this.updateService.forceUpdateAndReload();
+  }
 
-    // Close the modal
+  /**
+   * Dismiss the modal without reloading (user chose "Later").
+   * Marks the update as seen so the modal won't appear again this session.
+   */
+  async dismissLater() {
+    await this.updateService.markUpdateAsSeen(this.update.version);
     await this.modalController.dismiss();
-
-    // Refresh app to apply new version
-    setTimeout(() => {
-      this.updateService.refreshApp();
-    }, 300);
   }
 }

@@ -5,9 +5,6 @@ import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { AlertController, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { ServicesService } from '../stockService/services.service';
 import { Storage } from '@ionic/storage';
-import { FilterPipe } from '../sales/pipe';
-import { FilterPipe2 } from '../sales/pipe2';
-import { FilterPipe3 } from '../sales/pipe3';
 import { Subscription } from 'rxjs';
 import { StockServiceService } from '../syncService/stock-service.service';
 import * as momentObj from 'moment';
@@ -18,20 +15,24 @@ import * as momentObj from 'moment';
 })
 export class EditTswiaPage implements OnInit {
   @ViewChild("dstEds") dstEds: ElementRef;
-  @ViewChild('qtyId13') qtyId13; 
-  @ViewChild('dstPop14') dstPop14; 
-  @ViewChild('popInput5') popInput5; 
-  @ViewChild('popover6') popover6;
-  @ViewChild('popoverNotif21') popoverNotif21;
+  @ViewChild('qtyId13') qtyId13;
   notifArr:Array<any> =[]
   showNotif = false
   LogHistoryLocalArr:Array<any> =[]
   logHistoryArr:Array<any>=[];
   isOpenNotif = false ;
   subiscribtionNotif:Subscription;
-  newNotif = false ; 
-  isOpen = false; 
+  newNotif = false ;
   selectedItemSales29 : any
+
+  // Selection, search, sort properties
+  selectedItems: Set<number> = new Set()
+  isSelectAll: boolean = false
+  sortedItemList: Array<any> = []
+  isItemListSorted: boolean = false
+  tableSearchTerm: string = ''
+  highlightedIndex: number = -1
+  searchMatches: number[] = []
   
   payArray:any ;  
   sub_account:Array<any> =[]
@@ -59,12 +60,7 @@ export class EditTswiaPage implements OnInit {
   offline:boolean
   showMe = null
   searchLang :any = 0
-  searchTerm : any = ""
-  aliasTerm :any =""
-  searchResult :Array<any> =[]
-  aliasResult :Array<any> =[]
-  finalResult :Array<any> =[]
-  year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any} 
+  year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
   constructor(private behavApi:StockServiceService ,private _location: Location ,private alertController: AlertController,private route: ActivatedRoute, private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) {
     this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:""};
    
@@ -126,9 +122,8 @@ export class EditTswiaPage implements OnInit {
 
         if(this.notifArr.length> 0){ 
           this.showNotif = true
-          this.itemsLocal = notif[1] 
+          this.itemsLocal = notif[1]
           this.items =  this.itemsLocal
-          this.searchResult = this.items
           this.sub_accountSales = notif[2] 
           //console.log(this.sub_accountLocalSales)  
           this.storage.get('LogHistoryLocal').then((response) => { 
@@ -195,7 +190,8 @@ export class EditTswiaPage implements OnInit {
        this.store_info = response
         //console.log(response)
         //console.log(this.store_info)  
-        this.getItemLocalOff() 
+        this.getItemLocalOff()
+        this.getStockItems()
      }
    });
    this.storage.get('LogHistoryLocal').then((response) => {
@@ -216,22 +212,10 @@ export class EditTswiaPage implements OnInit {
       getItemLocalOff(){
         this.storage.get('itemsLocal').then((response) => {
           if (response) {
-            this.itemsLocal = response 
-             //console.log(this.itemsLocal)  
+            this.itemsLocal = response
              this.items = this.itemsLocal
-             this.items.forEach(element => {
-              if(+element.tswiaQuantity > 0){
-                element.salesQuantity = +element.salesQuantity + +element.tswiaQuantity 
-      
-              }else if(+element.tswiaQuantity < 0){
-                element.perchQuantity = +element.perchQuantity + Math.abs(+element.tswiaQuantity) 
-              }
-      
-              element.quantity = (+element.perchQuantity + +element.firstQuantity) - +element.salesQuantity
-            });
-            this.searchResult = this.items  
           }
-        }); 
+        });
        }
 
 
@@ -320,22 +304,10 @@ export class EditTswiaPage implements OnInit {
      }
 
     setFocusOnInput(Input) {
-      //console.log('setFocusOnInput')
-      if (Input == 'dst') { 
-       this.dstEds.nativeElement.focus(); 
-      } else if(Input == 'dstPop14') {
-       this.dstPop14.setFocus();
-       this.isOpen = true;
-       this.clear()
-       this.searchResult = this.items
-       setTimeout(() => {
-           this.popInput5.setFocus(); 
-       }, 1500);
-     
-      }else if(Input == 'qtyId13') {
-       this.qtyId13.setFocus();  
-      }else if(Input == 'popInput5'){
-       this.popInput5.setFocus();  
+      if (Input == 'dst') {
+       this.dstEds.nativeElement.focus();
+      } else if(Input == 'qtyId13') {
+       this.qtyId13.setFocus();
       }
     }
 
@@ -357,26 +329,11 @@ getItems(){
 
 getStockItems() {
   if (this.offline == false) {
-    this.api.stockItems(1 , this.year.id).subscribe(data => {
-      //console.log(data)
+    this.api.getAllStockItemsWithouteCounts(this.store_info.id, this.year.id).subscribe(data => {
       let res = data
       this.items = res['data']
-
-      this.items.forEach(element => {
-
-        if(+element.tswiaQuantity > 0){
-            element.salesQuantity = +element.salesQuantity + +element.tswiaQuantity 
-
-          }else if(+element.tswiaQuantity < 0){
-            element.perchQuantity = +element.perchQuantity + Math.abs(+element.tswiaQuantity) 
-          }
-
-          element.quantity = (+element.perchQuantity + +element.firstQuantity) - +element.salesQuantity
-      });
       this.storage.set('itemsLocal' , this.items).then((response) => {
-             
       });
-      this.searchResult = this.items 
     }, (err) => {
       //console.log(err);
     },
@@ -385,17 +342,6 @@ getStockItems() {
     )
   } else {
     this.items = this.itemsLocal
-    this.items.forEach(element => {
-      if(+element.tswiaQuantity > 0){
-        element.salesQuantity = +element.salesQuantity + +element.tswiaQuantity 
-
-      }else if(+element.tswiaQuantity < 0){
-        element.perchQuantity = +element.perchQuantity + Math.abs(+element.tswiaQuantity) 
-      }
-
-      element.quantity = (+element.perchQuantity + +element.firstQuantity) - +element.salesQuantity
-    });
-    this.searchResult = this.items
   }
 }
 
@@ -495,118 +441,58 @@ editCell(i){
 
 
 
-selectFromPop(item){
-  //console.log(item)
-  this.selectedItem = {
-    id:item.id,
-    dateCreated:item.dateCreated,
-    pay_ref:this.payInvo.pay_ref,
-    item_desc:item.item_desc,
-    item_name:item.item_name,
-    item_unit:item.item_unit,
-    parcode:item.parcode,
-    pay_price:item.pay_price,
-    perch_price:item.perch_price,
-    qtyReal:"",
-    tot:item.pay_price,
-    availQty:item.quantity,
-    aliasEn:item.aliasEn
-    
-  } 
-
-  this.selectedItemSales29 = item.sales29 
-   this.searchTerm = item.item_name
-    //console.log( this.selectedItem); 
-    this.didDissmis()
-    
-  }
-
-  pickDetail(ev){
-    let fl : Array<any>=[]
-  if(this.searchLang == 1){
-     fl= this.items.filter(x=>x.item_desc == ev.target.value)
-    //console.log('hyrr',fl);
-  }else {
-     fl= this.items.filter(x=>x.item_name == ev.target.value)
-    //console.log(fl);
-  }
-    
-    //console.log(fl);
-    if (fl.length > 0) {
+onItemSelected(event: any) {
+  if (!event) {
     this.selectedItem = {
-      id:fl[0]['id'],
-      dateCreated:fl[0]['dateCreated'],
-      pay_ref:this.payInvo.pay_ref,
-      item_desc:fl[0]['item_desc'],
-      item_name:fl[0]['item_name'],
-      item_unit:fl[0]['item_unit'],
-      parcode:fl[0]['parcode'],
-      pay_price:fl[0]['pay_price'],
-      perch_price:fl[0]['perch_price'], 
-      tot:fl[0]['pay_price'],
-      availQty:fl[0]['quantity'],
-      aliasEn:fl[0]['aliasEn'],
-      qtyReal:fl[0]['qtyReal'],
-
-    }
-    //console.log( this.selectedItem);
-     this.setFocusOnInput('qtyEds')
-  }else{
-    this.presentToast('خطأ في اسم الصنف ', 'danger') 
-    this.selectedItem.item_name =""
+      id: undefined,
+      dateCreated: "",
+      pay_ref: this.payInvo.pay_ref,
+      item_desc: "",
+      item_name: "",
+      item_unit: "",
+      parcode: 0,
+      pay_price: 0,
+      perch_price: 0,
+      tot: 0,
+      availQty: 0,
+      aliasEn: "",
+      qtyReal: 0
+    };
+    this.selectedItemSales29 = null;
+    return;
   }
+  this.selectedItem = {
+    id: event.id,
+    dateCreated: event.dateCreated,
+    pay_ref: this.payInvo.pay_ref,
+    item_desc: event.item_desc,
+    item_name: event.item_name,
+    item_unit: event.item_unit,
+    parcode: event.parcode,
+    pay_price: event.pay_price,
+    perch_price: event.perch_price,
+    tot: event.pay_price,
+    availQty: 0,
+    aliasEn: event.aliasEn,
+    qtyReal: 0
+  };
+  const orig = this.items.find(i => i.id === event.id);
+  if (orig) {
+    const baseStock = (+orig.firstQuantity || 0) + (+orig.perchQuantity || 0) - (+orig.salesQuantity || 0);
+    const tswiaAdj = +orig.tswiaQuantity || 0;
+    this.selectedItem.availQty = baseStock - tswiaAdj;
+    this.selectedItem.tot = (this.selectedItem.availQty - this.selectedItem.qtyReal) * +this.selectedItem.perch_price;
+    this.selectedItemSales29 = orig.sales29;
   }
-  
-
-  presentPopover(e?: Event) {
-    //console.log('preent me', e)
-     this.popover6.event = e;
-     this.isOpen = true;
-     this.clear()
-     this.searchResult = this.items
-     setTimeout(() => {
-     this.setFocusOnInput('popInput5')
-     }, 2000);
-   }
-
-   didDissmis(){
-     this.isOpen = false
-     //console.log('dismissOver')
-     this.setFocusOnInput('qtyEds')
-     
-   }
-   presentPopoverNotif(e?: Event) {
-    //console.log('preent me', e)
-     this.notifArr = []
-     this.showNotif = false
-     this.popoverNotif21.event = e;
-     this.isOpenNotif = true;  
-   }
-  
-   
-  didDissmisNotif(){
-    this.isOpenNotif = false
-    //console.log('dismissOver') 
-  }
-  
-   
-    searchItem(ev){
-      this.searchResult = []
-      this.aliasTerm = ev.target.value 
-      const filterPipe = new FilterPipe;   
-      let  fiteredArr :any = filterPipe.transform(this.items,ev.target.value); 
-      if(fiteredArr.length>0){
-        fiteredArr.forEach(element => {
-          this.searchResult.push( element)
-        });
-      }    //console.log('search',this.searchResult)
-    }
+  if (orig) this.selectedItemSales29 = orig.sales29;
+  setTimeout(() => this.setFocusOnInput('qtyId13'), 300);
+}
 
    clear(item_name?){
     if(item_name){
      this.selectedItem = {
        id: undefined,
-       dateCreated: "", 
+       dateCreated: "",
        pay_ref:this.payInvo.pay_ref,
        item_desc: "",
        item_name: "",
@@ -619,8 +505,6 @@ selectFromPop(item){
        availQty:0,
        aliasEn:""
      }
-    }else{
-     this.searchTerm = "" 
     }
    }
 
@@ -737,8 +621,6 @@ selectFromPop(item){
       
 
       this.getTotal()
-      this.setFocusOnInput('dstPop14')
-      //this.setFocusOnInput('dstEds')
     }
 
   }
@@ -1156,8 +1038,185 @@ deleteSalesitemList(){
    
   },() => {
     this.loadingController.dismiss()
-  }) 
+  })
 }
 
+// ============ Selection Methods ============
+
+toggleSelectAll(event: any) {
+  const isChecked = event.detail.checked;
+  if (isChecked === this.isSelectAll) return;
+  if (isChecked) {
+    this.selectAllItems();
+  } else {
+    this.clearSelection();
+  }
+}
+
+selectAllItems() {
+  this.selectedItems.clear();
+  const displayList = this.getDisplayItemList();
+  displayList.forEach((_, index) => {
+    this.selectedItems.add(index);
+  });
+  this.isSelectAll = true;
+}
+
+clearSelection() {
+  this.selectedItems.clear();
+  this.isSelectAll = false;
+}
+
+toggleItemSelection(index: number, event: any) {
+  const isChecked = event.detail.checked;
+  if (isChecked) {
+    this.selectedItems.add(index);
+  } else {
+    this.selectedItems.delete(index);
+  }
+  this.isSelectAll = this.selectedItems.size === this.getDisplayItemList().length;
+}
+
+isItemSelected(displayIndex: number): boolean {
+  return this.selectedItems.has(displayIndex);
+}
+
+async bulkDeleteItems() {
+  if (this.selectedItems.size === 0) return;
+
+  const alert = await this.alertController.create({
+    header: 'تأكيد الحذف',
+    message: `هل تريد حذف ${this.selectedItems.size} صنف من القائمة؟`,
+    mode: 'ios',
+    buttons: [
+      { text: 'إلغاء', role: 'cancel' },
+      { text: 'حذف', handler: () => this.performBulkDelete() }
+    ]
+  });
+  await alert.present();
+}
+
+private performBulkDelete() {
+  const displayList = this.getDisplayItemList();
+  const itemsToDelete = Array.from(this.selectedItems).map(displayIndex => displayList[displayIndex]);
+
+  itemsToDelete.forEach(itemToDelete => {
+    const originalIndex = this.itemList.findIndex(item =>
+      item.item_name === itemToDelete.item_name &&
+      item.perch_price === itemToDelete.perch_price
+    );
+    if (originalIndex !== -1) {
+      this.itemList.splice(originalIndex, 1);
+    }
+  });
+
+  const deletedCount = this.selectedItems.size;
+  this.clearSelection();
+  this.getTotal();
+  if (this.isItemListSorted) {
+    this.sortItemListAlphabetically();
+  }
+  this.presentToast(`تم حذف ${deletedCount} صنف`, 'success');
+}
+
+// ============ Sort Methods ============
+
+sortItemListAlphabetically() {
+  if (!this.itemList || this.itemList.length === 0) return;
+
+  if (this.isItemListSorted) {
+    this.sortedItemList = [...this.itemList];
+    this.isItemListSorted = false;
+  } else {
+    this.sortedItemList = [...this.itemList].sort((a, b) => {
+      const nameA = a.item_name ? a.item_name.toString().toLowerCase() : '';
+      const nameB = b.item_name ? b.item_name.toString().toLowerCase() : '';
+      return nameA.localeCompare(nameB, 'ar', { numeric: true });
+    });
+    this.isItemListSorted = true;
+  }
+}
+
+getDisplayItemList() {
+  return this.sortedItemList.length > 0 ? this.sortedItemList : this.itemList;
+}
+
+updateSortedList() {
+  if (this.isItemListSorted) {
+    this.sortItemListAlphabetically();
+  } else {
+    this.sortedItemList = [...this.itemList];
+  }
+}
+
+// ============ Search Methods ============
+
+onSearchTermChange() {
+  this.searchMatches = [];
+  this.highlightedIndex = -1;
+
+  if (this.tableSearchTerm.trim() === '') return;
+
+  const displayList = this.getDisplayItemList();
+  const searchTermLower = this.tableSearchTerm.toLowerCase().trim();
+
+  displayList.forEach((item, index) => {
+    if (item.item_name && item.item_name.toLowerCase().includes(searchTermLower)) {
+      this.searchMatches.push(index);
+    }
+  });
+
+  if (this.searchMatches.length > 0) {
+    this.highlightedIndex = 0;
+    this.scrollToHighlightedItem();
+  }
+}
+
+navigateSearch(direction: 'next' | 'prev') {
+  if (this.searchMatches.length === 0) return;
+
+  if (direction === 'next') {
+    this.highlightedIndex = (this.highlightedIndex + 1) % this.searchMatches.length;
+  } else {
+    this.highlightedIndex = this.highlightedIndex <= 0 ? this.searchMatches.length - 1 : this.highlightedIndex - 1;
+  }
+
+  this.scrollToHighlightedItem();
+}
+
+scrollToHighlightedItem() {
+  if (this.highlightedIndex >= 0 && this.searchMatches.length > 0) {
+    const targetIndex = this.searchMatches[this.highlightedIndex];
+    setTimeout(() => {
+      const tableContainer = document.querySelector('.table-container');
+      const targetRow = document.querySelector(`tr[data-index="${targetIndex}"]`);
+      if (tableContainer && targetRow) {
+        targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  }
+}
+
+isHighlighted(index: number): boolean {
+  return this.searchMatches.includes(index) && this.searchMatches[this.highlightedIndex] === index;
+}
+
+isSearchMatch(index: number): boolean {
+  return this.searchMatches.includes(index);
+}
+
+getSearchResultText(): string {
+  if (this.tableSearchTerm.trim() === '') return '';
+  if (this.searchMatches.length === 0) return 'لا توجد نتائج';
+  return `${this.highlightedIndex + 1} من ${this.searchMatches.length}`;
+}
+
+highlightText(text: string, searchTerm: string): string {
+  if (!text || !searchTerm.trim()) {
+    return text || '';
+  }
+  const regex = new RegExp(`(${searchTerm.trim()})`, 'gi');
+  return text.replace(regex, '<mark>$1</mark>');
+}
 
 }

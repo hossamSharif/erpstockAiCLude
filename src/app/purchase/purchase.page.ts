@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef ,Renderer2,Input, OnDestroy, ChangeDetectorRef} from '@angular/core';
 import { ServicesService } from "../stockService/services.service";
 import { Observable, Subscription } from 'rxjs';
-import { AlertController, IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
+import { ActionSheetController, AlertController, IonInput, LoadingController, ModalController, ToastController } from '@ionic/angular';
 import { DatePipe, Location } from '@angular/common';
 import { TranslateService } from '@ngx-translate/core';
 import { Storage } from '@ionic/storage';
@@ -14,9 +14,12 @@ import { DraftService, DraftType, DraftData } from '../services/draft.service';
 import { FilterPipe } from './pipe';
 import { FilterPipe2 } from './pipe2';
 import { FilterPipe3 } from './pipe3';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { StockServiceService } from '../syncService/stock-service.service';
 import { CurrencyService } from '../services/currency.service';
+import { OfflineDataService } from '../services/offline-data.service';
+import { NetworkService } from '../services/network.service';
+import { ClipboardTransferService } from '../services/clipboard-transfer.service';
 import * as momentObj from 'moment';
 @Component({
   selector: 'app-purchase',
@@ -119,8 +122,12 @@ private lastSaveTimestamp: number = 0;
 autoSaveStatus: string = '';
 lastSaveTime: string = '';
 
+// Bulk selection properties
+selectedItems: Set<number> = new Set();
+isSelectAll: boolean = false;
+
 // اي طريقة دفع ح يكون في حساب مقابل ليها مثلا الكاش ح يتورد في حساب الخزينة وبنكك في حساب بنك الخرطوم اما الشيك فحيكون بالاجل و ح ينزل في  سجل الشيكات ويتحول الي حساب المعين سواء كان اتورد في حساب بنكي او اتسحب كاش واتورد فيحساب الخزينة
-constructor( private behavApi:StockServiceService ,private route: ActivatedRoute,private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private _location: Location, private cdr: ChangeDetectorRef, private currencyService: CurrencyService, private translate: TranslateService, private draftService: DraftService) {
+constructor( private behavApi:StockServiceService ,private route: ActivatedRoute, private rout: Router, private renderer : Renderer2,private modalController: ModalController,private alertController: AlertController, private authenticationService: AuthServiceService,private storage: Storage,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController, private _location: Location, private cdr: ChangeDetectorRef, private currencyService: CurrencyService, private translate: TranslateService, private draftService: DraftService, private actionSheetController: ActionSheetController, private offlineData: OfflineDataService, public networkService: NetworkService, private clipboardTransfer: ClipboardTransferService) {
  
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",phone:"",address:""};
 
@@ -149,14 +156,20 @@ constructor( private behavApi:StockServiceService ,private route: ActivatedRoute
        
        
       this.getAppInfoCase2()
-    } else if (params['status'] === 'newInvoFromItemsPage' && params['selectedItemsList']) {
-      console.log('New invoice from items page');
-      this.statusFromRoute = params['status'];
-      this.pendingItemsFromStock = JSON.parse(params['selectedItemsList']);
-      this.showBackButton = true; // Show back button when coming from items page
-      console.log('Received items from stock page:', this.pendingItemsFromStock);
+    } else if (params['fromTab'] === 'true' && params['dataKey']) {
+      // New tab mode: read items from localStorage
+      const dataKey = params['dataKey'];
+      const storedData = localStorage.getItem(dataKey);
+      if (storedData) {
+        const parsed = JSON.parse(storedData);
+        this.statusFromRoute = 'newInvoFromItemsPage';
+        this.pendingItemsFromStock = parsed;
+        this.showBackButton = false; // No back in new tab
+        // Don't remove from localStorage here - component may be created twice
+      }
+      console.log('New invoice from new tab, items:', this.pendingItemsFromStock);
       this.showPriceAdjustmentDialog('initial');
-    } 
+    }
   });
 
 
@@ -182,44 +195,21 @@ constructor( private behavApi:StockServiceService ,private route: ActivatedRoute
 
 
   getAllStockItemsWithouteCounts() {
-    this.storage.get('year').then((response) => {
+    this.storage.get('year').then(async (response) => {
      if (response) {
       this.year = response
-      //console.log('this.year.id',this.year.id)
-      if (this.offline == false) {
         this.loadingItems = true
-        this.api.getAllStockItemsWithouteCounts(1,this.year.id).subscribe(data => {
-           console.log(data)
-          let res = data
-          this.items = res['data'] 
-          this.loadingItems = false
-          this.storage.set('itemsLocal' , this.items).then((response) => {
-             
-          });  
-         
-        }, (err) => {
-          this.loadingItems = false
-          //console.log(err);
-        },
-          () => {
-            this.loadingItems = false
-          }
-        )
-      } else {
-        this.items = this.itemsLocal
-        // this.items.forEach(element => {
-        //   if(+element.tswiaQuantity > 0){
-        //     element.salesQuantity = +element.salesQuantity + +element.tswiaQuantity 
-
-        //   }else if(+element.tswiaQuantity < 0){
-        //     element.perchQuantity = +element.perchQuantity + Math.abs(+element.tswiaQuantity) 
-        //   }
-
-        //   element.quantity = (+element.perchQuantity + +element.firstQuantity) - +element.salesQuantity
-        // });
-        this.searchResult = this.items
+        try {
+          // Offline-aware item loading via OfflineDataService
+          this.items = await this.offlineData.getItems(this.store_info?.id || 1, this.year.id);
+          this.loadingItems = false;
+          this.searchResult = this.items;
+          this.storage.set('itemsLocal' , this.items);
+        } catch (err) {
+          this.loadingItems = false;
+          console.error('Error loading items:', err);
+        }
       }
-      } 
   }); 
   }
 
@@ -239,8 +229,14 @@ async presentAlertConfirm() {
         cssClass: 'secondary',
         id: 'cancel-button',
         handler: (blah) => {
-          //console.log('Confirm Cancel: blah'); 
+          //console.log('Confirm Cancel: blah');
           this.prepareInvo();
+          // Notify original tab that invoice was created
+          try {
+            const channel = new BroadcastChannel('invoice-channel');
+            channel.postMessage({ type: 'invoice-created', source: 'purchase' });
+            channel.close();
+          } catch (e) { /* BroadcastChannel not supported */ }
           // Close modal if in modal mode
           if (this.modalMode) {
             setTimeout(() => {
@@ -585,7 +581,7 @@ addItemsFromStockToPurchase() {
   let d = new Date();
   
   this.pendingItemsFromStock.forEach(item => {
-    this.itemList.push({
+    this.itemList.unshift({
       "id": 'NULL',
       "pay_ref": this.payInvo.pay_ref,
       "item_name": item.item_name,
@@ -612,15 +608,59 @@ openPriceAdjustmentDialog() {
   this.showPriceAdjustmentDialog('edit');
 }
 
+async openBulkPriceUpdateModal() {
+  if (!this.itemList || this.itemList.length === 0) {
+    this.presentToast('لا توجد أصناف في القائمة', 'warning');
+    return;
+  }
+
+  const { BulkPriceUpdateModalComponent } = await import('../components/bulk-price-update-modal/bulk-price-update-modal.component');
+
+  const modal = await this.modalController.create({
+    component: BulkPriceUpdateModalComponent,
+    cssClass: 'bulk-price-update-modal',
+    componentProps: {
+      itemsList: this.itemList,
+      mode: 'purchase'
+    },
+    backdropDismiss: false
+  });
+
+  modal.onDidDismiss().then((result) => {
+    if (result.data && result.data.success) {
+      if (result.data.updatedItems && result.data.updatedItems.length > 0) {
+        result.data.updatedItems.forEach(updatedItem => {
+          const idx = this.itemList.findIndex(item =>
+            item.item_id == updatedItem.id && item.item_name === updatedItem.item_name
+          );
+          if (idx !== -1) {
+            this.itemList[idx].pay_price = parseFloat(updatedItem.pay_price) || 0;
+            this.itemList[idx].perch_price = parseFloat(updatedItem.perch_price) || 0;
+            this.itemList[idx].retail_price = parseFloat(updatedItem.retail_price) || 0;
+            this.itemList[idx].tot = (this.itemList[idx].quantity * this.itemList[idx].perch_price).toFixed(2);
+          }
+        });
+        this.getTotal();
+        this.updateSortedList();
+        this.markDirty();
+      }
+      this.presentToast(`تم تعديل اسعار النظام والفاتورة لـ ${result.data.updated} صنف`, 'success');
+      this.getAllStockItemsWithouteCounts();
+    }
+  });
+
+  return await modal.present();
+}
 
 
- 
 
 
- 
- 
 
- 
+
+
+
+
+
 
 async getAppInfo(){
 
@@ -869,29 +909,43 @@ prepareInvo(){
  this.searchTerm = ''
  this.searchMatches = []
  this.highlightedIndex = -1
- 
- //check if there is pending items from stock page or from sales 
+
+ // Fallback: check localStorage via snapshot if subscription hasn't fired yet
+ if (this.pendingItemsFromStock.length === 0) {
+   const snap = this.route.snapshot.queryParams;
+   if (snap['fromTab'] === 'true' && snap['dataKey']) {
+     const storedData = localStorage.getItem(snap['dataKey']);
+     if (storedData) {
+       this.pendingItemsFromStock = JSON.parse(storedData);
+       this.statusFromRoute = 'newInvoFromItemsPage';
+       this.showBackButton = false;
+     }
+   }
+ }
+
+ //check if there is pending items from stock page or from sales
   if (this.statusFromRoute === 'newInvoFromItemsPage' && this.pendingItemsFromStock.length > 0) {
-      //console.log('Pending items from stock page:', this.pendingItemsFromStock);
       this.pendingItemsFromStock.forEach(item => {
-      this.itemList.push({
+      this.itemList.unshift({
       "id" : 'NULL',
       "pay_ref" :this.payInvo.pay_ref,
       "item_name" :item.item_name,
       "pay_price" :item.pay_price,
       "quantity" : +item.qty,
       "tot" :(+item.qty * +item.perch_price).toFixed(2),
-      "store_id" :+this.store_info.id, 
-      "yearId" :+this.year.id, 
+      "store_id" :+this.store_info.id,
+      "yearId" :+this.year.id,
       "item_id" : +item.id,
       "dateCreated" : this.datePipe.transform(d, 'dd-MM-YYYY'),
-      "perch_price":item.perch_price 
+      "perch_price":item.perch_price
         });
       });
        this.statusFromRoute = '';
        this.pendingItemsFromStock = []; // Reset status after processing
        this.getTotal()
-       console.log('itemlist after the get the')
+       // Clean up localStorage after successful processing
+       const snap = this.route.snapshot.queryParams;
+       if (snap['dataKey']) { localStorage.removeItem(snap['dataKey']); }
     }
     this.getSalesAccount()  
      //this.setFocusOnInput('dstP')
@@ -1553,13 +1607,13 @@ discountPerChange(ev){
   this.payInvo.changee = +( this.payInvo.tot_pr -  this.payInvo.discount ) - this.payInvo.pay
 }
 deleteItem(index){
-//console.log( index); 
+//console.log( index);
 const displayList = this.getDisplayItemList();
 const itemToDelete = displayList[index];
 
 // Find the item in the original itemList and remove it
-const originalIndex = this.itemList.findIndex(item => 
-  item.item_name === itemToDelete.item_name && 
+const originalIndex = this.itemList.findIndex(item =>
+  item.item_name === itemToDelete.item_name &&
   item.perch_price === itemToDelete.perch_price &&
   item.quantity === itemToDelete.quantity
 );
@@ -1572,10 +1626,268 @@ if (originalIndex !== -1) {
 this.discountPerc = 0
 this.payInvo.discount = 0
 this.getTotal()
-this.updateSortedList()
+this.autoSortAfterOperation()
 this.markDirty();
 }
 
+// ============ Bulk Selection Methods ============
+
+toggleSelectAll(event: any) {
+  const isChecked = event.detail.checked;
+  if (isChecked === this.isSelectAll) return;
+  if (isChecked) {
+    this.selectAllItems();
+  } else {
+    this.clearSelection();
+  }
+}
+
+selectAllItems() {
+  this.selectedItems.clear();
+  const displayList = this.getDisplayItemList();
+  displayList.forEach((_, index) => {
+    this.selectedItems.add(index);
+  });
+  this.isSelectAll = true;
+}
+
+clearSelection() {
+  this.selectedItems.clear();
+  this.isSelectAll = false;
+}
+
+toggleItemSelection(index: number, event: any) {
+  const isChecked = event.detail.checked;
+  if (isChecked) {
+    this.selectedItems.add(index);
+  } else {
+    this.selectedItems.delete(index);
+  }
+  this.isSelectAll = this.selectedItems.size === this.getDisplayItemList().length;
+}
+
+isItemSelected(displayIndex: number): boolean {
+  return this.selectedItems.has(displayIndex);
+}
+
+async bulkDeleteItems() {
+  if (this.selectedItems.size === 0) return;
+
+  const alert = await this.alertController.create({
+    header: 'تأكيد الحذف',
+    message: `هل تريد حذف ${this.selectedItems.size} صنف من القائمة؟`,
+    mode: 'ios',
+    buttons: [
+      {
+        text: 'إلغاء',
+        role: 'cancel'
+      },
+      {
+        text: 'حذف',
+        handler: () => this.performBulkDelete()
+      }
+    ]
+  });
+  await alert.present();
+}
+
+private performBulkDelete() {
+  const displayList = this.getDisplayItemList();
+
+  // Get items to delete from display list
+  const itemsToDelete = Array.from(this.selectedItems).map(displayIndex => displayList[displayIndex]);
+
+  // Remove items from original itemList
+  itemsToDelete.forEach(itemToDelete => {
+    const originalIndex = this.itemList.findIndex(item =>
+      item.item_name === itemToDelete.item_name &&
+      item.perch_price === itemToDelete.perch_price &&
+      item.quantity === itemToDelete.quantity
+    );
+    if (originalIndex !== -1) {
+      this.itemList.splice(originalIndex, 1);
+    }
+  });
+
+  const deletedCount = this.selectedItems.size;
+  this.clearSelection();
+
+  // Reset discount
+  this.discountPerc = 0;
+  this.payInvo.discount = 0;
+
+  this.getTotal();
+  this.autoSortAfterOperation();
+  this.markDirty();
+  this.presentToast(`تم حذف ${deletedCount} صنف`, 'success');
+}
+
+private autoSortAfterOperation() {
+  if (this.itemList.length > 0) {
+    this.sortedItemList = [...this.itemList].sort((a, b) => {
+      const nameA = a.item_name?.toString().toLowerCase() || '';
+      const nameB = b.item_name?.toString().toLowerCase() || '';
+      return nameA.localeCompare(nameB, 'ar', { numeric: true });
+    });
+    this.isItemListSorted = true;
+  } else {
+    this.sortedItemList = [];
+    this.isItemListSorted = false;
+  }
+  // Clear selection after sort since indices change
+  this.clearSelection();
+}
+
+// ============ Bulk Copy/Cut Methods ============
+
+getSelectedItemsForNavigation(): any[] {
+  const displayList = this.getDisplayItemList();
+  return Array.from(this.selectedItems).map(displayIndex => {
+    const item = displayList[displayIndex];
+    return {
+      id: item.item_id, item_id: item.item_id, item_name: item.item_name,
+      item_desc: item.item_desc, part_no: item.part_no, brand: item.brand,
+      model: item.model, item_unit: item.item_unit,
+      perch_price: item.perch_price || 0, pay_price: item.pay_price || 0,
+      qty: item.quantity,
+      tot: (item.perch_price * item.quantity).toFixed(2),
+      availQty: item.quantity || 0, aliasEn: item.aliasEn
+    };
+  });
+}
+
+async bulkCopyItems() {
+  if (this.selectedItems.size === 0) return;
+  const actionSheet = await this.actionSheetController.create({
+    header: 'نسخ المحدد إلى',
+    mode: 'ios',
+    buttons: [
+      { text: 'فاتورة بيع', icon: 'cart-outline', handler: () => { this.performBulkCopyOrCut('sales', false); } },
+      { text: 'فاتورة شراء', icon: 'bag-outline', handler: () => { this.performBulkCopyOrCut('purchase', false); } },
+      { text: 'طلب شراء', icon: 'document-text-outline', handler: () => { this.performBulkCopyOrCut('purchase-order', false); } },
+      { text: 'إلغاء', icon: 'close', role: 'cancel' }
+    ]
+  });
+  await actionSheet.present();
+}
+
+async bulkCutItems() {
+  if (this.selectedItems.size === 0) return;
+  const actionSheet = await this.actionSheetController.create({
+    header: 'قص المحدد إلى',
+    mode: 'ios',
+    buttons: [
+      { text: 'فاتورة بيع', icon: 'cart-outline', handler: () => { this.performBulkCopyOrCut('sales', true); } },
+      { text: 'فاتورة شراء', icon: 'bag-outline', handler: () => { this.performBulkCopyOrCut('purchase', true); } },
+      { text: 'طلب شراء', icon: 'document-text-outline', handler: () => { this.performBulkCopyOrCut('purchase-order', true); } },
+      { text: 'إلغاء', icon: 'close', role: 'cancel' }
+    ]
+  });
+  await actionSheet.present();
+}
+
+async performBulkCopyOrCut(destinationType: 'sales' | 'purchase' | 'purchase-order', isCut: boolean) {
+  let items = this.getSelectedItemsForNavigation();
+  const currentType = 'purchase';
+  const needsDialog = (destinationType === 'sales');
+
+  if (needsDialog) {
+    const { InvoicePriceConfigDialogComponent } = await import('../component/invoice-price-config-dialog/invoice-price-config-dialog.component');
+    const modal = await this.modalController.create({
+      component: InvoicePriceConfigDialogComponent,
+      componentProps: {
+        itemList: items,
+        invoiceType: 'sales',
+        context: 'purchase'
+      },
+      cssClass: 'invoice-price-config-modal'
+    });
+
+    modal.onDidDismiss().then((result) => {
+      if (result.data) {
+        this.finalizeBulkCopyOrCut(result.data, destinationType, isCut);
+      }
+    });
+
+    return await modal.present();
+  }
+
+  this.finalizeBulkCopyOrCut(items, destinationType, isCut);
+}
+
+private async finalizeBulkCopyOrCut(items: any[], destinationType: string, isCut: boolean) {
+  if (isCut) {
+    if (this.selectedItems.size === this.itemList.length) {
+      const alert = await this.alertController.create({
+        header: 'تنبيه',
+        message: 'سيتم قص جميع الأصناف من هذه الفاتورة. هل تريد المتابعة؟',
+        mode: 'ios',
+        buttons: [
+          { text: 'إلغاء', role: 'cancel' },
+          { text: 'متابعة', handler: () => { this.executeCutAndNavigate(items, destinationType); } }
+        ]
+      });
+      await alert.present();
+      return;
+    }
+    this.executeCutAndNavigate(items, destinationType);
+  } else {
+    this.navigateToDestination(items, destinationType);
+  }
+}
+
+private async executeCutAndNavigate(items: any[], destinationType: string) {
+  // Open new tab first
+  this.navigateToDestination(items, destinationType);
+
+  // Then ask user whether to remove items from source
+  const alert = await this.alertController.create({
+    header: 'تأكيد',
+    message: 'تم فتح الفاتورة الجديدة في نافذة جديدة. هل تريد حذف الأصناف المقصوصة من هذه الفاتورة؟',
+    mode: 'ios',
+    buttons: [
+      { text: 'إبقاء', role: 'cancel', handler: () => { this.clearSelection(); } },
+      {
+        text: 'حذف', cssClass: 'danger', handler: () => {
+          this.performCutRemoval();
+        }
+      }
+    ]
+  });
+  await alert.present();
+}
+
+private performCutRemoval() {
+  const displayList = this.getDisplayItemList();
+  const itemsToRemove = Array.from(this.selectedItems).map(displayIndex => displayList[displayIndex]);
+  itemsToRemove.forEach(itemToRemove => {
+    const originalIndex = this.itemList.findIndex(item =>
+      item.item_name === itemToRemove.item_name &&
+      item.perch_price === itemToRemove.perch_price &&
+      item.quantity === itemToRemove.quantity
+    );
+    if (originalIndex !== -1) {
+      this.itemList.splice(originalIndex, 1);
+    }
+  });
+  this.clearSelection();
+  this.getTotal();
+  this.autoSortAfterOperation();
+  this.markDirty();
+}
+
+private navigateToDestination(items: any[], destinationType: string) {
+  const clipboardKey = this.clipboardTransfer.storeItems(items);
+
+  const routes: { [key: string]: string } = {
+    'sales': '/folder/sales',
+    'purchase': '/folder/purchase',
+    'purchase-order': '/purchase-order'
+  };
+
+  const url = routes[destinationType] + '?fromTab=true&dataKey=' + clipboardKey;
+  window.open(url, '_blank');
+}
 
 async presentToast(translationKey: string, color?) {
     const message = this.translate.instant(translationKey);
@@ -1639,7 +1951,7 @@ chechPrice(cases?){
       let d = new Date();
       let r = this.datePipe.transform(d, 'dd-MM-YYYY');
 
-      this.itemList.push({
+      this.itemList.unshift({
         "id": 'NULL',
         "pay_ref": this.payInvo.pay_ref,
         "item_name": selectedItem.item_name,
@@ -1673,16 +1985,16 @@ addTolist() {
     if (fl.length == 0) {
       let d =   new Date
       let r= this.datePipe.transform(d, 'dd-MM-YYYY')
-    
-      this.itemList.push({
+
+      this.itemList.unshift({
       "id" : 'NULL',
       "pay_ref" :this.selectedItem.pay_ref,
       "item_name" :this.selectedItem.item_name,
       "pay_price" :this.selectedItem.pay_price,
       "quantity" : +this.selectedItem.qty,
       "tot" :(+this.selectedItem.qty * +this.selectedItem.perch_price).toFixed(2),
-      "store_id" :+this.store_info.id, 
-      "yearId" :+this.year.id, 
+      "store_id" :+this.store_info.id,
+      "yearId" :+this.year.id,
       "item_id" : +this.selectedItem.id,
       "dateCreated" : r,
       "perch_price":this.selectedItem.perch_price
@@ -1901,22 +2213,31 @@ if (!this.sub_account) {
   });
 }
 
-saveInvo(){
+async saveInvo(){
   // Optimized: Save invoice and items together in single API call
   const invoiceWithItems = {
     invoice: this.payInvo,
     items: this.itemList
   };
-  
-  this.api.savePerchInvoWithItems(invoiceWithItems).subscribe(
-    (response: any) => {
-      this.hideLoading(); // Hide loading before success handling
+
+  try {
+    // Offline-aware save via OfflineDataService
+    const result = await this.offlineData.savePurchaseInvoice(
+      invoiceWithItems,
+      this.store_info.id,
+      this.user_info.id,
+      this.year.id
+    );
+
+    this.hideLoading();
+    if (result.success) {
       this.handleSaveSuccess();
-    }, 
-    (err) => {
-      this.handleError(err, 'saveInvo');
+    } else {
+      this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري', 'danger');
     }
-  );
+  } catch (err) {
+    this.handleError(err, 'saveInvo');
+  }
 }
 
 private async handleSaveSuccess() {

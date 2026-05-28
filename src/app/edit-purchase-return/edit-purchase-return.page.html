@@ -1,4 +1,4 @@
-<ion-content>
+<ion-content #content scrollEvents="true" (ionScroll)="scrollFab.onScroll($event)">
   <ion-card>
     <div class="container">
 
@@ -231,4 +231,5 @@
     <p>{{ currentLoadingMessage }}</p>
   </div>
 
+  <app-scroll-to-top-fab #scrollFab [content]="content"></app-scroll-to-top-fab>
 </ion-content>

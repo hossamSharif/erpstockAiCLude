@@ -278,7 +278,95 @@
     <p>جميع القيم معروضة بالعملة المحددة مع القيمة بالجنيه السوداني</p>
   </div>
   
-  <div style="padding: 13px;" *ngIf="page != 'daily_report'">
+  <!-- STORE REPORT TEMPLATE (Picking List / Receiving List) - Enhanced Mode -->
+  <div *ngIf="page == 'sales_picking_list' || page == 'purchase_receiving_list'" style="padding: 20px;">
+    <div #printarea1 id="printarea1" style="direction: rtl; font-family: Arial, sans-serif;">
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 20px; border-bottom: 3px solid #333; padding-bottom: 15px;">
+        <h1 style="margin: 0; font-size: 26px; color: #333;" *ngIf="page == 'sales_picking_list'">قائمة تجهيز الطلب</h1>
+        <h1 style="margin: 0; font-size: 26px; color: #333;" *ngIf="page == 'purchase_receiving_list'">قائمة استلام البضاعة</h1>
+        <p style="margin: 8px 0 0; font-size: 13px; color: #888;">
+          <span *ngIf="page == 'sales_picking_list'">Picking List</span>
+          <span *ngIf="page == 'purchase_receiving_list'">Receiving List</span>
+        </p>
+      </div>
+
+      <!-- Invoice Info -->
+      <div *ngIf="printArr" style="margin-bottom: 15px; border: 1px solid #ccc; padding: 12px;">
+        <div style="font-size: 14px;">
+          <div style="margin-bottom: 8px; border-bottom: 1px dotted #ccc; padding-bottom: 8px;">
+            <span style="display: inline-block; width: 48%; text-align: right;">
+              <strong>التاريخ: </strong>{{printArr[0].payInvo.pay_date}}
+            </span>
+            <span style="display: inline-block; width: 48%; text-align: right;">
+              <strong>الرقم المرجعي: </strong>{{printArr[0].payInvo.pay_ref}}
+            </span>
+          </div>
+          <div>
+            <span style="display: inline-block; width: 48%; text-align: right;">
+              <strong *ngIf="page == 'sales_picking_list'">العميل: </strong>
+              <strong *ngIf="page == 'purchase_receiving_list'">المورد: </strong>
+              {{printArr[0].selectedAccount}}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Items Table -->
+      <div *ngIf="printArr" style="margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <thead>
+            <tr style="background-color: #d3d3d3;">
+              <th style="border: 2px solid #000; padding: 8px; text-align: center; width: 8%;">م</th>
+              <th style="border: 2px solid #000; padding: 8px; text-align: right; width: 50%;">الصنف</th>
+              <th style="border: 2px solid #000; padding: 8px; text-align: center; width: 14%;">الوحدة</th>
+              <th style="border: 2px solid #000; padding: 8px; text-align: center; width: 14%;">الكمية</th>
+              <th style="border: 2px solid #000; padding: 8px; text-align: center; width: 14%;" *ngIf="page == 'sales_picking_list'">تم التجهيز</th>
+              <th style="border: 2px solid #000; padding: 8px; text-align: center; width: 14%;" *ngIf="page == 'purchase_receiving_list'">تم الاستلام</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of printArr[0].itemList; let i = index">
+              <td style="border: 1px solid #000; padding: 6px; text-align: center;">{{i + 1}}</td>
+              <td style="border: 1px solid #000; padding: 6px; text-align: right;">{{item.item_name}}</td>
+              <td style="border: 1px solid #000; padding: 6px; text-align: center;">{{item.item_unit}}</td>
+              <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 16px;">{{item.quantity}}</td>
+              <td style="border: 1px solid #000; padding: 6px; text-align: center;">
+                <span style="display: inline-block; width: 22px; height: 22px; border: 2px solid #000;"></span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Total Items Count -->
+      <div *ngIf="printArr" style="margin-bottom: 20px; padding: 10px; background: #f5f5f5; border: 1px solid #ccc;">
+        <span style="font-size: 14px;">
+          <strong>إجمالي عدد الأصناف: </strong>{{printArr[0].itemList.length}}
+        </span>
+      </div>
+
+      <!-- Signature Section -->
+      <div style="margin-top: 40px; display: table; width: 100%;">
+        <div style="display: table-cell; width: 50%; text-align: center; padding: 0 20px;">
+          <div style="border-bottom: 1px solid #000; margin-bottom: 8px; padding-bottom: 30px;"></div>
+          <span style="font-size: 13px;" *ngIf="page == 'sales_picking_list'">أمين المخزن / المُجهّز</span>
+          <span style="font-size: 13px;" *ngIf="page == 'purchase_receiving_list'">المُستلم</span>
+        </div>
+        <div style="display: table-cell; width: 50%; text-align: center; padding: 0 20px;">
+          <div style="border-bottom: 1px solid #000; margin-bottom: 8px; padding-bottom: 30px;"></div>
+          <span style="font-size: 13px;">المدير</span>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div *ngIf="printArr" style="margin-top: 30px; text-align: right; font-size: 11px; color: #888; border-top: 1px solid #ccc; padding-top: 8px;">
+        <p>طبع بواسطة: {{printArr[0].payInvo.user_name}} | {{printDate}}</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 13px;" *ngIf="page != 'daily_report' && page != 'sales_picking_list' && page != 'purchase_receiving_list'">
     <div #printarea1 id="printarea1">
       <!-- Header with Images and Title -->
       <div style="display: table; width: 100%; margin-bottom: 12px;">
@@ -307,11 +395,11 @@
             </span>
             <span style="display: inline-block; width: 48%; text-align: right;">
               <strong *ngIf="page=='sales' || page=='sales_record'">العميل: </strong>
-              <strong *ngIf="page=='perch' || page=='perch_record'">المورد: </strong>
-              <span *ngIf="printArr[0].sub_nameNew.length == 0 && (page =='sales' || page =='perch')">
+              <strong *ngIf="page=='perch' || page=='perch_record' || page=='perchOrderAr' || page=='perchOrderAr-record' || page=='perchOrderEn' || page=='perchOrderEn-record'">المورد: </strong>
+              <span *ngIf="printArr[0].sub_nameNew.length == 0 && (page =='sales' || page =='perch' || page =='perchOrderAr' || page =='perchOrderEn')">
                 {{printArr[0].selectedAccount.sub_name}}
               </span>
-              <span *ngIf="printArr[0].sub_nameNew.length == 0 && (page =='sales_record' || page =='perch_record')">
+              <span *ngIf="printArr[0].sub_nameNew.length == 0 && (page =='sales_record' || page =='perch_record' || page =='perchOrderAr-record' || page =='perchOrderEn-record')">
                 {{printArr[0].selectedAccount}}
               </span>
               <span *ngIf="printArr[0].sub_nameNew.length > 0">{{printArr[0].sub_nameNew}}</span>
@@ -340,10 +428,10 @@
               <th style="border: 1px solid #000; padding: 10px; text-align: center;" *ngIf="page=='sales' || page=='sales_record'">
                 سعر الوحدة 
               </th>
-              <th style="border: 1px solid #000; padding: 10px; text-align: center;" *ngIf="page=='perch' || page=='perch_record'">
-                سعر الشراء 
+              <th style="border: 1px solid #000; padding: 10px; text-align: center;" *ngIf="(page=='perch' || page=='perch_record' || page=='perchOrderAr' || page=='perchOrderAr-record' || page=='perchOrderEn' || page=='perchOrderEn-record') && showPrices">
+                سعر الشراء
               </th>
-              <th style="border: 1px solid #000; padding: 10px; text-align: center;">المجموع </th>
+              <th *ngIf="showPrices" style="border: 1px solid #000; padding: 10px; text-align: center;">المجموع </th>
             </tr>
           </thead>
           <tbody>
@@ -354,10 +442,10 @@
               <td style="border: 1px solid #000; padding: 3px; text-align: center;font-size: 16px;" *ngIf="page=='sales' || page=='sales_record'">
                 {{formatNumberWithSeparators(item.pay_price)}}
               </td>
-              <td style="border: 1px solid #000; padding: 3px; text-align: center;font-size: 16px;" *ngIf="page=='perch' || page=='perch_record'">
+              <td style="border: 1px solid #000; padding: 3px; text-align: center;font-size: 16px;" *ngIf="(page=='perch' || page=='perch_record' || page=='perchOrderAr' || page=='perchOrderAr-record' || page=='perchOrderEn' || page=='perchOrderEn-record') && showPrices">
                 {{formatNumberWithSeparators(item.perch_price)}}
               </td>
-              <td style="border: 1px solid #000; padding: 3px; text-align: center;font-size: 16px;">{{formatNumberWithSeparators(item.tot)}}</td>
+              <td *ngIf="showPrices" style="border: 1px solid #000; padding: 3px; text-align: center;font-size: 16px;">{{formatNumberWithSeparators(item.tot)}}</td>
             </tr>
             <!-- Totals Row -->
             <!-- <tr style="background-color: #f0f0f0; font-weight: bold;">
@@ -372,7 +460,7 @@
       </div>
 
       <!-- Totals Section - RTL with Values After Colon -->
-      <div *ngIf="printArr" style="margin-top: 20px; border: 1px solid #ccc; padding: 15px; direction: rtl;">
+      <div *ngIf="printArr && showPrices" style="margin-top: 20px; border: 1px solid #ccc; padding: 15px; direction: rtl;">
         <div style="font-size: 14px; margin-right: 10px;">
           <!-- All totals in one row -->
           <div style="margin-bottom: 8px; border-bottom: 1px dotted #ccc; padding-bottom: 8px;">
@@ -841,11 +929,11 @@
                 <th class="th">التسلسل</th>
                 <th class="th">الصنف</th>
                 <th class="th">الكمية</th>
-                <th  class="th">
-                  سعر الشراء 
+                <th *ngIf="showPrices" class="th">
+                  سعر الشراء
                 </th>
-                
-                <th class="th">المجموع </th>
+
+                <th *ngIf="showPrices" class="th">المجموع </th>
                 </tr>
               </thead>
               <tbody>
@@ -853,13 +941,13 @@
                   <td class="td">{{i+1}}</td>
                   <td class="td">{{item.item_name}}</td>
                  <td class="td"> {{item.quantity}}</td>
-                 
-                 <td   class="td">
+
+                 <td *ngIf="showPrices" class="td">
                   {{formatNumberWithSeparators(item.perch_price)}}
                 </td>
-                 <td class="td">{{formatNumberWithSeparators(item.tot)}}</td>
-                </tr> 
-                <tr>
+                 <td *ngIf="showPrices" class="td">{{formatNumberWithSeparators(item.tot)}}</td>
+                </tr>
+                <tr *ngIf="showPrices">
                   <td ></td>
                   <td ></td>
                   <td></td>
@@ -867,11 +955,11 @@
                   <td class="td">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
                 </tr>
               </tbody>
-            </table> 
-            </div> 
+            </table>
+            </div>
           </div>
 
-          <div *ngIf="printArr" class="w100 rtl ion-margin"> 
+          <div *ngIf="printArr && showPrices" class="w100 rtl ion-margin">
             <div class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
               <div class="rtl ion-text-center" style=" width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
                 <ion-label>إجمالي المبلغ </ion-label>
@@ -944,11 +1032,11 @@
           <th class="th">No</th>
           <th class="th">Item</th>
           <th class="th">Qty</th>
-          <th   class="th">
-            Purchace price 
+          <th *ngIf="showPrices" class="th">
+            Purchase price
           </th>
-          
-          <th class="th">Total </th>
+
+          <th *ngIf="showPrices" class="th">Total </th>
           </tr>
         </thead>
         <tbody>
@@ -956,13 +1044,13 @@
             <td class="td">{{i+1}}</td>
             <td class="td">{{item.item_desc}}</td>
            <td class="td"> {{item.quantity}}</td>
-           
-           <td   class="td">
+
+           <td *ngIf="showPrices" class="td">
             {{formatNumberWithSeparators(item.perch_price)}}
           </td>
-           <td class="td">{{formatNumberWithSeparators(item.tot)}}</td>
-          </tr> 
-          <tr>
+           <td *ngIf="showPrices" class="td">{{formatNumberWithSeparators(item.tot)}}</td>
+          </tr>
+          <tr *ngIf="showPrices">
             <td ></td>
             <td ></td>
             <td></td>
@@ -970,11 +1058,11 @@
             <td class="td">{{formatNumberWithSeparators(printArr[0].payInvo.tot_pr)}}</td>
           </tr>
         </tbody>
-      </table> 
-      </div> 
+      </table>
+      </div>
     </div>
 
-    <div *ngIf="printArr" class="w100 rtl ion-margin"> 
+    <div *ngIf="printArr && showPrices" class="w100 rtl ion-margin">
       <div class="w100 rtl" style="display:inline-block ;margin-right: 16px;">
         <div class="rtl ion-text-center" style=" width:20% ;border: .5px solid #dddddd;text-align: center;padding: 8px; position: relative; float: right;">
           <ion-label>  Total  </ion-label>

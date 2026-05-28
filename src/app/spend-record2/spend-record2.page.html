@@ -173,8 +173,8 @@
                 <tr>
                   <th class="checkbox-col">
                     <ion-checkbox
-                      [(ngModel)]="selectAll"
-                      (ionChange)="toggleSelectAll()"
+                      [checked]="selectAll"
+                      (ionChange)="toggleSelectAll($event)"
                       class="select-all-checkbox">
                     </ion-checkbox>
                   </th>
@@ -248,7 +248,7 @@
                   <td class="checkbox-col">
                     <ion-checkbox
                       [checked]="isRecordSelected(pay.j_ref)"
-                      (ionChange)="toggleRecordSelection(pay.j_ref)">
+                      (ionChange)="toggleRecordSelection(pay.j_ref, $event)">
                     </ion-checkbox>
                   </td>
                   <td>{{i+1}}</td>
@@ -354,8 +354,8 @@
                 <tr>
                   <th class="checkbox-col">
                     <ion-checkbox
-                      [(ngModel)]="selectAll"
-                      (ionChange)="toggleSelectAll()"
+                      [checked]="selectAll"
+                      (ionChange)="toggleSelectAll($event)"
                       class="select-all-checkbox">
                     </ion-checkbox>
                   </th>
@@ -406,7 +406,7 @@
                   <td class="checkbox-col">
                     <ion-checkbox
                       [checked]="isRecordSelected(pay.j_ref)"
-                      (ionChange)="toggleRecordSelection(pay.j_ref)">
+                      (ionChange)="toggleRecordSelection(pay.j_ref, $event)">
                     </ion-checkbox>
                   </td>
                   <td>{{i+1}}</td>

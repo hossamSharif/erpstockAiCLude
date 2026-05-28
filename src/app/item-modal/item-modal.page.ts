@@ -26,7 +26,7 @@ export class ItemModalPage implements OnInit {
   segme
   selectedItem : {id:any ,item_name:any,model:any  ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,retail_price:any,item_unit:any,item_desc:any,item_parcode:any,aliasEn:any,category_id:any};
   firstqObj : {id:any ,item_id:any , store_id:any , quantity :any ,	fq_year:any ,	pay_price:any ,	perch_price:any }
-  colSettingpr : {id:any ,item_name:any ,model:any ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,item_unit:any,item_desc:any,item_parcode:any,profit:any,instock:any,total:any,lastSold:any,lastPurch:any,aliasEn:any};
+  colSettingpr : {id:any ,item_name:any ,model:any ,part_no:any  ,min_qty:any ,brand:any,pay_price:any,perch_price:any,retail_price:any,item_unit:any,item_desc:any,item_parcode:any,profit:any,instock:any,total:any,lastSold:any,lastPurch:any,edit:any,delete:any,aliasEn:any,firstQuantity:any};
  quantityFilter: {
     enabled: boolean,
     minQuantity: number,
@@ -47,7 +47,7 @@ export class ItemModalPage implements OnInit {
   constructor(private loadingController:LoadingController,private api:ServicesService,private modalController: ModalController,private toast :ToastController, private translate: TranslateService, private alertController: AlertController) {
     this.selectedItem = {id:"" ,item_name:"",model:"",part_no:""  ,min_qty:0 ,brand:"",pay_price:"",perch_price:"",retail_price:0,item_unit:"",item_desc:"",item_parcode:"",aliasEn:"",category_id:""};   
     this.firstqObj = {id:"" ,item_id:"" , store_id:"" , quantity :0 ,	fq_year:"" ,	pay_price:"" ,	perch_price:"" }
-    this.colSettingpr = {id:true ,item_name:true ,model:true ,part_no:true  ,min_qty:true ,brand:true,pay_price:true,perch_price:true,item_unit:true,item_desc:true,item_parcode:true,profit:true,instock:true,total:true,lastSold:true,lastPurch:true,aliasEn:true};
+    this.colSettingpr = {id:true ,item_name:true ,model:true ,part_no:true  ,min_qty:true ,brand:true,pay_price:true,perch_price:true,retail_price:true,item_unit:true,item_desc:true,item_parcode:true,profit:true,instock:true,total:true,lastSold:true,lastPurch:true,edit:true,delete:true,aliasEn:true,firstQuantity:true};
    
     this.price = {payval:0,perchval:0 ,type: 'pay', status:'plus'}  
   // Initialize quantity filter
@@ -187,7 +187,7 @@ applyQuantityFilter(items: Array<any>): Array<any> {
     //   pay_price:this.firstq.pay_price,perch_price:this.firstq.perch_price}; 
      
       } else if (this.status == 'settings'){
-        this.colSettingpr = {id: this.colSetting.id ,item_name:this.colSetting.item_name ,model:this.colSetting.model ,part_no:this.colSetting.part_no  ,min_qty:this.colSetting.min_qty ,brand:this.colSetting.brand,pay_price:this.colSetting.pay_price,perch_price:this.colSetting.perch_price,item_unit:this.colSetting.item_unit,item_desc:this.colSetting.item_desc,item_parcode:this.colSetting.item_parcode,profit:this.colSetting.profit,instock:this.colSetting.instock,total:this.colSetting.total,lastSold:this.colSetting.lastSold,lastPurch:this.colSetting.lastPurch,aliasEn:this.colSetting.aliasEn};
+        this.colSettingpr = {id: this.colSetting.id ,item_name:this.colSetting.item_name ,model:this.colSetting.model ,part_no:this.colSetting.part_no  ,min_qty:this.colSetting.min_qty ,brand:this.colSetting.brand,pay_price:this.colSetting.pay_price,perch_price:this.colSetting.perch_price,retail_price:this.colSetting.retail_price,item_unit:this.colSetting.item_unit,item_desc:this.colSetting.item_desc,item_parcode:this.colSetting.item_parcode,profit:this.colSetting.profit,instock:this.colSetting.instock,total:this.colSetting.total,lastSold:this.colSetting.lastSold,lastPurch:this.colSetting.lastPurch,edit:this.colSetting.edit,delete:this.colSetting.delete,aliasEn:this.colSetting.aliasEn,firstQuantity:this.colSetting.firstQuantity};
       }  else if (this.status == 'filter'){  
          this.filterArray = this.filterArrayOrign
          //console.log(this.filterArray)

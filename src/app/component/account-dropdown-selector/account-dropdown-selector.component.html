@@ -1,0 +1,93 @@
+<div class="account-selector-wrapper">
+  <div class="label-with-buttons-container">
+    <ion-label *ngIf="label" class="account-selector-label">{{ label }}</ion-label>
+
+    <div class="action-buttons-left">
+      <ion-button
+        fill="clear"
+        size="small"
+        class="acc-refresh-btn-left"
+        (click)="refresh()"
+        [disabled]="loadingAccounts">
+        <ion-icon
+          name="refresh"
+          color="primary"
+          [class.spin]="loadingAccounts">
+        </ion-icon>
+      </ion-button>
+
+      <ion-button
+        fill="clear"
+        size="small"
+        class="acc-add-btn-left"
+        (click)="onAddClicked()"
+        [disabled]="loadingAccounts">
+        <ion-icon name="add-circle-outline" color="primary" slot="icon-only"></ion-icon>
+      </ion-button>
+
+      <ion-spinner
+        *ngIf="loadingAccounts"
+        name="dots"
+        class="acc-loading-spinner-left">
+      </ion-spinner>
+    </div>
+  </div>
+
+  <ion-item class="custInput">
+    <div class="input-container-wrapper" #inputWrapper>
+      <ion-input
+        #searchInput
+        [(ngModel)]="searchTerm"
+        [placeholder]="placeholder"
+        [disabled]="loadingAccounts || disabled"
+        [clearInput]="true"
+        class="account-selector-input"
+        (ionInput)="onSearchInput($event)"
+        (ionClear)="onInputClear()"
+        (ionFocus)="onInputFocus()"
+        (ionBlur)="onInputBlur()"
+        (click)="onInputFocus()"
+        (keydown)="onKeyDown($event)">
+      </ion-input>
+    </div>
+  </ion-item>
+
+  <div
+    class="account-dropdown-container"
+    *ngIf="showDropdown && getFilteredAccounts().length > 0"
+    [style.top]="dropdownPosition.top"
+    [style.left]="dropdownPosition.left"
+    [style.width]="dropdownPosition.width">
+    <ion-list class="account-dropdown">
+      <ion-item
+        *ngFor="let acc of getFilteredAccounts(); let i = index; trackBy: trackById"
+        button
+        class="account-item"
+        [class.highlighted]="i === highlightedIndex"
+        (click)="selectAccount(acc)"
+        (mousedown)="$event.preventDefault()"
+        (mouseenter)="highlightedIndex = i">
+        <ion-label>
+          <h3>{{ acc.sub_name }}</h3>
+          <p *ngIf="acc.sub_code" class="acc-meta">{{ acc.sub_code }}<span *ngIf="acc.cat_name"> · {{ acc.cat_name }}</span></p>
+          <p *ngIf="!acc.sub_code && acc.cat_name" class="acc-meta">{{ acc.cat_name }}</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <div
+    class="account-dropdown-container"
+    *ngIf="showDropdown && getFilteredAccounts().length === 0 && searchTerm?.length > 0"
+    [style.top]="dropdownPosition.top"
+    [style.left]="dropdownPosition.left"
+    [style.width]="dropdownPosition.width">
+    <ion-list class="account-dropdown">
+      <ion-item class="no-results">
+        <ion-label>
+          <p>لا توجد نتائج مطابقة</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
+</div>

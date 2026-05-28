@@ -9,9 +9,11 @@ import { FilterPipe2 } from "./pipe2";
 import { FilterPipe3 } from "./pipe3";
 import { SalesPageRoutingModule } from './sales-routing.module';
 import { ShareModule } from "../shareModule/share-module/share-module.module";
-import { SalesPage } from './sales.page'; 
+import { SalesPage } from './sales.page';
 import { SharedModule } from '../module/shared/shared.module';
 import { InsufficientStockDialogComponent } from '../component/insufficient-stock-dialog/insufficient-stock-dialog.component';
+import { SelectionActionPanelModule } from '../components/selection-action-panel/selection-action-panel.module';
+import { ScrollToTopFabModule } from '../components/scroll-to-top-fab/scroll-to-top-fab.module';
  
  
 @NgModule({
@@ -20,10 +22,11 @@ import { InsufficientStockDialogComponent } from '../component/insufficient-stoc
     FormsModule,
     ShareModule,
     IonicModule,
-    SharedModule, 
-    SalesPageRoutingModule 
-  ,
-    TranslateModule
+    SharedModule,
+    SalesPageRoutingModule,
+    TranslateModule,
+    SelectionActionPanelModule,
+    ScrollToTopFabModule
   ],
   declarations: 
   [

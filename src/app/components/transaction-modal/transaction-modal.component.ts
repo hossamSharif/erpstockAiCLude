@@ -1,6 +1,8 @@
 import { Component, OnInit, Input, HostListener } from '@angular/core';
 import { ModalController, ToastController } from '@ionic/angular';
 import { ServicesService } from '../../stockService/services.service';
+import { OfflineDataService } from '../../services/offline-data.service';
+import { NetworkService } from '../../services/network.service';
 
 @Component({
   selector: 'app-transaction-modal',
@@ -14,8 +16,14 @@ export class TransactionModalComponent implements OnInit {
   @Input() user_id: number = 0;
   @Input() selectedDate: string = '';
 
+  // Pre-fill inputs (for Quick Pay from recurring obligations)
+  @Input() prefillType: string = '';
+  @Input() prefillAccountId: any = null;
+  @Input() prefillAmount: number = 0;
+  @Input() prefillDescription: string = '';
+
   // Transaction type
-  transactionType: string = ''; // 'pay_supplier', 'receive_customer', 'expense', 'internal_transfer'
+  transactionType: string = ''; // 'pay_supplier', 'receive_customer', 'expense', 'internal_transfer', 'general_entry'
 
   // Form data
   selectedAccount: any = null;
@@ -63,7 +71,9 @@ export class TransactionModalComponent implements OnInit {
   constructor(
     private modalCtrl: ModalController,
     private api: ServicesService,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private offlineData: OfflineDataService,
+    public networkService: NetworkService
   ) { }
 
   @HostListener('document:click', ['$event'])
@@ -89,7 +99,22 @@ export class TransactionModalComponent implements OnInit {
     if (this.transaction) {
       this.isEditMode = true;
       this.loadTransactionForEdit();
+    } else if (this.prefillType) {
+      this.applyPrefill();
     }
+  }
+
+  private applyPrefill() {
+    if (this.prefillType) {
+      this.transactionType = this.prefillType;
+    }
+    if (this.prefillAmount) {
+      this.amount = this.prefillAmount;
+    }
+    if (this.prefillDescription) {
+      this.description = this.prefillDescription;
+    }
+    // Account selection is deferred until accounts are loaded
   }
 
   loadAccounts() {
@@ -113,6 +138,20 @@ export class TransactionModalComponent implements OnInit {
         // If transaction type is already selected, refresh filtered accounts
         if (this.transactionType) {
           this.filterAccountsByType();
+        }
+
+        // Apply prefill account selection after accounts are loaded
+        if (this.prefillAccountId && !this.isEditMode) {
+          const prefillAccount = this.allAccounts.find((x: any) => x.id == this.prefillAccountId);
+          if (prefillAccount) {
+            if (this.transactionType === 'internal_transfer' || this.transactionType === 'general_entry') {
+              this.selectedSourceAccount = prefillAccount;
+              this.loadSourceAccountBalance(prefillAccount.id);
+            } else {
+              this.selectedAccount = prefillAccount;
+              this.loadAccountBalance(prefillAccount.id);
+            }
+          }
         }
       }
     );
@@ -271,25 +310,39 @@ export class TransactionModalComponent implements OnInit {
         }
       }
     } else {
-      // Internal transfer (سند قيد)
-      console.log('✅ Detected: Internal Transfer');
-      this.transactionType = 'internal_transfer';
-      this.filterAccountsByType();
+      // سند قيد - determine if internal_transfer or general_entry
+      const fromInPayment = this.paymentMethods.find(x => x.id == fromAcId);
+      const toInPayment = this.paymentMethods.find(x => x.id == toAcId);
 
-      // Both source and destination are cash/bank accounts
-      const sourceAccount = this.paymentMethods.find(x => x.id == fromAcId);
-      const destAccount = this.paymentMethods.find(x => x.id == toAcId);
+      if (fromInPayment && toInPayment) {
+        // Both accounts are cash/bank -> internal transfer
+        console.log('✅ Detected: Internal Transfer');
+        this.transactionType = 'internal_transfer';
+        this.filterAccountsByType();
 
-      if (sourceAccount) {
-        this.selectedSourceAccount = sourceAccount;
-        this.loadSourceAccountBalance(sourceAccount.id);
-        console.log('✅ Source account:', sourceAccount);
-      }
+        this.selectedSourceAccount = fromInPayment;
+        this.loadSourceAccountBalance(fromInPayment.id);
 
-      if (destAccount) {
-        this.selectedDestAccount = destAccount;
-        this.loadDestAccountBalance(destAccount.id);
-        console.log('✅ Destination account:', destAccount);
+        this.selectedDestAccount = toInPayment;
+        this.loadDestAccountBalance(toInPayment.id);
+      } else {
+        // At least one account is not a payment method -> general entry
+        console.log('✅ Detected: General Entry');
+        this.transactionType = 'general_entry';
+        this.filterAccountsByType();
+
+        const sourceAccount = this.allAccounts.find(x => x.id == fromAcId);
+        const destAccount = this.allAccounts.find(x => x.id == toAcId);
+
+        if (sourceAccount) {
+          this.selectedSourceAccount = sourceAccount;
+          this.loadSourceAccountBalance(sourceAccount.id);
+        }
+
+        if (destAccount) {
+          this.selectedDestAccount = destAccount;
+          this.loadDestAccountBalance(destAccount.id);
+        }
       }
     }
 
@@ -308,7 +361,7 @@ export class TransactionModalComponent implements OnInit {
       this.showAccountDropdown = false;
       this.showPaymentDropdown = false;
 
-      if (type !== 'internal_transfer') {
+      if (type !== 'internal_transfer' && type !== 'general_entry') {
         this.selectedSourceAccount = null;
         this.selectedDestAccount = null;
         this.sourceSearchTerm = '';
@@ -333,6 +386,10 @@ export class TransactionModalComponent implements OnInit {
         // Use payment methods array which includes both cash and banks
         this.filteredAccounts = [...this.paymentMethods];
         break;
+      case 'general_entry':
+        // All accounts available for general journal entries
+        this.filteredAccounts = [...this.allAccounts];
+        break;
       default:
         this.filteredAccounts = [];
     }
@@ -348,18 +405,19 @@ export class TransactionModalComponent implements OnInit {
   }
 
   getFilteredSourceAccounts() {
-    // For internal transfer, always use payment methods directly (more reliable)
     let accountsToShow: any[] = [];
 
     if (this.transactionType === 'internal_transfer') {
       accountsToShow = [...this.paymentMethods];
-
-      // Filter out the selected destination account to prevent same account selection
-      if (this.selectedDestAccount) {
-        accountsToShow = accountsToShow.filter(x => x.id !== this.selectedDestAccount.id);
-      }
+    } else if (this.transactionType === 'general_entry') {
+      accountsToShow = [...this.allAccounts];
     } else {
       accountsToShow = this.filteredAccounts;
+    }
+
+    // Filter out the selected destination account to prevent same account selection
+    if (this.selectedDestAccount) {
+      accountsToShow = accountsToShow.filter(x => x.id !== this.selectedDestAccount.id);
     }
 
     // Apply search filter
@@ -372,18 +430,19 @@ export class TransactionModalComponent implements OnInit {
   }
 
   getFilteredDestAccounts() {
-    // For internal transfer, always use payment methods directly (more reliable)
     let accountsToShow: any[] = [];
 
     if (this.transactionType === 'internal_transfer') {
       accountsToShow = [...this.paymentMethods];
-
-      // Filter out the selected source account to prevent same account selection
-      if (this.selectedSourceAccount) {
-        accountsToShow = accountsToShow.filter(x => x.id !== this.selectedSourceAccount.id);
-      }
+    } else if (this.transactionType === 'general_entry') {
+      accountsToShow = [...this.allAccounts];
     } else {
       accountsToShow = this.filteredAccounts;
+    }
+
+    // Filter out the selected source account to prevent same account selection
+    if (this.selectedSourceAccount) {
+      accountsToShow = accountsToShow.filter(x => x.id !== this.selectedSourceAccount.id);
     }
 
     // Apply search filter
@@ -500,11 +559,11 @@ export class TransactionModalComponent implements OnInit {
   }
 
   isFormValid(): boolean {
-    if (!this.transactionType || this.amount <= 0 || !this.description.trim()) {
+    if (!this.transactionType || this.amount <= 0) {
       return false;
     }
 
-    if (this.transactionType === 'internal_transfer') {
+    if (this.transactionType === 'internal_transfer' || this.transactionType === 'general_entry') {
       return this.selectedSourceAccount && this.selectedDestAccount &&
              this.selectedSourceAccount.id !== this.selectedDestAccount.id;
     } else {
@@ -527,10 +586,14 @@ export class TransactionModalComponent implements OnInit {
   }
 
   async createTransaction() {
-    const journal = this.prepareJournalData();
-    const jdetails = this.prepareJournalDetails();
+    // Generate j_ref ONCE to ensure journal and details share the same reference
+    const timestamp = new Date().getTime();
+    const j_ref = `${this.store_id}JO${timestamp}`;
 
-    console.log('📝 Creating transaction...', { journal, jdetails });
+    const journal = this.prepareJournalData(j_ref);
+    const jdetails = this.prepareJournalDetails(j_ref);
+
+    console.log('📝 Creating transaction (atomic)...', { journal, jdetails });
 
     // Validate data before saving
     if (!jdetails.from || !jdetails.to) {
@@ -547,67 +610,43 @@ export class TransactionModalComponent implements OnInit {
       return;
     }
 
-    // Save journal
-    this.api.saveJournal(journal).subscribe(
-      async (res: any) => {
-        // CRITICAL FIX: Backend returns {message: id}, not just id
-        const j_id = res?.message || res;
-        console.log('✅ Journal saved. API Response:', res);
-        console.log('✅ Extracted j_id:', j_id);
+    // Single atomic API call - journal + from + to saved in one DB transaction
+    const transactionData = {
+      journal: journal,
+      from_detail: jdetails.from,
+      to_detail: jdetails.to
+    };
 
-        // Validate we got a valid j_id
-        if (!j_id) {
-          console.error('❌ No j_id returned from saveJournal API');
-          this.loading = false;
-          await this.showErrorToast('فشل الحصول على معرف الحركة');
-          return;
+    try {
+      // Offline-aware save via OfflineDataService
+      const result = await this.offlineData.saveTransaction(transactionData);
+      this.loading = false;
+
+      if (result.success && !result.isQueued) {
+        // Online save — check API response
+        const res = result.response;
+        if (res?.success) {
+          await this.showSuccessToast('تمت إضافة الحركة بنجاح');
+          this.modalCtrl.dismiss({ refresh: true });
+        } else {
+          console.error('Transaction create failed:', res?.message);
+          await this.showErrorToast(res?.message || 'فشل إنشاء الحركة');
         }
-
-        // Update details with j_id
-        jdetails.from.j_id = j_id;
-        jdetails.to.j_id = j_id;
-
-        console.log('📝 Updated jdetails with j_id:', { from: jdetails.from.j_id, to: jdetails.to.j_id });
-
-        console.log('📤 Saving FROM details:', jdetails.from);
-        // Save from details
-        this.api.saveJournalFrom([jdetails.from]).subscribe(
-          async (fromRes) => {
-            console.log('✅ FROM details saved:', fromRes);
-
-            console.log('📤 Saving TO details:', jdetails.to);
-            // Save to details
-            this.api.saveJournalTo([jdetails.to]).subscribe(
-              async (toRes) => {
-                console.log('✅ TO details saved:', toRes);
-                this.loading = false;
-                await this.showSuccessToast('تمت إضافة الحركة بنجاح');
-                this.modalCtrl.dismiss({ refresh: true });
-              },
-              async (toError) => {
-                console.error('❌ Error saving TO details:', toError);
-                this.loading = false;
-                await this.showErrorToast('فشل حفظ تفاصيل الحساب المستهدف');
-              }
-            );
-          },
-          async (fromError) => {
-            console.error('❌ Error saving FROM details:', fromError);
-            this.loading = false;
-            await this.showErrorToast('فشل حفظ تفاصيل الحساب المصدر');
-          }
-        );
-      },
-      async (error) => {
-        console.error('❌ Error saving journal:', error);
-        this.loading = false;
+      } else if (result.success && result.isQueued) {
+        // Offline — queued for sync
+        this.modalCtrl.dismiss({ refresh: false, queued: true });
+      } else {
         await this.showErrorToast('حدث خطأ أثناء إضافة الحركة');
       }
-    );
+    } catch (error) {
+      console.error('Error creating transaction:', error);
+      this.loading = false;
+      await this.showErrorToast('حدث خطأ أثناء إضافة الحركة');
+    }
   }
 
   async updateTransaction() {
-    console.log('🔄 Updating transaction...');
+    console.log('🔄 Updating transaction (atomic)...');
 
     // Validate form
     if (!this.isFormValid()) {
@@ -617,21 +656,20 @@ export class TransactionModalComponent implements OnInit {
       return;
     }
 
-    const journal = this.prepareJournalData();
-    const jdetails = this.prepareJournalDetails();
+    // Use the original j_ref for update
+    const j_ref = this.transaction.j_ref;
+    const journal = this.prepareJournalData(j_ref);
+    const jdetails = this.prepareJournalDetails(j_ref);
 
     // Set IDs for update
     journal.j_id = this.transaction.j_id;
-    journal.j_ref = this.transaction.j_ref; // Keep original reference
 
     // Preserve detail IDs from original records
     jdetails.from.id = this.originalJdetailFrom?.id;
     jdetails.from.j_id = this.transaction.j_id;
-    jdetails.from.j_ref = this.transaction.j_ref;
 
     jdetails.to.id = this.originalJdetailTo?.id;
     jdetails.to.j_id = this.transaction.j_id;
-    jdetails.to.j_ref = this.transaction.j_ref;
 
     console.log('📝 Update data prepared:', {
       journal,
@@ -654,75 +692,38 @@ export class TransactionModalComponent implements OnInit {
       return;
     }
 
-    // Update journal
-    console.log('📤 Updating journal...');
-    this.api.updateJournal(journal).subscribe(
-      async (journalRes) => {
-        console.log('✅ Journal updated:', journalRes);
+    // Single atomic API call - journal + from + to updated in one DB transaction
+    const transactionData = {
+      journal: journal,
+      from_detail: jdetails.from,
+      to_detail: jdetails.to
+    };
 
-        if (journalRes && journalRes['message'] === 'Post Not Updated') {
-          console.error('❌ Journal update failed');
-          this.loading = false;
-          await this.showErrorToast('فشل تحديث بيانات الحركة');
-          return;
+    this.api.updateFullTransaction(transactionData).subscribe(
+      async (res: any) => {
+        console.log('✅ Transaction updated (atomic). Response:', res);
+        this.loading = false;
+        if (res?.success) {
+          await this.showSuccessToast('تم تحديث الحركة بنجاح');
+          this.modalCtrl.dismiss({ refresh: true });
+        } else {
+          console.error('❌ Transaction update failed:', res?.message);
+          await this.showErrorToast(res?.message || 'فشل تحديث الحركة');
         }
-
-        // Update from details
-        console.log('📤 Updating FROM details...');
-        this.api.updateJFrom(jdetails.from).subscribe(
-          async (fromRes) => {
-            console.log('✅ FROM details updated:', fromRes);
-
-            if (fromRes && fromRes['message'] === 'Post Not Updated') {
-              console.error('❌ FROM details update failed');
-              this.loading = false;
-              await this.showErrorToast('فشل تحديث تفاصيل الحساب المصدر');
-              return;
-            }
-
-            // Update to details
-            console.log('📤 Updating TO details...');
-            this.api.updateJTo(jdetails.to).subscribe(
-              async (toRes) => {
-                console.log('✅ TO details updated:', toRes);
-
-                if (toRes && toRes['message'] === 'Post Not Updated') {
-                  console.error('❌ TO details update failed');
-                  this.loading = false;
-                  await this.showErrorToast('فشل تحديث تفاصيل الحساب المستهدف');
-                  return;
-                }
-
-                this.loading = false;
-                console.log('✅ Transaction updated successfully');
-                await this.showSuccessToast('تم تحديث الحركة بنجاح');
-                this.modalCtrl.dismiss({ refresh: true });
-              },
-              async (toError) => {
-                console.error('❌ Error updating TO details:', toError);
-                this.loading = false;
-                await this.showErrorToast('فشل تحديث تفاصيل الحساب المستهدف');
-              }
-            );
-          },
-          async (fromError) => {
-            console.error('❌ Error updating FROM details:', fromError);
-            this.loading = false;
-            await this.showErrorToast('فشل تحديث تفاصيل الحساب المصدر');
-          }
-        );
       },
-      async (journalError) => {
-        console.error('❌ Error updating journal:', journalError);
+      async (error) => {
+        console.error('❌ Error updating transaction:', error);
         this.loading = false;
         await this.showErrorToast('حدث خطأ أثناء تحديث الحركة');
       }
     );
   }
 
-  prepareJournalData(): any {
-    const timestamp = new Date().getTime();
-    const j_ref = this.isEditMode ? this.transaction.j_ref : `${this.store_id}JO${timestamp}`;
+  prepareJournalData(j_ref?: string): any {
+    if (!j_ref) {
+      const timestamp = new Date().getTime();
+      j_ref = this.isEditMode ? this.transaction.j_ref : `${this.store_id}JO${timestamp}`;
+    }
 
     let j_type = '';
     let standard_details = '';
@@ -737,6 +738,9 @@ export class TransactionModalComponent implements OnInit {
       j_type = 'سند دفع';
       standard_details = `من حساب ${this.selectedAccount.sub_name} إلى حساب ${this.selectedPaymentMethod.sub_name}`;
     } else if (this.transactionType === 'internal_transfer') {
+      j_type = 'سند قيد';
+      standard_details = `من حساب ${this.selectedSourceAccount.sub_name} إلى حساب ${this.selectedDestAccount.sub_name}`;
+    } else if (this.transactionType === 'general_entry') {
       j_type = 'سند قيد';
       standard_details = `من حساب ${this.selectedSourceAccount.sub_name} إلى حساب ${this.selectedDestAccount.sub_name}`;
     }
@@ -757,12 +761,14 @@ export class TransactionModalComponent implements OnInit {
     };
   }
 
-  prepareJournalDetails(): any {
+  prepareJournalDetails(j_ref?: string): any {
     let fromDetail: any = {};
     let toDetail: any = {};
 
-    const timestamp = new Date().getTime();
-    const j_ref = this.isEditMode ? this.transaction.j_ref : `${this.store_id}JO${timestamp}`;
+    if (!j_ref) {
+      const timestamp = new Date().getTime();
+      j_ref = this.isEditMode ? this.transaction.j_ref : `${this.store_id}JO${timestamp}`;
+    }
 
     if (this.transactionType === 'pay_supplier') {
       // From: Supplier (debit), To: Cash/Bank (credit)
@@ -842,11 +848,8 @@ export class TransactionModalComponent implements OnInit {
         store_id: this.store_id,
         yearId: this.year_id
       };
-    } else if (this.transactionType === 'internal_transfer') {
+    } else if (this.transactionType === 'internal_transfer' || this.transactionType === 'general_entry') {
       // From: Source account (debit), To: Destination account (credit)
-      console.log('🔍 Preparing internal transfer - Source:', this.selectedSourceAccount);
-      console.log('🔍 Preparing internal transfer - Dest:', this.selectedDestAccount);
-
       fromDetail = {
         id: null,
         j_id: undefined,
@@ -999,6 +1002,30 @@ export class TransactionModalComponent implements OnInit {
   getBalanceColor(balance: any): string {
     if (!balance) return 'medium';
     return balance.status === 'debit' ? 'success' : 'danger';
+  }
+
+  getAccountCategoryLabel(account: any): string {
+    if (!account) return '';
+    switch (Number(account.ac_id)) {
+      case 1: return 'عميل';
+      case 2: return 'مورد';
+      case 5: return 'مصروفات';
+      case 7: return 'بنك';
+      case 46: return 'خزينة';
+      default: return 'أخرى';
+    }
+  }
+
+  getAccountCategoryClass(account: any): string {
+    if (!account) return '';
+    switch (Number(account.ac_id)) {
+      case 1: return 'customer';
+      case 2: return 'supplier';
+      case 5: return 'expense';
+      case 7: return 'bank';
+      case 46: return 'cash';
+      default: return 'other';
+    }
   }
 
   close() {

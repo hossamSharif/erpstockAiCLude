@@ -4,6 +4,11 @@
     <ion-label>طباعة</ion-label>
   </ion-item>
 
+  <ion-item button (click)="selectAction('printStoreReport')" class="action-item">
+    <ion-icon name="clipboard-outline" slot="start" class="action-icon"></ion-icon>
+    <ion-label>تقرير المخزن</ion-label>
+  </ion-item>
+
   <ion-item button (click)="selectAction('edit')" class="action-item">
     <ion-icon name="create-outline" slot="start" class="action-icon"></ion-icon>
     <ion-label>تعديل</ion-label>
@@ -12,6 +17,11 @@
   <ion-item button (click)="selectAction('verify')" class="action-item">
     <ion-icon name="checkmark-done-outline" slot="start" class="action-icon"></ion-icon>
     <ion-label>التحقق من الفاتورة</ion-label>
+  </ion-item>
+
+  <ion-item button (click)="selectAction('createReturn')" class="action-item" *ngIf="context !== 'returns'">
+    <ion-icon name="return-down-back-outline" slot="start" class="action-icon"></ion-icon>
+    <ion-label>إنشاء مرتجعة</ion-label>
   </ion-item>
 
   <!-- Only show copy options for invoices, not for orders -->

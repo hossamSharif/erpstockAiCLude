@@ -1,0 +1,329 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>{{ 'RECURRING.TITLE' | translate }}</ion-title>
+  </ion-toolbar>
+
+  <ion-toolbar>
+    <ion-segment [(ngModel)]="selectedSegment" (ionChange)="segmentChanged($event)">
+      <ion-segment-button value="management">
+        <ion-label>{{ 'RECURRING.MANAGEMENT' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="status">
+        <ion-label>{{ 'RECURRING.MONTHLY_STATUS' | translate }}</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- ============ Management Tab ============ -->
+  <div *ngIf="selectedSegment === 'management'" class="management-tab">
+
+    <!-- Add/Edit Form -->
+    <ion-card *ngIf="showForm" class="form-card">
+      <ion-card-header>
+        <ion-card-title>{{ isEditing ? ('RECURRING.EDIT_OBLIGATION' | translate) : ('RECURRING.ADD_OBLIGATION' | translate) }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-grid class="form-grid" dir="rtl">
+          <ion-row class="form-row">
+            <!-- Obligation Type -->
+            <ion-col size="12" size-md="6">
+              <div class="field-block">
+                <ion-label class="column-label">{{ 'RECURRING.OBLIGATION_TYPE' | translate }}</ion-label>
+                <ion-item class="custInput field-input" lines="none">
+                  <ion-select
+                    [(ngModel)]="formData.obligation_type"
+                    interface="alert"
+                    [interfaceOptions]="{ header: ('RECURRING.OBLIGATION_TYPE' | translate), cssClass: 'recurring-alert-select' }">
+                    <ion-select-option value="salary">{{ 'RECURRING.SALARY' | translate }}</ion-select-option>
+                    <ion-select-option value="rent">{{ 'RECURRING.RENT' | translate }}</ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </div>
+            </ion-col>
+
+            <!-- Day of Month -->
+            <ion-col size="12" size-md="6">
+              <div class="field-block">
+                <ion-label class="column-label">{{ 'RECURRING.DAY_OF_MONTH' | translate }}</ion-label>
+                <ion-item class="custInput field-input" lines="none">
+                  <ion-select
+                    [(ngModel)]="formData.day_of_month"
+                    interface="alert"
+                    [interfaceOptions]="{ header: ('RECURRING.DAY_OF_MONTH' | translate), cssClass: 'recurring-alert-select' }">
+                    <ion-select-option *ngFor="let d of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]" [value]="d">
+                      {{d}}
+                    </ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </div>
+            </ion-col>
+          </ion-row>
+
+          <ion-row class="form-row">
+            <!-- Sub Account (employee/landlord) -->
+            <ion-col size="12" size-md="6">
+              <app-account-dropdown-selector
+                [accounts]="allAccounts"
+                [loadingAccounts]="loadingAccounts"
+                [(selectedId)]="formData.sub_account_id"
+                [label]="'RECURRING.ACCOUNT' | translate"
+                [placeholder]="'اختر الحساب'"
+                (refreshAccounts)="loadAccounts()"
+                (addAccountClicked)="onAddAccount('main')">
+              </app-account-dropdown-selector>
+            </ion-col>
+
+            <!-- Expense Account -->
+            <ion-col size="12" size-md="6">
+              <div class="field-block">
+                <ion-label class="column-label">{{ 'RECURRING.EXPENSE_ACCOUNT' | translate }}</ion-label>
+                <ion-item class="custInput field-input" lines="none">
+                  <ion-select
+                    [(ngModel)]="formData.expense_account_id"
+                    interface="alert"
+                    [interfaceOptions]="{ header: ('RECURRING.EXPENSE_ACCOUNT' | translate), cssClass: 'recurring-alert-select' }">
+                    <ion-select-option *ngFor="let acc of expenseAccounts" [value]="acc.id">
+                      {{acc.sub_name}}
+                    </ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </div>
+            </ion-col>
+          </ion-row>
+
+          <ion-row class="form-row">
+            <!-- Amount -->
+            <ion-col size="12" size-md="6">
+              <div class="field-block">
+                <ion-label class="column-label">{{ 'RECURRING.AMOUNT' | translate }}</ion-label>
+                <ion-item class="custInput field-input" lines="none">
+                  <ion-input type="number" [(ngModel)]="formData.amount" placeholder="0.00"></ion-input>
+                </ion-item>
+              </div>
+            </ion-col>
+
+            <!-- Description (styled like sales comment input) -->
+            <ion-col size="12" size-md="6">
+              <div class="field-block">
+                <ion-label class="column-label">{{ 'RECURRING.DESCRIPTION' | translate }}</ion-label>
+                <ion-item class="custInput field-input" lines="none">
+                  <ion-input
+                    [placeholder]="'RECURRING.DESCRIPTION_PLACEHOLDER' | translate"
+                    [(ngModel)]="formData.description">
+                  </ion-input>
+                </ion-item>
+              </div>
+            </ion-col>
+          </ion-row>
+
+          <ion-row class="form-row">
+            <!-- Start Date -->
+            <ion-col size="12" size-md="6">
+              <div class="field-block date-field-block">
+                <ion-label class="column-label">{{ 'RECURRING.START_DATE' | translate }}</ion-label>
+                <ion-item class="header-date-item" lines="none">
+                  <ion-input type="date" [(ngModel)]="formData.start_date" class="header-date-input"></ion-input>
+                </ion-item>
+              </div>
+            </ion-col>
+
+            <!-- End Date -->
+            <ion-col size="12" size-md="6">
+              <div class="field-block date-field-block">
+                <ion-label class="column-label">{{ 'RECURRING.END_DATE' | translate }}</ion-label>
+                <ion-item class="header-date-item" lines="none">
+                  <ion-input
+                    type="date"
+                    [(ngModel)]="formData.end_date"
+                    class="header-date-input"
+                    placeholder="{{ 'RECURRING.NO_END_DATE' | translate }}">
+                  </ion-input>
+                </ion-item>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+
+        <!-- Buttons (single centered row) -->
+        <div class="form-buttons">
+          <ion-button color="primary" (click)="saveObligation()">
+            <ion-icon name="save-outline" slot="start"></ion-icon>
+            {{ 'COMMON.BUTTON.SAVE' | translate }}
+          </ion-button>
+          <ion-button color="medium" fill="outline" (click)="cancelForm()">
+            {{ 'COMMON.BUTTON.CANCEL' | translate }}
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Obligations List -->
+    <div class="obligations-list" *ngIf="!showForm">
+      <!-- Loading -->
+      <div *ngIf="loadingObligations" class="loading-container">
+        <ion-spinner name="crescent"></ion-spinner>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loadingObligations && obligations.length === 0" class="empty-state">
+        <ion-icon name="repeat-outline" class="empty-icon"></ion-icon>
+        <p>{{ 'RECURRING.NO_OBLIGATIONS' | translate }}</p>
+      </div>
+
+      <!-- List -->
+      <ion-card *ngFor="let ob of obligations" class="obligation-card" [class.inactive]="ob.is_active == 0">
+        <ion-card-content>
+          <div class="ob-header">
+            <div class="ob-info">
+              <h3>{{ob.description || ob.expense_account_name}}</h3>
+              <p class="ob-description">
+                <strong>{{ob.expense_account_name}}</strong>
+                <span class="ob-source"> · الدفع من: {{ob.account_name}}</span>
+              </p>
+            </div>
+            <div class="ob-badges">
+              <ion-badge [color]="getTypeColor(ob.obligation_type)">{{ getTypeLabel(ob.obligation_type) }}</ion-badge>
+              <ion-badge [color]="ob.is_active == 1 ? 'success' : 'medium'">
+                {{ ob.is_active == 1 ? ('RECURRING.ACTIVE' | translate) : ('RECURRING.INACTIVE' | translate) }}
+              </ion-badge>
+            </div>
+          </div>
+
+          <div class="ob-details">
+            <div class="detail-item">
+              <span class="detail-label">{{ 'RECURRING.AMOUNT' | translate }}</span>
+              <span class="detail-value amount">{{ob.amount | number:'1.2-2'}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">{{ 'RECURRING.DAY_OF_MONTH' | translate }}</span>
+              <span class="detail-value">{{ob.day_of_month}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">الدفع من</span>
+              <span class="detail-value">{{ob.account_name}}</span>
+            </div>
+          </div>
+
+          <div class="ob-actions">
+            <ion-button fill="clear" size="small" (click)="openEditForm(ob)">
+              <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" size="small" [color]="ob.is_active == 1 ? 'warning' : 'success'" (click)="toggleActive(ob)">
+              <ion-icon [name]="ob.is_active == 1 ? 'pause-outline' : 'play-outline'" slot="icon-only"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" size="small" color="danger" (click)="confirmDelete(ob)">
+              <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- FAB Add Button -->
+    <ion-fab vertical="bottom" horizontal="end" slot="fixed" *ngIf="!showForm">
+      <ion-fab-button (click)="openAddForm()">
+        <ion-icon name="add"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
+  </div>
+
+  <!-- ============ Monthly Status Tab ============ -->
+  <div *ngIf="selectedSegment === 'status'" class="status-tab">
+
+    <!-- Month Navigator -->
+    <div class="month-navigator">
+      <ion-button fill="clear" (click)="prevMonth()">
+        <ion-icon name="chevron-back-outline"></ion-icon>
+      </ion-button>
+      <h2 class="month-display">{{selectedMonthDisplay}}</h2>
+      <ion-button fill="clear" (click)="nextMonth()">
+        <ion-icon name="chevron-forward-outline"></ion-icon>
+      </ion-button>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <ion-card class="summary-card salary-card">
+        <ion-card-content>
+          <div class="summary-label">{{ 'RECURRING.TOTAL_SALARIES' | translate }}</div>
+          <div class="summary-value">{{summary.total_salaries | number:'1.2-2'}}</div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="summary-card rent-card">
+        <ion-card-content>
+          <div class="summary-label">{{ 'RECURRING.TOTAL_RENT' | translate }}</div>
+          <div class="summary-value">{{summary.total_rent | number:'1.2-2'}}</div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="summary-card progress-card">
+        <ion-card-content>
+          <div class="summary-label">{{ 'RECURRING.PAID' | translate }}</div>
+          <div class="summary-value">{{summary.paid_count}} / {{summary.total_count}}</div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Generate All Button -->
+    <div class="generate-section">
+      <ion-button expand="block" color="primary" (click)="generateAll()" [disabled]="generating">
+        <ion-spinner *ngIf="generating" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!generating" name="flash-outline" slot="start"></ion-icon>
+        {{ 'RECURRING.GENERATE_ALL' | translate }}
+      </ion-button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loadingStatus" class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loadingStatus && statusList.length === 0" class="empty-state">
+      <ion-icon name="calendar-outline" class="empty-icon"></ion-icon>
+      <p>{{ 'RECURRING.NO_OBLIGATIONS' | translate }}</p>
+    </div>
+
+    <!-- Status List -->
+    <ion-card *ngFor="let item of statusList" class="status-card">
+      <ion-card-content>
+        <div class="status-header">
+          <div class="status-info">
+            <h3>{{item.description || item.expense_account_name}}</h3>
+            <p>
+              <strong>{{item.expense_account_name}}</strong>
+              <span class="ob-source"> · الدفع من: {{item.account_name}}</span>
+            </p>
+          </div>
+          <div class="status-badges">
+            <ion-badge [color]="getTypeColor(item.obligation_type)">{{ getTypeLabel(item.obligation_type) }}</ion-badge>
+            <ion-badge [color]="getStatusColor(item.status)">{{ getStatusLabel(item.status) }}</ion-badge>
+          </div>
+        </div>
+
+        <div class="status-amount">
+          <span class="amount-value">{{item.amount | number:'1.2-2'}}</span>
+        </div>
+
+        <div class="status-actions" *ngIf="item.status !== 'paid'">
+          <ion-button *ngIf="item.status === 'generated' || item.status === 'overdue'"
+                      size="small" color="success" (click)="quickPay(item)">
+            <ion-icon name="cash-outline" slot="start"></ion-icon>
+            {{ 'RECURRING.QUICK_PAY' | translate }}
+          </ion-button>
+        </div>
+
+        <div class="paid-info" *ngIf="item.status === 'paid' && item.paid_at">
+          <ion-icon name="checkmark-circle" color="success"></ion-icon>
+          <span>{{ 'RECURRING.PAID' | translate }} - {{item.paid_at}}</span>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

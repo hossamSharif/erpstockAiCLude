@@ -1,0 +1,45 @@
+<ion-content class="category-switcher-popover-content">
+  <div class="popover-header">
+    <ion-icon name="folder-open-outline"></ion-icon>
+    <span>{{ 'MENU.SWITCH_CATEGORY_TITLE' | translate }}</span>
+  </div>
+
+  <div class="search-bar">
+    <ion-searchbar
+      mode="ios"
+      [value]="searchTerm"
+      (ionInput)="onSearchChange($event)"
+      [placeholder]="'MENU.SEARCH_CATEGORY' | translate"
+      debounce="100"
+      class="category-search">
+    </ion-searchbar>
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <ion-list lines="none" class="category-list" *ngIf="!loading">
+    <ion-item
+      *ngFor="let cat of filteredCategories"
+      button
+      (click)="selectCategory(cat)"
+      [class.active]="isActive(cat)"
+      class="category-item">
+      <ion-icon
+        slot="start"
+        [name]="isActive(cat) ? 'checkmark-circle' : 'ellipse-outline'"
+        [color]="isActive(cat) ? 'success' : 'medium'">
+      </ion-icon>
+      <ion-label>
+        <h3>{{ cat.category_name }}</h3>
+      </ion-label>
+    </ion-item>
+
+    <div class="empty-state" *ngIf="filteredCategories.length === 0">
+      <ion-icon name="folder-outline"></ion-icon>
+      <p *ngIf="categories.length === 0">لا توجد تصنيفات متاحة</p>
+      <p *ngIf="categories.length > 0">لا توجد نتائج للبحث</p>
+    </div>
+  </ion-list>
+</ion-content>

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Storage } from '@ionic/storage';
-import { ToastController, Platform, LoadingController } from '@ionic/angular';
+import { ToastController, Platform, LoadingController, NavController } from '@ionic/angular';
 import { BehaviorSubject } from 'rxjs'
 import { Router } from '@angular/router';
 import { ServicesService } from "../stockService/services.service";
@@ -22,7 +22,7 @@ export class AuthServiceService {
      password:any,
     user_level:any
   };
-  constructor(private toast:ToastController ,private loadingController:LoadingController,private api:ServicesService,   private router: Router,private storage: Storage,private platform: Platform,public toastController: ToastController) { 
+  constructor(private toast:ToastController ,private loadingController:LoadingController,private api:ServicesService, private router: Router,private storage: Storage,private platform: Platform,public toastController: ToastController, private navCtrl: NavController) {
     this.platform.ready().then(() => {
       this.checkPlatform()
       this.ifLoggedIn();
@@ -66,12 +66,12 @@ export class AuthServiceService {
     //console.log('Loading dismissed with role:', role);
   }
 
-  ifLoggedIn() {
-    this.storage.get('USER_INFO').then((response) => {
-      if (response) {
-        this.authState.next(true);
-      }
-    });
+  async ifLoggedIn() {
+    await this.storage.create();
+    const response = await this.storage.get('USER_INFO');
+    if (response) {
+      this.authState.next(true);
+    }
   }
 
 
@@ -93,19 +93,19 @@ export class AuthServiceService {
       }
         //console.log(  'sdlijlf' ,  this.USER_INFO)
         this.storage.set('USER_INFO', this.USER_INFO).then(async (response) => {
-          // Dismiss loading first
-          await this.loadingController.dismiss();
+          // Dismiss loading (ignore if already auto-dismissed)
+          try { await this.loadingController.dismiss(); } catch(e) {}
 
           // Set auth state - login page will handle navigation
           this.authState.next(true);
         });
       }else{
-        this.loadingController.dismiss()
+        try { this.loadingController.dismiss(); } catch(e) {}
         this.presentToast('خطأ في البريد الإلكتروني او كلمة المرور' ,'danger')
       }
     }, (err) => {
        //console.log(err);
-       this.loadingController.dismiss()
+       try { this.loadingController.dismiss(); } catch(e) {}
        this.presentToast('خطأ في البريد الإلكتروني او كلمة المرور' ,'danger')
 
       },()=>{ }
@@ -115,12 +115,11 @@ export class AuthServiceService {
 
  
   async logout() {
-    this.storage.remove('USER_INFO').then(() => {
-      this.storage.remove('STORE_INFO').then(() => { 
-        this.authState.next(false);
-        // Let app.component.ts handle navigation to avoid conflicts
-      }); 
-    }); 
+    await this.storage.create();
+    await this.storage.remove('USER_INFO');
+    await this.storage.remove('STORE_INFO');
+    this.authState.next(false);
+    this.navCtrl.navigateRoot('folder/login');
   }
 
   isAuthenticated() {

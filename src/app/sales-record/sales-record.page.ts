@@ -315,20 +315,34 @@ export class SalesRecordPage implements OnInit, OnDestroy {
      }
   }
 
-  ngOnInit() { 
+  private invoiceChannel: BroadcastChannel;
+
+  ngOnInit() {
     this.payArray =[]
     this.sortedPayArray =[]
     this.currentSort = null
     // Check category visibility setting
   //  this.isCategoryVisibilityEnabled = CategoriesPage.isCategoryVisibilityEnabled();
     //console.log('ngOnInit')
-    this.getAppInfo() 
+    this.getAppInfo()
     this.prepareOffline()
     this.initializeCurrency()
+
+    // Listen for invoice creation in new tabs
+    try {
+      this.invoiceChannel = new BroadcastChannel('invoice-channel');
+      this.invoiceChannel.onmessage = (event) => {
+        if (event.data.type === 'invoice-created') {
+          this.search(); // refresh data
+          this.clearInvoiceSelection();
+        }
+      };
+    } catch (e) { /* BroadcastChannel not supported */ }
   }
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+    this.invoiceChannel?.close();
   }
 
   private async initializeCurrency() {
@@ -359,7 +373,7 @@ export class SalesRecordPage implements OnInit, OnDestroy {
       translucent: true,
       cssClass: 'action-popover-rtl',
       componentProps: {
-        contextType: this.radioVal === 4 ? 'returns' : 'sales'
+        context: this.radioVal === 4 ? 'returns' : 'invoice'
       }
     });
   
@@ -388,6 +402,12 @@ export class SalesRecordPage implements OnInit, OnDestroy {
             break;
           case 'copyPurchase':
             this.copyAsInvoice(pay, 'purchase');
+            break;
+          case 'printStoreReport':
+            this.printStoreReport(pay);
+            break;
+          case 'createReturn':
+            this.navigateToCreateReturn(pay);
             break;
         }
       }
@@ -578,23 +598,17 @@ export class SalesRecordPage implements OnInit, OnDestroy {
   
     
   
-    if (type === 'sales') { 
-      let navigationExtras: NavigationExtras = {  
-      queryParams: {
-          status: 'newInvoFromItemsPage',
-          selectedItemsList: JSON.stringify(salesitems) 
-      }
-    };
-        this.rout.navigate(['folder/sales'], navigationExtras); 
-    } else {  
-       let navigationExtras: NavigationExtras = {  
-      queryParams: {
-          status: 'newInvoFromItemsPage',
-          selectedItemsList: JSON.stringify(purchitems) 
-      }
-    };
-        this.rout.navigate(['folder/purchase'], navigationExtras); 
+    if (type === 'sales') {
+      this.openInvoiceInNewTab('/folder/sales', salesitems);
+    } else {
+      this.openInvoiceInNewTab('/folder/purchase', purchitems);
     }
+  }
+
+  private openInvoiceInNewTab(route: string, items: any[]) {
+    const dataKey = 'invoice_data_' + Date.now();
+    localStorage.setItem(dataKey, JSON.stringify(items));
+    window.open(`${route}?fromTab=true&dataKey=${dataKey}`, '_blank');
   }
   
 
@@ -719,7 +733,7 @@ export class SalesRecordPage implements OnInit, OnDestroy {
   if (this.offline == false) {
   this.api.getSalesAccounts(this.store_info.id , this.year.id).subscribe(data =>{
      let res = data
-     this.sub_account = res ['data']
+     this.sub_account = res['data'] || []
      console.log('this.sub_account',this.sub_account)
      this.recalSubBalance()
       this.addSubaccountLocal()
@@ -765,6 +779,7 @@ export class SalesRecordPage implements OnInit, OnDestroy {
 
   
   recalSubBalance(){
+    if (!Array.isArray(this.sub_account)) return;
     // adding new change to subbalances
     this.sub_account.forEach(element => {
       element.sub_balance = 0 
@@ -820,8 +835,7 @@ export class SalesRecordPage implements OnInit, OnDestroy {
 
    printInvo(printarea , dataFrom){  
     if ( dataFrom.pay_id != undefined) {
-      this.paInvo = dataFrom  
-      let flt = this.sub_account.filter(x=>+x.id == +dataFrom.cust_id) 
+      this.paInvo = dataFrom
       if(this.radioVal == 3){
         this.api.getPayInvoDetailinit(this.store_info.id , dataFrom.pay_ref).subscribe(data =>{
           //console.log(data)
@@ -875,7 +889,62 @@ export class SalesRecordPage implements OnInit, OnDestroy {
 
    }
   
-    async presentModal(printArr , page) { 
+   printStoreReport(dataFrom) {
+    if (dataFrom.pay_id != undefined) {
+      this.paInvo = dataFrom;
+      if (this.radioVal == 3) {
+        this.api.getPayInvoDetailinit(this.store_info.id, dataFrom.pay_ref).subscribe(data => {
+          let res = data;
+          this.itemList = res['data'];
+          this.printArr = [];
+          this.printArr.push({
+            'payInvo': this.paInvo,
+            'itemList': this.itemList,
+            'selectedAccount': this.paInvo.sub_name,
+            'sub_nameNew': "",
+            'user_name': this.paInvo.user_name
+          });
+          this.presentModalStoreReport(this.printArr, 'sales_picking_list');
+        }, (err) => {
+          this.presentToast('خطا في الإتصال حاول مرة اخري', 'danger');
+        });
+      } else {
+        this.api.getPayInvoDetail(this.store_info.id, dataFrom.pay_ref, this.year.id).subscribe(data => {
+          let res = data;
+          this.itemList = res['data'];
+          this.printArr = [];
+          this.printArr.push({
+            'payInvo': this.paInvo,
+            'itemList': this.itemList,
+            'selectedAccount': this.paInvo.sub_name,
+            'sub_nameNew': "",
+            'user_name': this.paInvo.user_name
+          });
+          this.presentModalStoreReport(this.printArr, 'sales_picking_list');
+        }, (err) => {
+          this.presentToast('خطا في الإتصال حاول مرة اخري', 'danger');
+        });
+      }
+    }
+  }
+
+  async presentModalStoreReport(printArr, page) {
+    const modal = await this.modalController.create({
+      component: PrintModalPage,
+      componentProps: {
+        "printArr": printArr,
+        "page": page,
+        "showPrices": false
+      }
+    });
+    modal.onDidDismiss().then((dataReturned) => {
+      if (dataReturned !== null) {
+      }
+    });
+    return await modal.present();
+  }
+
+    async presentModal(printArr , page) {
       const modal = await this.modalController.create({
         component: PrintModalPage ,
         componentProps: {
@@ -1670,6 +1739,7 @@ getSortIcon(column: string): string {
 }
 
 // Multi-select invoice methods
+
 toggleInvoiceSelection(invoice: any, event: any) {
   if (event.detail.checked) {
     if (!this.isInvoiceSelected(invoice)) {
@@ -1679,8 +1749,8 @@ toggleInvoiceSelection(invoice: any, event: any) {
     this.selectedInvoicesList = this.selectedInvoicesList.filter(
       selectedInvoice => selectedInvoice.pay_ref !== invoice.pay_ref
     );
-    this.selectAllInvoices = false;
   }
+  this.selectAllInvoices = this.selectedInvoicesList.length === this.sortedPayArray.length;
 }
 
 isInvoiceSelected(invoice: any): boolean {
@@ -1690,10 +1760,14 @@ isInvoiceSelected(invoice: any): boolean {
 }
 
 toggleSelectAll(event: any) {
-  if (event.detail.checked) {
+  const isChecked = event.detail.checked;
+  if (isChecked === this.selectAllInvoices) return;
+  if (isChecked) {
     this.selectedInvoicesList = [...this.sortedPayArray];
+    this.selectAllInvoices = true;
   } else {
     this.selectedInvoicesList = [];
+    this.selectAllInvoices = false;
   }
 }
 
@@ -1787,19 +1861,11 @@ async createSalesInvoiceFromSelectedInvoices() {
 
     modal.onDidDismiss().then((result) => {
       if (result.data) {
-        // User confirmed configuration, navigate with configured items
+        // User confirmed configuration, open in new tab
         const configuredItems = result.data;
+        this.openInvoiceInNewTab('/folder/sales', configuredItems);
 
-        let navigationExtras: NavigationExtras = {
-          queryParams: {
-            status: 'newInvoFromItemsPage',
-            selectedItemsList: JSON.stringify(configuredItems)
-          }
-        };
-
-        this.rout.navigate(['folder/sales'], navigationExtras);
-
-        // Clear selection after navigation
+        // Clear selection after opening new tab
         this.clearInvoiceSelection();
       }
       // If result.data is null/undefined, user cancelled - don't navigate
@@ -1899,19 +1965,11 @@ async createPurchaseInvoiceFromSelectedInvoices() {
 
     modal.onDidDismiss().then((result) => {
       if (result.data) {
-        // User confirmed configuration, navigate with configured items
+        // User confirmed configuration, open in new tab
         const configuredItems = result.data;
+        this.openInvoiceInNewTab('/folder/purchase', configuredItems);
 
-        let navigationExtras: NavigationExtras = {
-          queryParams: {
-            status: 'newInvoFromItemsPage',
-            selectedItemsList: JSON.stringify(configuredItems)
-          }
-        };
-
-        this.rout.navigate(['folder/purchase'], navigationExtras);
-
-        // Clear selection after navigation
+        // Clear selection after opening new tab
         this.clearInvoiceSelection();
       }
       // If result.data is null/undefined, user cancelled - don't navigate
@@ -1957,17 +2015,22 @@ async createPurchaseOrderFromSelectedInvoices() {
       }
     });
 
-    // Merge duplicate items by item_id and perch_price, summing quantities
+    // Merge duplicate items by item_id only, summing quantities and keeping highest price
     const mergedItemsMap = new Map<string, any>();
 
     allItems.forEach(item => {
-      // Create a unique key based on item_id and perch_price
-      const key = `${item.item_id}_${item.perch_price || 0}`;
+      // Create a unique key based on item_id only (for purchase order)
+      const key = `${item.item_id}`;
+      const currentPrice = +(item.perch_price || 0);
 
       if (mergedItemsMap.has(key)) {
-        // Item exists, sum the quantity
+        // Item exists, sum the quantity and keep highest price
         const existingItem = mergedItemsMap.get(key);
         existingItem.quantity = +existingItem.quantity + +item.quantity;
+        // Keep the highest price
+        if (currentPrice > +(existingItem.perch_price || 0)) {
+          existingItem.perch_price = currentPrice;
+        }
       } else {
         // New item, add to map with a copy
         mergedItemsMap.set(key, { ...item });
@@ -2011,19 +2074,11 @@ async createPurchaseOrderFromSelectedInvoices() {
 
     modal.onDidDismiss().then((result) => {
       if (result.data) {
-        // User confirmed configuration, navigate with configured items
+        // User confirmed configuration, open in new tab
         const configuredItems = result.data;
+        this.openInvoiceInNewTab('/purchase-order', configuredItems);
 
-        let navigationExtras: NavigationExtras = {
-          queryParams: {
-            status: 'newInvoFromItemsPage',
-            selectedItemsList: JSON.stringify(configuredItems)
-          }
-        };
-
-        this.rout.navigate(['/purchase-order'], navigationExtras);
-
-        // Clear selection after navigation
+        // Clear selection after opening new tab
         this.clearInvoiceSelection();
       }
       // If result.data is null/undefined, user cancelled - don't navigate
@@ -2165,8 +2220,22 @@ getCommentValue(pay: any): string {
 }
 
 // Navigate to create new return page
-navigateToCreateReturn() {
-  this.rout.navigate(['/folder/sales-return']);
+navigateToCreateReturn(pay?: any) {
+  if (pay) {
+    let navigationExtras: NavigationExtras = {
+      queryParams: {
+        original_pay_ref: pay.pay_ref,
+        cust_id: pay.cust_id,
+        cust_name: pay.sub_name,
+        original_total: pay.tot_pr,
+        original_date: pay.pay_date
+      },
+      replaceUrl: true
+    };
+    this.rout.navigate(['/folder/sales-return'], navigationExtras);
+  } else {
+    this.rout.navigate(['/folder/sales-return']);
+  }
 }
 
 // Handle printing return invoices

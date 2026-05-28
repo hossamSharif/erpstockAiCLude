@@ -46,6 +46,13 @@ export class TswiaRecordPage implements OnInit {
   sums : {pay:any ,change:any,discount:any,tot:any,totAfterDiscout:any}
   year : {id:any ,yearDesc:any ,yearStart :any,yearEnd:any}
 
+  // Item search properties
+  items: Array<any> = []
+  loadingItems: boolean = false
+  selectedItemForSearch: any = null
+  isDetailView: boolean = false
+  detailArray: Array<any> = []
+  detailSums: { totalTot: number } = { totalTot: 0 }
 
   constructor(private rout : Router,private storage: Storage,private modalController: ModalController,private loadingController:LoadingController, private datePipe:DatePipe,private api:ServicesService,private toast :ToastController,  private translate: TranslateService) { 
   this.selectedAccount = {id:"" ,ac_id:"",sub_name:"",sub_type:"",sub_code:"",sub_balance:"",store_id:"",cat_name:"",cat_id:"",currentCustumerStatus:0};
@@ -85,6 +92,10 @@ export class TswiaRecordPage implements OnInit {
     this.salesLocal = []
     this.showEmpty = false
     this.loading = false
+    this.selectedItemForSearch = null
+    this.isDetailView = false
+    this.detailArray = []
+    this.detailSums = { totalTot: 0 }
   }
   ionViewDidEnter(){
     this.payArray =[]
@@ -440,9 +451,14 @@ export class TswiaRecordPage implements OnInit {
       if (this.offline == true) {
       //  this.getSales2DateOffline()
       } else {
-        this.getSales2Date() 
+        this.getSales2Date()
       }
-    } 
+    } else if (this.radioVal == 3) {
+      this.isDetailView = true
+      if (this.selectedItemForSearch) {
+        this.searchByItem()
+      }
+    }
    }
 
    getInitialInvoices(){
@@ -794,11 +810,18 @@ export class TswiaRecordPage implements OnInit {
    }
 
    radioChange(ev){
-    //console.log(ev.target.value) 
+    //console.log(ev.target.value)
     this.payArray = []
     this.salesLocal = []
     this.showEmpty = false
     this.loading = false
+    this.detailArray = []
+    this.isDetailView = false
+    this.detailSums = { totalTot: 0 }
+    this.selectedItemForSearch = null
+    if (this.radioVal == 3 && this.items.length == 0) {
+      this.loadItems()
+    }
    }
 
   
@@ -860,7 +883,57 @@ export class TswiaRecordPage implements OnInit {
     //console.log('Loading dismissed with role:', role);
   }
 
+  loadItems(){
+    this.loadingItems = true
+    this.api.getAllStockItemsWithouteCounts(this.store_info.id, this.year.id).subscribe(data => {
+      let res = data
+      if(res['message'] != 'No record Found'){
+        this.items = res['data']
+      }
+      this.loadingItems = false
+    }, (err) => {
+      this.loadingItems = false
+      this.presentToast('خطا في جلب الأصناف', 'danger')
+    })
+  }
 
+  onItemSelected(event){
+    this.selectedItemForSearch = event
+    if(this.selectedItemForSearch){
+      this.searchByItem()
+    }
+  }
 
+  searchByItem(){
+    if(!this.selectedItemForSearch) return
+    this.loading = true
+    this.showEmpty = false
+    this.isDetailView = true
+    this.detailArray = []
+    this.api.getItemTswiaByItemId(this.store_info.id, this.selectedItemForSearch.id, this.year.id).subscribe(data => {
+      let res = data
+      if(res['message'] != 'No record Found'){
+        this.detailArray = res['data']
+      }
+      this.calculateDetailSums()
+      if(this.detailArray.length == 0){
+        this.showEmpty = true
+      } else {
+        this.showEmpty = false
+      }
+      this.loading = false
+    }, (err) => {
+      this.loading = false
+      this.presentToast('خطا في الإتصال حاول مرة اخري', 'danger')
+    })
+  }
+
+  calculateDetailSums(){
+    this.detailSums.totalTot = this.detailArray.reduce((acc, obj) => { return acc + +(obj.tot || 0); }, 0)
+  }
+
+  refreshItemsList(){
+    this.loadItems()
+  }
 
 }

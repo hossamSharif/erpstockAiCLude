@@ -86,6 +86,7 @@ constructor(private renderer : Renderer2,private modalController: ModalControlle
   }
 
 async presentAlertConfirm() {
+  console.log('presentAlertConfirm called - showing print dialog');
   const alert = await this.alertController.create({
     cssClass: 'my-custom-class',
     header: 'تأكيد!',
@@ -98,24 +99,64 @@ async presentAlertConfirm() {
         cssClass: 'secondary',
         id: 'cancel-button',
         handler: (blah) => {
-          //console.log('Confirm Cancel: blah'); 
+          //console.log('Confirm Cancel: blah');
           this.prepareInvo()
         }
       }, {
         text: 'موافق',
         id: 'confirm-button',
         handler: () => {
-          if(this.radioVal3 == 0){
-            this.presentModal(this.printArr , 'perchOrderAr')
-          }else if(this.radioVal3 == 1){
-            this.presentModal(this.printArr , 'perchOrderEn')
-          }
+          this.askIncludePricesAndPrint();
         }
       }
     ]
   });
 
   await alert.present();
+}
+
+async askIncludePricesAndPrint(): Promise<void> {
+  const alert = await this.alertController.create({
+    cssClass: 'my-custom-class',
+    header: this.translate.instant('PURCHASE_ORDER.PRINT_OPTIONS_TITLE'),
+    mode: 'ios',
+    message: this.translate.instant('PURCHASE_ORDER.INCLUDE_PRICES_MESSAGE'),
+    buttons: [
+      {
+        text: this.translate.instant('PURCHASE_ORDER.NO_HIDE_PRICES'),
+        cssClass: 'secondary',
+        handler: () => {
+          const page = this.radioVal3 == 0 ? 'perchOrderAr' : 'perchOrderEn';
+          this.presentModalWithPriceOption(page, false);
+        }
+      },
+      {
+        text: this.translate.instant('PURCHASE_ORDER.YES_INCLUDE_PRICES'),
+        handler: () => {
+          const page = this.radioVal3 == 0 ? 'perchOrderAr' : 'perchOrderEn';
+          this.presentModalWithPriceOption(page, true);
+        }
+      }
+    ]
+  });
+  await alert.present();
+}
+
+async presentModalWithPriceOption(page: string, showPrices: boolean): Promise<void> {
+  const modal = await this.modalController.create({
+    component: PrintModalPage,
+    componentProps: {
+      "printArr": this.printArr,
+      "page": page,
+      "showPrices": showPrices
+    }
+  });
+  modal.onDidDismiss().then((dataReturned) => {
+    if (dataReturned !== null) {
+      this.prepareInvo();
+    }
+  });
+  return await modal.present();
 }
 
 async priceChangeAlertConfirm() {
@@ -1070,9 +1111,8 @@ if (data['message'] != 'Post Not Created') {
 } 
   }, (err) => {
 //console.log(err);
+this.loadingController.dismiss().catch(() => {})
 this.presentToast('لم يتم انشاء حساب للمورد , خطا في الإتصال حاول مرة اخري' , 'danger')
- },()=>{
- this.loadingController.dismiss()
  })
 }
 
@@ -1130,27 +1170,32 @@ saveInvo(){
   })
 }
 
-saveitemList(){  
-this.api.savePerchOrderitemList(this.itemList).subscribe(data=>{ 
-  //console.log(data) 
+saveitemList(){
+this.api.savePerchOrderitemList(this.itemList).subscribe(data=>{
+  //console.log(data)
   this.printArr = []
   this.printArr.push({
     'payInvo': this.payInvo,
     'itemList':this.itemList,
     'selectedAccount' : this.selectedAccount,
     'sub_nameNew' : this.sub_nameNew
-  }) 
+  })
   //console.log(this.printArr)
- 
-  this.presentAlertConfirm() 
-  this.presentToast('تم الحفظ بنجاح' , 'success')  
+
+  // Dismiss loading first, then show the print confirm dialog
+  this.loadingController.dismiss().then(() => {
+    this.presentAlertConfirm()
+  }).catch(() => {
+    // Loading may already be dismissed (e.g. from saveSubAccount), show alert anyway
+    this.presentAlertConfirm()
+  })
+  this.presentToast('تم الحفظ بنجاح' , 'success')
 }, (err) => {
   //console.log(err);
+  this.loadingController.dismiss().catch(() => {})
   this.presentToast('لم يتم حفظ البيانات , خطا في الإتصال حاول مرة اخري' , 'danger')
-}, () => {
-  this.loadingController.dismiss()
 }
-)      
+)
 }
 
 async presentModal(printArr , page) { 

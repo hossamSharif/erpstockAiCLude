@@ -1,284 +1,415 @@
-/* Sales Return Page Styles - Following Sales Page Pattern */
-
 .container {
   padding: 16px;
   max-width: 1200px;
   margin: 0 auto;
+  padding-bottom: 20px;
 }
 
-/* Header Styles */
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  
-  ion-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--ion-color-primary);
-    text-align: center;
+// Header date input
+.date-item {
+  --background: transparent;
+  --color: white;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+
+  ion-input {
+    --color: white;
+    font-size: 0.85rem;
   }
 }
 
-/* Section Styles */
-.section {
-  margin-bottom: 20px;
-}
+// Invoice Info Bar
+.invoice-info-bar {
+  margin: 0;
+  border-radius: 12px;
+  border-right: 4px solid var(--ion-color-primary);
 
-.section-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: var(--ion-color-primary);
-  text-align: center;
-}
-
-/* Form Styles */
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 16px;
-  align-items: end;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
-  }
-  
-  ion-item {
-    margin-bottom: 0;
-  }
-}
 
-/* Invoice Selection Styles */
-.invoices-list {
-  margin-top: 16px;
-  max-height: 300px;
-  overflow-y: auto;
-  
-  ion-item {
-    --padding-start: 16px;
-    --padding-end: 16px;
-    margin-bottom: 8px;
-    border-radius: 8px;
-    border: 1px solid var(--ion-color-light);
-    
-    &:hover {
-      background-color: var(--ion-color-light);
+    @media (max-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .info-label {
+    font-size: 0.75rem;
+    color: var(--ion-color-medium);
+    font-weight: 500;
+  }
+
+  .info-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ion-color-dark);
+
+    &.total {
+      color: var(--ion-color-success);
+      font-size: 1.05rem;
     }
   }
 }
 
-.invoice-info {
+// Empty State
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+
+  .empty-icon {
+    font-size: 64px;
+    color: var(--ion-color-medium);
+    margin-bottom: 16px;
+  }
+
   h3 {
-    margin: 0 0 4px 0;
-    font-weight: bold;
-    color: var(--ion-color-primary);
+    color: var(--ion-color-dark);
+    margin-bottom: 8px;
   }
-  
+
   p {
-    margin: 2px 0;
     color: var(--ion-color-medium);
-    font-size: 0.9rem;
+    margin-bottom: 24px;
   }
-  
-  .invoice-total {
-    color: var(--ion-color-success);
-    font-weight: bold;
+
+  .invoices-list {
+    margin-top: 24px;
+    max-height: 400px;
+    overflow-y: auto;
+    text-align: right;
+
+    ion-item {
+      --padding-start: 16px;
+      margin-bottom: 4px;
+      border-radius: 8px;
+
+      h3 {
+        font-weight: 600;
+        color: var(--ion-color-primary);
+        margin: 0 0 4px;
+      }
+
+      p {
+        margin: 2px 0;
+        font-size: 0.85rem;
+        color: var(--ion-color-medium);
+        padding: 0;
+      }
+
+      .invoice-total {
+        color: var(--ion-color-success);
+        font-weight: 600;
+      }
+    }
   }
 }
 
-/* Toggle Styles */
-.toggle-label {
-  margin-right: 12px;
-  
-  h2 {
-    margin: 0 0 4px 0;
-    font-size: 1.1rem;
-    color: var(--ion-color-primary);
-  }
-  
-  p {
-    margin: 0;
-    font-size: 0.9rem;
-    color: var(--ion-color-medium);
-  }
-}
-
-/* List Controls */
-.list-controls {
+// Checklist Toolbar
+.checklist-toolbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  margin-top: 12px;
-  
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .selection-count {
+    ion-chip {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+  }
+
+  .checklist-search {
+    flex: 1;
+    min-width: 150px;
+    --border-radius: 8px;
+    --height: 36px;
+    padding: 0;
+  }
+
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
-  }
-  
-  ion-item {
-    flex: 1;
-    margin: 0;
+
+    .checklist-search {
+      min-width: unset;
+    }
   }
 }
 
-/* Table Styles */
+// Checklist Table
 .table-container {
   overflow-x: auto;
   border-radius: 8px;
   border: 1px solid var(--ion-color-light);
 }
 
-.items-table {
+.checklist-table {
   width: 100%;
   border-collapse: collapse;
-  
+
   th, td {
-    padding: 12px;
+    padding: 10px 8px;
     text-align: center;
     border-bottom: 1px solid var(--ion-color-light);
   }
-  
+
   th {
     background-color: var(--ion-color-light);
-    font-weight: bold;
-    color: var(--ion-color-primary);
+    font-weight: 600;
+    color: var(--ion-color-dark);
     position: sticky;
     top: 0;
     z-index: 1;
+    font-size: 0.85rem;
   }
-  
-  tr {
-    &:hover {
-      background-color: var(--ion-color-light-shade);
-    }
-    
-    &.highlighted {
-      background-color: var(--ion-color-primary-tint) !important;
-      border: 2px solid var(--ion-color-primary);
-    }
-    
-    &.search-match {
-      background-color: var(--ion-color-warning-tint);
+
+  .col-check {
+    width: 40px;
+    padding: 8px 4px;
+  }
+
+  .col-name {
+    text-align: right;
+    min-width: 120px;
+
+    .item-desc {
+      display: block;
+      color: var(--ion-color-medium);
+      font-size: 0.8rem;
+      margin-top: 2px;
     }
   }
-  
-  td {
+
+  .col-qty-orig {
+    color: var(--ion-color-medium);
+    font-weight: 500;
+  }
+
+  .col-qty-return, .col-price {
+    min-width: 80px;
+
     ion-input {
-      --padding-start: 8px;
-      --padding-end: 8px;
+      --padding-start: 4px;
+      --padding-end: 4px;
+      text-align: center;
+      font-size: 0.9rem;
+      border: 1px solid var(--ion-color-light);
+      border-radius: 6px;
+      max-width: 90px;
+      margin: 0 auto;
+    }
+  }
+
+  .col-total {
+    font-weight: 600;
+    color: var(--ion-color-primary);
+  }
+
+  tbody tr {
+    transition: opacity 0.25s ease, background-color 0.2s ease;
+
+    &:hover:not(.deselected) {
+      background-color: var(--ion-color-light-tint);
+    }
+
+    &.deselected {
+      opacity: 0.4;
+
+      td {
+        text-decoration: line-through;
+        text-decoration-color: var(--ion-color-medium);
+      }
+
+      .col-check, .col-qty-return, .col-price {
+        text-decoration: none;
+      }
     }
   }
 }
 
-/* Action Buttons */
-.action-buttons {
+// Input style matching sales page
+.custInput {
+  border-style: solid;
+  border-color: var(--ion-color-light);
+  border-radius: 5px;
+}
+
+// Return notes grid
+.return-notes-grid {
+  margin-bottom: 12px;
+  padding: 0;
+}
+
+// Footer grid matching sales page
+.return-footer-grid {
+  padding: 0;
+  border-top: 1px solid var(--ion-color-light);
+  padding-top: 12px;
+}
+
+.footer-input-container {
   display: flex;
-  gap: 8px;
-  justify-content: center;
-  
-  ion-button {
-    --padding-start: 8px;
-    --padding-end: 8px;
-    min-width: 40px;
-  }
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%;
+  padding: 6px 4px;
 }
 
-/* Discount Section */
-.discount-section {
-  border: 1px solid var(--ion-color-light);
-  border-radius: 8px;
-  padding: 16px;
-  margin: 16px 0;
-  background-color: var(--ion-color-light-tint);
-  
-  ion-item {
-    --background: transparent;
-    margin-bottom: 8px;
-  }
-}
-
-/* Totals Styles */
-.totals-card {
-  background: linear-gradient(135deg, var(--ion-color-primary-tint), var(--ion-color-light));
-  border: 2px solid var(--ion-color-primary);
-}
-
-.totals-grid {
-  .total-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--ion-color-light);
-    
-    &:last-child {
-      border-bottom: none;
-    }
-    
-    &.final-total {
-      border-top: 2px solid var(--ion-color-primary);
-      margin-top: 8px;
-      padding-top: 12px;
-      font-weight: bold;
-      font-size: 1.1rem;
-    }
-    
-    .label {
-      font-weight: 500;
-      color: var(--ion-color-dark);
-    }
-    
-    .value {
-      font-weight: bold;
-      font-size: 1.1rem;
-      
-      &.discount {
-        color: var(--ion-color-warning);
-      }
-      
-      &.positive {
-        color: var(--ion-color-success);
-      }
-      
-      &.negative {
-        color: var(--ion-color-danger);
-      }
-    }
-  }
-}
-
-/* Return Type Indicator */
-.return-type-indicator {
+.footer-input-label {
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  font-size: 11px;
+  margin-bottom: 3px;
   text-align: center;
-  margin-top: 16px;
-  
-  ion-chip {
-    font-weight: bold;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footer-input-item {
+  width: 100%;
+
+  ion-input {
+    text-align: center;
+    font-weight: 500;
+    font-size: 13px;
+    --padding-top: 6px;
+    --padding-bottom: 6px;
   }
 }
 
-/* Action Section */
+.remaining-positive ion-input {
+  color: var(--ion-color-success) !important;
+  font-weight: 700 !important;
+}
+
+.remaining-negative ion-input {
+  color: var(--ion-color-danger) !important;
+  font-weight: 700 !important;
+}
+
+// Discount segment matching sales page
+.discount-header {
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.discount-segment-container {
+  --background: transparent;
+  margin: 0;
+  flex: 1;
+  max-width: 160px;
+}
+
+.compact-discount-segment {
+  --background: var(--ion-color-light);
+  border-radius: 14px;
+  padding: 1px;
+  width: 100%;
+  min-height: 24px;
+
+  .compact-segment-button {
+    --background-checked: var(--ion-color-primary);
+    --color: var(--ion-color-dark);
+    --color-checked: white;
+    --border-radius: 12px;
+    --padding-start: 6px;
+    --padding-end: 6px;
+    min-height: 22px;
+    font-size: 10px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 600;
+  }
+}
+
+.discount-input {
+  margin-top: 3px;
+  width: 100%;
+
+  ion-input {
+    text-align: center;
+    font-size: 13px;
+    --padding-top: 6px;
+    --padding-bottom: 6px;
+  }
+
+  .discount-note {
+    font-size: 10px;
+    color: var(--ion-color-medium);
+    white-space: nowrap;
+  }
+}
+
+.return-badge {
+  font-weight: 600;
+  margin-top: 16px;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .return-footer-grid ion-row {
+    flex-wrap: wrap;
+  }
+
+  .footer-input-container {
+    padding: 4px 2px;
+    min-width: 45%;
+  }
+
+  .footer-input-label {
+    font-size: 9px;
+  }
+
+  .footer-input-item ion-input,
+  .discount-input ion-input {
+    font-size: 11px;
+  }
+
+  .discount-segment-container {
+    max-width: 120px;
+  }
+
+  .compact-discount-segment .compact-segment-button {
+    min-height: 18px;
+    font-size: 8px;
+  }
+}
+
+// Action Section
 .action-section {
-  position: sticky;
-  bottom: 16px;
-  z-index: 10;
-  
   .action-buttons {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 12px;
-    
+    display: flex;
+    gap: 8px;
+
+    .save-btn {
+      flex: 1;
+    }
+
+    ion-button {
+      --border-radius: 8px;
+      font-weight: 600;
+    }
+
     @media (max-width: 768px) {
-      grid-template-columns: 1fr;
+      flex-direction: column;
     }
   }
 }
 
-/* Loading Overlay */
+// Loading Overlay
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -291,147 +422,63 @@
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  
+
   ion-spinner {
     --color: var(--ion-color-primary);
     transform: scale(2);
     margin-bottom: 20px;
   }
-  
+
   p {
     color: white;
     font-size: 1.1rem;
     text-align: center;
-    margin: 0;
   }
 }
 
-/* Popover Styles */
-ion-popover {
-  --width: 400px;
-  --max-height: 50vh;
-  
-  @media (max-width: 768px) {
-    --width: 90vw;
-  }
-  
-  ion-content {
-    --padding-top: 8px;
-    --padding-bottom: 8px;
-  }
-  
-  ion-searchbar {
-    --background: var(--ion-color-light);
-    margin-bottom: 8px;
-  }
-  
-  ion-item {
-    --padding-start: 16px;
-    --padding-end: 16px;
-    
-    &:hover {
-      --background: var(--ion-color-light);
-    }
-    
-    ion-label {
-      h2 {
-        margin: 0 0 4px 0;
-        font-weight: bold;
-      }
-      
-      p {
-        margin: 2px 0;
-        font-size: 0.9rem;
-        color: var(--ion-color-medium);
-      }
-    }
-  }
+// Section spacing
+.section {
+  margin-bottom: 16px;
 }
 
-/* Search Highlighting */
+// Card base
+ion-card {
+  margin: 0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+// Search highlighting
 mark {
   background-color: var(--ion-color-warning);
-  padding: 2px 4px;
+  padding: 1px 3px;
   border-radius: 2px;
   font-weight: bold;
 }
 
-/* Card Styles */
-ion-card {
-  margin: 16px 0;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
-  ion-card-header {
-    text-align: center;
-    
-    ion-card-title {
-      color: var(--ion-color-primary);
-      font-weight: bold;
-    }
-  }
-}
-
-/* Responsive Design */
+// Responsive
 @media (max-width: 768px) {
   .container {
-    padding: 12px;
+    padding: 8px;
   }
-  
-  .section {
-    margin-bottom: 16px;
-  }
-  
-  .items-table {
-    font-size: 0.9rem;
-    
+
+  .checklist-table {
+    font-size: 0.85rem;
+
     th, td {
       padding: 8px 4px;
     }
   }
-  
-  .totals-grid .total-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    
-    .value {
-      align-self: flex-end;
-    }
-  }
 }
 
-/* RTL Support */
+// RTL
 [dir="rtl"] {
-  .form-row {
-    direction: rtl;
+  .invoice-info-bar {
+    border-right: none;
+    border-left: 4px solid var(--ion-color-primary);
   }
-  
-  .totals-grid .total-row {
-    direction: rtl;
-  }
-  
-  .action-buttons {
-    direction: rtl;
-  }
-}
 
-/* Focus States */
-ion-input:focus-within,
-ion-textarea:focus-within,
-ion-select:focus-within {
-  --highlight-color: var(--ion-color-primary);
-}
-
-/* Button Styles */
-ion-button {
-  --border-radius: 8px;
-  
-  &[color="primary"] {
-    font-weight: bold;
-  }
-  
-  &[fill="outline"] {
-    --border-width: 2px;
+  .col-name {
+    text-align: right;
   }
 }

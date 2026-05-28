@@ -684,6 +684,7 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
 
     const modal = await this.modalController.create({
       component: TransactionModalComponent,
+      cssClass: 'transaction-full-modal',
       componentProps: {
         transaction: record,
         store_id: this.store_info.id,
@@ -881,9 +882,13 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
   }
 
   // Multi-select methods
-  toggleSelectAll() {
-    this.selectAll = !this.selectAll;
-    if (this.selectAll) {
+
+  toggleSelectAll(event: any) {
+    const isChecked = event.detail.checked;
+    // If event value matches model, this is a programmatic echo — ignore
+    if (isChecked === this.selectAll) return;
+    this.selectAll = isChecked;
+    if (isChecked) {
       // Select all visible records
       const visibleRecords = this.searchMode ? this.searchResult : this.sortedPayArray;
       visibleRecords.forEach(record => {
@@ -895,18 +900,18 @@ export class SpendRecord2Page implements OnInit, OnDestroy {
     }
   }
 
-  toggleRecordSelection(j_ref: string) {
-    if (this.selectedRecords.has(j_ref)) {
-      this.selectedRecords.delete(j_ref);
-      this.selectAll = false;
-    } else {
+  toggleRecordSelection(j_ref: string, event: any) {
+    const isChecked = event.detail.checked;
+    // If event value matches current state, this is a programmatic echo — ignore
+    if (isChecked === this.selectedRecords.has(j_ref)) return;
+    if (isChecked) {
       this.selectedRecords.add(j_ref);
-      // Check if all visible records are selected
-      const visibleRecords = this.searchMode ? this.searchResult : this.sortedPayArray;
-      if (this.selectedRecords.size === visibleRecords.length) {
-        this.selectAll = true;
-      }
+    } else {
+      this.selectedRecords.delete(j_ref);
     }
+    const visibleRecords = this.searchMode ? this.searchResult : this.sortedPayArray;
+    this.selectAll = visibleRecords.length > 0 &&
+      visibleRecords.every(record => this.selectedRecords.has(record.j_ref));
   }
 
   isRecordSelected(j_ref: string): boolean {

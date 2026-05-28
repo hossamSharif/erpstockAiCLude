@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { TswiaRecordPageRoutingModule } from './tswia-record-routing.module';
+import { SharedModule } from '../module/shared/shared.module';
 
 import { TswiaRecordPage } from './tswia-record.page';
 
@@ -15,7 +16,8 @@ import { TswiaRecordPage } from './tswia-record.page';
     CommonModule,
     FormsModule,
     IonicModule,
-    TswiaRecordPageRoutingModule
+    TswiaRecordPageRoutingModule,
+    SharedModule
   ],
   declarations: [TswiaRecordPage]
 })

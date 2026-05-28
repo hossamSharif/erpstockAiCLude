@@ -1,0 +1,228 @@
+.account-selector-wrapper {
+  width: 100%;
+  position: relative;
+
+  .account-selector-label {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: var(--ion-color-medium);
+    margin: 0;
+    text-align: right;
+    direction: rtl;
+    min-height: 32px;
+  }
+
+  .input-container-wrapper {
+    position: relative;
+    width: 100%;
+  }
+}
+
+.custInput {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 5px 0;
+}
+
+.label-with-buttons-container {
+  direction: rtl;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  text-align: right;
+  min-height: 32px;
+
+  .action-buttons-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-inline-start: auto;
+  }
+}
+
+.acc-refresh-btn-left {
+  --color: var(--ion-color-success);
+  --padding-start: 3px;
+  --padding-end: 3px;
+  height: 32px;
+  width: 32px;
+  margin: 0;
+
+  ion-icon {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+
+    &.spin {
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  &:hover {
+    --color: var(--ion-color-success-shade);
+    --background: rgba(var(--ion-color-success-rgb), 0.1);
+  }
+
+  &[disabled] {
+    --color: var(--ion-color-medium);
+    opacity: 0.5;
+  }
+}
+
+.acc-add-btn-left {
+  --color: var(--ion-color-success);
+  --padding-start: 3px;
+  --padding-end: 3px;
+  height: 32px;
+  width: 32px;
+  margin: 0;
+
+  ion-icon {
+    font-size: 18px;
+  }
+
+  &:hover {
+    --color: var(--ion-color-success-shade);
+    --background: rgba(var(--ion-color-success-rgb), 0.1);
+  }
+}
+
+.acc-loading-spinner-left {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.account-selector-input {
+  --background: transparent;
+  --color: var(--ion-color-dark);
+  --placeholder-color: var(--ion-color-medium);
+  width: 100%;
+  direction: rtl;
+  text-align: right;
+  --padding-start: 12px;
+  --padding-end: 45px;
+
+  input,
+  .native-input,
+  .input-wrapper input {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    display: block !important;
+  }
+
+  &[disabled] {
+    --background: var(--ion-color-light);
+    --color: var(--ion-color-medium);
+    cursor: not-allowed;
+  }
+}
+
+.account-dropdown-container {
+  position: fixed;
+  z-index: 10000;
+  background: white;
+  border: 1px solid var(--ion-color-light);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 4px;
+  min-width: 250px;
+
+  .account-dropdown {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+
+    .account-item {
+      --background: transparent;
+      --border-color: transparent;
+      --color: var(--ion-color-dark);
+      --padding-start: 12px;
+      --padding-end: 12px;
+      --min-height: 52px;
+      direction: rtl;
+      text-align: right;
+
+      &:hover {
+        --background: var(--ion-color-light);
+      }
+
+      &:active {
+        --background: rgba(var(--ion-color-primary-rgb), 0.1);
+      }
+
+      &.highlighted {
+        --background: rgba(var(--ion-color-primary-rgb), 0.1);
+        border-left: 3px solid var(--ion-color-primary);
+      }
+
+      ion-label {
+        margin: 0;
+
+        h3 {
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--ion-color-dark);
+          margin: 0 0 4px 0;
+        }
+
+        .acc-meta {
+          font-size: 12px;
+          color: var(--ion-color-medium);
+          margin: 2px 0;
+        }
+      }
+    }
+
+    .no-results {
+      --color: var(--ion-color-medium);
+      --padding-start: 12px;
+      --padding-end: 12px;
+      text-align: center;
+      font-style: italic;
+
+      ion-label p {
+        margin: 0;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .label-with-buttons-container {
+    .action-buttons-left {
+      gap: 2px;
+    }
+
+    .acc-refresh-btn-left,
+    .acc-add-btn-left {
+      height: 28px;
+      width: 28px;
+      --padding-start: 2px;
+      --padding-end: 2px;
+
+      ion-icon {
+        font-size: 16px;
+      }
+    }
+
+    .acc-loading-spinner-left {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}

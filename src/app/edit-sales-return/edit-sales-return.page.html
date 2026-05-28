@@ -14,7 +14,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
+<ion-content #content scrollEvents="true" (ionScroll)="scrollFab.onScroll($event)">
   <div class="container" *ngIf="returnInvo && returnInvo.return_ref">
 
     <!-- Return Information Section -->
@@ -345,4 +345,5 @@
     <p>{{ currentLoadingMessage }}</p>
   </div>
 
+  <app-scroll-to-top-fab #scrollFab [content]="content"></app-scroll-to-top-fab>
 </ion-content>

@@ -435,6 +435,10 @@
               <ion-checkbox [(ngModel)]="colSettingpr.pay_price"></ion-checkbox>
             </ion-item>
             <ion-item>
+              <ion-label>   سعر التجزئة (retail price)				  </ion-label>
+              <ion-checkbox [(ngModel)]="colSettingpr.retail_price"></ion-checkbox>
+            </ion-item>
+            <ion-item>
               <ion-label>   نسبة الفائدة (profit perc)					  </ion-label>
               <ion-checkbox [(ngModel)]="colSettingpr.profit"></ion-checkbox>
             </ion-item>
@@ -448,13 +452,23 @@
             </ion-item>
 
               <ion-item>
-                <ion-label> اخر عملية بيع	 			  </ion-label>
+                <ion-label> اخر عملية بيع (تاريخ وكمية)	 			  </ion-label>
                 <ion-checkbox [(ngModel)]="colSettingpr.lastSold"></ion-checkbox>
               </ion-item>
 
               <ion-item>
                 <ion-label> اخر عملية شراء (تاريخ وكمية)	 			  </ion-label>
                 <ion-checkbox [(ngModel)]="colSettingpr.lastPurch"></ion-checkbox>
+              </ion-item>
+
+              <ion-item>
+                <ion-label> المخزون الإفتتاحي (opening stock)	 			  </ion-label>
+                <ion-checkbox [(ngModel)]="colSettingpr.firstQuantity"></ion-checkbox>
+              </ion-item>
+
+              <ion-item>
+                <ion-label> الإجراءات (actions)	 			  </ion-label>
+                <ion-checkbox [(ngModel)]="colSettingpr.edit"></ion-checkbox>
               </ion-item>
           </ion-list>
         </ion-col>
